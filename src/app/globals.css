@@ -5478,3 +5478,65 @@ html:not(.dark) .lp-sigil-img {
     animation: none !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE WORKPLACE'S OWN SKY — the making rooms' themed backgrounds     */
+/*  (WorkspaceAmbient.tsx): the Book's drifting leaves, the Forge's    */
+/*  blueprint paper. Same three laws as the scope sky.                 */
+/* ------------------------------------------------------------------ */
+.ws-page {
+  opacity: 0.5;
+  animation-name: amb-drift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.ws-blueprint-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, #1d4ed8 10%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, #1d4ed8 10%, transparent) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(
+    110% 85% at 50% 10%,
+    black 0%,
+    transparent 74%
+  );
+  mask-image: radial-gradient(
+    110% 85% at 50% 10%,
+    black 0%,
+    transparent 74%
+  );
+  opacity: 0.4;
+}
+@keyframes amb-spin-rev {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE VISION'S REVEAL — the moment the woven image lands, it        */
+/*  fades and settles into the very square that waited for it.        */
+/* ------------------------------------------------------------------ */
+.vision-reveal {
+  animation: vision-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes vision-reveal {
+  0% {
+    opacity: 0;
+    transform: scale(1.035);
+    filter: blur(6px) saturate(0.8);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0) saturate(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vision-reveal {
+    animation: none !important;
+  }
+}

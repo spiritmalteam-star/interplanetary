@@ -181,21 +181,14 @@ export function parseAudit(raw: unknown): BookAudit | null {
 }
 
 /** The bounded injection — the ledger rides into every continuation,
-    compact enough to never crowd the pages it protects. */
+    compact enough to never crowd the pages it protects. THE OPEN
+    TUNNEL: only the Mirror's own continuity memory is handed back —
+    the facts the book itself keeps (canon, cast, objects, chronology,
+    chapters). The old brief/promises/motifs machinery is never spoken
+    to the page again (legacy ledgers simply keep those fields quiet). */
 export function ledgerBlock(ledger: BookLedger | null): string {
   if (!ledger) return "";
   const out: string[] = [];
-  if (ledger.brief) {
-    const b = ledger.brief;
-    const parts = [
-      b.premise ? `premise: ${b.premise}` : "",
-      b.question ? `question: ${b.question}` : "",
-      b.dilemma ? `dilemma: ${b.dilemma}` : "",
-      b.chain ? `chain: ${b.chain}` : "",
-      b.ending ? `ending effect sought: ${b.ending}` : "",
-    ].filter(Boolean);
-    if (parts.length) out.push(`  BRIEF — ${parts.join(" · ")}`);
-  }
   if (ledger.canon?.length) out.push(`  CANON — ${ledger.canon.slice(0, 12).join(" | ")}`);
   if (ledger.characters?.length)
     out.push(`  CHARACTERS — ${ledger.characters.slice(0, 14).join(" | ")}`);
@@ -203,12 +196,6 @@ export function ledgerBlock(ledger: BookLedger | null): string {
     out.push(`  OBJECTS (state is law) — ${ledger.objects.slice(0, 10).join(" | ")}`);
   if (ledger.timeline?.length)
     out.push(`  TIMELINE — ${ledger.timeline.slice(0, 10).join(" | ")}`);
-  if (ledger.promises?.length)
-    out.push(
-      `  PROMISES (every one must land or stay honest) — ${ledger.promises.slice(0, 12).join(" | ")}`
-    );
-  if (ledger.motifs?.length)
-    out.push(`  MOTIFS — ${ledger.motifs.slice(0, 8).join(" | ")}`);
   if (ledger.chapters?.length)
     out.push(
       `  CHAPTERS — ${ledger.chapters
@@ -217,5 +204,5 @@ export function ledgerBlock(ledger: BookLedger | null): string {
         .join(" | ")}`
     );
   if (out.length === 0) return "";
-  return `- THE LEDGER (the volume's own intelligence — honor every line; carry it forward and update it with what these pages change):\n${out.join("\n")}`;
+  return `- THE LEDGER (the volume's own memory of facts — honor every line; carry it forward and update it with what these pages change):\n${out.join("\n")}`;
 }

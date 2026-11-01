@@ -42,6 +42,46 @@ function HyperXScienceSky() {
       {/* the blueprint grid — the scientist's own paper, faint */}
       <span className="hx-sky-grid absolute inset-0" aria-hidden="true" />
 
+      {/* THE SPACETIME WARP — the grid bent by a mass at its heart:
+          relativity's own picture, resting behind the room */}
+      <svg
+        viewBox="0 0 400 260"
+        className="absolute right-[-6%] bottom-[-4%] w-[min(400px,72vw)] opacity-[0.1] dark:opacity-[0.13]"
+        aria-hidden="true"
+      >
+        <g fill="none" stroke="#22d3ee" strokeWidth="0.9">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <path
+              key={`h${i}`}
+              d={`M0 ${24 + i * 36} C 120 ${24 + i * 36}, 150 ${130 - Math.abs(i - 2.4) * 26}, 200 130 C 250 ${130 + Math.abs(i - 2.4) * 26}, 280 ${24 + i * 36}, 400 ${24 + i * 36}`}
+            />
+          ))}
+          {Array.from({ length: 9 }).map((_, i) => (
+            <path
+              key={`v${i}`}
+              d={`M${24 + i * 44} 0 C ${24 + i * 44} 80, ${200 - Math.abs(i - 4) * 12} 110, 200 130 C ${200 + Math.abs(i - 4) * 12} 150, ${24 + i * 44} 180, ${24 + i * 44} 260`}
+            />
+          ))}
+        </g>
+        <circle cx="200" cy="130" r="9" fill="#e879f9" opacity="0.7" />
+      </svg>
+
+      {/* THE GRAVITATIONAL WAVE — two rings radiating from a merger,
+          the spacetime's own ripple */}
+      <svg
+        viewBox="0 0 300 160"
+        className="absolute left-[2%] bottom-[4%] w-[min(260px,58vw)] opacity-[0.13] dark:opacity-[0.16]"
+        aria-hidden="true"
+      >
+        <g fill="none" stroke="#e879f9" strokeWidth="1.2">
+          <ellipse cx="150" cy="80" rx="130" ry="52" strokeDasharray="10 14" />
+          <ellipse cx="150" cy="80" rx="96" ry="38" strokeDasharray="8 12" opacity="0.75" />
+          <ellipse cx="150" cy="80" rx="60" ry="24" strokeDasharray="6 10" opacity="0.55" />
+        </g>
+        <circle cx="138" cy="76" r="5" fill="#22d3ee" />
+        <circle cx="163" cy="84" r="4" fill="#e879f9" />
+      </svg>
+
       {/* THE ATOM — a nucleus and three electrons on their orbits,
           the discovery room's own sigil, slowly turning */}
       <svg

@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 import { ArrowLeft, Maximize2, Minimize2, RotateCcw } from "lucide-react";
 import { useMirror, type ToolTabKey } from "@/lib/mirror-store";
 import { WORKSPACES, WORKSPACE_ORDER } from "@/lib/mirror/workspaces";
+import { WorkspaceAmbient } from "./WorkspaceAmbient";
 import { runWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -204,6 +205,19 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
   const view = useMirror((s) => s.view);
   const toolTabs = useMirror((s) => s.toolTabs);
   const activeToolTab = useMirror((s) => s.activeToolTab);
+
+  /* THE WRITING YIELD — the room's own sky folds away the moment any
+     line of the workplace takes the caret (the composer, the editor,
+     a field of any room) and returns when the line rests again.
+     Declarative capture hands: React's own focus system, no timing. */
+  const frameRef = useRef<HTMLDivElement | null>(null);
+  const [frameWriting, setFrameWriting] = useState(false);
+  const isWritingSpot = (el: EventTarget | null): boolean =>
+    el instanceof Element &&
+    (el.tagName === "INPUT" ||
+      el.tagName === "TEXTAREA" ||
+      (el instanceof HTMLElement && el.isContentEditable));
+
   const activateToolTab = useMirror((s) => s.activateToolTab);
   const openToolTab = useMirror((s) => s.openToolTab);
   const closeWorkspace = useMirror((s) => s.closeWorkspace);
@@ -354,6 +368,18 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
 
   const frame = (
     <div
+      ref={frameRef}
+      onFocusCapture={(e) => setFrameWriting(isWritingSpot(e.target))}
+      onBlurCapture={() => {
+        window.setTimeout(() => {
+          const now = document.activeElement;
+          setFrameWriting(
+            !!now &&
+              !!frameRef.current?.contains(now) &&
+              isWritingSpot(now)
+          );
+        }, 0);
+      }}
       data-testid="tool-workspace"
       data-workplace="true"
       data-zoomed={zoomed || undefined}
@@ -450,6 +476,10 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
           room its own scroll and its own undisturbed state — switching
           tools never unmounts anything, so a weaving book keeps
           weaving and a sequencer keeps its pattern. */}
+      {/* THE ROOM'S OWN SKY — the workplace's themed living background
+          (the Book's pages, the Archive's rings, the Forge's wheels…),
+          folded away while the visitor writes into any line of the room */}
+      <WorkspaceAmbient tab={active} dormant={frameWriting} />
       <div className="relative min-h-0 flex-1">
         {/* THE ROOM'S OWN ATMOSPHERE — the fullscreen room keeps the
             house's breath: two still lights (the room's accent and its

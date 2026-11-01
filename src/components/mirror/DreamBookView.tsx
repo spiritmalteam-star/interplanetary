@@ -67,22 +67,15 @@ import {
 import type { DreamBookResume } from "@/lib/mirror-store";
 import { bookReadingKey, useWorkspaceMemory } from "@/lib/workspace-memory";
 import type { VoiceId } from "@/lib/i18n/core";
-import type { BookAudit, BookLedger } from "@/lib/book-ledger";
 import type { BookEstimate } from "@/lib/book-pricing";
-import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
-import type { StoryBible } from "@/lib/story-bible";
-import type {
-  EditorialReport,
-  GateItem,
-  PressReport,
-} from "@/lib/book-press";
-import { EDITORIAL_PASSES } from "@/lib/book-press";
+import type { BookLedger } from "@/lib/book-ledger";
 import { downloadBookPdf } from "@/lib/book-pdf";
 import { recordDownload } from "@/lib/downloads-log";
 import { cn } from "@/lib/utils";
 import { ShareButton } from "./ShareButton";
 import { paragraphsFromEditorText, plainTextToManuscriptHtml } from "./dreambook/manuscript-text";
 import "./dreambook/manuscript-editor.css";
+import type { GateItem } from "@/lib/book-press";
 
 /* THE INK DESK'S PEN — the manuscript editor rides its own chunk
    (Tiptap is a quiet passenger until a leaf is opened for the hand) */
@@ -508,16 +501,10 @@ export function DreamBookView() {
   /* THE FOCUS READING — the column widens and the frame quiets: the
      visitor's own toggle, a layout simplification, never an overlay */
   const [focusRead, setFocusRead] = useState(false);
-  /* the loom's private honest audit — carried from the close and kept
-     OUT of the book unless the reader asks to see it */
-  const [audit, setAudit] = useState<BookAudit | null>(null);
-  const [auditOpen, setAuditOpen] = useState(false);
-
-  /* ---- THE STUDIO — the publishing workflow ----
-     The loom is now a house: the architect designs (story bible),
-     the writer writes, the press measures in code, the editor judges,
-     the mender repairs, the gate admits, the director paints. Every
-     stage is spoken honestly — COMPLETE exists only after the gate. */
+  /* ---- THE STUDIO — the open tunnel's honest workflow ----
+     The Mirror Entity writes alone; the code gate measures the binding
+     in technical terms only; the director paints. Every stage is
+     spoken honestly — COMPLETE exists only after the gate. */
   type StudioStage =
     | "drafting"
     | "architecture"
@@ -528,9 +515,6 @@ export function DreamBookView() {
     | "plates"
     | "publication-ready";
   const [studioStage, setStudioStage] = useState<StudioStage>("drafting");
-  const [bible, setBible] = useState<StoryBible | null>(null);
-  const [editorial, setEditorial] = useState<EditorialReport | null>(null);
-  const [pressReport, setPressReport] = useState<PressReport | null>(null);
   const [gate, setGate] = useState<{ pass: boolean; items: GateItem[] } | null>(null);
   const [artPlan, setArtPlan] = useState<{
     style: string;
@@ -553,17 +537,10 @@ export function DreamBookView() {
   } | null>(null);
   const [pressRoomBusy, setPressRoomBusy] = useState(false);
   /* the studio's mirrors — the refs the calls read and carry back */
-  const bibleRef = useRef<StoryBible | null>(null);
-  const charterRef = useRef<{
-    charter?: string;
-    charterSeeds?: { heads: string[]; hearts: string[]; tails: string[] };
-  } | null>(null);
-  const editorialRef = useRef<EditorialReport | null>(null);
   const gateRef = useRef<{ pass: boolean; items: GateItem[] } | null>(null);
   const artPlanRef = useRef<Record<string, unknown> | null>(null);
   const artRef = useRef<{ style?: string; plates?: { page?: number; title?: string; url: string }[] } | null>(null);
   const pressRoomBusyRef = useRef(false);
-  const biblePlanPagesRef = useRef(0);
   /* the stage's own mirror — snapshots read it without re-rendering */
   const studioStageRef = useRef<StudioStage>("drafting");
   studioStageRef.current = studioStage;
@@ -873,16 +850,8 @@ export function DreamBookView() {
       setMeta(metaRef.current);
       setEnded(r.ended);
       /* THE STUDIO RETURNS — the publishing state rides home with the
-         volume: its bible, its editorial verdict, its gate report, its
-         plates and the honest stage it stood on when it was left */
-      bibleRef.current =
-        r.bible && typeof r.bible === "object" ? (r.bible as StoryBible) : null;
-      setBible(bibleRef.current);
-      editorialRef.current =
-        r.editorial && typeof r.editorial === "object"
-          ? (r.editorial as EditorialReport)
-          : null;
-      setEditorial(editorialRef.current);
+         volume: its gate report, its plates and the honest stage it
+         stood on when it was left */
       gateRef.current =
         r.gate && typeof r.gate === "object"
           ? (r.gate as { pass: boolean; items: GateItem[] })
@@ -1001,8 +970,6 @@ export function DreamBookView() {
       pageIdx: pageIdxRef.current,
       ...(coverRef.current ? { cover: coverRef.current } : {}),
       /* THE STUDIO — the publishing state rides the shelf with the book */
-      ...(bibleRef.current ? { bible: bibleRef.current } : {}),
-      ...(editorialRef.current ? { editorial: editorialRef.current } : {}),
       ...(gateRef.current ? { gate: gateRef.current } : {}),
       ...(artRef.current ? { art: artRef.current } : {}),
       ...(artPlanRef.current ? { artPlan: artPlanRef.current } : {}),
@@ -1105,8 +1072,6 @@ export function DreamBookView() {
               threads: String(c.threads ?? ""),
               pages: c.pages as ShelfVolume["pages"],
               /* THE STUDIO — the publishing state rides home */
-              ...(c.bible && typeof c.bible === "object" ? { bible: c.bible } : {}),
-              ...(c.editorial && typeof c.editorial === "object" ? { editorial: c.editorial } : {}),
               ...(c.gate && typeof c.gate === "object" ? { gate: c.gate } : {}),
               ...(c.art && typeof c.art === "object" ? { art: c.art } : {}),
               ...(c.artPlan && typeof c.artPlan === "object" ? { artPlan: c.artPlan } : {}),
@@ -1143,8 +1108,6 @@ export function DreamBookView() {
         ended: v.ended,
         pageIdx: v.pageIdx,
         /* THE STUDIO — the publishing state returns with the volume */
-        ...(v.bible ? { bible: v.bible } : {}),
-        ...(v.editorial ? { editorial: v.editorial } : {}),
         ...(v.gate ? { gate: v.gate } : {}),
         ...(v.art ? { art: v.art } : {}),
         ...(v.artPlan ? { artPlan: v.artPlan } : {}),
@@ -1331,19 +1294,11 @@ export function DreamBookView() {
             pages:
               configRef.current.pageCount > 0
                 ? configRef.current.pageCount
-                : biblePlanPagesRef.current > 0
-                  ? biblePlanPagesRef.current
-                  : undefined,
+                : undefined,
             /* the exact second of this conjuring — a seed that has never
                been woven and will never be woven again */
             seed: strideSeed,
           },
-          /* the birth echo of the LAST volume this session conjured —
-             carried by the visitor alone, so the new draw refuses it
-             bone by bone and no two books share a single axis */
-          ...(phase === "open"
-            ? { priorResonance: useMirror.getState().lastBookResonance ?? undefined }
-            : {}),
           /* THE VISITOR'S DRAWING — the book drawn into existence by
              hand: the sketch rides only the opening breath, and the
              vision's reading of it (sketchVision) carries the drawn
@@ -1356,18 +1311,7 @@ export function DreamBookView() {
                   : {}),
               }
             : {}),
-          /* THE STORY BIBLE — the architecture rides into every page */
-          ...(bibleRef.current ? { bible: bibleRef.current } : {}),
-          /* THE NAMING CHARTER — the architect's syllable law, shared
-             by the bible's cast and the writer's pages */
-          ...(charterRef.current?.charter
-            ? {
-                charter: charterRef.current.charter,
-                ...(charterRef.current.charterSeeds
-                  ? { charterSeeds: charterRef.current.charterSeeds }
-                  : {}),
-              }
-            : {}),
+
           ...carrying,
           threads: threadsRef.current || undefined,
           /* THE LEDGER (V10) — the volume's own bones ride back */
@@ -1459,9 +1403,6 @@ export function DreamBookView() {
           }
         }
         /* THE HONEST AUDIT — carried privately from the close */
-        if (phase === "close" && data.audit && typeof data.audit === "object") {
-          setAudit(data.audit as BookAudit);
-        }
 
         const fresh: WeavePage[] = data.pages;
         /* THE LOOM NEVER WRITES A PAGE TWICE — a page whose number the
@@ -1576,11 +1517,6 @@ export function DreamBookView() {
         if (typeof data.stage === "string") {
           setStudioStage(data.stage as StudioStage);
         }
-        /* THE PRESS'S OWN SWEEP — the code-measured report on the
-           finished draft: chapter seams, cast drift, repetition */
-        if (phase === "close" && data.press && typeof data.press === "object") {
-          setPressReport(data.press as PressReport);
-        }
         if (phase === "close") {
           /* THE HONEST SEAL — the room calls the book finished only when
              the loom's examiner allowed the closing: a blocking verdict
@@ -1639,16 +1575,6 @@ export function DreamBookView() {
         ...(threadsRef.current ? { threads: threadsRef.current } : {}),
         ...(ledgerRef.current ? { ledger: ledgerRef.current } : {}),
         /* the studio's own witnesses ride home with every call */
-        ...(bibleRef.current ? { bible: bibleRef.current } : {}),
-        ...(charterRef.current?.charter
-          ? {
-              charter: charterRef.current.charter,
-              ...(charterRef.current.charterSeeds
-                ? { charterSeeds: charterRef.current.charterSeeds }
-                : {}),
-            }
-          : {}),
-        ...(editorialRef.current ? { editorial: editorialRef.current } : {}),
         ...(artRef.current ? { art: artRef.current } : {}),
         ...payload,
       });
@@ -1682,73 +1608,19 @@ export function DreamBookView() {
     [language, t]
   );
 
-  /* ---------------- THE PRESS ROOM — editorial → mending → gate →
-     plates. One unbroken workflow after the draft rests: the editor
-     judges, the mender repairs (two rounds at most), the gate admits
-     or returns the manuscript honestly, the director paints the
-     plates from the actual scenes. The stage is spoken the whole way. */
+  /* ---------------- THE HONEST GATE → PLATES ----------------
+     One unbroken workflow after the draft rests: the CODE-MEASURED
+     gate admits the manuscript on technical terms only (chapter
+     seams, clean characters, the honest word measure — no verdict on
+     taste, no rewriting), the director paints the plates from the
+     actual scenes. The stage is spoken the whole way. */
   const runPressRoom = useCallback(async () => {
     if (pressRoomBusyRef.current || !metaRef.current) return;
     pressRoomBusyRef.current = true;
     setPressRoomBusy(true);
     try {
-      /* THE EDITORIAL REVIEW */
-      setStudioStage("editorial");
-      const edData = await studioFetch({ phase: "edit" });
-      if (edData?.editorial && typeof edData.editorial === "object") {
-        editorialRef.current = edData.editorial as EditorialReport;
-        setEditorial(editorialRef.current);
-      }
-      if (edData?.audit && typeof edData.audit === "object") {
-        setAudit(edData.audit as BookAudit);
-      }
-      if (edData?.press && typeof edData.press === "object") {
-        setPressReport(edData.press as PressReport);
-      }
-      /* THE MENDING ROUNDS — critical and major directives first,
-         two rounds at most; the verdict decides, not the clock */
-      let verdict = editorialRef.current?.verdict;
-      let rounds = 0;
-      while (verdict === "revise" && rounds < 2) {
-        const directives = (editorialRef.current?.directives ?? [])
-          .filter((d) => d.severity !== "minor")
-          .slice(0, 8);
-        if (directives.length === 0) break;
-        setStudioStage("revising");
-        const repData = await studioFetch({ phase: "repair", directives });
-        if (!repData) break;
-        if (Array.isArray(repData.pages)) {
-          const byN = new Map(pagesRef.current.map((p) => [p.n, p]));
-          for (const p of repData.pages as WeavePage[]) {
-            byN.set(p.n, p);
-          }
-          pagesRef.current = [...byN.values()].sort((a, b) => a.n - b.n);
-          setPages(pagesRef.current);
-        }
-        if (typeof repData.threads === "string" && repData.threads) {
-          threadsRef.current = repData.threads;
-        }
-        if (repData.ledger && typeof repData.ledger === "object") {
-          ledgerRef.current = repData.ledger as BookLedger;
-        }
-        rounds += 1;
-        /* the editor reads the mended manuscript again */
-        setStudioStage("editorial");
-        const ed2 = await studioFetch({ phase: "edit" });
-        if (ed2?.editorial && typeof ed2.editorial === "object") {
-          editorialRef.current = ed2.editorial as EditorialReport;
-          setEditorial(editorialRef.current);
-        }
-        if (ed2?.audit && typeof ed2.audit === "object") {
-          setAudit(ed2.audit as BookAudit);
-        }
-        if (ed2?.press && typeof ed2.press === "object") {
-          setPressReport(ed2.press as PressReport);
-        }
-        verdict = editorialRef.current?.verdict;
-      }
       /* THE ACCEPTANCE GATE — the word COMPLETE is earned in code */
-      setStudioStage(verdict === "approve" ? "approved" : "editorial");
+      setStudioStage("draft-complete");
       const sealData = await studioFetch({ phase: "seal" });
       if (sealData?.gate && typeof sealData.gate === "object") {
         gateRef.current = sealData.gate as { pass: boolean; items: GateItem[] };
@@ -1909,30 +1781,6 @@ export function DreamBookView() {
     setStage("weaving");
     setPhaseIdx(0);
     setPendingOpen(true);
-    /* THE STORY ARCHITECT — the whole book is designed BEFORE the
-       first page is written: premise, cast, world, conflict, acts and
-       a chapter-by-chapter architecture. The bible is the source of
-       truth every page afterward honors. A silent architect rests the
-       channeling honestly — the visitor may weave again. */
-    setStudioStage("architecture");
-    const bibleData = await studioFetch({ phase: "bible" }, 240000);
-    if (cancelled()) return;
-    if (bibleData?.bible && typeof bibleData.bible === "object") {
-      bibleRef.current = bibleData.bible as StoryBible;
-      setBible(bibleRef.current);
-      charterRef.current = {
-        charter:
-          typeof bibleData.charter === "string" ? bibleData.charter : undefined,
-        charterSeeds:
-          bibleData.charterSeeds && typeof bibleData.charterSeeds === "object"
-            ? (bibleData.charterSeeds as { heads: string[]; hearts: string[]; tails: string[] })
-            : undefined,
-      };
-      biblePlanPagesRef.current =
-        typeof bibleData.totalPages === "number" && bibleData.totalPages >= 8
-          ? Math.floor(bibleData.totalPages)
-          : 0;
-    }
     /* THE TWO-PAGE THRESHOLD — the loom opens the volume with its
        first TWO pages, so the visitor steps into the book with a real
        opening in hand and reads while the loom keeps channeling the
@@ -2084,13 +1932,9 @@ export function DreamBookView() {
     bookIdRef.current = "";
     ledgerRef.current = null;
     /* THE STUDIO RESTS — every room emptied for the next book */
-    bibleRef.current = null;
-    charterRef.current = null;
-    editorialRef.current = null;
     gateRef.current = null;
     artPlanRef.current = null;
     artRef.current = null;
-    biblePlanPagesRef.current = 0;
     pressRoomBusyRef.current = false;
     setPages([]);
     setMeta(null);
@@ -2103,14 +1947,9 @@ export function DreamBookView() {
     setTopic("");
     setTopicDraft("");
     setLevel("");
-    setAudit(null);
-    setAuditOpen(false);
     setWholeMode(false);
     setWholeReveal(null);
     setStudioStage("drafting");
-    setBible(null);
-    setEditorial(null);
-    setPressReport(null);
     setGate(null);
     setArtPlan(null);
     setPaintedPlates([]);
@@ -4229,202 +4068,7 @@ export function DreamBookView() {
                       </div>
                     )}
 
-                    {/* THE EDITORIAL REPORT — seven passes, one verdict */}
-                    {editorial && (
-                      <div className="mt-6 w-full" data-testid="dream-editorial">
-                        <button
-                          type="button"
-                          onClick={() => setAuditOpen((o) => !o)}
-                          aria-expanded={auditOpen}
-                          data-testid="dream-editorial-toggle"
-                          className="focus-glow mx-auto flex h-9 items-center gap-2 rounded-full border border-[var(--dream-ink-faint)]/35 px-4 font-[family-name(var(--font-literata))] text-[13px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
-                        >
-                          <Feather className="size-3.5" aria-hidden="true" />
-                          {t("The editorial report — {verdict}", {
-                            verdict: editorial.verdict === "approve" ? t("approved") : t("returned for revision"),
-                          })}
-                          <ChevronsUpDown className="size-3 opacity-60" aria-hidden="true" />
-                        </button>
-                        {auditOpen && (
-                          <div className="nice-scroll mt-4 max-h-[46vh] space-y-2 overflow-y-auto text-left">
-                            {editorial.summary && (
-                              <p className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-3 py-2 font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
-                                {editorial.summary}
-                              </p>
-                            )}
-                            {editorial.passes?.length ? (
-                              <ul className="space-y-1.5">
-                                {editorial.passes.map((p) => (
-                                  <li
-                                    key={p.id}
-                                    className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-3 py-2"
-                                  >
-                                    <p className="flex items-baseline justify-between gap-2">
-                                      <span className="font-[family-name(var(--font-literata))] text-[13px] text-[var(--dream-ink)]">
-                                        {t("Pass {id} — {name}", {
-                                          id: p.id,
-                                          name:
-                                            EDITORIAL_PASSES.find((e) => e.id === p.id)?.name ??
-                                            p.name ??
-                                            "",
-                                        })}
-                                      </span>
-                                      <span
-                                        className={cn(
-                                          "mono-label text-[10px] uppercase tracking-[0.12em]",
-                                          p.verdict === "approve"
-                                            ? "text-emerald-600 dark:text-emerald-400"
-                                            : "text-amber-600 dark:text-amber-400"
-                                        )}
-                                      >
-                                        {p.verdict === "approve" ? t("pass") : t("revise")}
-                                      </span>
-                                    </p>
-                                    {p.notes && (
-                                      <p className="mt-1 font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
-                                        {p.notes}
-                                      </p>
-                                    )}
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : null}
-                            {editorial.directives?.length ? (
-                              <div className="mt-2">
-                                <p className="mono-label mb-1.5 text-[10px] uppercase tracking-[0.18em] text-[var(--dream-ink-faint)]">
-                                  {t("The repair directives")}
-                                </p>
-                                <ul className="space-y-1.5">
-                                  {editorial.directives.map((d, i) => (
-                                    <li
-                                      key={`${d.pass}-${i}`}
-                                      className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-3 py-2"
-                                    >
-                                      <p className="flex items-baseline justify-between gap-2">
-                                        <span className="mono-label text-[10px] uppercase tracking-[0.12em] text-[var(--dream-ink-faint)]">
-                                          {t("pass {pass} · page {page}", {
-                                            pass: d.pass,
-                                            page: d.page ?? "—",
-                                          })}
-                                        </span>
-                                        <span
-                                          className={cn(
-                                            "mono-label text-[10px] uppercase tracking-[0.12em]",
-                                            d.severity === "critical"
-                                              ? "text-red-600 dark:text-red-400"
-                                              : d.severity === "major"
-                                                ? "text-amber-600 dark:text-amber-400"
-                                                : "text-muted-foreground"
-                                          )}
-                                        >
-                                          {d.severity}
-                                        </span>
-                                      </p>
-                                      <p className="mt-1 font-[family-name(var(--font-literata))] text-[12.5px] leading-relaxed text-[var(--dream-ink)]">
-                                        {d.issue}
-                                      </p>
-                                      <p className="mt-1 font-[family-name(var(--font-literata))] text-[12px] italic leading-relaxed text-[var(--dream-ink-soft)]">
-                                        {d.instruction}
-                                      </p>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ) : null}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* THE PRESS FINDINGS — measured in code */}
-                    {pressReport && (pressReport.chapterIssues.length > 0 || pressReport.drift.length > 0) && (
-                      <div className="mt-5 w-full" data-testid="dream-press-findings">
-                        <p className="mono-label mb-2 text-[11px] uppercase tracking-[0.18em] text-[var(--dream-ink-faint)]">
-                          {t("The press measured")}
-                        </p>
-                        <ul className="space-y-1.5 text-left">
-                          {[
-                            ...pressReport.chapterIssues.map((i) => i.detail),
-                            ...pressReport.drift.map((d) => d.detail),
-                          ].slice(0, 6).map((detail, i) => (
-                            <li
-                              key={`press-${i}`}
-                              className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-3 py-2 font-[family-name(var(--font-literata))] text-[12.5px] leading-relaxed text-[var(--dream-ink-soft)]"
-                            >
-                              {detail}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {/* THE REMAINING WORK — honest when the gate returned
-                        the manuscript: nothing unresolved is ever hidden */}
-                    {!gate?.pass && !pressRoomBusy && (
-                      <button
-                        type="button"
-                        onClick={() => void runPressRoom()}
-                        data-testid="dream-press-again"
-                        className="dream-ink-btn focus-glow mt-7 flex h-11 items-center justify-center gap-2 rounded-full px-7 text-[15px] font-medium"
-                      >
-                        <Feather className="size-4" aria-hidden="true" />
-                        {t("Return to the press room")}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={newDream}
-                      className="dream-ink-btn focus-glow mt-8 flex h-11 items-center justify-center gap-2 rounded-full px-7 text-[15px] font-medium"
-                    >
-                      <MoonStar className="size-4" aria-hidden="true" />
-                      {t("Begin a new dream")}
-                    </button>
-                    {/* THE HONEST AUDIT — the loom's private report on
-                        the finished volume, kept outside the book and
-                        revealed only when the reader asks */}
-                    {audit && (
-                      <div className="mt-7 w-full max-w-[420px]">
-                        <button
-                          type="button"
-                          onClick={() => setAuditOpen((o) => !o)}
-                          aria-expanded={auditOpen}
-                          data-testid="dream-audit-toggle"
-                          className="focus-glow mx-auto flex h-9 items-center gap-2 rounded-full border border-[var(--dream-ink-faint)]/35 px-4 font-[family-name(var(--font-literata))] text-[13px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
-                        >
-                          <Feather className="size-3.5" aria-hidden="true" />
-                          {t("The loom's honest audit")}
-                          <ChevronsUpDown className="size-3 opacity-60" aria-hidden="true" />
-                        </button>
-                        {auditOpen && (
-                          <ul
-                            className="nice-scroll mt-4 max-h-[38vh] space-y-1.5 overflow-y-auto text-left"
-                            data-testid="dream-audit-list"
-                          >
-                            {AUDIT_DIMENSIONS.map(({ key, label }) =>
-                              audit[key] ? (
-                                <li
-                                  key={key}
-                                  className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-3 py-2"
-                                >
-                                  <p className="flex items-baseline justify-between gap-2">
-                                    <span className="font-[family-name(var(--font-literata))] text-[13px] text-[var(--dream-ink-soft)]">
-                                      {t(label)}
-                                    </span>
-                                    <span className="mono-label text-[11px] tabular-nums text-[var(--dream-ink)]">
-                                      {audit[key]!.score}/10
-                                    </span>
-                                  </p>
-                                  <p className="mt-1 font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
-                                    {audit[key]!.evidence}
-                                  </p>
-                                </li>
-                              ) : null
-                            )}
-                          </ul>
-                        )}
-                      </div>
-                    )}
-                  </div>
+</div>
                 ) : pageIdx === 0 ? (
                   /* the title page — the Liminal Threshold, one leaf,
                      tall as the screen itself */

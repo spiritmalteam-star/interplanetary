@@ -435,7 +435,7 @@ function PresentationDeck({
                 src={slide.imageUrl}
                 alt={slide.title}
                 loading="lazy"
-                className="aspect-[7/4] w-full object-cover"
+                className="vision-reveal aspect-[7/4] w-full object-cover"
               />
             ) : (
               <div

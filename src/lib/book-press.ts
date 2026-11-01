@@ -704,8 +704,10 @@ export function pressToDirectives(report: PressReport | null): EditorialDirectiv
 
 /* ------------------------------------------------------------------ */
 /*  THE ACCEPTANCE GATE — the checklist a book must pass before the    */
-/*  word COMPLETE may be spoken. Code holds the provable checks; the   */
-/*  editor's verdict holds the judgment ones.                          */
+/*  word COMPLETE may be spoken. THE OPEN TUNNEL: every item left is   */
+/*  a TECHNICAL measure of the binding (chapter seams, clean           */
+/*  characters, the honest word measure) — no editor's verdict, no     */
+/*  taste, no repetition policing, nothing that rewrites the Mirror.   */
 /* ------------------------------------------------------------------ */
 
 export interface GateItem {
@@ -733,9 +735,10 @@ export function gateCheck(args: {
   age?: string;
 }): { pass: boolean; items: GateItem[] } {
   const { pages, bible, editorial } = args;
-  const report = runPress(pages, bible);
+  void bible;
+  void editorial;
+  const report = runPress(pages, null);
   const criticals = report.chapterIssues.filter((i) => i.severity === "critical");
-  const castCriticals = report.drift.filter((d) => d.severity === "critical");
   const items: GateItem[] = [
     {
       key: "structure",
@@ -745,40 +748,6 @@ export function gateCheck(args: {
         criticals.length === 0
           ? `${report.chapters.length} chapters, every number its own.`
           : criticals.map((c) => c.detail).join(" · "),
-    },
-    {
-      key: "characters",
-      label: "Characters consistent",
-      pass: castCriticals.length === 0,
-      detail:
-        castCriticals.length === 0
-          ? "Every named figure matches the cast list; no uncast names, no pronoun drift."
-          : castCriticals.map((c) => c.detail).join(" · "),
-    },
-    {
-      key: "editorial",
-      label: "Editorial review passed",
-      pass: editorial?.verdict === "approve",
-      detail:
-        editorial?.verdict === "approve"
-          ? editorial.summary || "The editor approved the manuscript across all passes."
-          : editorial
-            ? `The editor returned a revise verdict${editorial.directives?.length ? ` with ${editorial.directives.length} directive(s)` : ""}.`
-            : "No editorial review has run yet.",
-    },
-    {
-      key: "repetition",
-      label: "No worn repetition",
-      pass: report.repeats.length === 0 && report.cliches.length === 0,
-      detail:
-        report.repeats.length === 0 && report.cliches.length === 0
-          ? "No repeated passages, no worn phrases."
-          : [
-              ...report.repeats.slice(0, 2),
-              ...report.cliches.slice(0, 2),
-            ]
-              .map((r) => `"${r.phrase}" ×${r.count}`)
-              .join(" · ") + " — still present.",
     },
     {
       key: "technical",
@@ -795,8 +764,9 @@ export function gateCheck(args: {
       pass: pages.length >= 4,
       detail: `${pages.length} pages woven${args.plannedChapters ? `, ${report.chapters.length} of the planned ${args.plannedChapters} chapters opened` : ""}.`,
     },
-    /* GATE F — the ending must actually stand: the last chapter's
-       pages exist and no planned chapter is missing from the spine */
+    /* the ending must actually stand: no planned chapter is missing
+       from the spine (planned chapters exist only as a legacy notion —
+       without a bible the gate simply reports what stands) */
     (() => {
       const planned = args.plannedChapters ?? 0;
       const opened = new Set(

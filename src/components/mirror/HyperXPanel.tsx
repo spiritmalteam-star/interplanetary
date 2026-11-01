@@ -644,7 +644,7 @@ export function HyperXAnswer({
                     src={st.imageUrl}
                     alt={st.imageTitle ?? label}
                     loading="lazy"
-                    className="aspect-square w-full bg-background/40 object-cover"
+                    className="vision-reveal aspect-square w-full bg-background/40 object-cover"
                   />
                 </button>
                 <figcaption className="mono-label flex items-center gap-1.5 px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">

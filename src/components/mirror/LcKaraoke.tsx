@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Mic, Pause, Play, X } from "lucide-react";
+import { Maximize2, Mic, Minimize2, Pause, Play, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -37,21 +37,87 @@ type KaraokeLine = {
   blank: boolean;
 };
 
-/** THE SHARE OF THE MELODY — the song's duration divided among the
-    lines by their own length (long lines hold it longer, rests hold
-    a breath), so the light walks the words the way a voice would. */
-function buildLines(lyrics: string): KaraokeLine[] {
+/** THE TIMESTAMP'S OWN KEY — a lyric line may arrive with its own
+    moment woven in (the LRC shape: "[mm:ss.xx] text"); when at least
+    two lines carry their moments, the karaoke walks by THEM, exactly,
+    instead of sharing the song by length. */
+const LRC_TIME = /^\s*\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]\s*/;
+
+/** THE SHARE OF THE MELODY — with timestamps, the lines walk their
+    own clock (seconds → the song's span); without them, the song's
+    duration is divided among the lines by their own length (long
+    lines hold it longer, rests hold a breath), so the light walks
+    the words the way a voice would. THE HONEST LIMITATION: an
+    untimed brief is an approximation, and the room says so. */
+function buildLines(
+  lyrics: string,
+  dur: number
+): { lines: KaraokeLine[]; timed: boolean } {
   const raw = lyrics.split(/\r?\n/);
-  const weights = raw.map((l) =>
+  const stamps: (number | null)[] = [];
+  const texts: string[] = [];
+  for (const line of raw) {
+    const m = line.match(LRC_TIME);
+    if (m) {
+      const sec =
+        parseInt(m[1], 10) * 60 +
+        parseInt(m[2], 10) +
+        (m[3] ? parseFloat(`0.${m[3]}`) : 0);
+      stamps.push(sec);
+      texts.push(line.slice(m[0].length));
+    } else {
+      stamps.push(null);
+      texts.push(line);
+    }
+  }
+  const timedStamps = stamps.filter((t): t is number => t !== null);
+  const timed = timedStamps.length >= 2 && dur > 0;
+
+  if (timed) {
+    /* the timed walk — each line's own second, mapped into the song */
+    const span = Math.max(dur, timedStamps[timedStamps.length - 1] + 0.1);
+    const idxs: number[] = [];
+    stamps.forEach((t, i) => {
+      if (t !== null) idxs.push(i);
+    });
+    const lines: KaraokeLine[] = raw.map((_, i) => ({
+      text: texts[i],
+      start: 0,
+      end: 0,
+      blank: !texts[i].trim(),
+    }));
+    idxs.forEach((i, k) => {
+      const at = (stamps[i] as number) / span;
+      const next = k + 1 < idxs.length ? (stamps[idxs[k + 1]] as number) / span : 1;
+      lines[i].start = Math.min(0.999, at);
+      lines[i].end = Math.min(1, Math.max(next, at + 0.001));
+    });
+    /* lines before the first stamp walk from zero; gaps between timed
+       lines inherit the span their timestamps open */
+    let last = 0;
+    for (let i = 0; i < lines.length; i++) {
+      if (stamps[i] !== null) {
+        last = lines[i].start;
+      } else {
+        lines[i].start = last;
+        lines[i].end = last;
+      }
+    }
+    return { lines, timed: true };
+  }
+
+  /* the proportional walk — no timestamps woven in */
+  const weights = texts.map((l) =>
     l.trim() ? Math.max(6, l.trim().length) : 2.2
   );
   const total = weights.reduce((a, b) => a + b, 0) || 1;
   let at = 0;
-  return raw.map((text, i) => {
+  const lines = raw.map((text, i) => {
     const start = at / total;
     at += weights[i];
     return { text, start, end: at / total, blank: !text.trim() };
   });
+  return { lines, timed: false };
 }
 
 /** the floating notes of the karaoke's own sky — five notes, slow and
@@ -87,7 +153,7 @@ export function LcKaraoke({
   onSeekRatio: (ratio: number) => void;
 }) {
   const t = useT();
-  const lines = useMemo(() => buildLines(lyrics), [lyrics]);
+  const { lines, timed } = useMemo(() => buildLines(lyrics, dur), [lyrics, dur]);
   const progress = dur > 0 ? Math.min(1, Math.max(0, time / dur)) : 0;
 
   /* the line the melody is breathing right now — the last line whose
@@ -173,6 +239,33 @@ export function LcKaraoke({
     typeof document !== "undefined" ? document.body : null
   );
 
+  /* THE ROOM'S OWN FULLSCREEN — where the device grants it (Android,
+     desktop), one hand lifts the room into the OS's own screen and
+     back; where the device refuses (an iPhone's Safari on a div), the
+     room already fills the viewport and the hand rests gently. */
+  const roomRef = useRef<HTMLDivElement | null>(null);
+  const [osFullscreen, setOsFullscreen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onFs = () => setOsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onFs);
+    return () => document.removeEventListener("fullscreenchange", onFs);
+  }, [open]);
+  useEffect(() => {
+    if (!open && document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    }
+  }, [open]);
+  const toggleFullscreen = () => {
+    const el = roomRef.current;
+    if (!el) return;
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => undefined);
+    } else if (typeof el.requestFullscreen === "function") {
+      void el.requestFullscreen().catch(() => undefined);
+    }
+  };
+
   const fmt = (s: number) => {
     if (!Number.isFinite(s) || s < 0) return "0:00";
     const m = Math.floor(s / 60);
@@ -193,6 +286,7 @@ export function LcKaraoke({
           aria-modal="true"
           aria-label={`${t("Karaoke")} — ${title}`}
           data-testid="lc-karaoke-room"
+          ref={roomRef}
           className="lc-karaoke fixed inset-0 z-[95] flex flex-col overflow-hidden"
           style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
         >
@@ -244,6 +338,20 @@ export function LcKaraoke({
             </div>
             <button
               type="button"
+              onClick={toggleFullscreen}
+              aria-label={osFullscreen ? t("Return from the fullscreen") : t("Lift the room to the fullscreen")}
+              title={osFullscreen ? t("Return from the fullscreen") : t("Lift the room to the fullscreen")}
+              data-testid="lc-karaoke-fullscreen"
+              className="focus-glow flex size-11 shrink-0 items-center justify-center rounded-full text-white/55 transition-colors duration-300 hover:text-white"
+            >
+              {osFullscreen ? (
+                <Minimize2 className="size-4.5" aria-hidden="true" />
+              ) : (
+                <Maximize2 className="size-4.5" aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
               onClick={onClose}
               aria-label={t("Leave the karaoke")}
               title={t("Leave the karaoke")}
@@ -253,6 +361,20 @@ export function LcKaraoke({
               <X className="size-5" aria-hidden="true" />
             </button>
           </header>
+
+          {/* THE HONEST CLOCK'S NOTE — the room speaks its own measure:
+              when the brief carried no per-line timestamps, the words
+              ride the melody's share by length, and the room says so */}
+          {!timed && (
+            <p
+              className="mono-label relative z-10 shrink-0 px-4 pb-1 text-center text-[8.5px] uppercase tracking-[0.2em] text-white/35 sm:px-6"
+              data-testid="lc-karaoke-timing-note"
+            >
+              {t(
+                "No per-line timing was woven into this song — the words ride the melody's own measure"
+              )}
+            </p>
+          )}
 
           {/* THE WORDS — the whole lyric, the sung line lit and leading */}
           <div
