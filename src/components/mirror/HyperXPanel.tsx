@@ -80,6 +80,77 @@ const FOLLOW_UP_WELL: string[] = [
   "What mirrors this truth in the oldest records?",
 ];
 
+/* THE REVEALED ONES — the transmissions that have already materialized
+   in this visit. A room that rises again (a field switched, a thread
+   restored, a follow-up pushing the turn into the past) shows its words
+   standing whole — the stream is spoken once, never replayed. */
+const REVEALED_ANSWERS = new Set<string>();
+const revealedKey = (q: string, a: string) =>
+  `${q.length}:${q.slice(0, 80)}|${a.length}:${a.slice(0, 80)}`;
+
+/* THE REVEAL'S OWN EDGE — how many characters ride the luminous front
+   (the gradient wash at the growing edge of the transmission). */
+const REVEAL_EDGE = 110;
+
+/* THE TRANSMISSION'S OWN REVEAL — the discovery text never simply
+   appears: a fresh answer materializes in a fast, tech-looking stream.
+   Characters arrive at a steady clip on a requestAnimationFrame clock,
+   the leading paragraph carries a gradient caret, and the room's scroll
+   is never touched — the truth grows downward beneath the reader's own
+   eye, exactly where they stand. Returns null once the whole truth
+   stands, or a number = characters revealed so far. */
+function useTransmissionReveal(
+  total: number,
+  active: boolean
+): number | null {
+  /* the characters already materialized — written ONLY by the reveal's
+     own frame clock (never synchronously inside the effect body): the
+     house's render stays pure, the stream stays smooth */
+  const [revealed, setRevealed] = useState(() => {
+    if (!active || total <= 0) return total;
+    if (
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return total;
+    }
+    return 0;
+  });
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!active || total <= 0) return;
+    /* THE SPEED LAW — fast enough to feel alive, calm enough to keep
+       reading at the transmission's beginning: the clip scales with the
+       answer's length so even the longest truth streams for at most a
+       handful of breaths (~5s ceiling), never a slow crawl. */
+    const cps = Math.max(2400, Math.ceil(total / 5));
+    let start: number | null = null;
+    const tick = (now: number) => {
+      if (start === null) start = now;
+      const count = Math.min(
+        total,
+        Math.round(((now - start) / 1000) * cps)
+      );
+      setRevealed(count);
+      if (count >= total) {
+        rafRef.current = null;
+        return;
+      }
+      rafRef.current = window.requestAnimationFrame(tick);
+    };
+    rafRef.current = window.requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [active, total]);
+  /* null — the whole truth stands; a number — the front's position */
+  return !active || revealed >= total ? null : revealed;
+}
+
 function pickFollowUps(
   crystals: HyperxCrystal[],
   seedText: string
@@ -203,6 +274,7 @@ export function HyperXAnswer({
   testId = "hyperx",
   variant = "full",
   loading = false,
+  reveal = false,
 }: {
   question: string;
   answer: string;
@@ -214,6 +286,10 @@ export function HyperXAnswer({
   variant?: "full" | "compact";
   /** while the transmission still streams, the doors and the press rest */
   loading?: boolean;
+  /** THE STREAMING REVEAL — true only for the answer that just landed:
+     the body materializes in the fast, luminous, tech-looking stream
+     (past answers stand whole, and the room's scroll is never moved) */
+  reveal?: boolean;
 }) {
   const language = useMirror((s) => s.language);
   const { body, crystals } = splitCrystals(answer);
@@ -222,10 +298,59 @@ export function HyperXAnswer({
      it was meant to be, and only then is the reading cut into its
      paragraphs (the old order flowed each paragraph alone and the
      thin-tall strips survived the cut). */
-  const paragraphs = flowAnswerText(body)
-    .split(/\n{2,}/)
-    .map((p) => p.trim())
-    .filter(Boolean);
+  const flowedBody = useMemo(() => flowAnswerText(body), [body]);
+  const paragraphs = useMemo(
+    () =>
+      flowedBody
+        .split(/\n{2,}/)
+        .map((p) => p.trim())
+        .filter(Boolean),
+    [flowedBody]
+  );
+  /* THE STREAM'S OWN MAP — where each paragraph begins along the
+     flowed reading (a paragraph plus the blank line that separates it
+     from the next), so the reveal can open the text paragraph by
+     paragraph without ever re-cutting the words differently. */
+  const paraStarts = useMemo(
+    () =>
+      paragraphs.reduce<{ starts: number[]; at: number }>(
+        (carry, p) => {
+          carry.starts.push(carry.at);
+          return { starts: carry.starts, at: carry.at + p.length + 2 };
+        },
+        { starts: [], at: 0 }
+      ).starts,
+    [paragraphs]
+  );
+  const streamTotal = useMemo(
+    () => paragraphs.reduce((n, p) => n + p.length + 2, 0),
+    [paragraphs]
+  );
+  /* THE STREAMING REVEAL — armed only for the answer that just landed
+     (the parent's hand), decided ONCE at the transmission's first
+     breath: the revealed ones never replay, however often the room
+     remounts (a field switched, a thread restored, a follow-up that
+     pushes the turn into the past). */
+  const [revealArmed] = useState(() => {
+    if (!reveal || answer.trim().length === 0) return false;
+    return !REVEALED_ANSWERS.has(revealedKey(question, answer));
+  });
+  const revealKey = useMemo(
+    () => revealedKey(question, answer),
+    [question, answer]
+  );
+  useEffect(() => {
+    if (!revealArmed) return;
+    REVEALED_ANSWERS.add(revealKey);
+    while (REVEALED_ANSWERS.size > 120) {
+      const oldest = REVEALED_ANSWERS.values().next().value;
+      if (!oldest) break;
+      REVEALED_ANSWERS.delete(oldest);
+    }
+  }, [revealArmed, revealKey]);
+  const shown = useTransmissionReveal(streamTotal, revealArmed);
+  const revealing = shown !== null;
+  const streamAt = shown ?? Number.MAX_SAFE_INTEGER;
   /* THE INSTRUMENT'S OWN READING — measured from the words themselves,
      never advertised: the transmission's words, its derivation steps,
      the truths that can crystallize, and the honest reading time. */
@@ -398,15 +523,47 @@ export function HyperXAnswer({
         const label = crystal?.label ?? "This paragraph's truth";
         const focus = crystal?.focus ?? deriveFocus(para);
         const st = visions[idx];
+        /* THE STREAM'S OWN WINDOW — a paragraph not yet reached stands
+           unborn; the paragraph the front is crossing shows its opening
+           slice with the luminous edge and the gradient caret riding
+           it; everything behind the front stands whole. The window is
+           render-only — no scroll, no focus, no touch is ever moved. */
+        const start = paraStarts[idx];
+        if (revealing && streamAt <= start) return null;
+        const cut = revealing
+          ? Math.max(0, Math.min(para.length, streamAt - start))
+          : para.length;
+        const live = revealing && cut < para.length;
+        const slice = para.slice(0, cut);
+        const edgeAt = live ? Math.max(0, slice.length - REVEAL_EDGE) : slice.length;
         return (
-          <div key={idx} className="hx-para flex items-start gap-2.5">
-            <span aria-hidden="true" className="hx-node mono-label">
+          <div
+            key={idx}
+            className={cn(
+              "hx-para flex items-start gap-2.5",
+              revealing && "hx-para-in"
+            )}
+          >
+            <span
+              aria-hidden="true"
+              className={cn("hx-node mono-label", live && "hx-node-live")}
+            >
               {String(idx + 1).padStart(2, "0")}
             </span>
             <div className="min-w-0 flex-1">
             <div className="flex items-start gap-1">
               <p className="hx-para-text min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90">
-                {para}
+                {live ? (
+                  <>
+                    {slice.slice(0, edgeAt)}
+                    <span className="hx-stream-edge">
+                      {slice.slice(edgeAt)}
+                    </span>
+                    <span className="hx-stream-caret" aria-hidden="true" />
+                  </>
+                ) : (
+                  slice
+                )}
               </p>
               <span className="hx-diamond-arm pt-[7px]">
                 <button
@@ -532,7 +689,7 @@ export function HyperXAnswer({
       )}
 
       {/* ---------------- THE DOORS THAT FOLLOW THE ANSWER --------------- */}
-      {variant === "full" && !loading && onAsk && (
+      {variant === "full" && !loading && !revealing && onAsk && (
         <div
           className="mt-3 flex flex-col gap-1.5"
           data-testid={`${testId}-follow-ups`}

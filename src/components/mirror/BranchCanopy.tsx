@@ -371,6 +371,11 @@ interface RoomTurn {
      wish is spoken, no plate arrived, and the retry hand stands
      beside the notice until the vision is painted. */
   paintFailed?: boolean;
+  /* THE FRESH TRANSMISSION — true only on the turn whose answer just
+     landed in this live session: its HyperX body materializes in the
+     streaming reveal. A turn that was ever revealed keeps its words
+     standing whole (the reveal's own rememberer refuses a replay). */
+  justLanded?: boolean;
 }
 
 /* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
@@ -3866,6 +3871,9 @@ export function BranchCanopy({
                   ...turn,
                   a: landedReply,
                   loading: false,
+                  /* THE FRESH TRANSMISSION — this answer was born now:
+                     its body may materialize in the streaming reveal */
+                  justLanded: true,
                 }
               : turn
           )
@@ -4552,6 +4560,9 @@ export function BranchCanopy({
                   ...turn,
                   a: reply,
                   loading: false,
+                  /* THE FRESH TRANSMISSION — the room's own answer was
+                     born now: it may materialize in the stream */
+                  justLanded: true,
                 }
               : turn
           )
@@ -6537,6 +6548,7 @@ export function BranchCanopy({
                             onAsk={(q) => sendFromPanel(q, null)}
                             testId={`${testIdPrefix}-zoom-hyperx`}
                             loading={roomLoading}
+                            reveal={lastLandingTurn?.justLanded === true}
                           />
                         ) : (
                           <div className="relative">
@@ -6801,6 +6813,7 @@ export function BranchCanopy({
                                     variant={
                                       i === thread.length - 1 ? "full" : "compact"
                                     }
+                                    reveal={turn.justLanded === true}
                                   />
                                 </div>
                               ) : (

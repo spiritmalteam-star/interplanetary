@@ -578,7 +578,10 @@ function buildUserPrompt(body: {
   storyWordsPerPage?: number;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
-  const span = Math.min(8, Math.max(2, Math.round(body.span ?? 2)));
+  const span = Math.min(
+    8,
+    Math.max(phase === "open" ? 1 : 2, Math.round(body.span ?? 2))
+  );
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
@@ -731,7 +734,7 @@ function buildUserPrompt(body: {
       ...(phase === "open" && !body.ground?.tiny
         ? [
             ``,
-            `THE FULL PAGE LAW holds from the first leaf: both opening pages are real book pages (three to five full paragraphs each for grown readers; two to four for the young). If the book's planned length is 60 pages or more, PART ONE opens on page one — that page returns its "part" line above its chapter. Page one opens the first numbered chapter.`,
+            `THE FULL PAGE LAW holds from the first leaf: ${span === 1 ? "the opening page is a real book page" : "both opening pages are real book pages"} (three to five full paragraphs each for grown readers; two to four for the young). If the book's planned length is 60 pages or more, PART ONE opens on page one — that page returns its "part" line above its chapter. Page one opens the first numbered chapter.`,
           ]
         : []),
       ...(seedLine ? [``, seedLine] : []),
@@ -859,7 +862,13 @@ function buildUserPrompt(body: {
     ``,
     `OUTPUT FORMAT — return STRICT JSON only, no markdown fences, no text outside the JSON:`,
     `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","ledger":{"brief":{"premise":"<one line>","question":"<one line>","dilemma":"<one line>","chain":"<one line>","ending":"<one line — the desired effect on the reader>"},"canon":["<world rule>"],"characters":["<Name — desire, wound, state, who knows what>"],"objects":["<object — state (page changed)>"],"timeline":["<event — when, where>"],"promises":["<foreshadowing / open promise>"],"motifs":["<recurring image — its developing meaning>"],"chapters":[{"title":"<chapter>","pages":"<n–m>","summary":"<one line>"}]},"pages":[{"n":<page number>,"part":"<part line — ONLY on the page where a new part opens>","chapter":"<chapter line — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>","<paragraph 3>"]}]${phase === "close" ? `,"audit":{"prose":{"score":<0–10>,"evidence":"<one line from the finished writing>"},"originality":{...},"worldbuilding":{...},"character":{...},"structure":{...},"emotion":{...},"philosophy":{...},"pacing":{...},"continuity":{...},"endings":{...}}` : ""}}`,
-    `Rules: exactly ${span === 2 ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}` : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`}. ${body.reveal ? "Each page carries 1–2 paragraphs (3 only at a true turning point)" : "Each page is a FULL book page — three to five full paragraphs for grown readers (two to four shorter ones for the young); a lone-paragraph page never leaves the loom"}. "chapter" carries the chapter's number and its evocative title as a printed book would (e.g. "Chapter One — The Cartographer of Ashes"; the style may follow the book's own tongue) — given ONLY when a genuinely new chapter opens on that page (a new chapter every 8–14 pages AT MOST; most strides carry NO chapter at all; NEVER repeat a chapter title or number already given — a page must not wear a chapter it did not open). "part" is given ONLY on the page where a NEW part opens (two to four parts for volumes of 60+ pages) and names it like a printed book (e.g. "Part Two — The Drowning Choir"); a part already announced is never announced again. Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
+    `Rules: exactly ${
+      span === 1
+        ? `ONE page object, in order, numbered ${body.pageNumber}`
+        : span === 2
+          ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}`
+          : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`
+    }. ${body.reveal ? "Each page carries 1–2 paragraphs (3 only at a true turning point)" : "Each page is a FULL book page — three to five full paragraphs for grown readers (two to four shorter ones for the young); a lone-paragraph page never leaves the loom"}. "chapter" carries the chapter's number and its evocative title as a printed book would (e.g. "Chapter One — The Cartographer of Ashes"; the style may follow the book's own tongue) — given ONLY when a genuinely new chapter opens on that page (a new chapter every 8–14 pages AT MOST; most strides carry NO chapter at all; NEVER repeat a chapter title or number already given — a page must not wear a chapter it did not open). "part" is given ONLY on the page where a NEW part opens (two to four parts for volumes of 60+ pages) and names it like a printed book (e.g. "Part Two — The Drowning Choir"); a part already announced is never announced again. Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
     phase === "open"
       ? `The "ledger" is REQUIRED in this opening: fill it with the private brief and every canon line, character, object, promise and motif the first pages establish — the room keeps it and hands it back at every continuation.`
       : `The "ledger" is REQUIRED: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, paid promises are marked paid, and the new chapter (if any) is appended to "chapters" (a chapter that opens a part carries the part's name in its summary, so the parts are never announced twice). THE LEDGER STAYS LEAN — a fast loom is a kind loom: every ledger line is ONE short clause (at most ~12 words); canon at most 10 lines, characters at most 12, objects at most 10, timeline at most 16 (when it overflows, the earliest events fold into one summarizing line), promises at most 10, motifs at most 8, and "chapters" carries only the LAST 12 chapters, each summary one short line.`,
@@ -1382,13 +1391,15 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
     /* THE LEDGER (V10) — the room hands the book's own memory back */
     const incomingLedger = parseLedger(body?.ledger);
-    /* THE SPAN — the opening breath and the closing seal write the
-       classic pair; every continuation strides FOUR pages wide (the
-       speed law: the same crossing pays its road cost once and lays
-       twice the reading, so the reader rarely catches the loom up). */
+    /* THE SPAN — the opening breath may be the ONE-PAGE THRESHOLD (the
+       visitor reads while the loom keeps weaving), and the closing seal
+       writes the classic pair; every continuation strides FOUR pages
+       wide (the speed law: the same crossing pays its road cost once
+       and lays twice the reading, so the reader rarely catches the
+       loom up). */
     const spanRaw = Number(body?.span);
     const span = (phase === "open" || phase === "next") && Number.isFinite(spanRaw)
-      ? Math.min(8, Math.max(2, Math.round(spanRaw)))
+      ? Math.min(8, Math.max(phase === "open" ? 1 : 2, Math.round(spanRaw)))
       : phase === "next"
         ? 4
         : 2;

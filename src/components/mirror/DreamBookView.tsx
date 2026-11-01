@@ -372,6 +372,49 @@ export function DreamBookView() {
       t("Every borrowed idea is being sent home — this one is only yours…"),
       t("The quill dips. The loom breathes. The pages turn…"),
       t("Binding the book with a breath…"),
+      t("The hero's shadow is being measured for its fit…"),
+      t("A door is being hung where no wall stood…"),
+      t("This world's moon is being given its own face…"),
+      t("A whole life is being folded into one sentence…"),
+      t("The first storm is learning which way to blow…"),
+      t("Voices are being tuned so each stays its own…"),
+      t("A secret is being buried where you will dig it up later…"),
+      t("The chapter edges are being gilded by hand…"),
+      t("Small wonders are being hidden between the lines…"),
+      t("The road is being laid through the plot's deep forest…"),
+      t("Sleep is being taught to rhyme with the story…"),
+      t("Every chapter is promised its own little thunder…"),
+      t("The last page is sending letters to the first…"),
+      t("A lighthouse is being lit for the middle of the book…"),
+      t("The cast is rehearsing their entrances in the dark…"),
+      t("Time inside the book is being wound like a watch…"),
+      t("The world's laws are written where only the story reads them…"),
+      t("Yesterday inside the book must fit tomorrow — threads are checked…"),
+      t("The margins are being swept clean of every borrowed word…"),
+      t("Dust is being shaken off a never-before-told idea…"),
+      t("The inkwell refills itself whenever no one is watching…"),
+    ],
+    [t]
+  );
+
+  /* THE ARCHITECT'S OWN VOICE — the studio's first room speaks too:
+     while the story's architecture is designed (before one page is
+     written) its own drift of comforts rotates here, so the waiting
+     hand always sees a living sentence, never one frozen line. */
+  const ARCHITECTURE_PHASES = useMemo(
+    () => [
+      t("Designing the story's architecture — the cast, the world, the chapter-by-chapter plan…"),
+      t("The architect is weighing what the story is truly about…"),
+      t("Foundations are being laid beneath the world…"),
+      t("Faces and voices are being chosen for the cast…"),
+      t("The road from first page to last is being mapped…"),
+      t("Each chapter is being given its own honest work…"),
+      t("The central conflict is being sharpened on both edges…"),
+      t("Places are being named that will feel lived-in…"),
+      t("The ending is being designed before the beginning is written…"),
+      t("Secrets are being planted where the chapters will find them…"),
+      t("The book's spine is being set straight and true…"),
+      t("The blueprint is nearly drawn — the pens are next…"),
     ],
     [t]
   );
@@ -689,15 +732,21 @@ export function DreamBookView() {
     setRewrites(rewritesRef.current);
   }, []);
 
-  /* drift the weaving phrases while the loom works */
+  /* the phrases the weaving room speaks right now — the architect's
+     while the blueprint is drawn, the loom's once the pages flow */
+  const weavingPhrases =
+    studioStage === "architecture" ? ARCHITECTURE_PHASES : WEAVING_PHASES;
+
+  /* drift the weaving phrases while the loom works — whichever voice
+     is the room's own right now (the architect's or the loom's) */
   useEffect(() => {
     if (stage !== "weaving" || weaveError) return;
     const iv = setInterval(
-      () => setPhaseIdx((i) => (i + 1) % WEAVING_PHASES.length),
+      () => setPhaseIdx((i) => (i + 1) % weavingPhrases.length),
       2600
     );
     return () => clearInterval(iv);
-  }, [stage, weaveError, WEAVING_PHASES]);
+  }, [stage, weaveError, weavingPhrases]);
 
   /* THE ZOOMED PAGE'S OWN ESCAPE — the keyboard lays the wide page
      back into the quiet bar as surely as the minimize does */
@@ -1302,9 +1351,10 @@ export function DreamBookView() {
           ...(phase !== "open" && ledgerRef.current
             ? { ledger: ledgerRef.current }
             : {}),
-          /* THE SPAN — the seven-page breath, or the whole-book
-             reveal's own wider stride */
-          ...(span > 2 ? { span } : {}),
+          /* THE SPAN — the one-page threshold, the seven-page breath, or
+             the whole-book reveal's own wider stride (span 2 is every
+             phase's own resting pair — it never rides) */
+          ...(span !== 2 ? { span } : {}),
           /* THE FLAVOR — the whole-book reveal asks for swift leaves;
              the background batch reads at full depth */
           ...(flavor === "reveal" ? { reveal: true } : {}),
@@ -1751,10 +1801,12 @@ export function DreamBookView() {
           ? Math.floor(bibleData.totalPages)
           : 0;
     }
-    /* THE SIX-PAGE FIRST BREATH — the loom opens the volume with
-       six pages at once, so the visitor can truly begin reading
-       while the rest of the book channels in the background */
-    const ok = await weave("open", 1, 6, 240000);
+    /* THE ONE-PAGE THRESHOLD — the loom opens the volume with its
+       FIRST page alone, so the visitor steps into the book as soon
+       as a single leaf exists and reads while the loom keeps
+       channeling the rest in the background (the reader's own six-
+       page breath rises the moment the reading begins). */
+    const ok = await weave("open", 1, 1, 240000);
     if (cancelled()) return;
     setPendingOpen(false);
     if (ok) {
@@ -3188,9 +3240,7 @@ export function DreamBookView() {
                   transition={{ duration: 0.55, ease: "easeOut" }}
                   className="ink-hand ink-soft max-w-[420px] text-center text-[16px] italic"
                 >
-                  {studioStage === "architecture"
-                    ? t("Designing the story's architecture — the cast, the world, the chapter-by-chapter plan…")
-                    : WEAVING_PHASES[phaseIdx]}
+                  {weavingPhrases[phaseIdx % weavingPhrases.length]}
                 </motion.p>
               </AnimatePresence>
             </div>
@@ -4303,6 +4353,14 @@ export function DreamBookView() {
                       fontSize={ZOOM_STEPS[zoom]}
                       bookTitle={meta?.title}
                       stalled={weaveFailed && !weavingNext}
+                      /* THE LOOM'S OWN COUNT — the frontier page speaks the
+                         honest number too: what stands woven, what the
+                         whole plan holds, while the loom works below */
+                      progress={
+                        meta && !ended
+                          ? { woven: pages.length, total: meta.totalPages }
+                          : undefined
+                      }
                       onRetry={() =>
                         void weave("next", pagesRef.current.length + 1)
                       }
@@ -4312,7 +4370,9 @@ export function DreamBookView() {
               </motion.div>
             </AnimatePresence>
 
-            {/* the loom at work while the visitor reads */}
+            {/* the loom at work while the visitor reads — the honest
+                count of what stands woven against the book's own plan,
+                so the background channeling is never a silent guess */}
             <AnimatePresence>
               {weavingNext && !showChoice && !showEnd && (
                 <motion.p
@@ -4320,12 +4380,18 @@ export function DreamBookView() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="mono-label mt-4 flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
+                  data-testid="dream-loom-indicator"
                 >
                   <span
                     className="size-1 animate-pulse rounded-full bg-foreground/50"
                     aria-hidden="true"
                   />
-                  {t("The loom weaves the next pages…")}
+                  {meta
+                    ? t(
+                        "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…",
+                        { woven: pages.length, total: meta.totalPages }
+                      )
+                    : t("The loom weaves the next pages…")}
                 </motion.p>
               )}
             </AnimatePresence>
@@ -5027,12 +5093,16 @@ function BookPage({
   stalled,
   onRetry,
   bookTitle,
+  progress,
 }: {
   page?: WeavePage;
   fontSize: number;
   stalled?: boolean;
   onRetry?: () => void;
   bookTitle?: string;
+  /* the loom's own honest count while the frontier page waits:
+     what stands woven against the book's whole plan */
+  progress?: { woven: number; total: number };
 }) {
   const t = useT();
   /* THE PAGE'S OWN COPY — one quiet button at the end of every page:
@@ -5131,7 +5201,8 @@ function BookPage({
           </div>
         </>
       ) : (
-        /* the page still in the loom */
+        /* the page still in the loom — the honest count spoken beside
+           the shimmer, so the background channeling is never a guess */
         <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
           <span
             className="font-[family-name(var(--font-literata))] text-lg text-[var(--dream-ink-faint)]"
@@ -5140,7 +5211,12 @@ function BookPage({
             ❧
           </span>
           <p className="font-[family-name(var(--font-literata))] text-[13.5px] italic text-[var(--dream-ink-faint)]">
-            {t("The loom weaves the next pages…")}
+            {progress
+              ? t(
+                  "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…",
+                  { woven: progress.woven, total: progress.total }
+                )
+              : t("The loom weaves the next pages…")}
           </p>
           <div className="h-px w-28 rounded-full bg-[var(--dream-ink-faint)]/25 overflow-hidden">
             <div className="ink-shimmer h-full w-full" />

@@ -1421,6 +1421,9 @@ html:not(.dark) .scope-lightcodes {
   .hx-cell,
   .hx-caret,
   .hx-step-dot,
+  .hx-stream-caret,
+  .hx-node-live,
+  .hx-para-in,
   .fg-tap,
   .fg-spark,
   .fg-ember,
@@ -5085,4 +5088,48 @@ html:not(.dark) .lp-sigil-img {
 @keyframes hx-step-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* THE TRANSMISSION'S OWN REVEAL — a fresh HyperX answer materializes
+   in a fast, tech-looking stream: each paragraph fades up as the
+   stream's front reaches it, the front's last characters carry a
+   cyan→fuchsia luminous wash, and a thin gradient caret rides the
+   edge. Render-only — the room's scroll is never moved, the reader
+   keeps their place at the transmission's beginning while the truth
+   grows beneath their eye. */
+.hx-para-in {
+  animation: hx-para-in 0.42s ease-out both;
+}
+@keyframes hx-para-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hx-stream-edge {
+  background: linear-gradient(
+    90deg,
+    var(--foreground) 0%,
+    color-mix(in srgb, #22d3ee 70%, var(--foreground)) 55%,
+    color-mix(in srgb, #e879f9 85%, #ffffff) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hx-stream-caret {
+  display: inline-block;
+  width: 8px;
+  height: 15px;
+  margin-left: 3px;
+  transform: translateY(2px);
+  border-radius: 1.5px;
+  background: linear-gradient(180deg, #e879f9, #22d3ee);
+  box-shadow: 0 0 10px -1px color-mix(in srgb, #22d3ee 70%, transparent);
+  animation: hx-caret 0.9s steps(2, start) infinite;
+}
+.hx-node-live {
+  animation: hx-step-dot 1.4s ease-in-out infinite;
+  border-color: color-mix(in srgb, #22d3ee 45%, transparent) !important;
+}
+.hx-fade-in {
+  animation: hx-para-in 0.6s ease-out both;
 }
