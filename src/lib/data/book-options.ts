@@ -43,6 +43,7 @@ export const VOLUMES: BookOption[] = [
   { id: "bedtime", label: "Bedtime treasure" },
   { id: "classic", label: "Classic tale" },
   { id: "saga", label: "Grand saga" },
+  { id: "novel", label: "Full novel" },
 ];
 
 /** The verse forms — books written in stanzas, not prose paragraphs. */

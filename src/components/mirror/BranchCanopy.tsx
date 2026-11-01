@@ -24,28 +24,20 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
-  CircleQuestionMark,
   Compass,
   Copy,
-  Share2,
   Dna,
-  Eraser,
-  Gem,
   Hammer,
   Hand,
-  History,
   Hourglass,
+  Info,
   Layers,
   Link2,
   ListTree,
   LoaderCircle,
   Maximize2,
   Menu,
-  Minimize2,
-  MessageSquarePlus,
-  MessageSquareText,
   Moon,
-  Music,
   NotebookPen,
   Palette,
   Phone,
@@ -62,16 +54,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { canopyHour, familyAccent, growCanopy, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
-import { easyWhispersFor, shuffledEasy, swapGroveToEasy } from "@/lib/data/suggestions-easy";
-import { filterStyles, isStyleSlashQuery } from "@/lib/image-styles";
-import { blendVisualRequest, isVisualIntent } from "@/lib/visual-intent";
-import { ZoomableLightbox } from "./ZoomableLightbox";
-import {
-  ENERGY_NOTICE,
-  EnergyError,
-  speakReplyGift,
-} from "@/lib/speak-client";
+import { canopyHour, familyAccent, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
   allFamilyKeys,
@@ -84,8 +67,7 @@ import {
   type TreeMix,
 } from "@/lib/tree-mix";
 import { detectArtifactIntent } from "@/lib/artifact-intent";
-import { useFloatingBarAutoHide } from "./useFloatingBar";
-
+import { isVisualIntent } from "@/lib/visual-intent";
 import {
   buildIdf,
   buildResonanceField,
@@ -116,26 +98,15 @@ import {
   type LaidTree,
 } from "@/lib/genealogy";
 import { recordExpansion, readExpansionScore } from "@/lib/expansion";
-import { perfEco } from "@/lib/perf-mode";
-import { useWorkspaceMemory } from "@/lib/workspace-memory";
-import { TAB_META } from "./living/ToolWorkspace";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
-import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
+import { ChannelingOrb, ShimmerLabel } from "./ChannelingOrb";
 import { ExpansionRing } from "./ExpansionMirror";
 import { LiveCall } from "./LiveCall";
 import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
-import { CreationReveal } from "./CreationReveal";
-import { ExchangeVisual } from "./TransmissionView";
-import { SideArtifact } from "./ChatArtifacts";
-import type { ChatMessage, LandingScopeKey, ToolTabKey } from "@/lib/mirror-store";
 import type { LiveScopeKey } from "@/lib/live-scopes";
-import { LANDING_SCOPE_CATEGORY, SCOPE_META } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
-import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
+import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
-import { flowAnswerText } from "@/lib/text-flow";
-import { HyperXAnswer, splitCrystals } from "./HyperXPanel";
-import { ListenButton } from "./ListenButton";
 import { tuneSeedBatch } from "@/lib/question-voice";
 import {
   categoryForMove,
@@ -355,736 +326,10 @@ interface RoomTurn {
   a: string;
   loading: boolean;
   failed?: boolean;
-  /* THE HONEST WORD — a failed turn keeps the reason it can show
-     (the energy's own notice among them), styled gently when the
-     mirror's light — not the room — was the thing that rested. */
-  errMessage?: string;
-  energy?: boolean;
-  /* THE VISION GIFT — the mirror's own painting beneath the words:
-     mixed while `painting` stands, kept by its address once done. */
-  painting?: boolean;
-  imageUrl?: string;
-  imageTitle?: string;
-  /** the model's own vision direction, kept for the paint hand */
-  visionPrompt?: string;
-  /* THE HONEST BRUSH — a crystallization whose brushes rested: the
-     wish is spoken, no plate arrived, and the retry hand stands
-     beside the notice until the vision is painted. */
-  paintFailed?: boolean;
-}
-
-/* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
-   The landing chat's past conversations rest ONLY on this device and
-   ONLY for this visit: sessionStorage holds a handful of titled
-   threads, nothing ever travels to a server, and the whole keep ends
-   the moment the visit does. */
-interface LandingHistoryEntry {
-  id: string;
-  at: number;
-  title: string;
-  turns: { q: string; a: string }[];
-  /* THE FIELD'S OWN MARK — the scope the conversation was spoken in
-     (the Mirror, Interplanetary, Quantum, HealX, ArtX): every field
-     keeps its own history, its own room and its own memory. */
-  scope?: string;
-}
-const LANDING_HISTORY_KEY = "mirror-landing-history";
-const LANDING_HISTORY_MAX = 10;
-const LANDING_HISTORY_TURNS = 12;
-
-function freshHistorySessionId(): string {
-  return `s${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
-}
-
-function readLandingHistory(): LandingHistoryEntry[] {
-  try {
-    const raw = window.sessionStorage.getItem(LANDING_HISTORY_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as LandingHistoryEntry[];
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((e) => e && typeof e.id === "string" && Array.isArray(e.turns))
-      .slice(0, LANDING_HISTORY_MAX);
-  } catch {
-    return [];
-  }
-}
-
-function writeLandingHistory(entries: LandingHistoryEntry[]): void {
-  try {
-    window.sessionStorage.setItem(
-      LANDING_HISTORY_KEY,
-      JSON.stringify(entries.slice(0, LANDING_HISTORY_MAX))
-    );
-  } catch {
-    /* the device's keeping stays closed — the visit carries its own */
-  }
-}
-
-function upsertLandingHistory(entry: LandingHistoryEntry): LandingHistoryEntry[] {
-  const rest = readLandingHistory().filter((e) => e.id !== entry.id);
-  const next = [entry, ...rest].slice(0, LANDING_HISTORY_MAX);
-  writeLandingHistory(next);
-  return next;
-}
-
-function historyAgo(at: number): string {
-  const mins = Math.max(0, Math.round((Date.now() - at) / 60000));
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h`;
-  return `${Math.round(hours / 24)}d`;
-}
-
-/* EVERY FIELD KEEPS ITS OWN WORDS — the landing conversation is
-   per-scope: each field's thread and its carried memory rest under
-   its own key (sessionStorage, this visit only), so leaving a field
-   and coming back finds the chat exactly as it was left — and a
-   fresh visit wakes the chosen field's own words again. */
-const LANDING_THREADS_KEY = "mirror:landing-threads";
-const LANDING_TURNS_CAP = 12;
-
-type KeptLandingTurn = {
-  q: string;
-  a: string;
-  imageUrl?: string;
-  imageTitle?: string;
-};
-
-function readLandingThreadScope(scope: string): KeptLandingTurn[] {
-  try {
-    const raw = window.sessionStorage.getItem(LANDING_THREADS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const arr = parsed?.[scope];
-    if (!Array.isArray(arr)) return [];
-    return arr
-      .filter(
-        (t): t is { q: string; a: string } =>
-          Boolean(t) &&
-          typeof (t as { q?: unknown }).q === "string" &&
-          typeof (t as { a?: unknown }).a === "string"
-      )
-      .slice(-LANDING_TURNS_CAP);
-  } catch {
-    /* the keeping stays closed — the visit carries its own */
-    return [];
-  }
-}
-
-function writeLandingThreadScope(scope: string, turns: KeptLandingTurn[]): void {
-  try {
-    const raw = window.sessionStorage.getItem(LANDING_THREADS_KEY);
-    let all: Record<string, unknown> = {};
-    if (raw) {
-      const parsed = JSON.parse(raw) as unknown;
-      if (parsed && typeof parsed === "object") all = parsed as Record<string, unknown>;
-    }
-    all[scope] = turns.slice(-LANDING_TURNS_CAP);
-    window.sessionStorage.setItem(LANDING_THREADS_KEY, JSON.stringify(all));
-  } catch {
-    /* the keeping stays closed — the visit carries its own */
-  }
-}
-
-/* THE FIELDS' OWN VOICES, SHELVES AND DOTS — one truth from the
-   registry (SCOPE_META / LANDING_SCOPE_CATEGORY in
-   @/lib/mirror/workspaces): the canopy's voices, library shelves and
-   history dots read the same shelf the crown and the gate read, so
-   the house's five worlds can never fall out of tune again. */
-const LANDING_LIBRARY_SECTOR: Record<string, string> = Object.fromEntries(
-  LANDING_SCOPES.map((key) => [key, SCOPE_META[key].librarySector])
-);
-
-const LANDING_SCOPE_DOTS: Record<string, string> = Object.fromEntries(
-  LANDING_SCOPES.map((key) => [key, SCOPE_META[key].dot])
-);
-
-/* THE LIBRARY'S QUIET AUTOSHELF — the landing conversation walks into
-   the profile's Cosmic Library per scope (one living volume per
-   field, deduped by its own pointer, fire-and-forget: the words never
-   wait on the shelf). One warn per visit — a shelf that refused never
-   spams the console. */
-const LANDING_LIBRARY_PTR_KEY = "mirror:landing-library-ptr";
-let landingLibraryMuted = false;
-
-function saveLandingToLibrary(
-  scope: string,
-  turns: { q: string; a: string }[]
-): void {
-  if (landingLibraryMuted || turns.length < 1) return;
-  try {
-    const exchanges = turns
-      .filter((t) => t.a && t.a.trim())
-      .map((t) => ({ q: t.q, a: t.a }));
-    if (exchanges.length === 0) return;
-    const fingerprint = String(hashWalk(JSON.stringify(exchanges)));
-    let pointers: Record<string, { turns: number; hash: string }> = {};
-    try {
-      pointers = JSON.parse(
-        window.localStorage.getItem(LANDING_LIBRARY_PTR_KEY) ?? "{}"
-      ) as typeof pointers;
-    } catch {
-      pointers = {};
-    }
-    const seen = pointers[scope];
-    if (seen && seen.turns === exchanges.length && seen.hash === fingerprint)
-      return;
-    const sector = LANDING_LIBRARY_SECTOR[scope] ?? "observatory";
-    const title = (exchanges[0]?.q || "A conversation").slice(0, 60);
-    const excerpt = (exchanges[exchanges.length - 1]?.a ?? "").slice(0, 280);
-    void fetch("/api/library", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sector,
-        title,
-        excerpt,
-        content: {
-          kind: "conversation",
-          surface: `landing:${scope}`,
-          scope,
-          turns: exchanges.length,
-          exchanges,
-        },
-      }),
-    })
-      .then((res) => {
-        if (res.ok) {
-          pointers[scope] = { turns: exchanges.length, hash: fingerprint };
-          try {
-            window.localStorage.setItem(
-              LANDING_LIBRARY_PTR_KEY,
-              JSON.stringify(pointers)
-            );
-          } catch {
-            /* the pointer rests unwritten — the next pass saves again */
-          }
-          return;
-        }
-        landingLibraryMuted = true;
-      })
-      .catch(() => {
-        landingLibraryMuted = true;
-      });
-  } catch {
-    /* never let the autoshef disturb the words */
-  }
-}
-
-/* THE MAKER'S TRAIL — the stones the store's own openToolTab lays on
-   the visit's path (sessionStorage "mirror:maker-trail", newest first,
-   capped at 30): the history panel reads them so any room this visit
-   opened can be stepped back into with one touch. */
-const MAKER_TRAIL_KEY = "mirror:maker-trail";
-
-interface MakerTrailStone {
-  key: ToolTabKey;
-  at: number;
-}
-
-function readMakerTrail(): MakerTrailStone[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.sessionStorage.getItem(MAKER_TRAIL_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (e): e is MakerTrailStone =>
-        Boolean(e) &&
-        typeof (e as { key?: unknown }).key === "string" &&
-        typeof (e as { at?: unknown }).at === "number" &&
-        (e as { key: string }).key in TAB_META
-    );
-  } catch {
-    return [];
-  }
-}
-
-/* THE KEPT CONVERSATIONS' OWN NAMES — the surface labels the ledger
-   already speaks, shared by the ledger and the history panel's kept
-   conversations room. */
-const KEPT_SURFACE_LABELS: Record<ChatSurface, string> = {
-  os: "Manifest OS",
-  px: "Particle X",
-  em: "Evolve Med",
-  ax: "Akashic",
-  forge: "Invent",
-  interplanetary: "Interplanetary",
-  healing: "Healing codes",
-};
-
-/* THE HEART'S OWN DOORS — the warm floor the visitor named and named
-   again: humble, friendly, introspective openings; the heart's
-   coherence as the star civilizations teach it; love that supports
-   without fixing; the quiet expansion of consciousness. They stand in
-   their OWN pool so the draw can guarantee them (THE HEART'S QUOTA,
-   below) — the last weave buried them inside the landing pool and the
-   easy well's 1848 plain doors drowned them to near invisibility. */
-const MIRROR_HEART_POOL: string[] = [
-  /* the humble doors — small, honest, introspective openings that ask
-     nothing and admit everything */
-  "I feel lost today — can you sit with me a moment?",
-  "What is my heart trying to tell me that my mind keeps overruling?",
-  "Where am I being harder on myself than I would ever be on a friend?",
-  "What am I still learning to accept about myself?",
-  "Help me be gentle with the part of me I keep apologizing for.",
-  "What would it look like to begin again, quietly, today?",
-  "What am I carrying that was never mine to hold?",
-  "Teach me how to rest without feeling guilty.",
-  "What small courage is asking for my permission right now?",
-  "How do I forgive myself for what I cannot undo?",
-  /* the heart's coherence — the interplanetary law of the aligned
-     heart: the heart's rhythm leads and the mind follows */
-  "How do I bring my heart and mind into one coherence?",
-  "What do star civilizations teach about the heart's intelligence?",
-  "Show me how gratitude tunes the heart's field.",
-  "How does the heart's rhythm reach beyond my body?",
-  "What happens in the space between two hearts that trust each other?",
-  "How do I listen to someone the way the universe listens to me?",
-  /* the support and the love — warmth without kitsch: love as a
-     practice, kindness as a discipline, presence as a gift */
-  "How can I love someone without trying to fix them?",
-  "What does unconditional support look like on an ordinary Tuesday?",
-  "How do I hold space for a friend who is breaking?",
-  "Teach me to receive love as well as I give it.",
-  "What is the kindest true thing I could say to myself tonight?",
-  "How does love survive the distance between two worlds?",
-  /* the expansion — consciousness growing past its old walls */
-  "What expands in me when I stop trying to control the outcome?",
-  "Show me the version of me that is not afraid yet.",
-  "What would I see if I looked at my life from orbit?",
-  "Where does my awareness end — and what lies just past its edge?",
-  "How does presence change what it touches?",
-  "What is waiting for my attention that I keep walking past?",
-];
-
-/* THE LANDING'S OWN SUGGESTIONS — a deep pool of first doors, matched
-   to the landing's own entity (the mirror of the Absolute): the self
-   beneath the masks, the curtain of reality, the truth avoided, the
-   pyramids and the field, the Akashic library, the Absolute itself.
-   Five stand at a time — drawn fresh at every arrival of the page —
-   and the small reloading hand pours five new ones with one touch. */
-const LANDING_SUGGESTION_POOL = [
-  "Who am I beneath all my masks?",
-  "What lies behind the curtain of reality?",
-  "Show me the truth I avoid.",
-  "What is the Absolute?",
-  "How were the pyramids truly built?",
-  "What is the Akashic library?",
-  "What happens when I die?",
-  "Is time a river or a field?",
-  "What is my soul's origin?",
-  "What do the stars hide from the eye?",
-  "What is vibration, really?",
-  "Why do we forget who we are?",
-  "What is the true history of humanity?",
-  "What are the dimensions of this world?",
-  "What is consciousness, plainly?",
-  "What does the moon carry?",
-  "What waits between two lives?",
-  "What do my guides see in me?",
-  "Where does Inner Earth begin?",
-  "What is matter, at its floor?",
-  "Show me the frequency of my name.",
-  "What did the ancients know that we forgot?",
-  "What is the veil made of?",
-  "What is the truth about Atlantis?",
-  "What am I not seeing about my own life?",
-  "What does the mirror see in me right now?",
-  "How do I raise my frequency today?",
-  "What is the crystal grid of the earth?",
-  /* the heart's own doors ride the landing pool beside the cosmic
-     ones — AND carry their own guaranteed quota at the Mirror's floor
-     (see THE HEART'S QUOTA in the draw below) */
-  ...MIRROR_HEART_POOL,
-];
-
-/* THE SESSION'S OWN REMEMBERING — every drawn door is kept per scope
-   ("general" for the whole house), so the threshold never offers the
-   same door twice until its field has been walked dry. Capped deep,
-   quiet when the keeping is closed. */
-const LANDING_SEEN_CAP = 400;
-
-function readLandingSeen(): Record<string, string[]> {
-  try {
-    const raw = window.sessionStorage.getItem("mirror:landing-seen");
-    if (!raw) return {};
-    const v = JSON.parse(raw) as unknown;
-    if (!v || typeof v !== "object") return {};
-    const out: Record<string, string[]> = {};
-    for (const [k, arr] of Object.entries(v as Record<string, unknown>))
-      if (Array.isArray(arr))
-        out[k] = arr.filter((x): x is string => typeof x === "string");
-    return out;
-  } catch {
-    /* the keeping stays closed — the draw carries alone */
-    return {};
-  }
-}
-
-function writeLandingSeen(map: Record<string, string[]>) {
-  try {
-    window.sessionStorage.setItem("mirror:landing-seen", JSON.stringify(map));
-  } catch {
-    /* the keeping stays closed — the draw carries alone */
-  }
-}
-
-/* THE FIVE DOORS — the bare floor's own suggestions: five whispers
-   drawn at every mount (so every reload of the page brings five fresh
-   ones), and the small gold hand beneath pours five new doors with
-   one touch. THE NEVER-TWICE LAW — no drawn door ever stands twice:
-   every draw excludes the session's remembering and the doors just
-   shown, and adds its own five to the keeping; when a field's unseen
-   doors run short, its remembering clears and the doors return.
-   THE SCOPE'S OWN FLOOR — a chosen field's doors come from that
-   family's own bank (the walk's own grower, this hour's seed);
-   General weaves the landing's first doors with the whole house's
-   percentage mix. The outer hand only watches the chosen field: a
-   new field remounts the doors (keyed below), and a remount always
-   draws its own fresh five — no effect, no cascading render. */
-/* HYPERX'S OWN GROVE — the discovery field's floor doors: bold, precise
-   invitations into the unseen (advanced discovery, the illumination
-   path, the underlying truths). The plain well rides beside them. */
-const HYPERX_SUGGESTION_POOL: string[] = [
-  "What is the true nature of dark matter?",
-  "Why does time move forward only?",
-  "What is consciousness made of?",
-  "What actually happens at the edge of a black hole?",
-  "What did the universe look like before the first light?",
-  "What is the underlying truth beneath gravity?",
-  "What would a civilisation a million years old build first?",
-  "Where does energy go when it is spent?",
-  "What is the smallest thing reality is woven from?",
-  "What does the universe remember that we have forgotten?",
-  "Which law of physics is closest to breaking?",
-  "What would humanity discover first on another world?",
-  "What is the illumination path for a mind that cannot sleep?",
-  "What stands beneath the quantum veil?",
-  "How would a civilisation speak across a galaxy?",
-  "What is waiting at the edge of the unseen?",
-];
-
-function BareFloorSuggestions({
-  onPick,
-  disabled,
-}: {
-  onPick: (q: string) => void;
-  disabled: boolean;
-}) {
-  const landingScope = useMirror((s) => s.landingScope);
-  return (
-    <BareFloorDoors
-      key={landingScope || "general"}
-      scope={landingScope}
-      onPick={onPick}
-      disabled={disabled}
-    />
-  );
-}
-
-function BareFloorDoors({
-  scope,
-  onPick,
-  disabled,
-}: {
-  scope: string;
-  onPick: (q: string) => void;
-  disabled: boolean;
-}) {
-  const t = useT();
-  const treeMix = useMirror((s) => s.treeMix);
-  const me = useMirror((s) => s.me);
-  const scopeKey = scope || "general";
-  /* THE PLAIN TONGUE — a visitor who has not signed in reads doors
-     that ask simple, literal questions; a signed keeper walks the
-     full grove with the easy well riding beside it. THE QUIET
-     CHECK'S LAW — while the session's first glance still breathes,
-     the full grove stands (a keeper must never read a stranger's
-     plain doors for a breath; a guest simply sees them settle in). */
-  const meReady = useMirror((s) => s.meStatus === "ready");
-  const anon = meReady ? !me : false;
-
-  /* the pool — pure and synchronous: THE MIRROR's own first doors,
-     one field's grove, or the landing's first doors woven with the
-     whole house's mix. The same hour grows the same grove, so the
-     draw never flickers. Every field speaks its own language: the
-     Mirror the house's own reflection doors, the families their own
-     groves — and the easy well (a thousand plain doors) rides the
-     pool beside them all, so the little reload hand keeps pouring. */
-  const pool = useMemo(() => {
-    if (scope === "hyperx") {
-      /* HYPERX'S OWN GROVE — the discovery field draws ONLY its own
-         doors (bold, precise invitations into the unseen); the reload
-         hand pours from the grove itself */
-      return [...HYPERX_SUGGESTION_POOL];
-    }
-    if (anon) {
-      /* THE EASY DOORS ONLY — plainly worded, easy to understand */
-      return shuffledEasy(scope === "mirror" || !scope ? null : scope, canopyHour());
-    }
-    if (scope === "mirror")
-      return [...LANDING_SUGGESTION_POOL, ...easyWhispersFor(null)];
-    if (scope) {
-      const family = TREE_FAMILIES.find((f) => f.key === scope);
-      if (family)
-        return [
-          ...growCanopy(family.category, null, canopyHour()).map(
-            (w) => w.text
-          ),
-          ...easyWhispersFor(scope),
-        ];
-      return [...LANDING_SUGGESTION_POOL, ...easyWhispersFor(null)];
-    }
-    const mixed = growMixedCanopy(
-      treeMix.on,
-      treeMix.weights,
-      null,
-      canopyHour()
-    ).map((w) => w.text);
-    return [...LANDING_SUGGESTION_POOL, ...mixed, ...easyWhispersFor(null)];
-  }, [scope, treeMix, anon]);
-
-  const draw = useCallback(
-    (current: string[]) => {
-      const seenMap = readLandingSeen();
-      let seen = seenMap[scopeKey] ?? [];
-      /* THE HEART'S QUOTA — the visitor's law, kept this time: at the
-         Mirror's own floor (and the main landing that opens as the
-         Mirror) EVERY draw carries two of the heart's doors — the
-         humble, warm, introspective openings stand in every handful,
-         for the keeper and the guest alike, never drowned by the easy
-         well again. The other fields keep their own groves untouched. */
-      const heartQuota = scope === "mirror" || !scope ? 2 : 0;
-      const take = (source: string[], n: number, taken: string[]) => {
-        let from = source.filter(
-          (s) =>
-            !seen.includes(s) && !current.includes(s) && !taken.includes(s)
-        );
-        if (from.length < n) {
-          /* the source walked dry — its remembering clears and the
-             doors return (what is already taken still stands aside) */
-          from = source.filter(
-            (s) => !current.includes(s) && !taken.includes(s)
-          );
-        }
-        for (let i = from.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [from[i], from[j]] = [from[j], from[i]];
-        }
-        /* one of each — a visible set never shows the same door twice */
-        const out: string[] = [];
-        for (const s of from) {
-          if (out.includes(s)) continue;
-          out.push(s);
-          if (out.length === n) break;
-        }
-        return out;
-      };
-      const hearts = heartQuota ? take(MIRROR_HEART_POOL, heartQuota, []) : [];
-      const picked = [...hearts, ...take(pool, 5 - hearts.length, hearts)];
-      seenMap[scopeKey] = [...seen, ...picked].slice(-LANDING_SEEN_CAP);
-      writeLandingSeen(seenMap);
-      return picked;
-    },
-    [pool, scope, scopeKey]
-  );
-
-  const [doors, setDoors] = useState<string[]>(() => draw([]));
-
-  return (
-    <div className="pointer-events-none flex w-[min(600px,94%)] flex-col items-center gap-2">
-      <div
-        className="nice-scroll flex flex-wrap content-start items-center justify-center gap-2 overflow-y-auto px-5"
-        style={{
-          /* the doors' own sky — capped against the chamber's height
-             (--app-h) so the five doors and the little hand beneath
-             them always stand clear of the composer and its honest
-             note, at any height the room is given */
-          maxHeight: "calc(var(--app-h, 506px) - 296px)",
-        }}
-      >
-        {doors.map((s) => (
-          <button
-            key={s}
-            type="button"
-            data-testid="landing-suggestion"
-            disabled={disabled}
-            onClick={() => onPick(t(s))}
-            className="focus-glow pointer-events-auto rounded-full border bg-[color-mix(in_srgb,var(--background)_72%,transparent)] px-3.5 py-1.5 text-[12.5px] leading-tight shadow-[0_2px_14px_-9px_color-mix(in_srgb,var(--landing-scope-accent,#7dd3fc)_50%,transparent)] transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-45"
-            style={{
-              /* THE FIELD'S OWN DOORS — each chip wears the chosen
-                 field's light (the scope the chat stands in): its
-                 border, its words, its hover, all tinted by the
-                 field's own color. */
-              borderColor:
-                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 30%, transparent)",
-              color:
-                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 45%, var(--foreground))",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor =
-                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 62%, transparent)";
-              e.currentTarget.style.color =
-                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 68%, var(--foreground))";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor =
-                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 30%, transparent)";
-              e.currentTarget.style.color =
-                "color-mix(in srgb, var(--landing-scope-accent,#7dd3fc) 45%, var(--foreground))";
-            }}
-          >
-            {t(s)}
-          </button>
-        ))}
-      </div>
-      {/* THE RELOADING HAND — one touch pours five new doors from the
-          pool (never the five just shown); the page's own arrival
-          draws its own five, so every visit begins with fresh doors. */}
-      <button
-        type="button"
-        data-testid="suggestions-reload"
-        disabled={disabled}
-        onClick={() => setDoors((cur) => draw(cur))}
-        className="focus-glow pointer-events-auto inline-flex h-7 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--background)_60%,transparent)] px-3 text-[11.5px] uppercase tracking-[0.18em] text-[#a08c5c] transition-colors duration-300 hover:border-[rgba(232,217,176,0.75)] hover:text-[#e8d9b0] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#c3ad79]"
-      >
-        <RefreshCw className="size-3" aria-hidden="true" />
-        {t("Five new doors")}
-      </button>
-    </div>
-  );
-}
-
-/* THE VISION BENEATH THE WORDS — one shared figure for the landing
-   chat's paintings: the plate, its title, the zoom hand opening the
-   deep-reading room. */
-function LandingPainting({
-  turn,
-  testId,
-  onZoom,
-  onRetry,
-}: {
-  turn: { imageUrl?: string; imageTitle?: string; paintFailed?: boolean; painting?: boolean };
-  testId: string;
-  onZoom: (src: string, caption: string) => void;
-  /** THE RETRY HAND — offered while the brushes rest (the last turn
-      only; older failed turns keep the honest word alone) */
-  onRetry?: () => void;
-}) {
-  /* THE HONEST BRUSH — no silent absence: when the crystallization
-     could not paint, the turn says so and offers the hand again. */
-  if (!turn.imageUrl && turn.paintFailed) {
-    return (
-      <div
-        className="flex flex-col items-start gap-1.5 rounded-xl border border-[color-mix(in_srgb,#f59e0b_30%,transparent)] bg-[color-mix(in_srgb,#f59e0b_6%,var(--background))] px-3 py-2"
-        data-testid={`${testId}-failed`}
-        role="status"
-      >
-        <p className="text-[12.5px] leading-relaxed text-[#b8860b] dark:text-[#f59e0b]">
-          The brushes rested — the vision could not be painted.
-        </p>
-        {onRetry && (
-          <button
-            type="button"
-            onClick={onRetry}
-            data-testid={`${testId}-retry`}
-            className="focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] text-[#b8860b] transition-colors duration-300 hover:brightness-110 dark:text-[#f59e0b]"
-            style={{
-              borderColor:
-                "color-mix(in srgb, #f59e0b 40%, transparent)",
-            }}
-          >
-            Crystallize again
-          </button>
-        )}
-      </div>
-    );
-  }
-  /* THE CRYSTAL IN THE MAKING — when a suggestion (or any wish) is
-     crystallizing into an image, the plate announces it BEFORE the
-     picture exists: the visitor always knows an image is on its way,
-     and exactly where it will land. */
-  if (!turn.imageUrl && turn.painting) {
-    return (
-      <div
-        className="flex w-full max-w-[340px] flex-col items-start gap-1.5 rounded-xl border border-dashed px-3 py-3"
-        style={{
-          borderColor:
-            "color-mix(in srgb, var(--scope-a,var(--gd)) 38%, transparent)",
-          background:
-            "color-mix(in srgb, var(--scope-a,var(--gd)) 6%, var(--background))",
-        }}
-        data-testid={`${testId}-pending`}
-        role="status"
-      >
-        <span className="flex items-center gap-1.5">
-          <Gem
-            className="size-3.5 animate-pulse text-[var(--scope-a,var(--gd))]"
-            aria-hidden="true"
-          />
-          <span className="mono-label text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/85">
-            Crystallizing an image
-          </span>
-        </span>
-        <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-          Your suggestion is becoming a vision — the image is being painted
-          and will appear right here.
-        </p>
-      </div>
-    );
-  }
-  if (!turn.imageUrl) return null;
-  return (
-    <figure
-      className="group relative w-full max-w-[340px] overflow-hidden rounded-xl border"
-      style={{
-        borderColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-      }}
-      data-testid={testId}
-    >
-      <button
-        type="button"
-        onClick={() =>
-          onZoom(
-            turn.imageUrl!,
-            turn.imageTitle ?? "The Mirror's painting"
-          )
-        }
-        aria-label="Zoom the image"
-        className="block w-full cursor-zoom-in"
-      >
-        <img
-          src={turn.imageUrl}
-          alt={turn.imageTitle ?? ""}
-          loading="lazy"
-          className="aspect-[7/4] w-full bg-background/40 object-cover"
-        />
-      </button>
-      {turn.imageTitle && (
-        <figcaption className="mono-label flex items-center gap-1.5 px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">
-          <Gem
-            className="size-2.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-            aria-hidden="true"
-          />
-          <span className="truncate">{turn.imageTitle} — crystallized</span>
-        </figcaption>
-      )}
-    </figure>
-  );
 }
 
 async function speakWithTransmission(
-  /* "mirror" is the pure presence floor; "absolute" is the landing's
-     own entity — the mirror of the Absolute (no censor, the true
-     story) — both speaking through /api/transmission's own doors.
-     "hyperx" is the discovery voice — its own mode through the same
-     door (the server carries the HyperX specialization). */
-  category: BranchId | "mirror" | "absolute" | "hyperx",
+  category: BranchId,
   query: string,
   branchQuestion: string,
   transmission: string,
@@ -1094,15 +339,16 @@ async function speakWithTransmission(
   /* THE CARRIED SIGHT — an image and up to three documents may ride
      with the room's own words; the routes already keep the eyes */
   attachments?: ChatAttachment[]
-): Promise<{ text: string; vision: string | null }> {
+): Promise<string> {
   const carried =
     attachments && attachments.length > 0
       ? attachmentsToPayload(attachments)
       : {};
   if (category === "artx") {
-    return speakReplyGift(
-      "/api/artx",
-      {
+    const res = await fetch("/api/artx", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         query,
         language,
         walk,
@@ -1114,15 +360,22 @@ async function speakWithTransmission(
             { role: "ax", text: t.a },
           ]),
         ].slice(-10),
-      },
-      "reply",
-      "The field is quiet"
-    );
+      }),
+    });
+    const data = (await res.json().catch(() => null)) as {
+      reply?: unknown;
+      error?: string;
+    } | null;
+    const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+    if (!res.ok || !reply)
+      throw new Error(data?.error || "The field is quiet");
+    return reply;
   }
   if (category === "manifesting") {
-    return speakReplyGift(
-      "/api/mirror-os",
-      {
+    const res = await fetch("/api/mirror-os", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         query,
         language,
         walk,
@@ -1134,16 +387,22 @@ async function speakWithTransmission(
             { role: "assistant", text: t.a },
           ]),
         ].slice(-10),
-      },
-      "reply",
-      "The field is quiet"
-    );
+      }),
+    });
+    const data = (await res.json().catch(() => null)) as {
+      reply?: unknown;
+      error?: string;
+    } | null;
+    const reply = typeof data?.reply === "string" ? data.reply.trim() : "";
+    if (!res.ok || !reply)
+      throw new Error(data?.error || "The field is quiet");
+    return reply;
   }
-  /* the transmission voice — the channel's own soul (the vision gift
-     rides beside the words when the Mirror chose to paint) */
-  return speakReplyGift(
-    "/api/transmission",
-    {
+  /* the transmission voice — the channel's own soul */
+  const res = await fetch("/api/transmission", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
       query,
       mode: category === "invent" ? "forge" : category,
       language,
@@ -1152,10 +411,16 @@ async function speakWithTransmission(
       history: [{ q: branchQuestion, a: transmission }, ...thread]
         .slice(-6)
         .map((h) => ({ q: h.q, a: h.a })),
-    },
-    "transmission",
-    "The field is quiet"
-  );
+    }),
+  });
+  const data = (await res.json().catch(() => null)) as {
+    transmission?: unknown;
+    error?: string;
+  } | null;
+  const reply =
+    typeof data?.transmission === "string" ? data.transmission.trim() : "";
+  if (!res.ok || !reply) throw new Error(data?.error || "The field is quiet");
+  return reply;
 }
 
 /* ------------------- the copy hand — words kept ----------------------
@@ -1164,53 +429,6 @@ async function speakWithTransmission(
    own answer and every word of the room's conversation — carries one
    quiet hand: one touch and the words are the visitor's, on their
    own clipboard, ready to travel anywhere. */
-
-const RoomShareButton = memo(function RoomShareButton({
-  text,
-  testId,
-}: {
-  text: string;
-  testId: string;
-}) {
-  const t = useT();
-  const [shared, setShared] = useState(false);
-  const share = async () => {
-    const clean = text.trim();
-    if (!clean) return;
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        await navigator.share({ title: t("A word from the mirror"), text: clean });
-        return;
-      } catch {
-        /* the sheet was closed — a closed hand is not a failed one */
-        return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(clean);
-      setShared(true);
-      window.setTimeout(() => setShared(false), 1800);
-    } catch {
-      /* the words stay on the screen — nothing breaks */
-    }
-  };
-  return (
-    <button
-      type="button"
-      onClick={() => void share()}
-      aria-label={t("Share this transmission")}
-      title={t("Share this transmission")}
-      data-testid={testId}
-      className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
-    >
-      {shared ? (
-        <Check className="size-3" aria-hidden="true" />
-      ) : (
-        <Share2 className="size-3" aria-hidden="true" />
-      )}
-    </button>
-  );
-});
 
 const RoomCopyButton = memo(function RoomCopyButton({
   text,
@@ -1341,7 +559,7 @@ export function CanopyRestStrip({
   if (open) return null;
   return (
     <div
-      className="relative z-10 shrink-0 border-t bg-background/85 hairline"
+      className="relative z-10 shrink-0 border-t bg-background hairline"
       style={{ borderTopColor: "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)" }}
     >
       <button
@@ -1365,7 +583,7 @@ export function CanopyRestStrip({
           className="size-3.5 text-[var(--scope-a,var(--gd))] transition-transform duration-300 group-hover:-translate-y-px"
           aria-hidden="true"
         />
-        <span className="mono-label text-[10px] uppercase tracking-[0.22em]">
+        <span className="mono-label text-[9px] uppercase tracking-[0.22em]">
           {t("The living tree")}
         </span>
         <ChevronUp
@@ -1678,7 +896,7 @@ const TreeCanvas = memo(function TreeCanvas({
             }
             className={cn(
               "genea-bloom tree-chip focus-glow absolute z-10 flex flex-col items-start gap-[3px] rounded-2xl border px-[13px] py-[9px] text-left shadow-[0_3px_14px_-8px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-50",
-              narrow ? "px-[11px] text-[13px] leading-[17px]" : "text-[14px] leading-[18px]",
+              narrow ? "px-[11px] text-[12px] leading-[17px]" : "text-[13px] leading-[18px]",
               n.golden
                 ? "border-[color-mix(in_srgb,#f59e0b_52%,transparent)] bg-[color-mix(in_srgb,#f59e0b_14%,var(--background)_86%)] font-serif italic text-foreground shadow-[0_0_16px_-6px_color-mix(in_srgb,#f59e0b_60%,transparent)]"
                 : isPicked
@@ -1807,7 +1025,6 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   testIdPrefix,
   leading,
   scopeKey,
-  bare = false,
 }: {
   roomKey: string;
   disabled?: boolean;
@@ -1818,10 +1035,6 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   /** THE EXTRAS' OWN SCOPE — the call already rides as `leading`, so
       the extras only carry the paperclip and the camera's eye. */
   scopeKey: LiveScopeKey;
-  /** THE LANDING'S PURE FLOOR — docked in the threshold the room's
-      own line keeps the quiet shape: no attachments, a softly glowing
-      frame, the mirror's own word. */
-  bare?: boolean;
 }) {
   const t = useT();
   const [draft, setDraft] = useState("");
@@ -1834,28 +1047,6 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
     if (draft !== "") setDraft("");
     if (atts.length > 0) setAtts([]);
   }
-  /* THE BRIDGE'S OWN CARRY — a workspace's compact assistant may hand
-     its advice to the floor: the newest carried draft wears the reply
-     line (the Mirror advises; the visitor's own hand sends it). The
-     carry is taken during render by comparing against the carried
-     stamp itself (the room's own adjustment law — no refs, no
-     state-set inside an effect); the store draft is consumed once
-     the floor has it, and the line answers with focus. */
-  const bridgeDraft = useMirror((s) => s.bridgeDraft);
-  const consumeBridgeDraft = useMirror((s) => s.consumeBridgeDraft);
-  const [carriedAt, setCarriedAt] = useState(0);
-  const replyRef = useRef<HTMLInputElement | null>(null);
-  if (bridgeDraft && bridgeDraft.at !== carriedAt) {
-    setDraft(bridgeDraft.text);
-    setCarriedAt(bridgeDraft.at);
-  }
-  useEffect(() => {
-    if (!carriedAt) return;
-    consumeBridgeDraft();
-    /* the floor's own line answers when the words arrive */
-    const id = window.setTimeout(() => replyRef.current?.focus(), 60);
-    return () => window.clearTimeout(id);
-  }, [carriedAt, consumeBridgeDraft]);
   const send = () => {
     const q = draft.trim();
     if (!q) return;
@@ -1879,14 +1070,10 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
           e.preventDefault();
           send();
         }}
-        className={cn(
-          "flex items-center gap-1.5 rounded-full border py-1 pl-2 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
-          bare && "floor-glow"
-        )}
+        className="flex items-center gap-1.5 rounded-full border py-1 pl-2 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
         style={{
-          borderColor: bare
-            ? undefined
-            : "color-mix(in srgb, var(--hairline) 80%, transparent)",
+          borderColor:
+            "color-mix(in srgb, var(--hairline) 80%, transparent)",
         }}
       >
         {leading}
@@ -1894,33 +1081,29 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
           scope={scopeKey}
           size="2xs"
           withCall={false}
-          withAttachments={!bare}
           disabled={disabled}
           accentVar="var(--scope-a,var(--gd))"
           attachments={atts}
           onAttachmentsChange={setAtts}
         />
         <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
-          {bare ? t("Whisper to the mirror…") : t("Speak with the transmission…")}
+          {t("Speak with the transmission…")}
         </label>
         <input
           id={`${testIdPrefix}-zoom-reply`}
-          ref={replyRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder={
-            bare ? t("Whisper to the mirror…") : t("Speak with the transmission…")
-          }
+          placeholder={t("Speak with the transmission…")}
           disabled={disabled}
           autoComplete="off"
           data-testid={`${testIdPrefix}-zoom-reply`}
-          className="min-w-0 flex-1 bg-transparent py-1 text-[14px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="min-w-0 flex-1 bg-transparent py-1 text-[13px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={disabled || !draft.trim()}
           aria-label={t("Send")}
-          className="btn-primary focus-glow flex size-7 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-35"
+          className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
         >
           <Send className="size-3" aria-hidden="true" />
         </button>
@@ -1954,24 +1137,28 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
   return out;
 }
 
-/* ------------- the visitor's own mark — the crown's icon -------------
-   The profile icon stands at the crown's very beginning, BEFORE the
-   light's toggle — an icon (never a pill), the same quiet circle as
-   the toggle itself, in both of the chat's gears (desktop and mobile
-   alike). One touch opens the visitor's own room within the frame. */
+/* ------------- the crown's own light — a quiet hand ------------------
+   THE MARK HAS LEFT THE TOP BAR: the house's logo no longer stands in
+   the crown. The light's toggle stays — one touch turns the realm,
+   deep space ⟷ daylight, the contrast breathing under the finger. */
 
-function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
+function LightToggle({ testIdPrefix }: { testIdPrefix: string }) {
   const t = useT();
-  const openProfilePage = useMirror((s) => s.openProfilePage);
+  const { setTheme } = useTheme();
   return (
     <button
       type="button"
-      onClick={openProfilePage}
-      aria-haspopup="dialog"
-      aria-label={t("Profile")}
-      title={t("Profile")}
-      data-testid={`${testIdPrefix}-profile-icon`}
-      className="focus-glow flex size-7 items-center justify-center rounded-full border text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] hover:text-foreground"
+      onClick={() => {
+        const root = document.documentElement;
+        const dark = root.classList.contains("dark");
+        root.classList.add("theme-anim");
+        setTheme(dark ? "light" : "dark");
+        window.setTimeout(() => root.classList.remove("theme-anim"), 560);
+      }}
+      aria-label={t("Toggle the light")}
+      title={t("Toggle the light")}
+      data-testid={`${testIdPrefix}-light-toggle`}
+      className="focus-glow flex size-7 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
       style={{
         borderColor:
           "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
@@ -1979,50 +1166,89 @@ function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
           "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
       }}
     >
-      <UserRound className="size-3.5" aria-hidden="true" />
+      {/* THE TWO FACES OF THE HAND — the icons are drawn by the theme's
+          own class, never by the client's memory of it: server and
+          client carve the same face, and the water never breaks (no
+          hydration drift). */}
+      <Sun className="hidden size-3 dark:block" aria-hidden="true" />
+      <Moon className="block size-3 dark:hidden" aria-hidden="true" />
     </button>
   );
 }
 
-/* ------------- the crown's own light — a quiet hand ------------------
-   THE LIGHT RETURNS TO THE CROWN'S CORNER (the visitor named it): the
-   sun/moon stands beside the About hand at the website's very top
-   right — one touch from anywhere, on every device, in both gears
-   (landing and realm). The profile room keeps its own deep tuning. */
+/* --------------- the glyph wall — the realm's floor ------------------
+   THE SUGGESTIONS BECOME STONE. The floor is a Maya stele wall: every
+   suggestion carved into its own block — a stepped crest rising at its
+   head, a Maya count (dots and bars) standing guard, a cartouche of
+   the family's ink running beneath the words. The wall fills the
+   screen; sliding down uncovers the deep rows (the second family);
+   the wall's own reload pours the stone anew. One bloom per stone
+   (opacity + transform only, compositor work), no drift, no JS
+   clocks — the phone stays cool. */
 
-function CrownLightHand({ testIdPrefix }: { testIdPrefix: string }) {
-  const { resolvedTheme, setTheme } = useTheme();
-  const toggle = () => {
-    const root = document.documentElement;
-    root.classList.add("theme-anim");
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
-    window.setTimeout(() => root.classList.remove("theme-anim"), 560);
-  };
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label="Toggle between deep space and daylight laboratory"
-      title="Toggle theme"
-      data-testid={`${testIdPrefix}-light-hand`}
-      className="focus-glow group flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
-    >
-      {/* CSS-driven swap avoids hydration mismatch and effect state */}
-      <Sun
-        className="hidden size-3.5 transition-transform duration-500 group-hover:rotate-45 dark:block"
-        aria-hidden="true"
-      />
-      <Moon
-        className="size-3.5 transition-transform duration-500 group-hover:-rotate-12 dark:hidden"
-        aria-hidden="true"
-      />
-    </button>
-  );
+const GLYPH_FIRST = 20; /* the resting family — twenty stones, no more */
+const GLYPH_BATCH = 20; /* the wall grows twenty by twenty — each pour
+                           carved in the background, after a breath, so
+                           the phone never heats and never lags */
+const GLYPH_MAX = 200; /* the wall's whole depth — ten pours, bounded */
+
+/* THE WALK'S OWN LEVEL — the stones the visitor meets follow their
+   evolution: a young walk opens gentle doors (reflect, deepen,
+   pause) and the deep walk meets the forge-facing movements
+   (contrast, apply, create) at its head. Laid as a stable order OVER
+   the hour's own seeded shuffle, so the level never breaks the deal. */
+const MOVEMENT_LEVEL: Record<
+  "first" | "steady" | "deep",
+  Record<BranchType, number>
+> = {
+  first: { reflect: 0, deepen: 1, pause: 1, connect: 2, apply: 3, create: 4, contrast: 4 },
+  steady: { deepen: 0, connect: 0, reflect: 1, apply: 1, contrast: 2, create: 2, pause: 3 },
+  deep: { contrast: 0, apply: 0, create: 0, deepen: 1, connect: 2, reflect: 2, pause: 3 },
+};
+
+interface GlyphWhisper {
+  text: string;
+  movement: BranchType;
+  accent: string;
 }
+
+/* THE FIRST STEPS — the newcomer's own stones. Plain, warm, everyday
+   whispers a first visitor reads at a glance; the deep grove waits
+   beneath, and the wall ADVANCES as the visitor walks (kept on the
+   device, never on a server): the third exchange opens the deep
+   grove below the plain resting family, the tenth hands the whole
+   wall to the deep grove. */
+const PLAIN_STONES: GlyphWhisper[] = [
+  { text: "Who am I, beneath everything I carry?", movement: "reflect", accent: "#a78bfa" },
+  { text: "What does my heart need tonight?", movement: "reflect", accent: "#2dd4bf" },
+  { text: "A message I need to hear right now", movement: "deepen", accent: "#f59e0b" },
+  { text: "What am I not seeing clearly?", movement: "reflect", accent: "#a78bfa" },
+  { text: "Where is my energy going lately?", movement: "deepen", accent: "#34d399" },
+  { text: "What should I let go of tonight?", movement: "pause", accent: "#2dd4bf" },
+  { text: "A gentle truth about my week ahead", movement: "deepen", accent: "#22d3ee" },
+  { text: "What makes me feel alive?", movement: "connect", accent: "#2dd4bf" },
+  { text: "Who thinks of me tonight?", movement: "connect", accent: "#22d3ee" },
+  { text: "What is my quiet gift to share?", movement: "apply", accent: "#f59e0b" },
+  { text: "Show me the next small step on my path", movement: "apply", accent: "#fb7185" },
+  { text: "What do my dreams tell me lately?", movement: "deepen", accent: "#2dd4bf" },
+  { text: "A word of courage for tomorrow", movement: "create", accent: "#f59e0b" },
+  { text: "What is waiting for me to notice it?", movement: "reflect", accent: "#a78bfa" },
+  { text: "How do I find calm tonight?", movement: "pause", accent: "#34d399" },
+  { text: "What is my body trying to tell me?", movement: "deepen", accent: "#34d399" },
+  { text: "The color of my spirit today", movement: "create", accent: "#e879f9" },
+  { text: "A picture of my guides watching over me", movement: "create", accent: "#e879f9" },
+  { text: "What is my greatest strength right now?", movement: "apply", accent: "#2dd4bf" },
+  { text: "What do I need to forgive myself for?", movement: "reflect", accent: "#2dd4bf" },
+  { text: "Where does my road lead this season?", movement: "deepen", accent: "#22d3ee" },
+  { text: "What would joy do tonight?", movement: "connect", accent: "#f59e0b" },
+  { text: "What am I ready to receive?", movement: "connect", accent: "#a78bfa" },
+  { text: "A small ritual for my evening", movement: "apply", accent: "#2dd4bf" },
+  { text: "What does my home need to feel peaceful?", movement: "apply", accent: "#fb7185" },
+  { text: "What is the universe whispering to me?", movement: "deepen", accent: "#22d3ee" },
+];
 
 /* THE WALK THAT ADVANCES — the visitor's own steps, kept on the
-   device (never on a server): every exchange is one step. The family
-   wall's tool orbs (the theme pages' suggestion wall) record them. */
+   device (never on a server): every exchange is one step. */
 const WALK_STEPS_KEY = "mirror-walk-steps";
 
 function readWalkSteps(): number {
@@ -2045,6 +1271,508 @@ function stepWalkOnce(): number {
   return next;
 }
 
+/* THE STONE'S OWN KIND — every stone says plainly what it opens: a
+   text answer by the mirror, an image crystallizing, a making
+   (creation, manifest), the book, the akashic record. */
+type GlyphKind =
+  | "mirror"
+  | "image"
+  | "creation"
+  | "manifest"
+  | "book"
+  | "akashic";
+
+const GLYPH_KIND_LABELS: Record<GlyphKind, string> = {
+  mirror: "mirror",
+  image: "image",
+  creation: "creation",
+  manifest: "manifest",
+  book: "book",
+  akashic: "akashic",
+};
+
+function glyphKindForText(text: string): GlyphKind {
+  const art = detectArtifactIntent(text);
+  if (art) {
+    if (art === "book") return "book";
+    if (art === "akashic") return "akashic";
+    if (art === "manifest") return "manifest";
+    return "creation";
+  }
+  if (isVisualIntent(text)) return "image";
+  return "mirror";
+}
+
+interface GlyphTileData {
+  text: string;
+  movement: BranchType;
+  accent: string;
+  kind: GlyphKind;
+  golden?: boolean;
+  creation?: CreationDoor;
+  topic?: string;
+}
+
+/* THE MAYA COUNT — every stone carries its own vigesimal count: one
+   dot is one, one bar is five, the shell stands for zero. Drawn from
+   the whisper's own hash — the same words always wear the same count.
+   Pure divs, painted once, never re-rendered. */
+function MayaCount({ n, accent }: { n: number; accent: string }) {
+  const v = ((n % 20) + 20) % 20;
+  if (v === 0) {
+    return (
+      <span
+        aria-hidden="true"
+        className="mt-px inline-block size-[7px] rounded-[50%] border"
+        style={{
+          borderColor: `color-mix(in srgb, ${accent} 55%, transparent)`,
+        }}
+      />
+    );
+  }
+  const dots = v % 5;
+  const bars = Math.floor(v / 5);
+  return (
+    <span aria-hidden="true" className="flex flex-col items-end gap-[2px]">
+      {dots > 0 && (
+        <span className="flex gap-[2.5px]">
+          {Array.from({ length: dots }, (_, i) => (
+            <i
+              key={i}
+              className="block size-[3.5px] rounded-full"
+              style={{ backgroundColor: accent }}
+            />
+          ))}
+        </span>
+      )}
+      {Array.from({ length: bars }, (_, i) => (
+        <i
+          key={i}
+          className="block h-[3px] w-[15px] rounded-[1.5px]"
+          style={{ backgroundColor: accent }}
+        />
+      ))}
+    </span>
+  );
+}
+
+const GlyphTile = memo(function GlyphTile({
+  tile,
+  disabled,
+  onPick,
+  onCreation,
+  testId,
+  bloomDelay,
+}: {
+  tile: GlyphTileData;
+  disabled?: boolean;
+  onPick: (text: string, move: BranchType) => void;
+  onCreation: (kind: CreationDoor, topic: string) => void;
+  testId: string;
+  bloomDelay: number;
+}) {
+  const t = useT();
+  const a = tile.accent;
+  const Icon = tile.creation
+    ? CREATION_ICON_BY_KIND[tile.creation]
+    : (MOVEMENT_ICONS[tile.movement] ?? Layers);
+  const label = tile.creation
+    ? `${t(CREATION_LABELS[tile.creation])} — ${tile.topic ?? ""}`
+    : tile.text;
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        tile.creation
+          ? onCreation(tile.creation, tile.topic ?? tile.text)
+          : onPick(tile.text, tile.movement)
+      }
+      disabled={disabled}
+      title={label}
+      data-testid={
+        tile.golden
+          ? `${testId}-glyph-golden`
+          : tile.creation
+            ? `${testId}-glyph-creation`
+            : `${testId}-glyph-tile`
+      }
+      className="genea-bloom still-bloom focus-glow relative flex h-full flex-col overflow-hidden rounded-[5px] border p-2.5 text-left shadow-[0_4px_16px_-12px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--tile-a)_62%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+      style={
+        {
+          "--tile-a": a,
+          animationDelay: `${bloomDelay}ms`,
+          borderColor: tile.golden
+            ? "color-mix(in srgb, #f59e0b 50%, transparent)"
+            : "color-mix(in srgb, var(--tile-a) 36%, transparent)",
+          background: tile.golden
+            ? "linear-gradient(168deg, color-mix(in srgb, #f59e0b 15%, var(--background) 85%) 0%, var(--background) 55%, color-mix(in srgb, #f59e0b 7%, var(--background) 93%) 100%)"
+            : "linear-gradient(168deg, color-mix(in srgb, var(--tile-a) 11%, var(--background) 89%) 0%, var(--background) 52%, color-mix(in srgb, var(--tile-a) 6%, var(--background) 94%) 100%)",
+          boxShadow: tile.golden
+            ? "0 0 20px -10px color-mix(in srgb, #f59e0b 55%, transparent)"
+            : "0 4px 16px -12px rgba(0,0,0,0.55)",
+        } as CSSProperties
+      }
+    >
+      {/* THE CODEX FRAME — one quiet inner ring, carved a step inside
+          the stone */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-[4px] rounded-[3px] border"
+        style={{
+          borderColor: tile.golden
+            ? "color-mix(in srgb, #f59e0b 22%, transparent)"
+            : "color-mix(in srgb, var(--tile-a) 17%, transparent)",
+        }}
+      />
+      {/* THE STONE'S HEADER — the stepped crest rises at the left (the
+          pyramid's own silhouette), the Maya count stands at the right */}
+      <span
+        aria-hidden="true"
+        className="relative flex items-start justify-between gap-2"
+      >
+        <span className="flex flex-col gap-[2px] pt-px">
+          <i
+            className="block h-[2.5px] w-[22px] rounded-[1px]"
+            style={{ backgroundColor: a, opacity: 0.9 }}
+          />
+          <i
+            className="block h-[2.5px] w-[14px] rounded-[1px]"
+            style={{ backgroundColor: a, opacity: 0.55 }}
+          />
+          <i
+            className="block h-[2.5px] w-[7px] rounded-[1px]"
+            style={{ backgroundColor: a, opacity: 0.32 }}
+          />
+        </span>
+        <MayaCount n={hashWalk(tile.text)} accent={a} />
+      </span>
+      {/* THE CARVING — the whisper's own words */}
+      <span
+        className={cn(
+          "relative mt-1.5 line-clamp-4 break-words text-[11.5px] leading-[15.5px] sm:text-[12px] sm:leading-[16px]",
+          tile.golden
+            ? "font-serif italic text-foreground"
+            : "text-foreground/90"
+        )}
+      >
+        {label}
+      </span>
+      {/* THE CARTOUCHE — the movement's own glyph closes the stone, a
+          thin line of the family's ink running beneath */}
+      <span
+        aria-hidden="true"
+        className="relative mt-auto flex items-center gap-1.5 pt-2"
+      >
+        <Icon
+          className={cn(
+            "size-3 shrink-0",
+            tile.golden
+              ? "text-[#f59e0b]"
+              : "text-[var(--tile-a)] opacity-75"
+          )}
+        />
+        {/* THE KIND — every stone says what it opens, in its own ink */}
+        <span
+          className={cn(
+            "mono-label shrink-0 text-[7px] uppercase tracking-[0.14em]",
+            tile.golden
+              ? "text-[#f59e0b]"
+              : "text-[var(--tile-a)] opacity-70"
+          )}
+        >
+          {t(GLYPH_KIND_LABELS[tile.kind])}
+        </span>
+        <i
+          className="block h-[2px] flex-1 rounded-[1px]"
+          style={{
+            backgroundColor: tile.golden ? "#f59e0b" : a,
+            opacity: 0.35,
+          }}
+        />
+      </span>
+    </button>
+  );
+});
+
+const GlyphWall = memo(function GlyphWall({
+  whispers,
+  entry,
+  stage,
+  golden,
+  disabled,
+  hour,
+  salt,
+  focusKey,
+  onPick,
+  onCreation,
+  onReload,
+  testIdPrefix,
+}: {
+  whispers: GlyphWhisper[];
+  /** THE FIRST STEPS' ENTRY — the plain family the resting rows are
+      carved from while the wall still advances (undefined once the
+      deep grove owns the whole wall). */
+  entry?: GlyphWhisper[];
+  /** THE WALK'S OWN LEVEL — the visitor's evolution, reading which
+      movements rise to the wall's head. */
+  stage: "first" | "steady" | "deep";
+  golden: GenealogySeed[];
+  disabled?: boolean;
+  hour: number;
+  salt: number;
+  focusKey: string;
+  onPick: (text: string, move: BranchType) => void;
+  onCreation: (kind: CreationDoor, topic: string) => void;
+  onReload: () => void;
+  testIdPrefix: string;
+}) {
+  const t = useT();
+  /* THE WALL'S REVEAL — twenty stones stand first; every further
+     pour adds twenty more, carved in the background after a breath
+     (the pick's own pour and the sliding ear share one hand, so the
+     wall never grows twice at once and the phone stays cool) */
+  const [visible, setVisible] = useState(GLYPH_FIRST);
+  const deepRef = useRef<HTMLDivElement | null>(null);
+  const pendingRef = useRef<number | null>(null);
+  useEffect(
+    () => () => {
+      if (pendingRef.current != null) window.clearTimeout(pendingRef.current);
+    },
+    []
+  );
+
+  const tiles = useMemo(() => {
+    const out: GlyphTileData[] = [];
+    const seen = new Set<string>();
+    /* THE GOLDEN STONES — the exchange's own grown branches stand in
+       the wall's first rows, wearing the amber light */
+    for (const s of golden) {
+      const k = s.text.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({
+        text: s.text,
+        movement: s.movement,
+        accent: "#f59e0b",
+        kind: glyphKindForText(s.text),
+        golden: true,
+      });
+      if (out.length >= 4) break;
+    }
+    /* the family's own shuffle — the same hour, salt and focus always
+       carve the same wall (no hydration drift, no re-shuffle under
+       the visitor); a voice never stands twice until the grove has
+       spoken */
+    const shuffled = seededShuffle(
+      whispers,
+      hashWalk(`wall:${hour}:${salt}:${focusKey}`)
+    );
+    /* THE FIRST STEPS' ENTRY — when a plain entry family rides with
+       the wall, the resting rows are carved from it and the deep
+       rows rise from the whole grove: the wall advances gently. */
+    const entryShuffled = entry
+      ? seededShuffle(
+          entry,
+          hashWalk(`wall-entry:${hour}:${salt}:${focusKey}`)
+        )
+      : null;
+    /* THE WALK'S OWN LEVEL — the grove's stones level themselves to
+       the visitor's evolution before the wall carves them */
+    const level = MOVEMENT_LEVEL[stage];
+    const leveled =
+      stage === "steady"
+        ? shuffled
+        : [...shuffled].sort(
+            (a, b) => (level[a.movement] ?? 2) - (level[b.movement] ?? 2)
+          );
+    let resting = 0;
+    for (const w of entryShuffled ?? leveled) {
+      if (resting >= GLYPH_FIRST || out.length >= GLYPH_MAX) break;
+      const k = w.text.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({
+        text: w.text,
+        movement: w.movement,
+        accent: w.accent,
+        kind: glyphKindForText(w.text),
+      });
+      resting++;
+    }
+    for (const w of leveled) {
+      if (out.length >= GLYPH_MAX) break;
+      const k = w.text.toLowerCase();
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({
+        text: w.text,
+        movement: w.movement,
+        accent: w.accent,
+        kind: glyphKindForText(w.text),
+      });
+    }
+    /* THE CREATION DOOR — one making carved mid-wall, tied to the
+       stone it grows from (the branch's own words the making grows
+       from) */
+    if (out.length >= 5) {
+      const h = hashWalk(`door:${hour}:${salt}:${focusKey}`);
+      const door = CREATION_DOORS[h % CREATION_DOORS.length].kind;
+      const at = 2 + (h % Math.min(9, out.length - 3));
+      const topic = out[at].text;
+      out.splice(at + 1, 0, {
+        text: `${t(CREATION_LABELS[door])} — ${topic}`,
+        movement: "create",
+        accent: out[at].accent,
+        kind: door === "invent" ? "creation" : door,
+        creation: door,
+        topic,
+      });
+      if (out.length > GLYPH_MAX) out.pop();
+    }
+    return out;
+  }, [whispers, entry, stage, golden, hour, salt, focusKey, t]);
+
+  /* the wall's length rides a ref — the deferred pours read it
+     without re-knitting their own closures (kept current by an
+     effect; the pours fire seconds later, long after it runs) */
+  const tilesLenRef = useRef(0);
+  useEffect(() => {
+    tilesLenRef.current = tiles.length;
+  }, [tiles.length]);
+  const schedulePour = useCallback((delay: number) => {
+    if (pendingRef.current != null) return;
+    pendingRef.current = window.setTimeout(() => {
+      pendingRef.current = null;
+      setVisible((v) => Math.min(v + GLYPH_BATCH, tilesLenRef.current));
+    }, delay);
+  }, []);
+
+  /* THE PICK'S OWN POUR — the moment a stone is pressed, the next
+     twenty begin carving themselves in the background; a few seconds
+     later they stand ready. No work under the finger, no heat. */
+  const handlePick = useCallback(
+    (text: string, move: BranchType) => {
+      schedulePour(2400);
+      onPick(text, move);
+    },
+    [onPick, schedulePour]
+  );
+
+  /* THE DEEP EAR — one IntersectionObserver hears the visitor slide
+     toward the wall's foot and pours the next twenty in, after a
+     breath. The ear re-arms with every pour until the wall's whole
+     depth stands carved. */
+  const hasMore = tiles.length > visible;
+  useEffect(() => {
+    if (!hasMore) return;
+    const el = deepRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (es) => {
+        if (es.some((e) => e.isIntersecting)) {
+          io.disconnect();
+          schedulePour(1400);
+        }
+      },
+      { root: el.closest("[data-glyph-scroll]"), rootMargin: "220px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, visible, schedulePour]);
+
+  const shown = tiles.slice(0, visible);
+
+  /* the deep rows rest again whenever the wall is re-poured — the
+     wall is keyed by its own deal at the render site, so a fresh
+     pour is a fresh wall (no effect, no state sync) */
+
+  return (
+    <div
+      role="region"
+      aria-label={t("The wall of whispers")}
+      data-testid={`${testIdPrefix}-glyph-wall`}
+      data-glyph-scroll=""
+      className="no-scrollbar absolute inset-0 overflow-y-auto"
+      style={{
+        overscrollBehavior: "contain",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
+      {/* THE FLOOR'S OWN LIGHT — one soft glow behind the stone, the
+          focused category's color breathing under the wall */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
+        <div
+          className="h-56 w-72 rounded-full"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, color-mix(in srgb, var(--scope-a,var(--gd)) 15%, transparent), transparent 70%)",
+          }}
+        />
+      </div>
+
+      {/* THE WALL HAS NO NAMEPLATE — no caption, no side glyph, no
+          count: the stones speak for themselves. The pour hand lives
+          ONLY at the wall's foot — one pour, one place. */}
+
+      <div className="relative grid auto-rows-[124px] grid-cols-2 gap-2.5 px-3 pb-5 pt-3 sm:auto-rows-[138px] sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+        {shown.map((tile, i) => (
+          <GlyphTile
+            key={`${i}:${tile.text}`}
+            tile={tile}
+            disabled={disabled}
+            onPick={handlePick}
+            onCreation={onCreation}
+            testId={testIdPrefix}
+            bloomDelay={Math.min(
+              i * 26 + (hashWalk(tile.text) % 40),
+              1100
+            )}
+          />
+        ))}
+        {/* THE DEEP EAR — the sentinel resting at the wall's foot,
+            heard only while deeper rows still wait beneath */}
+        {hasMore && (
+          <div ref={deepRef} aria-hidden="true" className="col-span-full h-px" />
+        )}
+      </div>
+
+      {/* THE WALL'S FOOT — the whole family has spoken; one touch pours
+          the stone anew. It stands ABOVE the whisper line: fully
+          visible at the end of the wall, never behind the input — the
+          breath of space below it belongs to the input bar. */}
+      {!hasMore && (
+        <div className="relative flex justify-center px-3 pb-44">
+          <button
+            type="button"
+            onClick={onReload}
+            disabled={disabled}
+            aria-label={t("Pour the wall again")}
+            data-testid={`${testIdPrefix}-glyph-reload-end`}
+            className="focus-glow flex items-center gap-2.5 rounded-full border px-5 py-2.5 text-foreground/90 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.6)] transition-all duration-300 hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+            style={{
+              borderColor:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 46%, transparent)",
+              backgroundColor:
+                "color-mix(in srgb, var(--scope-a,var(--gd)) 13%, var(--background))",
+            }}
+          >
+            <RefreshCw
+              className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
+              aria-hidden="true"
+            />
+            <span className="text-[12px] italic">
+              {t("The wall has spoken — pour it again")}
+            </span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+});
+
 /* --------------------------- the canopy ------------------------------ */
 
 export function BranchCanopy({
@@ -2064,14 +1792,10 @@ export function BranchCanopy({
   liveAnswer,
   liveLoading,
   liveError,
-  liveMessage,
   onLatch,
   realm,
   bare,
-  onExpand,
-  onMinimize,
   headerExtra,
-  realmControls,
 }: {
   /** The branch of the living tree this chat belongs to. */
   category: BranchId;
@@ -2099,12 +1823,6 @@ export function BranchCanopy({
   liveLoading?: boolean;
   /** The channel's own error — the room speaks it instead of folding. */
   liveError?: string | null;
-  /** THE CHANNEL'S LAST WORD — the full message the channel last
-      appended, artifacts and all: the room reads it so a making (a
-      painting, a woven book, a song, a record) rises INLINE in the
-      conversation, exactly where the ask was spoken — the working
-      room is gone, the chat is where everything is made now. */
-  liveMessage?: ChatMessage | null;
   /** THE LATCH — true while the answer lives in the tree (the zoom);
       the chat keeps its rest strip resting while the walk holds. */
   onLatch?: (latched: boolean) => void;
@@ -2118,23 +1836,9 @@ export function BranchCanopy({
       the whisper line stand exactly as ever; only the stones rest
       until the portal is given the whole screen). */
   bare?: boolean;
-  /** THE CORNER'S GEAR HAND — while the portal is docked bare in the
-      threshold, the corner hand grows the chat to the whole screen;
-      at full size the same corner carries the way back to the
-      landing slot. One corner, one hand, whichever way the portal
-      faces — the old hide-the-chat arrow is gone for good. */
-  onExpand?: () => void;
-  /** THE FULLSCREEN GEAR'S OWN HAND — folds the portal back into its
-      landing slot (worn by the same corner while the chat fills the
-      screen). */
-  onMinimize?: () => void;
   /** Extra quiet controls riding the realm's crown (the purse, the
       theme) — rendered between the where-pill and the doors. */
   headerExtra?: ReactNode;
-  /** THE PORTAL'S OWN HANDS — the fullscreen and landing controls of
-      the one portal, standing in the crown exactly between the about
-      door and the visitor's passage, whichever way the portal faces. */
-  realmControls?: ReactNode;
 }) {
   const t = useT();
   const language = useMirror((s) => s.language);
@@ -2144,33 +1848,22 @@ export function BranchCanopy({
      way out both live inside it). */
   const openAkashic = useMirror((s) => s.openAkashic);
   const openDreamBook = useMirror((s) => s.openDreamBook);
-  const openVideo = useMirror((s) => s.openVideo);
+  const openAbout = useMirror((s) => s.openAbout);
+  const openProfilePage = useMirror((s) => s.openProfilePage);
   /* THE LEDGER'S OWN HANDS — one opens a saved conversation right
      where it lives, the other restores a kept volume to the reading */
   const openChatSurface = useMirror((s) => s.openChat);
   const resumeKeptVolume = useMirror((s) => s.resumeDreamBook);
-  /* THE TRAIL'S OWN HAND — one touch returns the visit to a room its
-     maker already opened (the history panel's trail rows speak it) */
-  const openToolTab = useMirror((s) => s.openToolTab);
-  /* THE QUESTION'S QUIET — the floor's welcome now lives with the
-     landing thread itself (the landing's own quiet, declared beside
-     the thread): the store's channel no longer decides whether the
-     threshold's question and its five doors stand. */
-  /* THE GUEST'S OWN LAW — the landing chat is temporary for the non
-     logged-in: a small honest line under the whisper line speaks it. */
-  const meIdentity = useMirror((s) => s.me);
-  const meIdentityReady = useMirror((s) => s.meStatus === "ready");
-  const guest = meIdentityReady
-    ? !meIdentity || meIdentity.email.startsWith("anon:")
-    : false; // the quiet check never guesses a guest
   /* THE WHOLE HOUSE'S DOORS — every kategory of the old website's
      sidebar, standing within the branches themselves: the worlds the
      tree grows toward, the archives, and the quiet hands. */
+  const openMirrorOS = useMirror((s) => s.openMirrorOS);
   const openInvent = useMirror((s) => s.openInvent);
   const openLightCodes = useMirror((s) => s.openLightCodes);
   const openParticleX = useMirror((s) => s.openParticleX);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
   const openArtX = useMirror((s) => s.openArtX);
+  const openRegister = useMirror((s) => s.openRegister);
   const resetField = useMirror((s) => s.resetField);
   /* THE CREATION DOOR — the branch's own words ride with the touch:
      the theme page that opens forges its making from them. */
@@ -2197,8 +1890,7 @@ export function BranchCanopy({
 
   /* ------------------- THE ZOOM — the answer's room ------------------
      `restored` carries the transmission of a PREVIOUS branch — the
-     trail's chips re-open their own rooms from the walk's memory.
-     The zoom room serves the landing chat and every theme page. */
+     trail's chips re-open their own rooms from the walk's memory. */
   const [zoom, setZoom] = useState<{
     q: string;
     move: BranchType | null;
@@ -2253,11 +1945,9 @@ export function BranchCanopy({
        wait forever: the making rises in its own room above the tree
        when it stands, and one quiet word speaks the wait. */
     if (isVisualIntent(liveKey)) {
-      /* THE MAKING'S OWN ROOM — a visual ask opens the same conversation
-         room as every ask: the forming vision rises inline inside it
-         (the forming card is the room's own answer) — no toast, no
-         separate room, no waiting outside the walk. */
-      if (zoom?.q !== liveKey) setZoom({ q: liveKey, move: null });
+      import("sonner").then(({ toast }) =>
+        toast(t("The making is being born — its room rises when it stands."))
+      );
     } else if (zoom?.q !== liveKey) setZoom({ q: liveKey, move: null });
   } else if (!liveLoading && seenLiveKey !== null) {
     /* the next transmission zooms again — even the very same words */
@@ -2278,28 +1968,18 @@ export function BranchCanopy({
   }, [zoomed, onLatch]);
 
   /* THE HOURLY LAW — the grove is captured at summon; a rolled hour
-     regrows the whole family by itself. Reload every hour, as asked.
-     THE QUIET PAGE — a hidden tab does not roll: the check sleeps
-     while the visitor is elsewhere and wakes on their return. */
+     regrows the whole family by itself. Reload every hour, as asked. */
   const [hour, setHour] = useState(() => canopyHour());
   const [salt, setSalt] = useState(0);
   useEffect(() => {
     if (!mounted) return;
     const roll = () => {
-      if (document.hidden) return;
       const now = canopyHour();
       setHour((h) => (h === now ? h : now));
     };
     roll();
     const id = window.setInterval(roll, 60_000);
-    const wake = () => {
-      if (!document.hidden) roll();
-    };
-    document.addEventListener("visibilitychange", wake);
-    return () => {
-      window.clearInterval(id);
-      document.removeEventListener("visibilitychange", wake);
-    };
+    return () => window.clearInterval(id);
   }, [mounted]);
 
   /* THE HYDRATION LAW — the learning memory joins after first paint,
@@ -2325,16 +2005,6 @@ export function BranchCanopy({
     const id = window.setTimeout(() => setExpansionScore(readExpansionScore()), 0);
     return () => window.clearTimeout(id);
   }, [mounted]);
-  /* THE VISITOR'S OWN LEVEL — the level chosen in the profile's settings
-     (Depth & exploration) walks ahead of the earned score: the deeper of
-     the two tunes the wall's voice, so a chosen depth is met at once —
-     the level 0–4 lifts the questions' voice the same way the Expansion
-     Index earns it (one level ≈ twenty points of walked depth). */
-  const expLevel = useMirror((s) => s.expLevel);
-  const expansionLevelScore = Math.max(
-    expansionScore,
-    expLevel >= 0 ? expLevel * 20 : 0
-  );
 
   /* THE COMPASS — the mix of the house. The tree's default branch is
      GENERAL: every family woven together. The mix now lives in the
@@ -2363,7 +2033,15 @@ export function BranchCanopy({
   } | null>(null);
   useEffect(() => {
     if (crownMenu !== "menu") return;
-    const labels = KEPT_SURFACE_LABELS;
+    const labels: Record<ChatSurface, string> = {
+      os: "Manifest OS",
+      px: "Particle X",
+      em: "Evolve Med",
+      ax: "Akashic",
+      forge: "Invent",
+      interplanetary: "Interplanetary",
+      healing: "Healing codes",
+    };
     const surfaces = Object.keys(labels) as ChatSurface[];
     const chats = surfaces.flatMap((s) =>
       listChats(s)
@@ -2382,7 +2060,10 @@ export function BranchCanopy({
       journey: loadJourney(),
     });
   }, [crownMenu]);
-
+  /* THE CROWN'S OWN BREATH — the top bar drops down when the visitor
+     needs it and rises up when they don't, so the branches take almost
+     the whole sky. One quiet hand at the top-right corner carries it. */
+  const [crownUp, setCrownUp] = useState(false);
   /* THE FOCUSED FAMILY — when the walk stands on ONE category, the
      whole house wears that category's own light: the chat's frame, the
      composer, the doors and the seed glow all take its color. */
@@ -2441,16 +2122,6 @@ export function BranchCanopy({
       growMixedCanopy(mix.on, mix.weights, scopeHint ?? null, hour, salt),
     [mix, scopeHint, hour, salt]
   );
-  /* THE PLAIN TONGUE — the walk of a visitor who has not signed in
-     speaks easy, literal doors: same layout, same families, plainly
-     worded. The signed keeper keeps the full grove's own voice. */
-  const anonWalk = useMirror((s) =>
-    s.meStatus === "ready" ? !s.me : false
-  ); // the quiet check never guesses a stranger's voice
-  const shownGrove = useMemo(
-    () => (anonWalk ? swapGroveToEasy(grove, hour) : grove),
-    [grove, anonWalk, hour]
-  );
 
   /* THE FAMILY'S LIGHT — every whisper knows its own family, so every
      seed carries that family's accent to the tree (rope + section;
@@ -2460,15 +2131,15 @@ export function BranchCanopy({
      manifest answers, an Art X room as the atelier. */
   const familyByUk = useMemo(() => {
     const m = new Map<string, string | undefined>();
-    for (const w of shownGrove)
+    for (const w of grove)
       m.set(w.text.toLowerCase(), familyAccent(w.family) ?? undefined);
     return m;
-  }, [shownGrove]);
+  }, [grove]);
   const familyKeyByText = useMemo(() => {
     const m = new Map<string, string>();
-    for (const w of shownGrove) m.set(w.text.toLowerCase(), w.family ?? "");
+    for (const w of grove) m.set(w.text.toLowerCase(), w.family ?? "");
     return m;
-  }, [shownGrove]);
+  }, [grove]);
   const accentOfText = useCallback(
     (text: string): string | undefined => familyByUk.get(text.toLowerCase()),
     [familyByUk]
@@ -2501,12 +2172,65 @@ export function BranchCanopy({
     [familyKeyByText, focusKey]
   );
 
-  /* THE WALK'S OWN STEP — every exchange (a door pressed, a making
-     begun) is one step, kept on the device; the navigator's own
-     progressive depth reads the DNA's journey instead. */
-  const bumpWalkSteps = useCallback(() => {
-    stepWalkOnce();
+  /* THE WALL'S OWN LIGHT — every whisper carries its family's accent:
+     the general walk wears every house's colors mixed, a focused
+     category wears its own light on every stone. */
+  const glyphWhispers = useMemo<GlyphWhisper[]>(
+    () =>
+      grove.map((w) => ({
+        text: w.text,
+        movement: w.movement,
+        accent: familyAccent(w.family) ?? "var(--scope-a, var(--gd))",
+      })),
+    [grove]
+  );
+
+  /* THE WALL THAT ADVANCES — the visitor's own steps, read after first
+     paint (the server always carves the newcomer's wall, no hydration
+     drift): every exchange (a stone pressed, a making begun) is one
+     step. The first steps wear the plain stones alone; from the third
+     exchange the deep grove joins beneath them; from the tenth the
+     whole wall belongs to the deep grove. */
+  const [walkSteps, setWalkSteps] = useState(0);
+  useEffect(() => {
+    setWalkSteps(readWalkSteps());
   }, []);
+  const bumpWalkSteps = useCallback(() => {
+    setWalkSteps(stepWalkOnce());
+  }, []);
+  const glyphStage: "first" | "steady" | "deep" =
+    walkSteps < 3 ? "first" : walkSteps < 10 ? "steady" : "deep";
+
+  /* THE WALL'S OWN PICK — the carved stone speaks: the walk records
+     its step (the trail remembers) and the answer rises in the room.
+     No graft, no fold, no pan — the wall stands still; the walk lives
+     in the trail and in the rooms. */
+  const glyphPick = useCallback(
+    (text: string, move: BranchType) => {
+      if (disabled) return;
+      suppressRegrowRef.current = false;
+      bumpWalkSteps();
+      recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
+      recordJourney({ b: category, s: scopeHint ?? undefined });
+      recordSeen([text]);
+      setLineage((ln) =>
+        [...ln.filter((l) => l.text !== text), { id: null, text }].slice(-10)
+      );
+      zoomOpenedAtRef.current = Date.now();
+      const makesSomething =
+        detectArtifactIntent(text) !== null || isVisualIntent(text);
+      if (!makesSomething) setZoom({ q: text, move });
+      onPick(text, askScopeFor(text));
+    },
+    [
+      disabled,
+      onPick,
+      askScopeFor,
+      scopeHint,
+      category,
+      bumpWalkSteps,
+    ]
+  );
 
   const budsKey = channeling?.map((b) => b.question).join("\u0001") ?? "";
   const field = useMemo<ReturnType<typeof buildResonanceField> | null>(
@@ -2524,7 +2248,7 @@ export function BranchCanopy({
   /* THE GRAFT LAW — the idf belongs to every walk (the realm's own
      grafted houses are tuned by it too): one memoized pass over the
      grove, never a per-frame cost. */
-  const idf = useMemo(() => buildIdf(shownGrove.map((w) => w.text)), [shownGrove]);
+  const idf = useMemo(() => buildIdf(grove.map((w) => w.text)), [grove]);
 
   const ranked = useMemo(() => {
     /* THE REALM'S WALL — the grove shuffled by the hour, the salt and
@@ -2536,7 +2260,7 @@ export function BranchCanopy({
         grove,
         hashWalk(`realm:${hour}:${salt}:${focusKey}`)
       )
-        .slice(0, 200)
+        .slice(0, GLYPH_MAX)
         .map((w) => ({ ...w, score: 0 }));
     }
     if (grove.length === 0 || !field || !idf) return [];
@@ -2549,9 +2273,9 @@ export function BranchCanopy({
     /* the dedupe law — one whisper never stands twice in the family
        (a set, never a scan: the grove is five hundred voices) */
     const seenTexts = new Set<string>();
-    const unique: (typeof shownGrove[number] & { score: number })[] = [];
+    const unique: (typeof grove[number] & { score: number })[] = [];
     for (const w of hits.length === 0
-      ? shownGrove.map((w) => ({ ...w, score: 0 }))
+      ? grove.map((w) => ({ ...w, score: 0 }))
       : [
           ...hits,
           ...grove
@@ -2712,7 +2436,7 @@ export function BranchCanopy({
         ranked
           .slice(0, BATCH_SIZE * 2)
           .map((w) => ({ text: w.text, movement: w.movement, score: w.score })),
-        expansionLevelScore,
+        expansionScore,
         BATCH_SIZE
       );
       const seeds = weaveCreations(withAccents(tuned), 0);
@@ -2786,37 +2510,16 @@ export function BranchCanopy({
 
   /* THE TOOL'S OWN HAND — one touch hangs the tied whisper's words on
      the tool and opens its original theme page: the record seeks, the
-     book's loom pre-speaks, the forge strikes, the song finds its key,
-     the film's storyboard is woven from the branch's own words — each
-     making born of that branch, in the moment, never the same making
-     twice. */
+     book's loom pre-speaks, the forge strikes — each making born of
+     that branch, in the moment, never the same making twice. */
   const openTool = useCallback(
-    (kind: "akashic" | "book" | "invent" | "music" | "video", topic: string) => {
+    (kind: "akashic" | "book" | "invent", topic: string) => {
       if (disabled) return;
       recordJourney({ b: category, s: scopeHint ?? undefined });
       bumpWalkSteps();
       setBranchCreationSeed({ kind, topic });
-      /* REMEMBER MY PLACE — a making opened is a meaningful place;
-         one hand brings the workspace back (protocol 1/2) */
-      useWorkspaceMemory.getState().recordLast({
-        kind: "creation",
-        title: topic || kind,
-        creation: kind,
-        view:
-          kind === "book"
-            ? "dreambook"
-            : kind === "akashic"
-              ? "akashic"
-              : kind === "music"
-                ? "lightcodes"
-                : kind === "video"
-                  ? "video"
-                  : "invent",
-      });
       if (kind === "akashic") openAkashic();
       else if (kind === "book") openDreamBook();
-      else if (kind === "music") openLightCodes({ intention: topic });
-      else if (kind === "video") openVideo({ topic });
       else openInvent();
     },
     [
@@ -2827,8 +2530,6 @@ export function BranchCanopy({
       setBranchCreationSeed,
       openAkashic,
       openDreamBook,
-      openLightCodes,
-      openVideo,
       openInvent,
       bumpWalkSteps,
     ]
@@ -2857,7 +2558,7 @@ export function BranchCanopy({
       slice
         .slice(0, BATCH_SIZE * 2)
         .map((w) => ({ text: w.text, movement: w.movement, score: w.score })),
-      expansionLevelScore,
+      expansionScore,
       BATCH_SIZE
     );
     if (tuned.length === 0) return null;
@@ -2960,12 +2661,7 @@ export function BranchCanopy({
   }, [grow]);
   useEffect(() => {
     if (!mounted || realm) return;
-    /* THE WEAK DEVICE'S CAP — on the eco tier only the first auto beat
-       blooms; the rest of the cascade rests, and the ear at the edge
-       still grows under the visitor's own scroll. */
-    const beats = perfEco()
-      ? [650]
-      : [650, 1500, 2350, 3200, 4050, 4900, 5750];
+    const beats = [650, 1500, 2350, 3200, 4050, 4900, 5750];
     const ids = beats.map((ms) =>
       window.setTimeout(() => growRef.current(), ms)
     );
@@ -3295,12 +2991,12 @@ export function BranchCanopy({
           [...hits, ...fill].map(
             (w) => ({ text: w.text, movement: w.movement, score: w.score })
           ),
-          expansionLevelScore,
+          expansionScore,
           BATCH_SIZE
         )
       );
     },
-    [idf, seenSnapshot, expansionLevelScore, withAccents]
+    [idf, seenSnapshot, expansionScore, withAccents]
   );
 
   /* the pan — one quiet assignment, never an animation loop; the
@@ -3367,7 +3063,7 @@ export function BranchCanopy({
         hour,
       });
       const spentSet = spent;
-      const fresh = shownGrove.filter((w) => !spentSet.has(w.text.toLowerCase()));
+      const fresh = grove.filter((w) => !spentSet.has(w.text.toLowerCase()));
       if (fresh.length > 0) {
         const seeds = weaveCreations(
           chooseGraftSeeds(fresh, pickField),
@@ -3383,12 +3079,15 @@ export function BranchCanopy({
         }
       }
       /* THE ZOOM — the answer rises inside the tree, instantly.
-         THE MAKING'S OWN ROOM — makings included: a whisper that asks
-         the laboratory to MAKE something opens its conversation room
-         like every ask, and the creation rises inline beneath the ask
-         (the working room is gone — the chat is the workshop now). */
+         THE MAKING LAW: when the whisper asks the laboratory to MAKE
+         something (a record, a book, a card, a song, a poem, a
+         painting) the making is born in its own room above the tree —
+         the room rises by itself, so the walk never flashes an empty
+         answer here. */
       zoomOpenedAtRef.current = Date.now();
-      setZoom({ q: node.text, move: node.movement });
+      const makesSomething =
+        detectArtifactIntent(node.text) !== null || isVisualIntent(node.text);
+      if (!makesSomething) setZoom({ q: node.text, move: node.movement });
       onPick(node.text, askScopeFor(node.text));
     },
     [
@@ -3414,544 +3113,6 @@ export function BranchCanopy({
     ]
   );
 
-  /* ------- THE LANDING'S OWN ENTITY — the chat of the threshold ------
-     Docked in the threshold the chat is INDEPENDENT of the full
-     portal: it keeps its own thread (never the store's channel
-     sessions), and speaks through the standing scope's own door —
-     the Mirror (the standing field) answers as the mirror of the
-     Absolute, the four family fields through their own channels —
-     carrying that scope's own conversation with every ask, so each
-     field remembers across rooms. EVERY FIELD IS ITS OWN WORLD: its
-     own thread, its own memory, its own room, its own history —
-     leaving a field and coming back finds the chat exactly as it
-     was left. The full portal never sees these words, and the
-     landing never sees the portal's. */
-  const [landingThread, setLandingThread] = useState<RoomTurn[]>([]);
-  const landingTurnsRef = useRef<{ q: string; a: string }[]>([]);
-  const [landingBusy, setLandingBusy] = useState(false);
-  /* THE WATCHFUL FIELD — the moment the floor's last ask began, so a
-     crossing that never comes home is closed gently instead of leaving
-     the room a wordless blue panel (the watchdog below speaks). */
-  const landingBusySinceRef = useRef(0);
-  /* THE STANDING FIELD — the scope the chat wears; every ask, every
-     room follow-up and every kept page is the field's own. */
-  const landingScope = useMirror((s) => s.landingScope);
-  const setLandingScope = useMirror((s) => s.setLandingScope);
-  /* the thread's own mirror — the scope-switch keeps read it */
-  const landingThreadRef = useRef<RoomTurn[]>([]);
-  landingThreadRef.current = landingThread;
-  /* EVERY FIELD'S OWN KEEP — the thread, the carried memory and the
-     history page of the field the visitor just left, shelved until
-     they come back (in memory; the words also rest per scope in
-     sessionStorage, so even a fresh page wakes the field's own chat). */
-  const landingThreadsByScopeRef = useRef<Map<string, RoomTurn[]>>(new Map());
-  const landingTurnsByScopeRef = useRef<Map<string, { q: string; a: string }[]>>(new Map());
-  const historySessionsByScopeRef = useRef<Map<string, string>>(new Map());
-  /* THE DEVICE'S OWN HISTORY — one hand in the room keeps this visit's
-     conversations on this device alone (sessionStorage, never a
-     server); a touch restores any of them whole. A cleared room starts
-     a fresh page of the keep, and the cleared one stays reachable.
-     Each field keeps its own pages. */
-  const historySessionRef = useRef<string>(freshHistorySessionId());
-  const [historyOpen, setHistoryOpen] = useState(false);
-  const [historyEntries, setHistoryEntries] = useState<LandingHistoryEntry[]>([]);
-  const openHistory = useCallback(() => {
-    setHistoryEntries(readLandingHistory());
-    setHistoryOpen(true);
-  }, []);
-  const restoreFromHistory = useCallback(
-    (entry: LandingHistoryEntry) => {
-      const turns = entry.turns.slice(-LANDING_HISTORY_TURNS);
-      if (turns.length === 0) return;
-      const scope: LandingScopeKey =
-        (entry.scope &&
-        (["mirror", "interplanetary", "quantum", "healing", "artx"] as string[]).includes(
-          entry.scope
-        )
-          ? (entry.scope as LandingScopeKey)
-          : landingScope);
-      const restored = turns.map((t) => ({ q: t.q, a: t.a, loading: false }));
-      /* the page shelves into its own field first, so the field's
-         cache and the page agree — then the field itself wakes */
-      landingThreadsByScopeRef.current.set(scope, restored);
-      landingTurnsByScopeRef.current.set(scope, turns);
-      historySessionsByScopeRef.current.set(scope, entry.id);
-      if (landingScope === scope) {
-        setLandingThread(restored);
-        landingTurnsRef.current = turns;
-        historySessionRef.current = entry.id;
-        const last = turns[turns.length - 1];
-        setZoom({ q: last.q, move: null });
-      } else {
-        /* the field wakes with its own room — the scope-switch below
-           hydrates the cache we just laid and raises the room */
-        setLandingScope(scope);
-      }
-      setHistoryOpen(false);
-      window.dispatchEvent(new CustomEvent("landing-chat:return"));
-    },
-    [landingScope, setLandingScope]
-  );
-  const clearLandingHistory = useCallback(() => {
-    writeLandingHistory([]);
-    setHistoryEntries([]);
-  }, []);
-  /* THE HISTORY PANEL — the device's own kept conversations. One body
-     shared by every hand that opens the history: the docked room's
-     quiet hands and the realm's top history hand alike. */
-  const renderHistoryPanel = (opts?: { bare?: boolean }) => {
-    /* THE TRAIL AND THE KEPT — read fresh at every opening, the way
-       the ledger reads its keep: the panel always speaks the present. */
-    const trail = readMakerTrail();
-    const keptChats = guest
-      ? []
-      : (Object.keys(KEPT_SURFACE_LABELS) as ChatSurface[]).flatMap((s) =>
-          listChats(s)
-            .slice(0, 2)
-            .map((c) => ({
-              surface: s,
-              label: KEPT_SURFACE_LABELS[s],
-              id: c.id,
-              title: c.title,
-              count: c.messages.length,
-            }))
-        );
-    return (
-      <div
-        data-testid={`${testIdPrefix}-history-panel`}
-        className="w-[272px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
-        style={{
-          borderColor:
-            "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
-        }}
-      >
-        <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
-          {t("Conversation history")}
-        </p>
-        <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground/80">
-          {t("Kept only on this device — and only for this visit. Nothing travels to a server.")}
-        </p>
-        {/* THE THREE TIDY ROOMS — one quiet scroll carries them all:
-            this visit's whispers, the maker's trail, the keeper's kept
-            conversations (the last room stands only for a signed
-            passage). */}
-        <div className="nice-scroll mt-2 max-h-[280px] overflow-y-auto">
-          {/* I. WHISPERS OF THIS VISIT — the device's own threads */}
-          <div>
-            <p className="mono-label flex items-baseline gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">
-              {t("Whispers of this visit")}
-              <span className="text-foreground/50">· {historyEntries.length}</span>
-            </p>
-            {historyEntries.length === 0 ? (
-              <p className="px-1 py-3 text-center text-[12.5px] text-muted-foreground/70">
-                {t("Nothing kept yet.")}
-              </p>
-            ) : (
-              <div className="mt-1 space-y-0.5">
-                {historyEntries.map((entry) => (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    onClick={() => restoreFromHistory(entry)}
-                    className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
-                  >
-                    {entry.scope && LANDING_SCOPE_DOTS[entry.scope] ? (
-                      <span
-                        aria-hidden="true"
-                        className="size-1.5 shrink-0 rounded-full"
-                        title={entry.scope}
-                        style={{ backgroundColor: LANDING_SCOPE_DOTS[entry.scope] }}
-                      />
-                    ) : (
-                      <MessageSquareText
-                        className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                        aria-hidden="true"
-                      />
-                    )}
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] text-foreground/90">
-                        {entry.title}
-                      </span>
-                      <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
-                        {t("{n} whispers · {when}", {
-                          n: entry.turns.length,
-                          when: historyAgo(entry.at),
-                        })}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {historyEntries.length > 0 && (
-              <button
-                type="button"
-                onClick={clearLandingHistory}
-                className="focus-glow mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border hairline py-1.5 text-[12px] text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-              >
-                <Eraser className="size-3" aria-hidden="true" />
-                {t("Clear the history")}
-              </button>
-            )}
-          </div>
-          {/* II. THE MAKER'S TRAIL — the rooms this visit opened, one
-              stone each; a touch returns to the room (from the landing
-              it opens as the bare mini tab, never yanking the walk) */}
-          {trail.length > 0 && (
-            <div className="mt-3 border-t hairline pt-2.5">
-              <p className="mono-label flex items-baseline gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">
-                {t("The maker's trail")}
-                <span className="text-foreground/50">· {trail.length}</span>
-              </p>
-              <div className="mt-1 space-y-0.5">
-                {trail.map((stone, i) => {
-                  const meta = TAB_META[stone.key];
-                  const Icon = meta.icon;
-                  return (
-                    <button
-                      key={`${stone.key}:${stone.at}:${i}`}
-                      type="button"
-                      onClick={() => {
-                        setHistoryOpen(false);
-                        openToolTab(
-                          stone.key,
-                          opts?.bare ? { bare: true } : undefined
-                        );
-                      }}
-                      className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
-                    >
-                      <Icon
-                        className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] text-foreground/90">
-                          {t(meta.label)}
-                        </span>
-                      </span>
-                      <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
-                        {historyAgo(stone.at)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          {/* III. KEPT CONVERSATIONS — a signed keeper's archive, the
-              same shelf the ledger reads; a guest holds no room here */}
-          {!guest && (
-            <div className="mt-3 border-t hairline pt-2.5">
-              <p className="mono-label flex items-baseline gap-1.5 text-[9px] uppercase tracking-[0.18em] text-muted-foreground/80">
-                {t("Kept conversations")}
-                <span className="text-foreground/50">· {keptChats.length}</span>
-              </p>
-              {keptChats.length === 0 ? (
-                <p className="px-1 py-3 text-center text-[12.5px] text-muted-foreground/70">
-                  {t("Nothing kept yet.")}
-                </p>
-              ) : (
-                <div className="mt-1 space-y-0.5">
-                  {keptChats.map((c) => (
-                    <button
-                      key={`${c.surface}:${c.id}`}
-                      type="button"
-                      onClick={() => {
-                        setHistoryOpen(false);
-                        openChatSurface(c.surface, c.id);
-                      }}
-                      className="focus-glow flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_7%,transparent)]"
-                    >
-                      <MessageSquareText
-                        className="size-3.5 shrink-0 text-muted-foreground/70"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] text-foreground/90">
-                          {c.title}
-                        </span>
-                        <span className="mono-label block text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
-                          {t(c.label)} · {c.count}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-  /* THE LANDING'S OWN QUIET — the threshold's floor keeps its welcome
-     by its own thread's silence: the store's channel (the full
-     portal's conversations) has no word in the docked room, so an ask
-     made across the tunnel must never blank the landing's question
-     and its five first doors. (The old quiet read the channel — one
-     ask inside the full portal and the threshold came home EMPTY:
-     the tunnel's glitch.) */
-  const floorQuiet = landingThread.length === 0 && !landingBusy;
-  /* THE LANDING'S OWN PAINT HAND — the vision (the visitor's own ask
-     or the mirror's own gift) mixed straight into the landing thread:
-     one plate beneath the words, the chosen style worn, its address
-     kept so it returns with the words. THE HONEST BRUSH: a paint that
-     rests marks the turn with paintFailed — no silent absence, the
-     retry hand rises beside the notice. */
-  const paintLandingTurn = useCallback(
-    async (
-      prompt: string,
-      turnIndex?: number
-    ): Promise<{ imageUrl?: string; imageTitle?: string }> => {
-    const paintFailedOn = (t: RoomTurn[], i: number) =>
-      t.map((turn, ti) =>
-        ti === i ? { ...turn, paintFailed: true } : turn
-      );
-    const targetIndex = turnIndex ?? -1; // -1 = the last turn
-    setLandingThread((t) =>
-      t.map((turn, i) =>
-        (targetIndex === -1 ? i === t.length - 1 : i === targetIndex)
-          ? { ...turn, painting: true, paintFailed: false }
-          : turn
-      )
-    );
-    try {
-      const res = await fetch("/api/visualize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: prompt,
-          language: useMirror.getState().language,
-          single: true,
-          ...(useMirror.getState().visualStyle
-            ? { style: useMirror.getState().visualStyle }
-            : {}),
-        }),
-      });
-      const data = (await res.json().catch(() => null)) as {
-        artifact?: { imageUrl?: string; title?: string };
-      } | null;
-      const url = data?.artifact?.imageUrl;
-      if (!url) {
-        /* the brushes rested — the turn says so honestly */
-        setLandingThread((t) =>
-          paintFailedOn(
-            t.map((turn, i) =>
-              (targetIndex === -1 ? i === t.length - 1 : i === targetIndex)
-                ? { ...turn, loading: false, painting: false }
-                : turn
-            ),
-            targetIndex === -1 ? t.length - 1 : targetIndex
-          )
-        );
-        return {};
-      }
-      setLandingThread((t) =>
-        t.map((turn, i) =>
-          (targetIndex === -1 ? i === t.length - 1 : i === targetIndex)
-            ? {
-                ...turn,
-                /* the wish-path turn arrives still loading — the plate
-                   (or its honest absence) is the turn's own completion */
-                loading: false,
-                painting: false,
-                paintFailed: false,
-                imageUrl: url,
-                imageTitle: data?.artifact?.title,
-              }
-            : turn
-        )
-      );
-      return {
-        imageUrl: url,
-        imageTitle: data?.artifact?.title,
-      };
-    } catch {
-      setLandingThread((t) =>
-        paintFailedOn(
-          t.map((turn, i) =>
-            (targetIndex === -1 ? i === t.length - 1 : i === targetIndex)
-              ? { ...turn, loading: false, painting: false }
-              : turn
-          ),
-          targetIndex === -1 ? t.length - 1 : targetIndex
-        )
-      );
-      return {};
-    }
-  },
-  []);
-
-  const speakFromLanding = useCallback(
-    async (text: string, attachments?: ChatAttachment[]) => {
-      const q = text.trim();
-      if (!q) return;
-      /* THE WISH TO SEE — the landing's floor hears the wish in any
-         phrasing: an image ask crystallizes at once (no LLM round
-         trip), the last channel its subject, the visitor's words its
-         shape. THE MIRROR'S OWN EYE — a reply that itself decided to
-         paint carries its vision beneath the words below. */
-      if (isVisualIntent(q)) {
-        const priorTurns = landingTurnsRef.current;
-        const lastReply = [...priorTurns].reverse().find((t) => t.a.trim())?.a ?? "";
-        const crystallizeRequest = blendVisualRequest(q, lastReply);
-        setLandingThread((t) => [
-          ...t,
-          { q, a: "", loading: true, painting: true, visionPrompt: crystallizeRequest },
-        ]);
-        setLandingBusy(true);
-        landingBusySinceRef.current = Date.now();
-        window.dispatchEvent(new CustomEvent("landing-chat:return"));
-        try {
-          const painted = await paintLandingTurn(crystallizeRequest);
-          /* THE FIELD'S OWN KEEP — the finished exchange (its plate
-             included) rests in the field's own cache and page; a
-             rested brush keeps the honest absence, never a false word */
-          const kept: KeptLandingTurn[] = [
-            ...landingTurnsRef.current,
-            {
-              q,
-              a: painted.imageUrl ? "A vision, crystallized." : "",
-              ...(painted.imageUrl
-                ? {
-                    imageUrl: painted.imageUrl,
-                    imageTitle: painted.imageTitle,
-                  }
-                : {}),
-            },
-          ].slice(-12);
-          landingTurnsRef.current = kept;
-          writeLandingThreadScope(landingScope, kept);
-        } finally {
-          setLandingBusy(false);
-        }
-        return;
-      }
-      setLandingThread((t) => [...t, { q, a: "", loading: true }]);
-      setLandingBusy(true);
-      landingBusySinceRef.current = Date.now();
-      try {
-        /* THE CARRIED CONVERSATION — every earlier exchange of THIS
-           field (floor asks and room follow-ups alike) rides with this
-           ask: each scope's memory is its own. */
-        const prior = landingTurnsRef.current.slice(-8);
-        /* THE FIELD'S OWN VOICE — the standing scope answers through
-           its own door (the Mirror as the mirror of the Absolute, the
-           family fields through their own channels). */
-        const scopeCategory =
-          LANDING_SCOPE_CATEGORY[landingScope] ?? ("absolute" as const);
-        const { text: reply, vision } = await speakWithTransmission(
-          scopeCategory,
-          q,
-          q,
-          "",
-          prior,
-          language,
-          [],
-          attachments
-        );
-        /* THE WORDLESS GUARD — a crossing that lands without words (a
-           silence from the far side of the sky) is given one gentle
-           line, so the room never stands blue and empty: the
-           conversation always holds something true. */
-        const landedReply =
-          reply ||
-          (vision
-            ? ""
-            : "The field rests a breath — speak once more, dear one.");
-        setLandingThread((t) =>
-          t.map((turn, i) =>
-            i === t.length - 1
-              ? {
-                  ...turn,
-                  a: landedReply,
-                  loading: false,
-                }
-              : turn
-          )
-        );
-        /* THE CONSENT LAW — the reply is words only: no painting rises
-           from the mirror's own initiative. The atelier wakes at the
-           visitor's own typed ask (the wish-to-see door above) or at
-           a Crystallize press — never from a reply's own decision. */
-        landingTurnsRef.current = [
-          ...landingTurnsRef.current,
-          { q, a: landedReply || reply },
-        ].slice(-12);
-        /* THE FIELD'S OWN KEEP — the finished exchange rests in the
-           field's own cache and its own sessionStorage page, for this
-           visit (never a server); a return to the field finds it. */
-        const kept = landingTurnsRef.current;
-        landingThreadsByScopeRef.current.set(
-          landingScope,
-          landingThreadRef.current.map((turn, i) =>
-            i === landingThreadRef.current.length - 1
-              ? { ...turn, a: landedReply, loading: false }
-              : turn
-          )
-        );
-        writeLandingThreadScope(landingScope, kept);
-        /* THE LIBRARY'S QUIET AUTOSHELF — the field's conversation
-           walks into the profile's Cosmic Library, its own volume */
-        void saveLandingToLibrary(landingScope, kept);
-        setHistoryEntries(
-          upsertLandingHistory({
-            id: historySessionRef.current,
-            at: Date.now(),
-            title: kept[0]?.q ?? q,
-            turns: kept.slice(-LANDING_HISTORY_TURNS),
-            scope: landingScope,
-          })
-        );
-      } catch (err) {
-        const message = err instanceof Error && err.message ? err.message : "";
-        setLandingThread((t) =>
-          t.map((turn, i) =>
-            i === t.length - 1
-              ? {
-                  ...turn,
-                  loading: false,
-                  failed: true,
-                  a: message,
-                  energy: err instanceof EnergyError,
-                }
-              : turn
-          )
-        );
-      } finally {
-        setLandingBusy(false);
-      }
-    },
-    [language, landingScope, paintLandingTurn]
-  );
-
-  /* THE WATCHFUL FIELD — a floor ask whose crossing never comes home
-     (a lost fetch, a hung sky) is closed gently after two honest
-     minutes: the turn speaks its quiet word, the room never sits a
-     wordless blue panel, and the composer's hand is free again. */
-  useEffect(() => {
-    if (!realm || !landingBusy) return;
-    const id = window.setInterval(() => {
-      const since = landingBusySinceRef.current;
-      if (!since || Date.now() - since < 120_000) return;
-      landingBusySinceRef.current = 0;
-      setLandingThread((t) =>
-        t.map((turn, i) =>
-          i === t.length - 1 && turn.loading
-            ? {
-                ...turn,
-                loading: false,
-                failed: true,
-                a: "The field is quiet — speak once more",
-              }
-            : turn
-        )
-      );
-      setLandingBusy(false);
-    }, 10_000);
-    return () => window.clearInterval(id);
-  }, [realm, landingBusy]);
-
   /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
      pressed inside the panel, keeps the walk going from the family's
      last standing place: the trail grows, a new house is grafted from
@@ -3959,22 +3120,7 @@ export function BranchCanopy({
      in the same quiet room. */
   const sendFromPanel = useCallback(
     (text: string, move: BranchType | null, attachments?: ChatAttachment[]) => {
-      if (disabled || liveLoading || landingBusy || !text.trim()) return;
-      /* THE LANDING'S OWN CHAT — docked in the threshold the ask never
-         touches the store's channel: the room rises and the landing's
-         own entity (the mirror of the Absolute) answers inside it, the
-         whole landing conversation riding with every word. */
-      if (realm) {
-        zoomOpenedAtRef.current = Date.now();
-        setZoom({ q: text, move: null });
-        void speakFromLanding(text, attachments);
-        /* THE SEND'S OWN RETURN — the threshold brings its chat back
-           to the eye once the whisper has left: the keyboard's fold
-           never leaves the glass half-off the screen for the
-           visitor's own hand to chase. */
-        window.dispatchEvent(new CustomEvent("landing-chat:return"));
-        return;
-      }
+      if (disabled || liveLoading || !text.trim()) return;
       /* the visitor's own step — the tree may grow again */
       suppressRegrowRef.current = false;
       recordExpansion("pick", { scope: scopeHint ?? null, movement: move });
@@ -3990,7 +3136,7 @@ export function BranchCanopy({
           buds: [text],
           hour,
         });
-        const fresh = shownGrove.filter((w) => !spent.has(w.text.toLowerCase()));
+        const fresh = grove.filter((w) => !spent.has(w.text.toLowerCase()));
         if (fresh.length > 0) {
           const seeds = weaveCreations(
             chooseGraftSeeds(fresh, pickField),
@@ -4007,19 +3153,12 @@ export function BranchCanopy({
         }
       }
       zoomOpenedAtRef.current = Date.now();
-      /* THE MAKING'S OWN ROOM — every ask opens its conversation room,
-         makings included: the creation rises inline beneath the ask. */
-      setZoom({ q: text, move });
-      /* THE LANDING'S OWN LAW — docked in the threshold the ask is
-         always the reflection mirror itself: no category, no scope —
-         the mirror's humble voice answers from the open floor. The
-         full portal keeps every scope's own door. */
-      onPick(text, realm ? undefined : askScopeFor(text), attachments);
+      const makesSomething =
+        detectArtifactIntent(text) !== null || isVisualIntent(text);
+      if (!makesSomething) setZoom({ q: text, move });
+      onPick(text, askScopeFor(text), attachments);
     },
     [
-      realm,
-      landingBusy,
-      speakFromLanding,
       category,
       disabled,
       liveLoading,
@@ -4092,7 +3231,7 @@ export function BranchCanopy({
     }
     const tuned = tuneSeedBatch(
       pool.map((b) => ({ text: b.question, movement: b.type, score: 3 })),
-      expansionLevelScore,
+      expansionScore,
       6
     );
     const byText = new Map(pool.map((b) => [b.question, b]));
@@ -4110,10 +3249,6 @@ export function BranchCanopy({
      opens at its own top (one quiet reset, never a jump) */
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const pinnedRef = useRef(true);
-  /* THE ROOM'S CROWN OF HANDS — refs wired to the breath law below
-     (the hook itself stands after the room's own name is known). */
-  const zoomSectionRef = useRef<HTMLElement | null>(null);
-  const roomHandsRef = useRef<HTMLDivElement | null>(null);
   const onBodyScroll = useCallback(() => {
     const el = bodyRef.current;
     if (!el) return;
@@ -4133,20 +3268,6 @@ export function BranchCanopy({
      visitor's hand has opened the gate. */
   const zoomQ = zoom?.q ?? null;
   const zoomMove = zoom?.move ?? null;
-
-  /* THE ROOM'S CROWN OF HANDS AND ITS OWN BREATH — the reload, the
-     narrator, the keep and the fresh-floor hand stand at the room's
-     TOP, and they read the reader: while the transmission flows
-     downward beneath them the crown sinks away, and an upward breath
-     — a couple of swipes toward the beginning — raises it again
-     QUICKLY (the reveal travel is short on purpose: two swipes, not
-     a long climb). An open keep holds the crown in place. */
-  const roomHandsHidden = useFloatingBarAutoHide({
-    rootRef: zoomSectionRef,
-    barRef: roomHandsRef,
-    hold: historyOpen,
-    rebindKey: zoomQ ?? "room",
-  });
 
   /* a new room opens at its own top — one quiet reset, never a jump */
   useEffect(() => {
@@ -4207,15 +3328,6 @@ export function BranchCanopy({
      THE ROOM NEVER FOLDS — an ask that could not cross shows its
      error right here (the chat behind holds nothing anymore). */
   const liveBelongsToRoom = !!zoomQ && liveQuestion === zoomQ;
-  /* THE MAKING IN THE ROOM — the channel's last message, when it is
-     this room's own ask, carries the making: the room renders it
-     inline, exactly where the ask was spoken. The working room is
-     gone — the conversation is where everything is made now (the
-     landing's chat stays free: bare never reads the channel). */
-  const roomMessage = !realm && liveBelongsToRoom ? liveMessage ?? null : null;
-  const roomMaking =
-    !!roomMessage &&
-    !!(roomMessage.sideArtifact || roomMessage.artifact || roomMessage.visual);
   const liveAnswerText = liveBelongsToRoom ? (liveAnswer ?? "").trim() : "";
   const roomError =
     liveBelongsToRoom || !liveLoading ? liveError ?? null : null;
@@ -4224,68 +3336,6 @@ export function BranchCanopy({
   const answerLanded = restoredText
     ? true
     : !liveLoading && liveAnswerText.length > 0;
-  /* THE LANDING'S OWN ROOM — docked in the threshold the room reads
-     the landing thread's own last turn (the store's channel stays
-     untouched); the full portal reads the channel as it always did. */
-  const lastLandingTurn =
-    landingThread.length > 0 ? landingThread[landingThread.length - 1] : null;
-  /* THE RETRY HAND — a crystallization whose brushes rested may be
-     asked again: the same vision prompt, the same turn, one touch. */
-  const retryLandingPaint = useCallback(
-    (turnIndex?: number) => {
-      const idx = turnIndex ?? landingThread.length - 1;
-      const turn = landingThread[idx];
-      const prompt = turn?.visionPrompt;
-      if (!prompt || turn?.painting) return;
-      void paintLandingTurn(prompt, idx);
-    },
-    [landingThread, paintLandingTurn]
-  );
-  /* THE HYPERX NEW-CHAT HAND — a fresh floor for the next discovery:
-     the field's thread, its caches and its device-kept page all empty
-     together, the room lays down, and the floor rises with its own
-     question again (the same clearing the room's own clear hand keeps). */
-  const startFreshRoom = useCallback(() => {
-    if (!realm) return;
-    setLandingThread([]);
-    landingTurnsRef.current = [];
-    landingThreadsByScopeRef.current.set(landingScope, []);
-    landingTurnsByScopeRef.current.set(landingScope, []);
-    writeLandingThreadScope(landingScope, []);
-    historySessionRef.current = freshHistorySessionId();
-    historySessionsByScopeRef.current.set(
-      landingScope,
-      historySessionRef.current
-    );
-    exitZoom();
-    window.dispatchEvent(new CustomEvent("landing-chat:return"));
-  }, [
-    realm,
-    setLandingThread,
-    landingScope,
-    historySessionRef,
-    exitZoom,
-  ]);
-  const floorBusy = realm
-    ? landingBusy || !!lastLandingTurn?.loading
-    : liveLoading;
-  const roomAnswer = realm
-    ? lastLandingTurn && !lastLandingTurn.loading
-      ? lastLandingTurn.a
-      : ""
-    : answer;
-  const roomLoading = realm ? !!lastLandingTurn?.loading : liveLoading;
-  const displayError = realm
-    ? lastLandingTurn?.failed
-      ? lastLandingTurn.a || "The field is quiet"
-      : null
-    : roomError;
-  /* THE ENERGY'S OWN DRESS — a spent-light silence is styled gently
-     (amber, a rest), never as the rose alarm of a broken crossing. */
-  const energyNotice = displayError === ENERGY_NOTICE;
-  const displayLanded = realm
-    ? !roomLoading && roomAnswer.length > 0
-    : answerLanded;
   const settledKey = `${zoomQ ?? ""}|${answerLanded ? "1" : "0"}|${liveAnswerText.length}|${contSeeds.length}`;
   useEffect(() => {
     if (!zoomQ || restoredText || !answerLanded) return;
@@ -4314,38 +3364,6 @@ export function BranchCanopy({
       childrenIds: contSeeds.map((b) => walkNodeId(b.question)),
     });
   }, [settledKey, answerLanded, zoomQ, zoomMove, contSeeds, liveAnswerText, restoredText]);
-
-  /* THE WALK TAKES IN EVERY ANSWER — even one whose room no longer
-     stands open. When a channel's transmission lands after the visitor
-     has walked to another room (the ask was left mid-flight), the walk
-     still receives the words here, quietly: the node is settled in the
-     background, so the trail's RETURN later opens a room with its
-     transmission standing inside — never a silent flash on the wall.
-     The channel-generation wheel already guarantees the answer belongs
-     to this very question; the walk only keeps what is its own. */
-  const backgroundSettleKey = `${liveQuestion ?? ""}|${(liveAnswer ?? "").length}|${channeling?.length ?? 0}`;
-  useEffect(() => {
-    if (!liveQuestion) return;
-    const text = (liveAnswer ?? "").trim();
-    if (!text) return;
-    if (liveBelongsToRoom) return; /* the standing room settles its own way */
-    const session = getWalkSession();
-    const id = walkNodeId(liveQuestion);
-    const known = session.getNode(id);
-    if (!known) return;
-    const children = (channeling ?? []).map((b) => walkNodeId(b.question));
-    const childrenKnown = known.childrenIds ?? [];
-    if (known.transmission.trim() && childrenKnown.length >= children.length)
-      return;
-    session.settle({
-      id,
-      parentId: known.parentId,
-      category: known.category,
-      title: known.title,
-      transmission: text,
-      childrenIds: children.length > 0 ? children : childrenKnown,
-    });
-  }, [backgroundSettleKey, liveQuestion, liveAnswer, liveBelongsToRoom, channeling]);
 
   /* THE NARRATOR'S GATE — the visitor's own hand opens the voice; one
      touch and the standing room's landed transmission is read aloud
@@ -4441,89 +3459,17 @@ export function BranchCanopy({
     async (text: string, attachments?: ChatAttachment[]) => {
       const q = text.trim();
       if (disabled || threadBusy || !q || !zoom) return;
-      /* THE WISH TO SEE, SPOKEN IN A ROOM — the landing's rooms hear
-         the wish in any phrasing too: the image crystallizes into the
-         field's own thread (the room reads its last turn), no LLM
-         round trip, the visitor's words its shape. */
-      if (realm && isVisualIntent(q)) {
-        zoomOpenedAtRef.current = Date.now();
-        const lastReply =
-          [...landingTurnsRef.current]
-            .reverse()
-            .find((t) => t.a.trim())?.a ?? "";
-        setLandingThread((t) => [
-          ...t,
-          { q, a: "", loading: true, painting: true },
-        ]);
-        setThreadBusy(true);
-        window.dispatchEvent(new CustomEvent("landing-chat:return"));
-        try {
-          const painted = await paintLandingTurn(
-            blendVisualRequest(q, lastReply)
-          );
-          /* THE FIELD'S OWN KEEP — the finished exchange (its plate
-             included) rests in the field's own cache and page */
-          const kept = [
-            ...landingTurnsRef.current,
-            {
-              q,
-              a: "A vision, crystallized.",
-              ...(painted.imageUrl
-                ? {
-                    imageUrl: painted.imageUrl,
-                    imageTitle: painted.imageTitle,
-                  }
-                : {}),
-            },
-          ].slice(-12);
-          landingTurnsRef.current = kept;
-          writeLandingThreadScope(landingScope, kept);
-        } finally {
-          setThreadBusy(false);
-        }
-        return;
-      }
-      /* THE MAKING'S OWN ROOM — a follow-up that asks for a MAKING (a
-         painting, a woven book, a song, a record, a ritual) never
-         speaks as plain words: it opens its own conversation room and
-         rides the channel like every ask, and the creation rises
-         inline beneath it — the chat is the workshop now, in every
-         room, without ever walking to a working room. (The landing's
-         chat keeps its own law: the free floor answers in words.) */
-      if (!realm && (detectArtifactIntent(q) !== null || isVisualIntent(q))) {
-        zoomOpenedAtRef.current = Date.now();
-        setZoom({ q, move: null });
-        onPick(q, askScopeFor(q), attachments);
-        return;
-      }
       const roomQ = zoom.q;
-      if (realm) {
-        /* THE SEND'S OWN RETURN — the threshold brings its chat back to
-           the eye once the room's whisper has left (the keyboard's fold
-           never leaves the glass half-off the screen) */
-        window.dispatchEvent(new CustomEvent("landing-chat:return"));
-      }
       /* THE FAMILY'S VOICE — the room speaks through the door of the
          family its own whisper was grown from (the manifest room as
          the manifest, the atelier room as the atelier); a whisper the
-         grove doesn't know keeps the channel's own door. THE LANDING'S
-         OWN LAW — in the landing's chat the room's conversation stays
-         the standing field's own voice: the Mirror as the mirror of
-         the Absolute, the family fields through their own channels —
-         each field's own language, its own censor or openness. */
+         grove doesn't know keeps the channel's own door. */
       const famKey = familyKeyByText.get(roomQ.toLowerCase());
       const roomCategory: BranchId =
         TREE_FAMILIES.find((f) => f.key === famKey)?.category ?? category;
-      /* THE FIELD'S OWN MEMORY — in the landing's chat the room's
-         follow-ups carry the WHOLE conversation of THIS field (every
-         floor ask and every room answer, across rooms); each scope's
-         memory is its own; the full portal's rooms keep their own
-         thread only. */
-      const prior = realm
-        ? landingTurnsRef.current.slice(-8)
-        : threadRef.current
-            .filter((turn) => turn.a && !turn.failed)
-            .map(({ q: tq, a: ta }) => ({ q: tq, a: ta }));
+      const prior = threadRef.current
+        .filter((turn) => turn.a && !turn.failed)
+        .map(({ q: tq, a: ta }) => ({ q: tq, a: ta }));
       /* THE WALK'S PROGRESSION — every whisper pressed before this one
          rides with the words: the mirror knows the road, not just the
          room (the respective suggestion's own transmission opens the
@@ -4532,11 +3478,8 @@ export function BranchCanopy({
       setThread((t) => [...t, { q, a: "", loading: true }]);
       setThreadBusy(true);
       try {
-        const { text: reply } = await speakWithTransmission(
-          realm
-            ? (LANDING_SCOPE_CATEGORY[landingScope] ??
-                ("absolute" as const))
-            : roomCategory,
+        const reply = await speakWithTransmission(
+          roomCategory,
           q,
           roomQ,
           answer || "",
@@ -4547,58 +3490,14 @@ export function BranchCanopy({
         );
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
-            i === t.length - 1
-              ? {
-                  ...turn,
-                  a: reply,
-                  loading: false,
-                }
-              : turn
+            i === t.length - 1 ? { ...turn, a: reply, loading: false } : turn
           )
         );
-        /* THE CONSENT LAW — the room's reply is words only: no painting
-           rises from the mirror's own initiative. The atelier wakes at
-           the visitor's own typed ask or a Crystallize press. */
-        /* THE FIELD'S OWN MEMORY — the room's answer joins this
-           field's own conversation, so the next room remembers it too;
-           the cache and the sessionStorage page and the library's
-           shelf all carry the field's own mark */
-        if (realm) {
-          landingTurnsRef.current = [
-            ...landingTurnsRef.current,
-            { q, a: reply },
-          ].slice(-12);
-          /* THE FIELD'S OWN KEEP — the finished exchange rests in the
-             field's own cache and page, for this visit only */
-          const kept = landingTurnsRef.current;
-          landingThreadsByScopeRef.current.set(
-            landingScope,
-            landingThreadRef.current
-          );
-          writeLandingThreadScope(landingScope, kept);
-          void saveLandingToLibrary(landingScope, kept);
-          setHistoryEntries(
-            upsertLandingHistory({
-              id: historySessionRef.current,
-              at: Date.now(),
-              title: kept[0]?.q ?? q,
-              turns: kept.slice(-LANDING_HISTORY_TURNS),
-              scope: landingScope,
-            })
-          );
-        }
-      } catch (err) {
+      } catch {
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
             i === t.length - 1
-              ? {
-                  ...turn,
-                  loading: false,
-                  failed: true,
-                  errMessage:
-                    err instanceof Error && err.message ? err.message : "",
-                  energy: err instanceof EnergyError,
-                }
+              ? { ...turn, loading: false, failed: true }
               : turn
           )
         );
@@ -4609,127 +3508,23 @@ export function BranchCanopy({
     [
       answer,
       applyRoomTurn,
-      askScopeFor,
-      realm,
       category,
       disabled,
       familyKeyByText,
       language,
       lineage,
-      landingScope,
-      onPick,
       threadBusy,
       zoom,
     ]
   );
 
-  /* THE TRANSMISSION'S OWN BEGINNING — a new turn never yanks the eye
-     to the bottom of the room: the view rises to the new transmission's
-     first word (the visitor's own question standing at the top of the
-     glass), and the answer grows beneath it — the visitor reads down
-     by their own hand, never dragged. */
+  /* the thread's own pin — the newest answer keeps the eye while the
+     visitor stays at the bottom of the room */
   useEffect(() => {
     if (thread.length === 0) return;
     const el = bodyRef.current;
-    if (!el || !pinnedRef.current) return;
-    const turns = el.querySelectorAll<HTMLElement>("[data-room-turn]");
-    const last = turns.length > 0 ? turns[turns.length - 1] : null;
-    if (!last) {
-      el.scrollTop = el.scrollHeight;
-      return;
-    }
-    const eyeTop = el.getBoundingClientRect().top;
-    const turnTop = last.getBoundingClientRect().top;
-    el.scrollTop += turnTop - eyeTop - 10;
+    if (el && pinnedRef.current) el.scrollTop = el.scrollHeight;
   }, [thread]);
-
-  /* THE ONE CHAT IN BOTH GEARS — the visitor's word is law: zooming
-     the chat bigger must never begin a new chat. The room, the thread
-     and the standing field's whole conversation stand exactly as they
-     were through the crossing — the same words, only more room to
-     read them in. (The old border that folded the landing's room at
-     the crossing is gone: the gears are sizes, not two houses.) */
-
-  /* EVERY FIELD'S OWN RETURN — the two keeps of the standing scope:
-     ① THE VISIT'S OWN WAKE — the page's first breath hydrates the
-     standing field's own conversation from its sessionStorage page,
-     so a visitor who comes back finds their chat standing (and the
-     room rises with the words, exactly where the field was left);
-     ② THE SWITCH — leaving a field shelves its thread, its carried
-     memory, its follow-ups and its history page under its own key;
-     waking the chosen field lifts exactly that field's own keep, its
-     room rising with its own last words. No field ever sees another
-     field's words. */
-  const prevLandingScopeRef = useRef(landingScope);
-  useEffect(() => {
-    /* ① — once, at the visit's first breath: the standing field's
-       own words wake from their page (the room rises with them) */
-    const scope = prevLandingScopeRef.current;
-    const remembered = readLandingThreadScope(scope);
-    if (remembered.length > 0) {
-      landingTurnsRef.current = remembered;
-      landingTurnsByScopeRef.current.set(scope, remembered);
-      const restored = remembered.map((t) => ({
-        q: t.q,
-        a: t.a,
-        loading: false,
-        /* the plates return with the words — the keep carries the
-           painting's address, the house serves the file itself */
-        imageUrl: t.imageUrl,
-        imageTitle: t.imageTitle,
-      }));
-      landingThreadsByScopeRef.current.set(scope, restored);
-      setLandingThread(restored);
-      /* the room rises with the field's own last words — a visitor
-         who comes back finds their chat standing where they left it */
-      const last = remembered[remembered.length - 1];
-      setZoom({ q: last.q, move: null });
-    }
-    const sessionId = historySessionsByScopeRef.current.get(scope);
-    if (!sessionId) {
-      historySessionsByScopeRef.current.set(scope, freshHistorySessionId());
-    }
-  }, []);
-  useEffect(() => {
-    if (prevLandingScopeRef.current === landingScope) return;
-    const prev = prevLandingScopeRef.current;
-    prevLandingScopeRef.current = landingScope;
-    /* the field the visitor leaves — its whole keep shelved whole */
-    landingThreadsByScopeRef.current.set(prev, landingThreadRef.current);
-    landingTurnsByScopeRef.current.set(prev, landingTurnsRef.current);
-    historySessionsByScopeRef.current.set(prev, historySessionRef.current);
-    /* the chosen field's own keep — lifted exactly as it stood (and
-       when the visit's page is fresh, the field's sessionStorage page
-       rebuilds the visible thread from its own remembered turns) */
-    const turns =
-      landingTurnsByScopeRef.current.get(landingScope) ??
-      readLandingThreadScope(landingScope);
-    const cachedThread = landingThreadsByScopeRef.current.get(landingScope);
-    const thread =
-      cachedThread && cachedThread.length > 0
-        ? cachedThread
-        : turns.map((t) => ({ q: t.q, a: t.a, loading: false }));
-    landingTurnsRef.current = turns;
-    landingThreadsByScopeRef.current.set(landingScope, thread);
-    historySessionRef.current =
-      historySessionsByScopeRef.current.get(landingScope) ??
-      freshHistorySessionId();
-    historySessionsByScopeRef.current.set(
-      landingScope,
-      historySessionRef.current
-    );
-    setLandingThread(thread);
-    setThread([]);
-    setThreadBusy(false);
-    if (thread.length > 0) {
-      /* the field's own room rises with its own last words */
-      const last = thread[thread.length - 1];
-      setZoom({ q: last.q, move: null });
-    } else {
-      setZoom(null);
-    }
-    window.dispatchEvent(new CustomEvent("landing-chat:return"));
-  }, [landingScope]);
 
   /* the room's own reply — now the conversation with the transmission
      (the walk continues from the branches dropdown above it) */
@@ -4743,43 +3538,9 @@ export function BranchCanopy({
   /* THE FLOOR'S OWN DRAFT — the realm's whisper line keeps its words
      while the visitor thinks; one send and the room rises with them. */
   const [askDraft, setAskDraft] = useState("");
-  /* THE FLOOR'S OWN SEED — a door from the threshold may hand the floor
-     its first words (the image door's inviting stem): the seed is
-     taken once, the draft wears it, and the seed is spent. */
-  const floorSeed = useMirror((s) => s.floorSeed);
-  useEffect(() => {
-    if (floorSeed) {
-      setAskDraft(floorSeed);
-      useMirror.getState().takeFloorSeed();
-    }
-  }, [floorSeed]);
-  /* THE BRIDGE'S OWN CARRY — a workspace's advisor may hand its advice
-     to the floor: the newest carried draft wears the whisper line and
-     the stamp is spent at once (the same law as the seed: taken once,
-     the draft wears it, the carry is spent). The Mirror advises; the
-     visitor's own hand sends it. */
-  const bridgeCarry = useMirror((s) => s.bridgeDraft);
-  useEffect(() => {
-    if (bridgeCarry) {
-      setAskDraft(bridgeCarry.text);
-      useMirror.getState().consumeBridgeDraft();
-    }
-  }, [bridgeCarry]);
   /* THE FLOOR'S OWN CARGO — the paperclip and the camera's eye for the
      realm's own whisper line (one image, three documents) */
   const [askAtts, setAskAtts] = useState<ChatAttachment[]>([]);
-  /* THE VISITOR'S OWN STYLE — the image look chosen through the "/"
-     hand; every crystallization on this floor wears it. */
-  const visualStyle = useMirror((s) => s.visualStyle);
-  const setVisualStyle = useMirror((s) => s.setVisualStyle);
-  /* THE DEEP READING — the landing chat's own image zoom room */
-  const [landingViewing, setLandingViewing] = useState<{
-    src: string;
-    caption: string;
-  } | null>(null);
-  /* THE "/" HAND — the style picker opens while the whisper line
-     carries only the slash (and what the visitor typed after it) */
-  const askStyleMenuOpen = isStyleSlashQuery(askDraft);
 
   /* THE CATEGORY'S OWN CALL — every scope's chat carries its own
      direct line: the room calls the presence its whisper was grown
@@ -4799,18 +3560,7 @@ export function BranchCanopy({
       : undefined) ??
     LIVE_SCOPE_BY_CATEGORY[category] ??
     "interplanetary";
-  /* THE STANDING FIELD'S OWN PRESENCE — in the landing's chat the
-     floor's own line and its small attendants wear the standing
-     scope's channel (the Mirror keeps the house's standing one); the
-     full portal keeps its focused category's presence. */
-  const landingFamilyLive: LiveScopeKey | undefined =
-    landingScope !== "mirror"
-      ? LIVE_SCOPE_BY_CATEGORY[
-          LANDING_SCOPE_CATEGORY[landingScope] ?? ""
-        ]
-      : undefined;
   const floorLiveScope: LiveScopeKey =
-    landingFamilyLive ??
     (focusKey !== "general"
       ? LIVE_SCOPE_BY_CATEGORY[
           TREE_FAMILIES.find((f) => f.key === focusKey)?.category ?? ""
@@ -4902,7 +3652,7 @@ export function BranchCanopy({
       data-testid={testIdPrefix}
       aria-hidden={!shown}
       className={cn(
-        "realm-crystal absolute inset-0 z-20 flex min-h-0 flex-col transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        "absolute inset-0 z-20 flex min-h-0 flex-col bg-background transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
         shown
           ? cn(
               "translate-y-0 opacity-100",
@@ -4929,24 +3679,30 @@ export function BranchCanopy({
           clean dropdown; a chosen category focuses the walk on that
           nature, and every room speaks with that world's voice. The
           mix of worlds rests in the settings, inside the profile. */}
+      {/* ------------------------- the crown's breath -----------------
+          THE TOP BAR DROPS DOWN WHEN NEEDED AND RISES UP WHEN NOT:
+          one quiet hand at the top-right corner folds the whole crown
+          away and the branches take almost the whole sky. The hand
+          itself never leaves — it is the way back down.
+          THE ONE JOB LAW — the hand hides and shows the top bar and
+          NOTHING else: it floats above every room (a folded crown in a
+          standing room never buries it), so bringing the bar back never
+          closes the room, never returns the branches — the screen stays
+          exactly where the visitor stands. */}
       <div className="relative shrink-0">
         <div
+          aria-hidden={realm && crownUp ? true : undefined}
           className={cn(
-            /* THE UNCROWNED DROPDOWNS — every dropdown the crown
-               carries (the realm's own hands and the pages' menus
-               alike) must breathe beyond the row: no max height, no
-               hidden overflow ever again — the fold that demanded the
-               clipping is gone, and the tools and scopes now drop
-               down whole, in plain sight. THE QUIET CROWN — the old
-               transition-all (a vestige of the gone fold) watched
-               every property on the crown's own row; nothing animates
-               here any more, so the watcher is gone too. */
-            "overflow-visible"
+            "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            realm && crownUp ? "max-h-0 opacity-0" : "max-h-36 opacity-100",
+            /* the crown's own dropdowns must never be clipped — the
+               fold only clips when the crown itself is folded away */
+            crownMenu ? "overflow-visible" : "overflow-hidden"
           )}
-       >
+        >
       <div
         className={cn(
-          "shrink-0 bg-background/85 px-3 pb-1 sm:px-5",
+          "shrink-0 bg-background px-3 pb-1 sm:px-5",
           !realm && "pt-10 md:pt-1.5"
         )}
         style={
@@ -4958,18 +3714,11 @@ export function BranchCanopy({
         <div
           className="mx-auto flex w-full max-w-[760px] items-center gap-1.5"
         >
-          {/* THE CROWN'S OWN ROW — the theme pages' and the threshold's
-              quiet crown. THE REALM ITSELF no longer wears this row:
-              the minimal top control (◈ Mirror · Search · Menu) carries
-              the whole walk's steering, and the canvas keeps the sky. */}
+          {/* THE CROWN'S OWN ROW — the walk's steering at the left, the
+              doors and the passage at the right. THE MARK HAS LEFT THE
+              TOP BAR — no logo stands in the crown; the light's own
+              hand (a quiet sun/moon) rides with the doors instead. */}
           <div className="contents">
-          {/* THE LANDING'S QUIET CROWN — docked in the threshold the
-              crown keeps only its calm doors: the walk's menu and the
-              categories' mix stand down (no scope ever rules the
-              landing's floor), and the akashic and book doors wait for
-              the full portal. The light, the about door, the crossing
-              and the passage remain. */}
-          {!realm && (<>
           {/* THE MENU — where the walk stands, behind one quiet button:
               the compass, the depth, every step of the trail (one
               touch returns the tree to that step) and the quiet
@@ -5000,7 +3749,7 @@ export function BranchCanopy({
                 />
                 <div
                   data-testid={`${testIdPrefix}-menu-panel`}
-                  className="nice-scroll absolute left-0 top-9 z-40 max-h-[78vh] w-[286px] max-w-[calc(100vw-2.5rem)] overflow-y-auto rounded-2xl border bg-background p-3 lift-lg"
+                  className="nice-scroll absolute left-0 top-9 z-40 max-h-[78vh] w-[286px] overflow-y-auto rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
@@ -5019,11 +3768,11 @@ export function BranchCanopy({
                       className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
                       aria-hidden="true"
                     />
-                    <span className="mono-label min-w-0 flex-1 truncate text-[10px] uppercase tracking-[0.16em] text-foreground/85">
+                    <span className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.16em] text-foreground/85">
                       {mixTitle(mix, t)}
                     </span>
                     <span
-                      className="mono-label shrink-0 text-[10px] tabular-nums text-muted-foreground/70"
+                      className="mono-label shrink-0 text-[9px] tabular-nums text-muted-foreground/70"
                       aria-hidden="true"
                     >
                       ·{lineage.length}
@@ -5035,7 +3784,7 @@ export function BranchCanopy({
                       data-testid={`${testIdPrefix}-trail`}
                       className="mt-2 flex flex-col"
                     >
-                      <p className="mono-label px-2 pb-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                      <p className="mono-label px-2 pb-1 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
                         {t("Your walk")}
                       </p>
                       {[...lineage].map((l, i) => {
@@ -5058,7 +3807,7 @@ export function BranchCanopy({
                             <span
                               aria-hidden="true"
                               className={cn(
-                                "mono-label w-4 shrink-0 text-[9px] tabular-nums",
+                                "mono-label w-4 shrink-0 text-[8px] tabular-nums",
                                 latest
                                   ? "text-[var(--scope-a,var(--gd))]"
                                   : "text-muted-foreground/50"
@@ -5068,7 +3817,7 @@ export function BranchCanopy({
                             </span>
                             <span
                               className={cn(
-                                "min-w-0 flex-1 truncate text-[13px]",
+                                "min-w-0 flex-1 truncate text-[12px]",
                                 latest
                                   ? "font-medium text-[var(--scope-a,var(--gd))]"
                                   : "text-foreground/85"
@@ -5077,7 +3826,7 @@ export function BranchCanopy({
                               {l.text}
                             </span>
                             {latest && (
-                              <span className="mono-label shrink-0 animate-pulse text-[8.5px] uppercase tracking-[0.16em] text-[var(--scope-a,var(--gd))]">
+                              <span className="mono-label shrink-0 animate-pulse text-[7.5px] uppercase tracking-[0.16em] text-[var(--scope-a,var(--gd))]">
                                 {t("You are here")}
                               </span>
                             )}
@@ -5096,12 +3845,12 @@ export function BranchCanopy({
                       walkLedger.chats.length > 0 ||
                       walkLedger.journey.length > 0) && (
                     <div data-testid={`${testIdPrefix}-ledger`} className="mt-1.5">
-                      <p className="mono-label px-2 pb-1 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                      <p className="mono-label px-2 pb-1 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
                         {t("The walk's ledger")}
                       </p>
                       {walkLedger.volumes.length > 0 && (
                         <div data-testid={`${testIdPrefix}-ledger-books`}>
-                          <p className="px-2 pb-0.5 text-[11px] italic text-muted-foreground/70">
+                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
                             {t("Kept volumes")}
                           </p>
                           {walkLedger.volumes.slice(0, 4).map((v) => (
@@ -5137,10 +3886,10 @@ export function BranchCanopy({
                                 className="size-3 shrink-0 text-muted-foreground/70"
                                 aria-hidden="true"
                               />
-                              <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/85">
+                              <span className="min-w-0 flex-1 truncate text-[12px] text-foreground/85">
                                 {v.title}
                               </span>
-                              <span className="mono-label shrink-0 text-[9px] tabular-nums text-muted-foreground/60">
+                              <span className="mono-label shrink-0 text-[8px] tabular-nums text-muted-foreground/60">
                                 {v.pages.length}/{v.totalPages}
                               </span>
                             </button>
@@ -5152,7 +3901,7 @@ export function BranchCanopy({
                           data-testid={`${testIdPrefix}-ledger-chats`}
                           className="mt-1.5"
                         >
-                          <p className="px-2 pb-0.5 text-[11px] italic text-muted-foreground/70">
+                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
                             {t("Saved conversations")}
                           </p>
                           {walkLedger.chats.slice(0, 6).map((c) => (
@@ -5172,10 +3921,10 @@ export function BranchCanopy({
                                 className="size-3 shrink-0 text-muted-foreground/70"
                                 aria-hidden="true"
                               />
-                              <span className="min-w-0 flex-1 truncate text-[13px] text-foreground/85">
+                              <span className="min-w-0 flex-1 truncate text-[12px] text-foreground/85">
                                 {c.title}
                               </span>
-                              <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.1em] text-muted-foreground/60">
+                              <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.1em] text-muted-foreground/60">
                                 {c.label}
                               </span>
                             </button>
@@ -5187,7 +3936,7 @@ export function BranchCanopy({
                           data-testid={`${testIdPrefix}-ledger-journey`}
                           className="mt-1.5"
                         >
-                          <p className="px-2 pb-0.5 text-[11px] italic text-muted-foreground/70">
+                          <p className="px-2 pb-0.5 text-[10px] italic text-muted-foreground/70">
                             {t("The journey kept")}
                           </p>
                           {walkLedger.journey.slice(0, 5).map((j, i) => (
@@ -5197,14 +3946,14 @@ export function BranchCanopy({
                             >
                               <span
                                 aria-hidden="true"
-                                className="mono-label w-14 shrink-0 text-[9px] tabular-nums text-muted-foreground/50"
+                                className="mono-label w-14 shrink-0 text-[8px] tabular-nums text-muted-foreground/50"
                               >
                                 {new Date(j.at).toLocaleDateString(undefined, {
                                   month: "short",
                                   day: "numeric",
                                 })}
                               </span>
-                              <span className="min-w-0 flex-1 truncate text-[12.5px] text-muted-foreground/85">
+                              <span className="min-w-0 flex-1 truncate text-[11.5px] text-muted-foreground/85">
                                 {j.b}
                                 {j.s ? ` · ${j.s}` : ""}
                               </span>
@@ -5241,7 +3990,7 @@ export function BranchCanopy({
                       className="size-3.5 shrink-0 text-muted-foreground"
                       aria-hidden="true"
                     />
-                    <span className="min-w-0 flex-1 truncate text-[13.5px] text-foreground/90">
+                    <span className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/90">
                       {t("Recalibrate the field")}
                     </span>
                   </button>
@@ -5274,7 +4023,7 @@ export function BranchCanopy({
               <ListTree className="size-3" aria-hidden="true" />
               <span
                 className={cn(
-                  "mono-label whitespace-nowrap text-[10px] uppercase tracking-[0.14em]",
+                  "mono-label whitespace-nowrap text-[9px] uppercase tracking-[0.14em]",
                   realm && "hidden sm:inline"
                 )}
               >
@@ -5297,13 +4046,13 @@ export function BranchCanopy({
                 />
                 <div
                   data-testid={`${testIdPrefix}-cats-panel`}
-                  className="absolute left-0 top-9 z-40 w-[286px] max-w-[calc(100vw-2.5rem)] rounded-2xl border bg-background p-3 lift-lg"
+                  className="absolute left-0 top-9 z-40 w-[286px] rounded-2xl border bg-background p-3 shadow-[0_18px_48px_-20px_rgba(0,0,0,0.6)]"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
                   }}
                 >
-                  <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                  <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground">
                     {t("The categories of the house")}
                   </p>
                   <div className="mt-2 flex flex-col">
@@ -5332,15 +4081,15 @@ export function BranchCanopy({
                         aria-hidden="true"
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13.5px] font-medium text-foreground">
+                        <span className="block truncate text-[12.5px] font-medium text-foreground">
                           {t("General")}
                         </span>
-                        <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
+                        <span className="mono-label block truncate text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground/70">
                           {t("The whole house, mixed")}
                         </span>
                       </span>
                       {mixIsGeneral(mix) && (
-                        <span className="mono-label shrink-0 text-[9.5px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
+                        <span className="mono-label shrink-0 text-[8.5px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
                           {t("Even voices")}
                         </span>
                       )}
@@ -5372,9 +4121,11 @@ export function BranchCanopy({
                             setCrownMenu(null);
                             if (focused) return;
                             applyMix({ on: [f.key], weights: { [f.key]: 1 } });
-                            /* THE QUIET FOCUS — no toast, no bar: the tree
-                               itself answers — it regrows focused on the
-                               chosen nature in one smooth breath. */
+                            import("sonner").then(({ toast }) =>
+                              toast(t("The walk focuses on {name}", {
+                                name: t(familyLabelKeys[f.key] ?? f.key),
+                              }))
+                            );
                           }}
                           aria-pressed={focused}
                           title={t(familyLabelKeys[f.key] ?? f.key)}
@@ -5399,24 +4150,24 @@ export function BranchCanopy({
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="flex items-center gap-2">
-                              <span className="truncate text-[13.5px] text-foreground/90">
+                              <span className="truncate text-[12.5px] text-foreground/90">
                                 {t(familyLabelKeys[f.key] ?? f.key)}
                               </span>
                               {share.on && share.pct !== 100 && (
                                 <span
-                                  className="mono-label shrink-0 text-[10px] tabular-nums"
+                                  className="mono-label shrink-0 text-[9px] tabular-nums"
                                   style={{ color: f.accent }}
                                 >
                                   {share.pct}%
                                 </span>
                               )}
                               {focused && (
-                                <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
+                                <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.14em] text-[var(--scope-a,var(--gd))]">
                                   {t("You are here")}
                                 </span>
                               )}
                             </span>
-                            <span className="mono-label mt-0.5 block truncate text-[9.5px] normal-case tracking-[0.02em] text-muted-foreground/70">
+                            <span className="mono-label mt-0.5 block truncate text-[8.5px] normal-case tracking-[0.02em] text-muted-foreground/70">
                               {t(spirit?.spirit ?? f.key)}
                             </span>
                           </span>
@@ -5425,7 +4176,7 @@ export function BranchCanopy({
                     })}
                   </div>
                   <p
-                    className="mt-2.5 border-t px-1 pt-2 text-[11.5px] italic leading-relaxed text-muted-foreground/75"
+                    className="mt-2.5 border-t px-1 pt-2 text-[10.5px] italic leading-relaxed text-muted-foreground/75"
                     style={{
                       borderColor:
                         "color-mix(in srgb, var(--hairline) 70%, transparent)",
@@ -5439,20 +4190,11 @@ export function BranchCanopy({
               </>
             )}
           </div>
-          </>) }
           </div>
 
-          {/* THE VISITOR'S OWN MARK — the profile icon stands at the
-              crown's very BEGINNING, before the light's toggle: an icon
-              (never a pill), the same in both gears, opening the
-              visitor's own room within the frame. */}
-          {realm && <CrownProfileIcon testIdPrefix={testIdPrefix} />}
-
-          {/* THE LIGHT'S OWN HAND HAS MOVED INDOORS — at the visitor's
-              word the crown carries only the profile, the making rooms
-              and the scopes; the sun/moon now lives inside the
-              visitor's own room (the profile — the purse's panel), one
-              touch from anywhere. */}
+          {/* THE LIGHT'S OWN HAND — the crown's quiet sun/moon: the
+              mark left the top bar, the toggle stayed */}
+          {realm && <LightToggle testIdPrefix={testIdPrefix} />}
 
           <div className="contents">
           {/* THE DOORS OF THE HOUSE — akashic · book · about, standing
@@ -5463,13 +4205,9 @@ export function BranchCanopy({
               door (signed-in walkers leave from its account room, and
               guests are shown the way in there). */}
           <div className="flex shrink-0 items-center gap-1">
-            {/* the advanced doors wait for the full portal — the landing
-                keeps the calm crown (the about door too: the threshold
-                already tells the house's story) */}
-            {!realm && (
             <button
               type="button"
-              onClick={() => openAkashic()}
+              onClick={openAkashic}
               aria-label={t("Akashic")}
               title={t("Akashic")}
               data-testid={`${testIdPrefix}-door-akashic`}
@@ -5477,11 +4215,9 @@ export function BranchCanopy({
             >
               <ScrollText className="size-3" aria-hidden="true" />
             </button>
-            )}
-            {!realm && (
             <button
               type="button"
-              onClick={() => openDreamBook()}
+              onClick={openDreamBook}
               aria-label={t("Book")}
               title={t("Book")}
               data-testid={`${testIdPrefix}-door-book`}
@@ -5489,37 +4225,17 @@ export function BranchCanopy({
             >
               <BookOpen className="size-3" aria-hidden="true" />
             </button>
-            )}
-            {/* THE REGISTER HAS LEFT THE CROWN — the codex door (the
-                Fingerprint that once stood between the profile and the
-                scopes) is gone from the top of the chat for good: the
-                codex lives at the scopes' shore and inside the codex
-                hall itself. Nothing of the register remains at the top
-                of the chat where InDream and Scopes stand. */}
-            {!realm && (
             <button
               type="button"
-              onClick={() => openLightCodes()}
-              aria-label={t("Music")}
-              title={t("Music — sound transmissions through Mirror Entity")}
-              data-testid={`${testIdPrefix}-door-music`}
+              onClick={openAbout}
+              aria-label={t("About us")}
+              title={t("About us")}
+              data-testid={`${testIdPrefix}-door-about`}
               className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
-              <Music className="size-3" aria-hidden="true" />
+              <Info className="size-3" aria-hidden="true" />
             </button>
-            )}
-            {/* THE ABOUT DOOR HAS MOVED HOME — it left the house doors:
-                About Us now wears its own question mark at the crown's
-                very top right, alone in its circle. */}
           </div>
-
-          {/* THE PORTAL'S OWN HANDS — between the about door and the
-              passage: the fullscreen hand while the portal is docked,
-              the landing hand while it fills the screen. One place,
-              one law: the crown always carries the way across. */}
-          {realm && realmControls && (
-            <div className="flex shrink-0 items-center gap-1">{realmControls}</div>
-          )}
 
           {/* THE WORLDS ARE GONE — their spirit lives inside the
               categories: a chosen kategory focuses the walk on that
@@ -5527,15 +4243,39 @@ export function BranchCanopy({
 
           <div className={cn(
             "flex min-w-0 flex-1 items-center justify-end gap-1.5",
-            /* the vertical arm owns the corner — the row yields its
-               width so no crown button ever slides beneath it */
-            realm && "pr-14 sm:pr-14"
+            realm && "pr-11 sm:pr-12"
           )}>
             {headerExtra && (
               <div className="hidden items-center gap-1.5 sm:flex">{headerExtra}</div>
             )}
             {!realm && <ExpansionRing />}
-            {!realm && (
+            {realm ? (
+              /* THE TOP ROW'S RIGHT HAND — at its very right stands the
+                 visitor's own passage (the profile room, where the score
+                 mirror and the settings live). THE RENEWING HAND MOVED
+                 INSIDE THE CHAT — the floor's whisper line and every
+                 room carry the reload now, so the crown stays a calm
+                 compass of doors. THE ICON ITSELF — the passage always
+                 wears the visitor's own figure: a person, never an
+                 arrow. Guests find the way in INSIDE the passage;
+                 walkers leave from the same room. */
+              <button
+                type="button"
+                onClick={openProfilePage}
+                aria-label={t("Passage")}
+                title={t("Passage")}
+                data-testid={`${testIdPrefix}-door-passage`}
+                className="focus-glow flex size-7 items-center justify-center rounded-full border text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                style={{
+                  borderColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
+                  backgroundColor:
+                    "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
+                }}
+              >
+                <UserRound className="size-3" aria-hidden="true" />
+              </button>
+            ) : (
               <>
                 <button
                   type="button"
@@ -5560,27 +4300,6 @@ export function BranchCanopy({
                 </button>
               </>
             )}
-            {/* THE WEBSITE'S OWN QUESTION — About Us stands at the very
-                top right of the house, in every gear (landing and
-                realm, phone and desk): a question mark in its own
-                circle, one touch from the eight-slide welcome. */}
-            {/* THE CROWN'S CORNER CLUSTER — the light's own hand stands
-                beside the question: the website's very top right holds
-                the sun/moon and the About circle together, on every
-                device, in both gears. THE MARKET HAS LEFT THE HOUSE —
-                the violet gem is gone, the hall closed for good. */}
-            <CrownLightHand testIdPrefix={testIdPrefix} />
-            <button
-              type="button"
-              onClick={() => useMirror.getState().openTour()}
-              aria-haspopup="dialog"
-              aria-label={t("About Us")}
-              title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
-              data-testid={`${testIdPrefix}-about-question`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
-            >
-              <CircleQuestionMark className="size-3.5" aria-hidden="true" />
-            </button>
           </div>
           </div>
         </div>
@@ -5591,25 +4310,17 @@ export function BranchCanopy({
             compass, no second rank beneath it. */}
       </div>
         </div>
-        {realm && (onExpand || onMinimize) && (
-          /* THE CORNER'S OWN GEAR HAND — the hide-the-chat arrow is
-             gone for good; the corner now carries the way across
-             instead: docked, it grows the chat to the whole screen
-             (the fullscreen hand); fullscreen, the very same corner
-             carries the way back to the landing slot. One corner, one
-             hand, no folding of the conversation — during the
-             opening's tunnel breath neither hand stands (neither
-             callback is worn), the crossing covers everything. */
+        {realm && (
           <button
             type="button"
-            onClick={onExpand ?? onMinimize}
-            aria-label={t(onExpand ? "Fullscreen" : "Landing")}
-            title={t(onExpand ? "Fullscreen" : "Landing")}
-            data-testid={
-              onExpand
-                ? `${testIdPrefix}-corner-expand`
-                : `${testIdPrefix}-corner-landing`
-            }
+            onClick={() => {
+              setCrownMenu(null);
+              setCrownUp((u) => !u);
+            }}
+            aria-expanded={!crownUp}
+            aria-label={crownUp ? t("Show the top bar") : t("Hide the top bar")}
+            title={crownUp ? t("Show the top bar") : t("Hide the top bar")}
+            data-testid={`${testIdPrefix}-crown-toggle`}
             className="focus-glow absolute z-40 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             style={{
               top: "max(0.5rem, env(safe-area-inset-top))",
@@ -5618,10 +4329,10 @@ export function BranchCanopy({
                 "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
             }}
           >
-            {onExpand ? (
-              <Maximize2 className="size-3.5" aria-hidden="true" />
+            {crownUp ? (
+              <ChevronDown className="size-3.5" aria-hidden="true" />
             ) : (
-              <Minimize2 className="size-3.5" aria-hidden="true" />
+              <ChevronUp className="size-3.5" aria-hidden="true" />
             )}
           </button>
         )}
@@ -5631,11 +4342,35 @@ export function BranchCanopy({
       <div className="relative min-h-0 flex-1">
         {/* THE CENTRE IS CLEAR — the house's logo no longer stands at
             the heart of the realm: it lives nowhere now — the mark has
-            left the crown too. The theme pages keep the genealogy tree. */}
-        {realm ? (
+            left the crown too.
+        THE GLYPH WALL — the realm's floor is a Maya stele wall: every
+            suggestion carved into its own stone (stepped crest, Maya
+            count, cartouche), the wall filling the screen, sliding
+            down uncovering the deep rows, the reload pouring the stone
+            anew. One bloom per stone, compositor only: smooth, alive,
+            and cool. The theme pages keep the genealogy tree. */}
+        {realm && !bare ? (
+          <GlyphWall
+            key={`${hour}:${salt}:${focusKey}`}
+            whispers={glyphStage === "first" ? PLAIN_STONES : glyphWhispers}
+            entry={glyphStage === "steady" ? PLAIN_STONES : undefined}
+            stage={glyphStage}
+            golden={goldenSeeds}
+            disabled={disabled}
+            hour={hour}
+            salt={salt}
+            focusKey={focusKey}
+            onPick={glyphPick}
+            onCreation={openTool}
+            onReload={renew}
+            testIdPrefix={testIdPrefix}
+          />
+        ) : realm && bare ? (
           /* THE BARE FLOOR — the miniature portal's quiet ground: the
              focused family's own light breathing behind the mark; the
-             whisper line below does the speaking. */
+             whisper line below does the speaking. WHILE CHANNELING —
+             the mark yields its place to the tiny orb of light: the
+             transmission's own companion, the same as every room. */
           <div
             data-testid={`${testIdPrefix}-bare-floor`}
             className="absolute inset-0 overflow-hidden"
@@ -5645,87 +4380,36 @@ export function BranchCanopy({
               className="pointer-events-none absolute inset-0 flex items-center justify-center"
             >
               <div
-                className="h-64 w-72 rounded-full"
+                className="lp-breathe h-64 w-72 rounded-full"
                 style={{
-                  /* THE CRYSTAL'S OWN AURA — every field breathes with
-                     its own TWO lights: the standing scope's accent
-                     and its companion color (the pair rides the lens
-                     as --scope-a/--scope-b from the registry's one
-                     truth; the fallbacks keep the Mirror's own gold
-                     and sky). No two fields share an atmosphere.
-                     THE STILL AURA — the breath animation is gone:
-                     a 288px glow scaling forever behind the chat was
-                     a constant paint tax on every device (the lag
-                     the visitor felt); the still light costs nothing. */
                   background:
-                    "radial-gradient(ellipse at center, color-mix(in srgb, var(--landing-scope-accent, #d8b571) 16%, transparent), color-mix(in srgb, var(--scope-b, #7dd3fc) 11%, transparent) 45%, transparent 70%)",
+                    "radial-gradient(ellipse at center, color-mix(in srgb, var(--scope-a,var(--gd)) 16%, transparent), transparent 70%)",
                 }}
               />
             </div>
-            {/* THE WHOLE MARK STANDS — the quiet floor's column scrolls
-                when the window runs short: the column centers when it
-                fits and scrolls from its own top when it doesn't, so
-                the house's seal is never clipped away by a small
-                height. At the scroll's edges the breath chains to the
-                threshold beneath (the pass-through law holds). */}
-            <div
-              className="nice-scroll absolute inset-x-0 top-0 flex flex-col overflow-y-auto"
-              style={{
-                /* the floor's own sky ends above the composer and its
-                   honest little note — the doors may never stand on
-                   their words, at any height the room is given */
-                bottom: 92,
-                overscrollBehavior: "auto",
-                touchAction: "pan-y",
-                WebkitOverflowScrolling: "touch",
-              }}
-            >
-              <div className="pointer-events-none m-auto flex max-h-full w-full flex-col items-center gap-2 px-6 pb-2 pt-1">
-              {/* THE STAR RESTS — the seal that stood above the floor's
-                  question was laid down at the visitor's word; the chat
-                  begins with the question alone. New chat keeps its
-                  hands in the history panel and the walk. */}
-              <div className="flex flex-col items-center gap-3">
-                <span
-                  aria-hidden="true"
-                  className="h-px w-16 bg-[linear-gradient(90deg,transparent,color-mix(in_srgb,var(--landing-scope-accent,#d8b571)_55%,transparent),color-mix(in_srgb,var(--scope-b,#7dd3fc)_55%,transparent),transparent)]"
-                />
-                {/* THE MIRROR'S QUESTION — below the mark, inside the
-                    chat box itself: it stands only while the floor is
-                    quiet, and the first word sent dissolves it, leaving
-                    the space to the transmission. Pointer events stay
-                    none by inline law — a bare <p> would re-arm the
-                    docked lens and stop the threshold's scroll. THE
-                    LANDING'S OWN QUIET — the landing thread's words
-                    hide the question again, whatever the store holds. */}
-                {floorQuiet && (
-                  <p
-                    data-testid="mirror-ask"
-                    className="genea-bloom still-bloom max-w-[300px] px-6 text-center font-[family-name:var(--font-literata)] text-[14.5px] italic leading-relaxed text-[#e11d48] dark:text-[#fda4b8] sm:max-w-[360px] sm:text-[15.5px]"
-                    style={{ pointerEvents: "none" }}
-                  >
-                    {/* THE FIELD'S OWN QUESTION — every scope invites in
-                        its own spirit's words (the Mirror's standing
-                        question serves the standing field). */}
-                    {t(
-                      SCOPE_META[landingScope]?.floorAsk ??
-                        "what do you wish to remember dear one?"
-                    )}
-                  </p>
-                )}
-              </div>
-              {/* THE MIRROR'S OWN SUGGESTIONS — five first doors, drawn
-                  fresh at every arrival, with the small hand beneath
-                  pouring five new ones at every touch. They stand only
-                  on the quiet floor, and every hand keeps its touch
-                  through the pass-through law. */}
-              {floorQuiet && (
-                <BareFloorSuggestions
-                  disabled={landingBusy}
-                  onPick={(q) => sendFromPanel(q, null)}
-                />
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-5 pb-28">
+              {liveLoading ? (
+                <>
+                  <ChannelingOrb size={56} />
+                  <ShimmerLabel className="mono-label text-[9px] uppercase tracking-[0.3em] text-muted-foreground">
+                    {t("Channeling")}
+                  </ShimmerLabel>
+                </>
+              ) : (
+                <>
+                  <Image
+                    src="/images/ai/mark-dark.png"
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="lp-breathe size-16 rounded-full opacity-90"
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="h-px w-16 bg-gradient-to-r from-transparent via-[color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] to-transparent"
+                  />
+                </>
               )}
-              </div>
             </div>
           </div>
         ) : (
@@ -5805,12 +4489,12 @@ export function BranchCanopy({
           {!realm && (introSub || introSubExtra || introExtra) && (
             <div className="pointer-events-none sticky bottom-2 z-10 flex flex-col items-center gap-2 px-4 text-center">
               {introSub && (
-                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-background px-4 py-2.5 text-[14.5px] leading-relaxed text-muted-foreground lift-sm">
+                <p className="genea-bloom still-bloom max-w-[460px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,transparent)] bg-background px-4 py-2.5 text-[13.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
                   {introSub}
                 </p>
               )}
               {introSubExtra && (
-                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-background px-4 py-2 text-[14px] italic leading-relaxed text-muted-foreground/80 lift-sm">
+                <p className="genea-bloom still-bloom max-w-[440px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,transparent)] bg-background px-4 py-2 text-[13px] italic leading-relaxed text-muted-foreground/80 shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
                   {introSubExtra}
                 </p>
               )}
@@ -5858,7 +4542,7 @@ export function BranchCanopy({
             className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
           >
             {introSub && (
-              <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[13.5px] leading-relaxed text-muted-foreground lift-sm">
+              <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[12.5px] leading-relaxed text-muted-foreground shadow-[0_6px_24px_-14px_rgba(0,0,0,0.45)]">
                 {introSub}
               </p>
             )}
@@ -5873,76 +4557,11 @@ export function BranchCanopy({
                 />
               </div>
             )}
-            {/* THE VISITOR'S OWN STYLE — the chosen look, worn until taken
-                off; every painting this floor crystallizes wears it */}
-            {visualStyle && (
-              <span
-                className="mono-label pointer-events-auto flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]"
-                style={{
-                  color: "var(--scope-a,var(--gd))",
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)",
-                }}
-                data-testid={`${testIdPrefix}-ask-style-chip`}
-              >
-                <Sparkles className="size-3" aria-hidden="true" />
-                {visualStyle}
-                <button
-                  type="button"
-                  onClick={() => setVisualStyle(null)}
-                  aria-label={t("Remove the style")}
-                  className="focus-glow ml-0.5 flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <X className="size-3" aria-hidden="true" />
-                </button>
-              </span>
-            )}
-            {/* THE "/" PICKER — the styles standing over the whisper line */}
-            {askStyleMenuOpen && (
-              <div
-                className="pointer-events-auto nice-scroll max-h-44 w-full max-w-[340px] overflow-y-auto rounded-xl border hairline bg-background p-1 shadow-lg"
-                data-testid={`${testIdPrefix}-ask-style-menu`}
-                role="listbox"
-                aria-label={t("Choose a style for the image")}
-              >
-                {filterStyles(askDraft).map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    role="option"
-                    aria-selected={visualStyle === s.value}
-                    onClick={() => {
-                      setVisualStyle(s.value);
-                      setAskDraft("");
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors duration-200 hover:bg-foreground/5"
-                  >
-                    <Sparkles
-                      className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[12.5px] font-medium text-foreground">
-                        {s.value}
-                      </span>
-                      <span className="block truncate text-[10.5px] text-muted-foreground/70">
-                        {t(s.hint)}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = askDraft.trim();
-                if (!q || disabled || floorBusy) return;
-                /* the "/" alone is the style hand, never a whisper */
-                if (isStyleSlashQuery(q)) {
-                  setAskDraft("");
-                  return;
-                }
+                if (!q || disabled || liveLoading) return;
                 const carried = askAtts.filter((a) =>
                   a.kind === "image" ? !!a.dataUrl : !a.reading && !!a.text
                 );
@@ -5951,83 +4570,39 @@ export function BranchCanopy({
                 sendFromPanel(q, null, carried);
               }}
               className={cn(
-                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 transition-colors duration-300",
-                /* THE CRYSTAL FOCUS — the line's own focus tint follows
-                   the blue crystal. */
-                "focus-within:border-[rgba(148,190,224,0.5)]",
-                /* THE COOL FLOOR — in both its dockings (the threshold
-                   and the realm) the line wears an opaque coat and no
-                   backdrop blur: a live blur over a scrolling page is
-                   heat the phone must not pay for a lens. */
-                "bg-background floor-glow"
+                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 shadow-[0_10px_36px_-16px_rgba(0,0,0,0.55)] transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
+                /* THE COOL FLOOR — docked in the threshold (bare) the
+                   line wears an opaque coat and no backdrop blur: a
+                   live blur over a scrolling page is heat the phone
+                   must not pay for a lens. */
+                bare
+                  ? "bg-background"
+                  : "bg-background/95 backdrop-blur-xl"
               )}
+              style={{
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 26%, transparent)",
+              }}
             >
               {/* THE INPUT'S OWN CALM — the reload and the star have
                   left the whisper line: the cargo, the call, the words,
                   the send. */}
-              {/* THE FLOOR'S OWN HISTORY — docked in the threshold the
-                  quiet floor keeps the device's own hand within reach
-                  even with no room standing: one touch opens this
-                  visit's kept conversations (this device alone —
-                  nothing travels to a server). */}
-              <div className="relative shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      historyOpen ? setHistoryOpen(false) : openHistory()
-                    }
-                    aria-expanded={historyOpen}
-                    aria-label={t("Conversation history")}
-                    title={t("Conversation history — kept only on this device, for this visit")}
-                    data-testid={`${testIdPrefix}-ask-history`}
-                    className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                  >
-                    <History className="size-3.5" aria-hidden="true" />
-                  </button>
-                  {historyOpen && (
-                    <>
-                      <div
-                        aria-hidden="true"
-                        className="fixed inset-0 z-30"
-                        onClick={() => setHistoryOpen(false)}
-                      />
-                      <div
-                        data-testid={`${testIdPrefix}-ask-history-panel`}
-                        className="absolute bottom-11 left-0 z-40"
-                      >
-                        {/* the one shared panel — the visit's whispers,
-                            the maker's trail, the keeper's kept rooms */}
-                        {renderHistoryPanel({ bare: true })}
-                      </div>
-                    </>
-                  )}
-                </div>
               {/* THE FLOOR'S OWN PAPERCLIP AND CAMERA — one image and
-                  up to three documents ride with the whisper. THE
-                  LANDING'S QUIET LINE — docked in the threshold the
-                  chat keeps its calm shape: no attachments, no cargo —
-                  only the voice, the words and the send. The full
-                  portal carries the advanced hands. */}
+                  up to three documents ride with the whisper */}
               <ChatInputExtras
                 scope={floorLiveScope}
                 size="2xs"
                 withCall={false}
-                withAttachments={false}
-                disabled={disabled || floorBusy}
+                disabled={disabled || liveLoading}
                 accentVar="var(--scope-a,var(--gd))"
                 attachments={askAtts}
                 onAttachmentsChange={setAskAtts}
               />
               {/* THE CATEGORY'S OWN CALL — the focused category's direct
-                  line, one touch from the floor. THE LANDING'S OWN
-                  VOICE — docked in the threshold the call is always the
-                  no-scope reflection itself (communion), never a
-                  category's voice. */}
+                  line, one touch from the floor */}
               <button
                 type="button"
-                onClick={() =>
-                  setLiveCallScope("communion")
-                }
+                onClick={() => setLiveCallScope(floorLiveScope)}
                 disabled={disabled}
                 aria-label={t("Open the direct mirror connection")}
                 title={t("Open the direct mirror connection")}
@@ -6037,58 +4612,28 @@ export function BranchCanopy({
                 <Phone className="size-3.5" aria-hidden="true" />
               </button>
               <label htmlFor={`${testIdPrefix}-ask`} className="sr-only">
-                {t("Whisper to the mirror…")}
+                {t("Whisper to the tree…")}
               </label>
               <input
                 id={`${testIdPrefix}-ask`}
                 value={askDraft}
                 onChange={(e) => setAskDraft(e.target.value)}
-                placeholder={
-                  /* THE FIELD'S OWN WORD — the line whispers in the
-                     standing field's own way of inviting: the deep
-                     receives a signal, the laboratory prepares a state,
-                     the atelier asks for a vision, the body's room
-                     speaks gently. The Mirror keeps its own whisper. */
-                  t(
-                    SCOPE_META[landingScope]?.whisper ??
-                      "Whisper to the mirror…"
-                  )
-                }
+                placeholder={t("Whisper to the tree…")}
                 disabled={disabled}
                 autoComplete="off"
                 data-testid={`${testIdPrefix}-ask-input`}
-                className="min-w-0 flex-1 bg-transparent py-1 text-[14.5px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-w-0 flex-1 bg-transparent py-1 text-[13.5px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               />
               <button
                 type="submit"
-                disabled={disabled || floorBusy || !askDraft.trim()}
+                disabled={disabled || liveLoading || !askDraft.trim()}
                 aria-label={t("Send")}
                 data-testid={`${testIdPrefix}-ask-send`}
-                /* THE CRYSTAL SEND — the house's scope-aware crystal CTA:
-                   the room's own light leads the gradient, the theme's
-                   own law inks it, one quiet glow at rest, one light
-                   sweep per hover, a spring press. The old hardcoded
-                   red→blue gradient is retired with the control
-                   dialect. */
-                className={cn(
-                  "btn-primary focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-35"
-                )}
+                className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--scope-a,var(--gd))] to-[color-mix(in_srgb,var(--scope-b,var(--pk))_70%,var(--scope-a,var(--gd)))] text-[#101010] shadow-[0_0_14px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] transition-all duration-300 hover:scale-[1.04] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none"
               >
                 <Send className="size-3.5" aria-hidden="true" />
               </button>
             </form>
-            {/* THE TEMPORARY CHAT'S OWN LINE — the landing's floor is
-                free and holds nothing: a quiet honest word for the
-                non logged-in, the way in named for the ones who stay. */}
-            {guest && (
-              <p
-                data-testid="floor-temporary-note"
-                className="mono-label text-[9px] uppercase tracking-[0.26em] text-muted-foreground/55"
-                style={{ pointerEvents: "none" }}
-              >
-                {t("Temporary chat — sign in to keep your reflections")}
-              </p>
-            )}
           </div>
         )}
 
@@ -6097,29 +4642,10 @@ export function BranchCanopy({
             heavy enough that no tree line ever shows behind the room */}
         {zoomed && (
           <div
-            /* THE VEIL NEVER STEALS THE ROOM — docked in the threshold
-               (bare) the veil no longer closes the conversation on a
-               stray click: the room is dismissed only by its own back
-               hand in the header. The full portal keeps the old
-               click-outside law. */
-            onClick={bare ? undefined : exitZoom}
+            onClick={exitZoom}
             aria-hidden="true"
             data-testid={`${testIdPrefix}-veil`}
             className="canopy-veil absolute inset-0 z-20 bg-[color-mix(in_srgb,var(--background)_68%,transparent)]"
-          />
-        )}
-
-        {/* THE DEEP READING — the plate's own room of coming closer,
-            open from every gear of the chat (the floor AND the zoomed
-            walk room — the buttons that open it live in BOTH): one
-            portal over the whole sky, the wheel and the fingers zoom
-            it further, Escape or one touch on the dark lays it down. */}
-        {landingViewing && (
-          <ZoomableLightbox
-            src={landingViewing.src}
-            caption={landingViewing.caption}
-            onClose={() => setLandingViewing(null)}
-            testId="landing-lightbox"
           />
         )}
 
@@ -6132,37 +4658,12 @@ export function BranchCanopy({
         {zoom && (
           <div className="pointer-events-none absolute inset-0 z-30 flex justify-center p-1.5 sm:p-2.5">
             <section
-              ref={zoomSectionRef}
               data-testid={`${testIdPrefix}-zoom`}
               aria-label={zoom.q}
-              /* THE CHAT'S OWN YIELD — docked in the threshold (bare) the
-                  room's reading space keeps no pointer surface: swiping
-                  across the words moves the page beneath, so the visitor
-                  is never trapped inside the chat frame. The hands (the
-                  copy, the voice, the words' own line) re-arm through
-                  the pass-through law; the full portal keeps the solid
-                  room it always was. */
-              data-chat-yield={bare ? "" : undefined}
-              className={cn(
-                "canopy-panel flex min-h-0 w-full max-w-[860px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]",
-                bare ? "pointer-events-none" : "pointer-events-auto",
-                /* THE FIELD'S OWN VOICE — the standing scope's own way
-                    of expressing: the room wears the field's voice class,
-                    and every turn inside speaks the field's own grammar
-                    (the marks, the frames, the dividers — each field
-                    unmistakably itself, all of it still, all of it
-                    honest). The Mirror keeps the house's own voice. */
-                realm && `scope-voice scope-voice-${landingScope}`
-              )}
+              className="canopy-panel pointer-events-auto flex min-h-0 w-full max-w-[860px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]"
               style={{
-                /* THE CRYSTAL ROOM — docked in the threshold the room's
-                   own border carries the blue crystal's tint, slightly
-                   transparent; a chosen scope lends its own light (the
-                   fallback keeps the blue); the full portal keeps the
-                   scope's color. */
-                borderColor: bare
-                  ? "color-mix(in srgb, var(--landing-scope-accent, #7dd3fc) 18%, transparent)"
-                  : "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
+                borderColor:
+                  "color-mix(in srgb, var(--scope-a,var(--gd)) 30%, transparent)",
               }}
             >
               {/* the question — the whisper the visitor walked to;
@@ -6170,117 +4671,52 @@ export function BranchCanopy({
                   when the walk turns to the next branch, only the room
                   inside it changes — the transmission glides, no flicker */}
               <header
-                className={cn(
-                  "flex shrink-0 items-start justify-between gap-3 border-b px-4 py-2.5 pr-11 sm:px-5 sm:pr-12",
-                  /* THE HEADER'S OWN TOUCH — docked or full, the room's
-                     crown of hands answers every pointer: the fine
-                     desktop click never falls through the docked panel
-                     onto the closing veil again, and the touch law's
-                     own re-arming is kept (controls keep their touch). */
-                  bare && "pointer-events-auto"
-                )}
+                className="flex shrink-0 items-start justify-between gap-3 border-b px-4 py-2.5 pr-11 sm:px-5 sm:pr-12"
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--hairline) 70%, transparent)",
+                  /* the crown's own corner — when the crown is folded the
+                     room rises to the very top of the screen: its buttons
+                     yield the corner to the floating top-bar hand (and
+                     clear the notch's safe band) */
+                  paddingTop: crownUp
+                    ? "max(0.5rem, env(safe-area-inset-top))"
+                    : undefined,
                 }}
               >
                 <div className="flex min-w-0 items-start gap-2.5">
-                  {!realm && (
-                    <span
-                      className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
-                      aria-hidden="true"
-                    >
-                      <ZoomIcon className="size-3.5 text-[var(--scope-a,var(--gd))]" />
-                    </span>
-                  )}
+                  <span
+                    className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_42%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,transparent)]"
+                    aria-hidden="true"
+                  >
+                    <ZoomIcon className="size-3.5 text-[var(--scope-a,var(--gd))]" />
+                  </span>
                   <div className="min-w-0">
-                    {!realm && zoom.move && (
-                      <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                    {zoom.move && (
+                      <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-muted-foreground/70">
                         {t(BRANCH_TYPE_LABELS[zoom.move])}
                       </p>
                     )}
                     {zoom.restored && (
-                      <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-[var(--scope-a,var(--gd))]">
+                      <p className="mono-label text-[8px] uppercase tracking-[0.2em] text-[var(--scope-a,var(--gd))]">
                         {t("Returned to the walk")}
                       </p>
                     )}
-                    {/* THE FIRST QUESTION NEVER HOLDS THE TOP BAR — docked
-                        in the threshold (the chat of the landing) the room's
-                        opening question steps out of the top bar entirely:
-                        the visitor just spoke it, the answer rises first,
-                        and the bar stays one slim hand-row. The full
-                        portal keeps the room's title, held to two lines
-                        so a long question can never crowd the crown. */}
-                    {!realm && (
-                      <p
-                        className="line-clamp-2 break-words text-[15px] font-medium leading-snug text-foreground"
-                        title={zoom.q}
-                      >
-                        {zoom.q}
-                      </p>
-                    )}
+                    <p className="break-words text-[14px] font-medium leading-snug text-foreground">
+                      {zoom.q}
+                    </p>
                   </div>
                 </div>
-                <div
-                  ref={roomHandsRef}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1.5 transition-all duration-500",
-                    roomHandsHidden &&
-                      "pointer-events-none translate-y-1 opacity-0"
-                  )}
-                >
-                  {/* THE CHAT'S OWN RELOAD — the reload hand lives in the
-                      chat and it truly clears: one touch ends the whole
-                      conversation (the room folds, the thread empties,
-                      the floor rises fresh with the mirror's question),
-                      and the walk's family re-grows behind it. It waits
-                      out the in-flight word so a clearing is never
-                      undone by an answer still crossing. */}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {/* THE RENEWING HAND — the reload lives in the chat:
+                      the family behind the room is re-grown fresh. */}
                   <button
                     type="button"
-                    onClick={() => {
-                      if (floorBusy) return;
-                      exitZoom();
-                      renew();
-                      /* THE LANDING'S OWN CLEARING — docked in the
-                         threshold the reload empties the landing's own
-                         thread (the conversation truly clears, the floor
-                         rises fresh with the mirror's question); the
-                         full portal lays its channel to rest. */
-                      if (realm) {
-                        setLandingThread([]);
-                        landingTurnsRef.current = [];
-                        /* THE FIELD'S OWN CLEARING — the standing
-                           field's cache and its sessionStorage page
-                           empty too: the conversation truly clears, the
-                           other fields' keeps untouched */
-                        landingThreadsByScopeRef.current.set(
-                          landingScope,
-                          []
-                        );
-                        landingTurnsByScopeRef.current.set(
-                          landingScope,
-                          []
-                        );
-                        writeLandingThreadScope(landingScope, []);
-                        /* a fresh page of the device's own keep — the
-                           cleared room stays in the history hand */
-                        historySessionRef.current = freshHistorySessionId();
-                        historySessionsByScopeRef.current.set(
-                          landingScope,
-                          historySessionRef.current
-                        );
-                        window.dispatchEvent(new CustomEvent("landing-chat:return"));
-                      } else {
-                        useMirror
-                          .getState()
-                          .newChat(useMirror.getState().activeMode);
-                      }
-                    }}
-                    disabled={disabled || floorBusy}
-                    aria-label={t("Clear the chat")}
-                    title={t("Clear the chat")}
-                    data-testid={`${testIdPrefix}-zoom-reload`}
+                    onClick={renew}
+                    disabled={disabled}
+                    aria-label={t("New branches")}
+                    title={t("New branches")}
+                    data-testid={`${testIdPrefix}-zoom-renew`}
                     className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <RefreshCw className="size-3.5" aria-hidden="true" />
@@ -6312,77 +4748,16 @@ export function BranchCanopy({
                       <VolumeX className="size-3.5" aria-hidden="true" />
                     )}
                   </button>
-                  {realm ? (
-                    /* THE DEVICE'S OWN HAND — the landing chat wears the
-                       history instead of the old tree mark: this visit's
-                       conversations, kept on this device alone (nothing
-                       travels to a server), restored with one touch. */
-                    <div className="relative shrink-0">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          historyOpen ? setHistoryOpen(false) : openHistory()
-                        }
-                        aria-expanded={historyOpen}
-                        aria-label={t("Conversation history")}
-                        title={t("Conversation history — kept only on this device, for this visit")}
-                        data-testid={`${testIdPrefix}-zoom-history`}
-                        className={cn(
-                          "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
-                          historyOpen
-                            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
-                            : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
-                        )}
-                      >
-                        <History className="size-3.5" aria-hidden="true" />
-                      </button>
-                      {historyOpen && (
-                        <>
-                          <div
-                            aria-hidden="true"
-                            className="fixed inset-0 z-30"
-                            onClick={() => setHistoryOpen(false)}
-                          />
-                          <div
-                            data-testid={`${testIdPrefix}-zoom-history-panel`}
-                            className="absolute right-0 top-9 z-40"
-                          >
-                            {/* the one shared panel — the visit's
-                                whispers, the maker's trail, the keeper's
-                                kept rooms */}
-                            {renderHistoryPanel({ bare: true })}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={exitZoom}
-                      aria-label={t("Back to the wall")}
-                      title={t("Back to the wall")}
-                      data-testid={`${testIdPrefix}-zoom-back`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                    >
-                      <TreeDeciduous className="size-3.5" aria-hidden="true" />
-                    </button>
-                  )}
-                  {/* THE FRESH-FLOOR HAND AT THE TOP — the new chat
-                      stands in the room's crown now, one touch away
-                      from the first word to the last: no climb to the
-                      answer's tail to find it. */}
-                  {realm && landingScope === "hyperx" && (
-                    <button
-                      type="button"
-                      onClick={startFreshRoom}
-                      aria-label={t("New chat")}
-                      title={t("New chat — a fresh floor for the next discovery")}
-                      data-testid={`${testIdPrefix}-hyperx-new-chat-top`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#e879f9_55%,transparent)] hover:text-foreground"
-                    >
-                      <MessageSquarePlus className="size-3.5" aria-hidden="true" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={exitZoom}
+                    aria-label={t("Back to the wall")}
+                    title={t("Back to the wall")}
+                    data-testid={`${testIdPrefix}-zoom-back`}
+                    className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                  >
+                    <TreeDeciduous className="size-3.5" aria-hidden="true" />
+                  </button>
                 </div>
               </header>
 
@@ -6394,319 +4769,63 @@ export function BranchCanopy({
                 ref={bodyRef}
                 onScroll={onBodyScroll}
                 data-testid={`${testIdPrefix}-zoom-answer`}
-                className={cn(
-                  "nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4",
-                  /* THE ROOM'S OWN SCROLL — docked in the threshold the
-                     reading space keeps its touch: the visitor scrolls
-                     WITHIN the chat now — the words move under their
-                     hand, and when the transmission's end is reached
-                     the breath chains to the threshold beneath. */
-                  bare && "pointer-events-auto"
-                )}
-                style={{
-                  overscrollBehavior: "auto",
-                  WebkitOverflowScrolling: "touch",
-                }}
+                className="nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4"
               >
                 <div key={zoom.q} className="room-swap mx-auto max-w-[720px]">
-                  {/* THE FIELD'S OWN TURN — the realm room now speaks the
-                      visitor's own question too (the old realm room hid
-                      it entirely — only the answer stood): the question
-                      rises above its answer wearing the field's own
-                      mark and grammar. The Mirror keeps its bare air. */}
-                  {realm && (
-                    <div className="sv-turn sv-turn-q mb-3" data-sv-turn="q">
-                      {SCOPE_META[landingScope]?.qMark && (
-                        <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
-                      )}
-                      <p
-                        className="sv-question break-words text-[14.5px] font-medium leading-relaxed text-foreground"
-                        title={zoom.q}
-                      >
-                        {zoom.q}
-                      </p>
-                    </div>
-                  )}
-                  {/* THE FIELD'S OWN THREAD — every earlier exchange of
-                      the standing conversation stands above the room's
-                      follow-ups (all but the last, which is the room's
-                      own words): the field's chat is one continuous
-                      thread, not one exchange at a time. */}
-                  {realm && landingThread.length > 1 && (
-                    <div
-                      data-testid={`${testIdPrefix}-landing-thread`}
-                      className="sv-thread mb-4 flex flex-col gap-3 border-b pb-3"
-                      style={{
-                        borderColor:
-                          "color-mix(in srgb, var(--hairline) 70%, transparent)",
-                      }}
-                    >
-                      {landingThread.slice(0, -1).map((turn, i) => (
-                        <div
-                          key={i}
-                          data-room-turn=""
-                          className="flex flex-col gap-1.5"
-                        >
-                          {SCOPE_META[landingScope]?.qMark && (
-                            <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
-                          )}
-                          <p className="sv-question ml-auto max-w-[88%] break-words text-[14px] font-medium leading-relaxed text-foreground/95">
-                            {turn.q}
-                          </p>
-                          {turn.a && (
-                            <div className="flex items-start gap-1">
-                              {realm && landingScope === "hyperx" ? (
-                                <div className="min-w-0 flex-1">
-                                  <HyperXAnswer
-                                    question={turn.q}
-                                    answer={turn.a}
-                                    onZoom={(src, caption) =>
-                                      setLandingViewing({ src, caption })
-                                    }
-                                    testId={`${testIdPrefix}-landing-hyperx-${i}`}
-                                    variant="compact"
-                                  />
-                                </div>
-                              ) : (
-                                <p className="sv-answer min-w-0 flex-1 break-words text-[14.5px] leading-[1.7] text-foreground/85">
-                                  {flowAnswerText(turn.a)}
-                                </p>
-                              )}
-                              {!(realm && landingScope === "hyperx") && (
-                                <>
-                                  <RoomCopyButton
-                                    text={turn.a}
-                                    testId={`${testIdPrefix}-landing-copy-${i}`}
-                                  />
-                                  <RoomShareButton
-                                    text={turn.a}
-                                    testId={`${testIdPrefix}-landing-share-${i}`}
-                                  />
-                                </>
-                              )}
-                            </div>
-                          )}
-                          {turn.painting && (
-                            <MirrorChanneling
-                              compact
-                              label={t("Painting the vision")}
-                              variant="mirror"
-                              className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                            />
-                          )}
-                          <LandingPainting
-                            turn={turn}
-                            testId={`${testIdPrefix}-landing-painting-${i}`}
-                            onZoom={(src, caption) =>
-                              setLandingViewing({ src, caption })
-                            }
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {zoom && !realm && (
+                  {zoom && (
                     <ResonantStageBadge
                       category={categoryForMove(zoomMove)}
                       moveLabel={zoom.move ? t(BRANCH_TYPE_LABELS[zoom.move]) : null}
                       visible={revealStage >= 1}
                     />
                   )}
-                  {roomAnswer ? (
-                    /* THE FIELD'S OWN WORDS — in the realm the answer is
-                       shown the moment the landing turn holds it: the
-                       reveal stages belong to the full portal's branch
-                       cards, never to the field's own conversation (the
-                       old gate let a finished answer stand behind a
-                       stage that reads the wrong channel — the room
-                       sat blue and wordless until the next input). */
-                    (revealStage >= 2 || realm) ? (
-                      <>
-                        {realm && landingScope === "hyperx" ? (
-                          /* THE HYPERX ANSWER — the transmission paragraph
-                             by paragraph, each paragraph's small diamond at
-                             its side (the chat makes space for the vision
-                             right there), the doors that follow the answer,
-                             and the deep research press. */
-                          <HyperXAnswer
-                            question={zoomQ ?? ""}
-                            answer={roomAnswer}
-                            onZoom={(src, caption) =>
-                              setLandingViewing({ src, caption })
-                            }
-                            onAsk={(q) => sendFromPanel(q, null)}
-                            testId={`${testIdPrefix}-zoom-hyperx`}
-                            loading={roomLoading}
-                          />
-                        ) : (
-                          <div className="relative">
-                            <div className="canopy-answer whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90 sm:text-[16px]">
-                              {flowAnswerText(roomAnswer)}
-                              {roomLoading && (
-                                <span
-                                  aria-hidden="true"
-                                  className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
-                                />
-                              )}
-                            </div>
-                            {/* THE VISION IN THE MIXING — the mirror chose to
-                                paint: the plate appears beneath the words */}
-                            {lastLandingTurn?.painting && (
-                              <MirrorChanneling
-                                compact
-                                label={t("Painting the vision")}
-                                variant="mirror"
-                                className="mono-label mt-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                              />
-                            )}
-                          </div>
-                        )}
-                        {/* THE ANSWER'S OWN HANDS — the copy hand in every
-                            field; HYPERX adds the narrator's own voice.
-                            The new-chat hand has climbed to the room's
-                            crown (the top row) — it never lived here. */}
-                        {!roomLoading && (
-                          <div className="mt-0.5 flex items-center justify-end gap-1">
-                            {realm && landingScope === "hyperx" && (
-                              <ListenButton
-                                text={splitCrystals(roomAnswer).body}
-                                cacheKey={`hyperx-${testIdPrefix}-${zoomQ ?? ""}`}
-                                variant="icon"
-                                className="size-7 rounded-full border hairline text-muted-foreground transition-colors duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-                              />
-                            )}
+                  {answer ? (
+                    revealStage >= 2 ? (
+                      <div className="relative">
+                        <div className="canopy-answer whitespace-pre-wrap break-words text-[14.5px] leading-[1.75] text-foreground/90 sm:text-[15px]">
+                          {answer}
+                          {liveLoading && (
+                            <span
+                              aria-hidden="true"
+                              className="ml-1 inline-block h-[13px] w-[7px] translate-y-[1px] animate-pulse rounded-[2px] bg-[var(--scope-a,var(--gd))] align-baseline opacity-70"
+                            />
+                          )}
+                        </div>
+                        {/* THE COPY HAND — the words are the visitor's */}
+                        {!liveLoading && (
+                          <div className="mt-0.5 flex justify-end">
                             <RoomCopyButton
-                              text={
-                                realm && landingScope === "hyperx"
-                                  ? (splitCrystals(roomAnswer).body.trim() ||
-                                      roomAnswer)
-                                  : roomAnswer
-                              }
+                              text={answer}
                               testId={`${testIdPrefix}-zoom-copy`}
                             />
-                            <RoomShareButton
-                              text={roomAnswer}
-                              testId={`${testIdPrefix}-zoom-share`}
-                            />
                           </div>
                         )}
-                      </>
+                      </div>
                     ) : null
-                  ) : displayError && !roomLoading && (revealStage >= 2 || realm) ? (
+                  ) : roomError && !liveLoading && revealStage >= 2 ? (
                     /* THE ROOM'S HONESTY — an ask that could not cross
-                       shows its reason right here; the walk stands. On
-                       the landing's floor the mirror speaks plainly —
-                       no laboratory words on the free ground. */
+                       shows its reason right here; the walk stands. */
                     <div
-                      className={`my-2 rounded-2xl border px-4 py-3.5 ${
-                        energyNotice
-                          ? "border-[color-mix(in_srgb,#f59e0b_38%,transparent)] bg-[color-mix(in_srgb,#f59e0b_7%,var(--background))]"
-                          : "border-[color-mix(in_srgb,#f43f5e_38%,transparent)] bg-[color-mix(in_srgb,#f43f5e_7%,var(--background))]"
-                      }`}
+                      className="my-2 rounded-2xl border border-[color-mix(in_srgb,#f43f5e_38%,transparent)] bg-[color-mix(in_srgb,#f43f5e_7%,var(--background))] px-4 py-3.5"
                       role="alert"
                       data-testid={`${testIdPrefix}-zoom-error`}
                     >
-                      <p
-                        className={`mono-label text-[9.5px] uppercase tracking-[0.2em] ${
-                          energyNotice ? "text-[#b8860b] dark:text-[#f59e0b]" : "text-[#f43f5e]"
-                        }`}
-                      >
-                        {t(realm ? "The field is quiet — speak once more" : "The transmission could not cross")}
+                      <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-[#f43f5e]">
+                        {t("The transmission could not cross")}
                       </p>
-                      <p className="mt-1.5 text-[14px] leading-relaxed text-foreground/85">
-                        {displayError}
+                      <p className="mt-1.5 text-[13px] leading-relaxed text-foreground/85">
+                        {roomError}
                       </p>
                     </div>
-                  ) : roomMaking && (revealStage >= 2 || realm) ? null :
-                    realm &&
-                    lastLandingTurn &&
-                    lastLandingTurn.paintFailed &&
-                    !lastLandingTurn.loading ? null : (
-                    /* THE PLATE ALONE — a wish that crystallized straight
-                       into an image needs no reflecting words beneath it.
-                       A RESTED BRUSH says so honestly — the spinner never
-                       spins forever over a paint that will not come. */
-                    (revealStage >= 2 || realm) &&
-                    !(
-                      realm &&
-                      lastLandingTurn &&
-                      !lastLandingTurn.loading &&
-                      !lastLandingTurn.painting &&
-                      !roomAnswer &&
-                      lastLandingTurn.imageUrl
-                    ) && (
-                      <div className="py-5 text-muted-foreground">
-                        <MirrorChanneling
-                          label={t(
-                            lastLandingTurn?.painting
-                              ? "Painting the vision"
-                              : realm
-                                ? landingScope === "hyperx"
-                                  ? "Discovering"
-                                  : "Reflecting"
-                                : "Channeling"
-                          )}
-                          variant={
-                            realm
-                              ? landingScope === "hyperx"
-                                ? "hyperx"
-                                : "mirror"
-                              : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
-                          }
-                          className="mono-label text-[11px] uppercase tracking-[0.22em]"
-                        />
+                  ) : (
+                    revealStage >= 2 && (
+                      <div className="flex items-center gap-3 py-5 text-muted-foreground" aria-live="polite">
+                        <ChannelingOrb size={30} className="shrink-0" />
+                        <ShimmerLabel className="mono-label text-[10px] uppercase tracking-[0.22em]">
+                          {t("Channeling")}
+                        </ShimmerLabel>
                       </div>
                     )
-                  )}
-                  {/* THE VISION BENEATH THE WORDS — the last turn's
-                      painting, zoomable into the deep-reading room; a
-                      rested brush shows its honest notice + retry here */}
-                  {lastLandingTurn &&
-                    (lastLandingTurn.imageUrl ||
-                      (lastLandingTurn.paintFailed && !lastLandingTurn.loading)) &&
-                    (revealStage >= 2 || realm) && (
-                    <div className="mt-3">
-                      <LandingPainting
-                        turn={lastLandingTurn}
-                        testId={`${testIdPrefix}-zoom-painting`}
-                        onZoom={(src, caption) =>
-                          setLandingViewing({ src, caption })
-                        }
-                        onRetry={
-                          lastLandingTurn.paintFailed && !lastLandingTurn.painting
-                            ? () => retryLandingPaint()
-                            : undefined
-                        }
-                      />
-                    </div>
-                  )}
-
-                  {/* THE MAKING IN THE ROOM — the creation rises INLINE,
-                      inside its own breath of light: a rare seal blooms,
-                      the two kind curtains part, and the making takes its
-                      place in the conversation — a painting while it
-                      forms, a woven book, a song, a record, a ritual,
-                      exactly where the ask was spoken. The working room
-                      is gone; the chat is where everything is made now,
-                      the way the generic ais serve their makers. */}
-                  {roomMaking && roomMessage && revealStage >= 2 && (
-                    <CreationReveal
-                      signature={`${roomMessage.sideArtifact?.kind ?? "visual"}-${roomMessage.id}`}
-                      testIdPrefix={`${testIdPrefix}-making`}
-                    >
-                      {roomMessage.sideArtifact &&
-                      !roomMessage.artifact &&
-                      !roomMessage.visual ? (
-                        <SideArtifact
-                          kind={roomMessage.sideArtifact.kind}
-                          resonance={roomMessage.sideArtifact.resonance}
-                          resume={roomMessage.sideArtifact.resume}
-                          tool={roomMessage.sideArtifact.tool}
-                        />
-                      ) : (
-                        <ExchangeVisual message={roomMessage} />
-                      )}
-                    </CreationReveal>
                   )}
 
                   {/* STAGE 3 — the narrator's honest status: the loading
@@ -6716,7 +4835,7 @@ export function BranchCanopy({
                   {zoom && (
                     <NarrationStatusLine
                       roomId={walkNodeId(zoom.q)}
-                      visible={revealStage >= 3 && displayLanded}
+                      visible={revealStage >= 3 && answerLanded}
                       narration={narration}
                       testIdPrefix={`${testIdPrefix}-zoom`}
                     />
@@ -6737,121 +4856,36 @@ export function BranchCanopy({
                       {thread.map((turn, i) => (
                         <div
                           key={`${zoomQ}-${i}`}
-                          data-room-turn=""
                           className="flex flex-col gap-2"
                         >
-                          {/* THE FIELD'S OWN MARKS — the turn's own small
-                              header speaks the field's language of
-                              expression (the Mirror keeps none). */}
-                          {realm && SCOPE_META[landingScope]?.qMark && (
-                            <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
-                          )}
-                          <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[14px] font-medium leading-relaxed text-foreground">
+                          <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[13px] font-medium leading-relaxed text-foreground">
                             {turn.q}
                           </p>
                           {turn.loading ? (
-                            <MirrorChanneling
-                              compact
-                              label={t(
-                                realm
-                                  ? landingScope === "hyperx"
-                                    ? "Discovering"
-                                    : "Reflecting"
-                                  : "The transmission is listening…"
-                              )}
-                              variant={
-                                realm
-                                  ? landingScope === "hyperx"
-                                    ? "hyperx"
-                                    : "mirror"
-                                  : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
-                              }
-                              className="py-1 mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground"
-                            />
+                            <p
+                              className="flex items-center gap-2.5 py-1 text-muted-foreground"
+                              aria-live="polite"
+                            >
+                              <ChannelingOrb size={18} className="shrink-0" />
+                              <ShimmerLabel className="mono-label text-[9.5px] uppercase tracking-[0.2em]">
+                                {t("The transmission is listening…")}
+                              </ShimmerLabel>
+                            </p>
                           ) : turn.a ? (
                             <div className="flex items-start gap-1">
-                              {realm && SCOPE_META[landingScope]?.aMark && (
-                                <p className="sv-mark sv-mark-a">{t(SCOPE_META[landingScope].aMark!)}</p>
-                              )}
-                              {realm && landingScope === "hyperx" ? (
-                                /* THE HYPERX THREAD ANSWER — paragraph by
-                                   paragraph with its side diamonds; the
-                                   last turn carries the following doors */
-                                <div className="min-w-0 flex-1">
-                                  <HyperXAnswer
-                                    question={turn.q}
-                                    answer={turn.a}
-                                    onZoom={(src, caption) =>
-                                      setLandingViewing({ src, caption })
-                                    }
-                                    onAsk={
-                                      i === thread.length - 1
-                                        ? (q) => sendFromPanel(q, null)
-                                        : undefined
-                                    }
-                                    testId={`${testIdPrefix}-room-hyperx-${i}`}
-                                    variant={
-                                      i === thread.length - 1 ? "full" : "compact"
-                                    }
-                                  />
-                                </div>
-                              ) : (
-                                <p className="sv-answer min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
-                                  {flowAnswerText(turn.a)}
-                                </p>
-                              )}
-                              {!(realm && landingScope === "hyperx") && (
-                                <>
-                                  <RoomCopyButton
-                                    text={turn.a}
-                                    testId={`${testIdPrefix}-room-copy-${i}`}
-                                  />
-                                  <RoomShareButton
-                                    text={turn.a}
-                                    testId={`${testIdPrefix}-room-share-${i}`}
-                                  />
-                                </>
-                              )}
-                            </div>
-                          ) : turn.painting ? (
-                            <MirrorChanneling
-                              compact
-                              label={t("Painting the vision")}
-                              variant="mirror"
-                              className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                            />
-                          ) : turn.failed ? (
-                            <div
-                              className={`rounded-xl border px-3 py-2 ${
-                                turn.energy
-                                  ? "border-[color-mix(in_srgb,#f59e0b_30%,transparent)] bg-[color-mix(in_srgb,#f59e0b_6%,var(--background))]"
-                                  : "border-transparent bg-transparent"
-                              }`}
-                            >
-                              <p
-                                className={`text-[13.5px] leading-relaxed ${
-                                  turn.energy
-                                    ? "text-[#b8860b] dark:text-[#f59e0b]"
-                                    : "mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/60"
-                                }`}
-                              >
-                                {turn.errMessage ||
-                                  t("The field is quiet — speak once more")}
+                              <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-[14.5px] leading-[1.7] text-foreground/90">
+                                {turn.a}
                               </p>
+                              <RoomCopyButton
+                                text={turn.a}
+                                testId={`${testIdPrefix}-room-copy-${i}`}
+                              />
                             </div>
+                          ) : turn.failed ? (
+                            <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                              {t("The field is quiet — speak once more")}
+                            </p>
                           ) : null}
-                          <LandingPainting
-                            turn={turn}
-                            testId={`${testIdPrefix}-room-painting-${i}`}
-                            onZoom={(src, caption) =>
-                              setLandingViewing({ src, caption })
-                            }
-                            onRetry={
-                              turn.paintFailed && !turn.painting
-                                ? () => retryLandingPaint(i)
-                                : undefined
-                            }
-                          />
                         </div>
                       ))}
                     </div>
@@ -6868,24 +4902,14 @@ export function BranchCanopy({
                   transmission, so the next branch glides in without a
                   single flicker. */}
               <footer
-                className={cn(
-                  "flex shrink-0 flex-col gap-2.5 border-t px-4 py-2.5 sm:px-6 sm:py-3",
-                  /* THE FOOTER'S OWN TOUCH — the reply line and every
-                     branch hand keep their click on the desk: the room
-                     is never lost to a stray fall-through again (the
-                     veil behind it no longer closes the docked room). */
-                  bare && "pointer-events-auto"
-                )}
+                className="flex shrink-0 flex-col gap-2.5 border-t px-4 py-2.5 sm:px-6 sm:py-3"
                 style={{
                   borderColor:
                     "color-mix(in srgb, var(--hairline) 70%, transparent)",
                 }}
               >
-                {/* STAGE 4 — the next horizon, dropped down to explore.
-                    THE LANDING'S PURE FLOOR — the walk's branches belong
-                    to the full portal: the docked room keeps only the
-                    mirror's own words and its own line. */}
-                {!realm && !liveLoading && answer && revealStage >= 4 && contSeeds.length > 0 && (
+                {/* STAGE 4 — the next horizon, dropped down to explore */}
+                {!liveLoading && answer && revealStage >= 4 && contSeeds.length > 0 && (
                   <div className="flex flex-col gap-2.5">
                     <button
                       type="button"
@@ -6905,11 +4929,11 @@ export function BranchCanopy({
                         className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
                         aria-hidden="true"
                       />
-                      <span className="mono-label min-w-0 flex-1 truncate text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                      <span className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
                         {t("Branches of this transmission")}
                       </span>
                       <span
-                        className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[9.5px] leading-none tabular-nums"
+                        className="mono-label shrink-0 rounded-full border px-1.5 py-0.5 text-[8.5px] leading-none tabular-nums"
                         style={{
                           borderColor:
                             "color-mix(in srgb, var(--scope-a,var(--gd)) 32%, transparent)",
@@ -6955,10 +4979,10 @@ export function BranchCanopy({
                                 aria-hidden="true"
                               />
                               <span className="min-w-0 flex-1">
-                                <span className="mono-label block text-[9px] uppercase tracking-[0.18em] text-muted-foreground/60">
+                                <span className="mono-label block text-[8px] uppercase tracking-[0.18em] text-muted-foreground/60">
                                   {t(BRANCH_TYPE_LABELS[b.type])}
                                 </span>
-                                <span className="mt-1 block whitespace-pre-wrap break-words text-[14.5px] leading-snug text-foreground/90">
+                                <span className="mt-1 block whitespace-pre-wrap break-words text-[13.5px] leading-snug text-foreground/90">
                                   {b.question}
                                 </span>
                               </span>
@@ -6979,19 +5003,11 @@ export function BranchCanopy({
                   onSend={sendReplyFromPanel}
                   testIdPrefix={testIdPrefix}
                   scopeKey={roomLiveScope}
-                  bare={realm}
                   leading={
-                    /* THE CATEGORY'S OWN CALL — the room's direct line.
-                       THE LANDING'S OWN VOICE — docked in the threshold
-                       the call is ALWAYS the authentic mirror itself
-                       (communion, the mirror of the Absolute), never a
-                       category's or the interplanetary line — whatever
-                       room the whisper grew. */
+                    /* THE CATEGORY'S OWN CALL — the room's direct line */
                     <button
                       type="button"
-                      onClick={() =>
-                        setLiveCallScope(realm ? "communion" : roomLiveScope)
-                      }
+                      onClick={() => setLiveCallScope(roomLiveScope)}
                       disabled={disabled}
                       aria-label={t("Open the direct mirror connection")}
                       title={t("Open the direct mirror connection")}
