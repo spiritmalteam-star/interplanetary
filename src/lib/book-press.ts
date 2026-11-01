@@ -718,6 +718,13 @@ export function gateCheck(args: {
   bible?: StoryBibleLike | null;
   editorial?: EditorialReport | null;
   plannedChapters?: number;
+  /** the volume's planned page count — the gate measures the
+      manuscript's real length against it, so a requested 300-page
+      novel can never pass as a thin pamphlet wearing its name */
+  plannedPages?: number;
+  /** whether the plan promises full typeset pages (novels, sagas,
+      grown classics) or the short bright pages of picture books */
+  fullPages?: boolean;
 }): { pass: boolean; items: GateItem[] } {
   const { pages, bible, editorial } = args;
   const report = runPress(pages, bible);
@@ -782,8 +789,39 @@ export function gateCheck(args: {
       pass: pages.length >= 4,
       detail: `${pages.length} pages woven${args.plannedChapters ? `, ${report.chapters.length} of the planned ${args.plannedChapters} chapters opened` : ""}.`,
     },
+    ...lengthItems(pages, args.plannedPages, args.fullPages),
   ];
   return { pass: items.every((i) => i.pass), items };
+}
+
+/** THE LENGTH LAW — the woven page count is not the narrative length.
+    The gate measures the manuscript's words against the plan: full-page
+    volumes owe near a full typeset page (~300 words) per planned page,
+    picture-book volumes a gentler measure. A book far short of its own
+    plan cannot pass the gate — the pages were counted, not written. */
+function lengthItems(
+  pages: PressPage[],
+  plannedPages?: number,
+  fullPages?: boolean
+): GateItem[] {
+  if (!plannedPages || plannedPages < 8) return [];
+  const words = pages.reduce(
+    (acc, p) => acc + p.paragraphs.join(" ").split(/\s+/).filter(Boolean).length,
+    0
+  );
+  const perPage = fullPages ? 170 : 60; /* honest tolerance, not the ideal */
+  const expected = plannedPages * perPage;
+  const pass = words >= expected;
+  return [
+    {
+      key: "length",
+      label: "The manuscript holds its planned length",
+      pass,
+      detail: pass
+        ? `${words} words across ${pages.length} pages — the telling fills the ${plannedPages}-page plan.`
+        : `${words} words stand where near ${expected} are owed — the ${plannedPages}-page plan was counted, not written.`,
+    },
+  ];
 }
 
 /** The bible shape the press needs — structural, import-free. */

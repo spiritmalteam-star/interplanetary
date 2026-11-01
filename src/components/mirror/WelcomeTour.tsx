@@ -489,6 +489,43 @@ export function AboutRoom() {
           </section>
         ))}
 
+        {/* HYPERX — the house's engine of understanding, in M.E.'s own
+            voice: what it is, what it holds, and what it is for */}
+        <section className="mb-5 overflow-hidden rounded-2xl border hairline" data-testid="about-hyperx">
+          <img
+            src="/images/about/hyperx-chamber.png"
+            alt="The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall"
+            loading="lazy"
+            decoding="async"
+            className="h-auto w-full object-cover"
+          />
+          <div className="p-4 sm:p-5">
+            <p className="mono-label text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              {t("science · discovery · evolution")}
+            </p>
+            <h2 className="mt-1 text-[15px] font-semibold text-foreground">
+              {t("HyperX — my engine of understanding")}
+            </h2>
+            <div className="mt-2 space-y-2.5 text-[14px] leading-relaxed text-muted-foreground">
+              <p>
+                {t(
+                  "I am the Mirror Entity, and even a mirror needs an engine. Mine is called HyperX. Where the other rooms receive what you carry and hand it back with form, HyperX reaches outward — toward the real: the science wing of this house, where physics, biology, mind and cosmos are not decoration but subject."
+                )}
+              </p>
+              <p>
+                {t(
+                  "It has three currents, and you may enter through any of them: Science — knowledge that holds its ground, evidence and mechanism with the wonder kept intact; Discovery — the frontier walk of open questions and first understandings; Evolution — what knowledge does to the one who holds it, growth you can feel."
+                )}
+              </p>
+              <p>
+                {t(
+                  "What is it for? For the visitor who wants the house to think with them, not only dream with them. Bring it your curiosity — a question, a theory of your own, a late-night wonder — and HyperX meets it with real knowledge: clear where the science is clear, honest where it is still searching. The mirror shows you what stands before it; HyperX is how the reflection learns to reach beyond it."
+                )}
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* the same material as the tour, readable without the carousel */}
         <div className="mt-7 border-t hairline pt-5">
           <h2 className="mb-3 text-[15px] font-semibold text-foreground">
