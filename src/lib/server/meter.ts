@@ -11,6 +11,7 @@ import { costOf } from "@/lib/server/costs";
 import { creditsEnforced, spendCredits } from "@/lib/server/credits";
 import { GATES, rateLimit } from "@/lib/server/rate-limit";
 import { recordUsage } from "@/lib/server/usage";
+import { depthKeyOf, perPageCredits } from "@/lib/book-pricing";
 import {
   WALLET_COSTS,
   WALLET_OPERATIONS,
@@ -99,16 +100,41 @@ async function bodyWeighFor(operation: string, req: NextRequest): Promise<BodyWe
   if (operation === "dream_book") {
     const b = (await req.clone().json().catch(() => null)) as {
       phase?: string;
-      tale?: string;
+      span?: number;
+      config?: {
+        volume?: string;
+        level?: string;
+        age?: string;
+        tale?: string;
+        topic?: string;
+        wishes?: string;
+        pages?: number;
+      };
     } | null;
-    if (!b || b.phase !== "open") return null;
-    const prices = await servicePrices();
-    const tale = String(b.tale ?? "short");
-    const extended = !(tale === "poem" || tale === "short");
+    if (!b) return null;
+    /* THE PRESS ROOM RIDES FREE — the studio phases (bible, edit,
+       repair, art, plate, seal) are the editorial workshop around the
+       volume; only the WEAVING itself is weighed. */
+    const phase = String(b.phase ?? "next");
+    if (!(phase === "open" || phase === "next" || phase === "extend" || phase === "close"))
+      return null;
+    /* THE HONEST WEIGH — page by page, at the telling's own depth and
+       the reader's own page measure. The loom charges stride by
+       stride as it weaves: what a pause or a cancel leaves unwoven
+       was never drawn from the purse. */
+    const spanRaw = Number(b.span);
+    const span =
+      phase === "open"
+        ? Math.min(2, Math.max(1, Number.isFinite(spanRaw) ? Math.round(spanRaw) : 2))
+        : phase === "next"
+          ? Math.min(8, Math.max(2, Number.isFinite(spanRaw) ? Math.round(spanRaw) : 4))
+          : 2;
+    const perPage = perPageCredits(b.config?.level, b.config?.age);
+    const cost = Math.max(1, Math.ceil(span * perPage));
     return {
       actionType: "DREAM_BOOK",
-      cost: extended ? prices.bookExtended : prices.bookShort,
-      description: `the book loom — ${tale} volume`,
+      cost,
+      description: `the book loom — ${span} ${span === 1 ? "page" : "pages"} woven (${phase}, depth ${depthKeyOf(b.config?.level)})`,
     };
   }
   return null;

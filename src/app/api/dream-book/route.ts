@@ -14,6 +14,7 @@ import {
   type ResonanceDraw,
 } from "@/lib/book-resonance";
 import { detectShortBookAsk, topicHoldsGround } from "@/lib/book-length";
+import { BOOK_PLAN, NOVEL_ASK } from "@/lib/book-pricing";
 import {
   estimateBoundPages,
   planFromBoundPages,
@@ -135,40 +136,10 @@ interface WeavePage {
   paragraphs: string[];
 }
 
-const BOOK_PLAN: Record<string, { min: number; max: number; label: string }> = {
-  /* THE SHORT BOOK — the visitor's own ask, honored: a complete tale
-     in a handful of pages, never a long, endless story. */
-  short: {
-    min: 10,
-    max: 16,
-    label:
-      "a SHORT book — a complete tale told in a handful of pages (10–16 total): one bright arc, no sprawling middle, an ending that arrives on time",
-  },
-  bedtime: { min: 80, max: 104, label: "a soft bedtime treasure — short luminous pages, a calm nightly cadence" },
-  classic: { min: 96, max: 120, label: "a classic tale — full pages, an evergreen storybook voice" },
-  saga: { min: 120, max: 220, label: "a grand saga — an epic breadth of pages up to 220, a mythic storyteller's breath" },
-  /* THE NOVEL — when the visitor speaks a long book by name (a novel,
-     three hundred pages), the loom plans a true novel: every woven
-     page a FULL typeset page of prose, the whole manuscript measured
-     at the seal — page count never confused with narrative length. */
-  novel: {
-    min: 240,
-    max: 320,
-    label:
-      "a FULL NOVEL — two hundred forty to three hundred twenty pages, every page a complete typeset page of living prose; arcs, acts and chapters planned like a printed book, never a page-count wearing a novel's name",
-  },
-  /* THE POEM ITSELF — when the visitor's own words ask for a poem (no
-     book word spoken), the loom weaves the poem, not a book: verses on
-     a few leaves, complete in the hand. THE GROUND LAW (see
-     src/lib/book-length.ts) — a short poem can never arrive as a
-     ninety-five page book again. */
-  tiny: {
-    min: 4,
-    max: 10,
-    label:
-      "A POEM ITSELF — verses on a few leaves (4–10 pages): the whole poem present, nothing padded, no sprawling book around it",
-  },
-};
+/* THE BOOK'S OWN SCALES — the page plans (BOOK_PLAN) and the length
+   ask (NOVEL_ASK) live in src/lib/book-pricing.ts, ONE truth shared
+   with the pricing scales, so the price the visitor reads before the
+   loom begins and the plan the prompts obey can never disagree. */
 
 /* THE SHORT BOOK LAW — spoken into the open conjuring when the volume
    is short. It overrides the general pacing and chapter cadence: the
@@ -1377,8 +1348,6 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     /* THE NOVEL ASK — when the visitor's own words speak a long book
        by name (a novel, three hundred pages), the loom plans a true
        novel: full pages, the whole measured at the seal. */
-    const NOVEL_ASK =
-      /\b(novels?|\d{3}\s*pages?|three\s+hundred(?:\s+pages?)?|roman)\b/i;
     const novelAsk =
       volume === "novel" || (!shortAsk && NOVEL_ASK.test(`${topic} ${wishes}`));
     const ground = topicHoldsGround(`${topic} ${wishes}`);

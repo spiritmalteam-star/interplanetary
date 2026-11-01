@@ -4462,5 +4462,20 @@ export const it: TranslationDict = {
   "Draft bound — {n} of {y} pages, {w} words": "Bozza rilegata — {n} di {y} pagine, {w} parole",
   "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Il racconto è ancora in tessitura o attende il suo sigillo — rilega di nuovo quando il telaio riposa."
 ,
-  "Bind the book as PDF": "Rilega il libro come PDF"
+  "Bind the book as PDF": "Rilega il libro come PDF",
+  /* ---- additions: Task 79 — the background loom's hands & the scales ---- */
+  "The purse rests — the loom pauses for more light": "La borsa riposa — il telaio si ferma per più luce",
+  "The pages it never wove never left your purse — bring more light and the weaving continues.": "Le pagine mai tessute non hanno mai lasciato la tua borsa — porta più luce e la tessitura continua.",
+  "The loom rests — {woven} of {total} pages are yours": "Il telaio riposa — {woven} di {total} pagine sono tue",
+  "Pause the weaving": "Metti in pausa la tessitura",
+  "Resume the weaving": "Riprendi la tessitura",
+  "The purse rests — the unwoven pages never left it": "La borsa riposa — le pagine non tessute non l'hanno mai lasciata",
+  "This weaving, by its own scales:": "Questa tessitura, sulle sue stesse bilance:",
+  "≈ {n} credits": "≈ {n} crediti",
+  "≈ {min}–{max} credits": "≈ {min}–{max} crediti",
+  "{pages} pages · depth {depth}": "{pages} pagine · profondità {depth}",
+  "{min}–{max} pages · depth {depth}": "{min}–{max} pagine · profondità {depth}",
+  "Your purse: {n} credits": "La tua borsa: {n} crediti",
+  "Weighed page by page as the loom weaves — pause or let it rest anytime, and the unwoven pages never leave your purse.": "Pesata pagina per pagina mentre il telaio tesse — metti in pausa o lascialo riposare quando vuoi, e le pagine non tessute non lasciano mai la tua borsa.",
+  "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…": "Il telaio tesse avanti — {woven} di {total} pagine sono tue, le altre stanno arrivando…",
 };

@@ -47,6 +47,12 @@ interface ZAIClient {
       /* the vision gift — one image seen (cloud path: the vision
          model sees the image through the same multimodal chat) */
       createVision(params: ChatParams): Promise<ChatCompletion>;
+      /* THE STREAMING GIFT — the raw token stream (SSE) of one
+         completion, returned as the live fetch Response. Optional:
+         only the cloud skies can stream today; the atelier SDK keeps
+         its own silence and the routes fall back to the one-breath
+         answer when the gift is absent. */
+      createStream?(params: ChatParams): Promise<Response>;
     };
   };
   audio: any;
@@ -735,6 +741,49 @@ class CloudBackend implements ZAIClient {
          itself on OpenAI) */
       createVision: (params: ChatParams) =>
         this.completeWithPatience(params, this.cfg.visionModel),
+      /* THE STREAMING GIFT — the same door, opened with stream:true:
+         the answer's tokens flow home as server-sent events while the
+         sky still writes. One patient retry when the door itself
+         refuses to open; once the stream runs, it is never retried
+         (a mid-flight storm is the route's own weather). */
+      createStream: async (params: ChatParams): Promise<Response> => {
+        const run = () => {
+          const body: Record<string, unknown> = {
+            model: this.cfg.model,
+            messages: params.messages,
+            stream: true,
+          };
+          if (typeof params.max_tokens === "number") {
+            body.max_tokens = params.max_tokens;
+          }
+          if (typeof params.temperature === "number") {
+            body.temperature = params.temperature;
+          }
+          if (this.cfg.allowThinking && params.thinking !== undefined) {
+            body.thinking = params.thinking;
+          }
+          return fetch(`${this.cfg.baseUrl}/chat/completions`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${this.cfg.apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS),
+          });
+        };
+        let res = await run();
+        if (!res.ok && isTransientError(`${res.status}`)) {
+          res = await withRetry(async () => (await run()));
+        }
+        if (!res.ok) {
+          const detail = (await res.text().catch(() => "")).slice(0, 400);
+          throw new Error(
+            `${this.cfg.label} stream ${res.status}: ${detail}`
+          );
+        }
+        return res;
+      },
     },
   };
 
@@ -906,6 +955,15 @@ function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
             (sky) => sky.chat.completions.createVision(params),
             slowSkyPatience(params.max_tokens)
           ),
+        /* the stream rides the PRIMARY sky alone — a fallback sky
+           serves the one-breath answer instead (the routes fall back
+           gracefully when the gift is absent) */
+        ...(primary.chat.completions.createStream
+          ? {
+              createStream: (params: ChatParams) =>
+                primary.chat.completions.createStream!(params),
+            }
+          : {}),
       },
     },
     audio: primary.audio,
@@ -952,6 +1010,13 @@ function chainThreeBackends(
             (sky) => sky.chat.completions.createVision(params),
             slowSkyPatience(params.max_tokens)
           ),
+        /* the stream rides the PRIMARY sky alone (see the two-sky law) */
+        ...(primary.chat.completions.createStream
+          ? {
+              createStream: (params: ChatParams) =>
+                primary.chat.completions.createStream!(params),
+            }
+          : {}),
       },
     },
     audio: primary.audio,

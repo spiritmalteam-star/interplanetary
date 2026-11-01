@@ -3522,5 +3522,20 @@ export const tr: TranslationDict = {
   "Draft bound — {n} of {y} pages, {w} words": "Taslak ciltlendi — {y} sayfadan {n}, {w} sözcük",
   "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Anlatı hâlâ dokunuyor ya da mührünü bekliyor — tezgâh dinlendiğinde yeniden ciltle."
 ,
-  "Bind the book as PDF": "Kitabı PDF olarak ciltle"
+  "Bind the book as PDF": "Kitabı PDF olarak ciltle",
+  /* ---- additions: Task 79 — the background loom's hands & the scales ---- */
+  "The purse rests — the loom pauses for more light": "Kese dinleniyor — dokuma daha fazla ışık için duraklıyor",
+  "The pages it never wove never left your purse — bring more light and the weaving continues.": "Hiç dokunmayan sayfalar kesenizden hiç ayrılmadı — daha fazla ışık getirin ve dokuma sürsün.",
+  "The loom rests — {woven} of {total} pages are yours": "Dokuma tezgahı dinleniyor — {total} sayfanın {woven} tanesi sizin",
+  "Pause the weaving": "Dokumayı duraklat",
+  "Resume the weaving": "Dokumayı sürdür",
+  "The purse rests — the unwoven pages never left it": "Kese dinleniyor — dokunmamış sayfalar onu hiç terk etmedi",
+  "This weaving, by its own scales:": "Bu dokuma, kendi terazisinde:",
+  "≈ {n} credits": "≈ {n} kredi",
+  "≈ {min}–{max} credits": "≈ {min}–{max} kredi",
+  "{pages} pages · depth {depth}": "{pages} sayfa · derinlik {depth}",
+  "{min}–{max} pages · depth {depth}": "{min}–{max} sayfa · derinlik {depth}",
+  "Your purse: {n} credits": "Keseniz: {n} kredi",
+  "Weighed page by page as the loom weaves — pause or let it rest anytime, and the unwoven pages never leave your purse.": "Tezgah örerken sayfa sayfa tartılır — istediğiniz an duraklatın ya da dinlenmesine izin verin, ve dokunmamış sayfalar kesenizden hiç ayrılmaz.",
+  "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…": "Tezgah örerken ilerliyor — {total} sayfanın {woven} tanesi sizin, geri kalanlar geliyor…",
 };

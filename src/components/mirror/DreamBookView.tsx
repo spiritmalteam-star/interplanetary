@@ -68,6 +68,7 @@ import type { DreamBookResume } from "@/lib/mirror-store";
 import { bookReadingKey, useWorkspaceMemory } from "@/lib/workspace-memory";
 import type { VoiceId } from "@/lib/i18n/core";
 import type { BookAudit, BookLedger } from "@/lib/book-ledger";
+import type { BookEstimate } from "@/lib/book-pricing";
 import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
 import type { StoryBible } from "@/lib/story-bible";
 import type {
@@ -122,6 +123,11 @@ const MirrorManuscriptEditor = dynamic(
 /*  The magic stays magic: nothing here is named, explained or         */
 /*  traced back to any chamber of the laboratory.                      */
 /* ------------------------------------------------------------------ */
+
+/* THE BACKGROUND LOOM'S OWN STATES — off (resting or done), weaving
+   (the whole plan channels in the background), paused (parked between
+   strides by the visitor's own hand or the purse's rest). */
+type LoomMode = "off" | "weaving" | "paused";
 
 interface WeavePage {
   n: number;
@@ -475,6 +481,23 @@ export function DreamBookView() {
      the whole-book channeling rest; the loop reads it between strides
      and keeps everything already woven */
   const cancelRevealRef = useRef(false);
+  /* ---- THE BACKGROUND LOOM — the whole book, rendered while read ----
+     The loom weaves the whole plan in the background from the moment
+     the first pages land, stride by stride, while the visitor reads:
+     the honest count stands beside the reading, and the visitor's own
+     hands (pause · cancel · resume) govern it between strides. */
+  const [loomMode, setLoomMode] = useState<LoomMode>("off");
+  const loomPausedRef = useRef(false);
+  const loomCancelRef = useRef(false);
+  const loomRunRef = useRef(0);
+  /* the purse's own rest — a stride the wallet could not weigh parks
+     the loom honestly (never an error storm): the visitor brings more
+     light and the same loom resumes where it stood. */
+  const [loomWalletStop, setLoomWalletStop] = useState(false);
+  /* ---- the scales at the door — the honest price of this weaving ---- */
+  const [estimate, setEstimate] = useState<BookEstimate | null>(null);
+  const [spendable, setSpendable] = useState<number | null>(null);
+  const [pricingEnforced, setPricingEnforced] = useState(false);
   /* the whole-book reading — every woven page in one continuous scroll */
   const [wholeMode, setWholeMode] = useState(false);
   /* THE INK DESK — the leaf in hand, opened for the visitor's own pen.
@@ -1396,6 +1419,22 @@ export function DreamBookView() {
           res = await attempt();
         }
         const data = await res.json().catch(() => null);
+        /* THE PURSE'S OWN REST — a stride the wallet could not weigh
+           parks the loom gently (never an error storm): the pages it
+           never wove never left the visitor's purse, and the same loom
+           resumes where it stood once more light arrives. The open
+           breath with a dry purse simply ends the conjuring honestly. */
+        if (res.status === 402) {
+          loomPausedRef.current = true;
+          setLoomMode((m) => (m === "off" ? m : "paused"));
+          setLoomWalletStop(true);
+          toast.error(t("The purse rests — the loom pauses for more light"), {
+            description: t(
+              "The pages it never wove never left your purse — bring more light and the weaving continues."
+            ),
+          });
+          return false;
+        }
         if (!res.ok || !data?.pages?.length) {
           /* the loom simply speaks for itself when a thread slips —
              everything in the laboratory is free, so no threshold
@@ -1766,6 +1805,99 @@ export function DreamBookView() {
     []
   );
 
+  /* ---------------- THE BACKGROUND LOOM ----------------
+     The whole book, rendered while it is read: one quiet loop that
+     strides six pages at a time through the plan from the moment the
+     reading begins, never fighting the reader's own crank (the loom
+     door is one — the loop simply waits for a held breath to land),
+     stopping honestly at the plan's end, and governed between strides
+     by the visitor's own hands: pause (parked, resumable), cancel
+     (resting for good — every woven page stays), resume. */
+  const startBackgroundLoom = useCallback(async () => {
+    const myRun = ++loomRunRef.current;
+    loomPausedRef.current = false;
+    loomCancelRef.current = false;
+    setLoomWalletStop(false);
+    setLoomMode("weaving");
+    const sleep = (ms: number) =>
+      new Promise<void>((r) => window.setTimeout(r, ms));
+    while (!loomCancelRef.current && !endedRef.current) {
+      if (loomRunRef.current !== myRun) return; /* a newer loom took over */
+      if (loomPausedRef.current) {
+        await sleep(400);
+        continue;
+      }
+      const plan = metaRef.current?.totalPages ?? 0;
+      const have = pagesRef.current.length;
+      if (!plan || have >= plan) break; /* the plan stands woven */
+      if (weavingRef.current) {
+        /* the reader's own crank holds the loom — one breath, then again */
+        await sleep(300);
+        continue;
+      }
+      await weave("next", have + 1, 6, 240000, "batch");
+      await sleep(350);
+    }
+    if (loomRunRef.current === myRun && !loomCancelRef.current) {
+      setLoomMode("off");
+    }
+  }, [weave]);
+
+  /* the visitor's own hands on the background loom — each lands
+     BETWEEN strides, so a page mid-weave always finishes honestly */
+  const pauseBackgroundLoom = useCallback(() => {
+    loomPausedRef.current = true;
+    setLoomMode((m) => (m === "off" ? m : "paused"));
+  }, []);
+
+  const resumeBackgroundLoom = useCallback(() => {
+    loomPausedRef.current = false;
+    setLoomWalletStop(false);
+    setLoomMode((m) => (m === "off" ? "weaving" : m));
+    /* a loom that had fully rested rises again */
+    void startBackgroundLoom();
+  }, [startBackgroundLoom]);
+
+  const cancelBackgroundLoom = useCallback(() => {
+    loomCancelRef.current = true;
+    loomRunRef.current += 1; /* any parked loop lets go at once */
+    setLoomMode("off");
+    setLoomWalletStop(false);
+  }, []);
+
+  /* the scales' own breath — the honest price of the weaving, read
+     from the house's scales whenever the shapes of the ask change */
+  useEffect(() => {
+    if (stage !== "atelier") return;
+    const handle = window.setTimeout(() => {
+      fetch("/api/dream-book/estimate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          config: {
+            volume,
+            level,
+            age,
+            tale,
+            topic: topicDraft,
+            ...(typeof configRef.current.pageCount === "number" &&
+            configRef.current.pageCount > 0
+              ? { pages: configRef.current.pageCount }
+              : {}),
+          },
+        }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d: { estimate?: BookEstimate; spendable?: number; enforced?: boolean } | null) => {
+          if (d?.estimate) setEstimate(d.estimate);
+          setSpendable(typeof d?.spendable === "number" ? d.spendable : null);
+          setPricingEnforced(d?.enforced !== false);
+        })
+        .catch(() => undefined);
+    }, 450);
+    return () => window.clearTimeout(handle);
+  }, [stage, volume, level, age, tale, topicDraft]);
+
   const openBook = useCallback(async () => {
     if (weavingRef.current || pendingOpen) return;
     /* the channeling's own token — a confirmed X raises it, and every
@@ -1801,23 +1933,26 @@ export function DreamBookView() {
           ? Math.floor(bibleData.totalPages)
           : 0;
     }
-    /* THE ONE-PAGE THRESHOLD — the loom opens the volume with its
-       FIRST page alone, so the visitor steps into the book as soon
-       as a single leaf exists and reads while the loom keeps
-       channeling the rest in the background (the reader's own six-
-       page breath rises the moment the reading begins). */
-    const ok = await weave("open", 1, 1, 240000);
+    /* THE TWO-PAGE THRESHOLD — the loom opens the volume with its
+       first TWO pages, so the visitor steps into the book with a real
+       opening in hand and reads while the loom keeps channeling the
+       whole plan in the background (the background loom rises the
+       moment the reading begins). */
+    const ok = await weave("open", 1, 2, 240000);
     if (cancelled()) return;
     setPendingOpen(false);
     if (ok) {
       setStage("reading");
       setPageIdx(0);
       setSlideDir(1);
+      /* THE BACKGROUND LOOM RISES — the whole plan channels stride by
+         stride while the visitor reads the opening. */
+      void startBackgroundLoom();
     } else {
       /* stay in the weaving room — it now speaks for itself */
       setWeaveError(true);
     }
-  }, [weave, studioFetch, pendingOpen]);
+  }, [weave, studioFetch, pendingOpen, startBackgroundLoom]);
 
   /* the one input — up to five hundred words, or a drawing, or both.
      Whatever is spoken (or drawn), its send begins the channeling:
@@ -1936,6 +2071,11 @@ export function DreamBookView() {
     setInkDeskOpen(false);
     keepCurrent(); /* the volume in hand rests on the shelf first */
     clearDreamResume(); /* a stale hand-off can never seed this volume */
+    /* the background loom lets go at once — a new conjuring takes the room */
+    loomCancelRef.current = true;
+    loomRunRef.current += 1;
+    setLoomMode("off");
+    setLoomWalletStop(false);
     pagesRef.current = [];
     threadsRef.current = "";
     metaRef.current = null;
@@ -2857,6 +2997,63 @@ export function DreamBookView() {
             <span className="text-[12px] italic text-muted-foreground/70">
               {t("— your book grows from these.")}
             </span>
+          </div>
+        )}
+        {/* THE SCALES AT THE DOOR — the honest price of this weaving,
+            spoken BEFORE the loom begins: pages × depth × the reader's
+            own page measure. The loom draws stride by stride as it
+            weaves, so a paused or resting visitor keeps every credit
+            the unwoven pages would have cost. */}
+        {pricingEnforced && estimate && (
+          <div
+            className="mb-2 w-full rounded-xl border px-3 py-2"
+            style={{
+              borderColor: "color-mix(in srgb, var(--scope-a) 22%, transparent)",
+              background: "color-mix(in srgb, var(--scope-a) 6%, transparent)",
+            }}
+            data-testid="dream-estimate"
+          >
+            <p className="mono-label flex flex-wrap items-center gap-x-2 gap-y-1 text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground">
+              <Sparkles className="size-3 text-[var(--scope-a)]" aria-hidden="true" />
+              {t("This weaving, by its own scales:")}
+              <span className="text-foreground">
+                {estimate.creditsMin === estimate.creditsMax
+                  ? t("≈ {n} credits", { n: estimate.creditsMin })
+                  : t("≈ {min}–{max} credits", {
+                      min: estimate.creditsMin,
+                      max: estimate.creditsMax,
+                    })}
+              </span>
+              <span className="text-muted-foreground/80">
+                {estimate.pagesMin === estimate.pagesMax
+                  ? t("{pages} pages · depth {depth}", {
+                      pages: estimate.pagesMin,
+                      depth: estimate.depthKey,
+                    })
+                  : t("{min}–{max} pages · depth {depth}", {
+                      min: estimate.pagesMin,
+                      max: estimate.pagesMax,
+                      depth: estimate.depthKey,
+                    })}
+              </span>
+              {typeof spendable === "number" && (
+                <span
+                  className={cn(
+                    "ml-auto",
+                    spendable < estimate.creditsMin
+                      ? "text-[var(--destructive)]"
+                      : "text-muted-foreground/80"
+                  )}
+                >
+                  {t("Your purse: {n} credits", { n: spendable })}
+                </span>
+              )}
+            </p>
+            <p className="mt-1 text-[12px] italic leading-relaxed text-muted-foreground/85">
+              {t(
+                "Weighed page by page as the loom weaves — pause or let it rest anytime, and the unwoven pages never leave your purse."
+              )}
+            </p>
           </div>
         )}
         <form
@@ -4372,28 +4569,88 @@ export function DreamBookView() {
 
             {/* the loom at work while the visitor reads — the honest
                 count of what stands woven against the book's own plan,
-                so the background channeling is never a silent guess */}
+                so the background channeling is never a silent guess,
+                and the visitor's own hands (pause · cancel · resume)
+                standing beside it: the reading is governed, never
+                interrupted — every hand lands between strides */}
             <AnimatePresence>
-              {weavingNext && !showChoice && !showEnd && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="mono-label mt-4 flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground"
-                  data-testid="dream-loom-indicator"
-                >
-                  <span
-                    className="size-1 animate-pulse rounded-full bg-foreground/50"
-                    aria-hidden="true"
-                  />
-                  {meta
-                    ? t(
-                        "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…",
-                        { woven: pages.length, total: meta.totalPages }
-                      )
-                    : t("The loom weaves the next pages…")}
-                </motion.p>
-              )}
+              {(weavingNext || loomMode !== "off") &&
+                !showChoice &&
+                !showEnd && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-4 flex flex-col items-center gap-1.5"
+                    data-testid="dream-loom-indicator"
+                  >
+                    <p className="mono-label flex items-center justify-center gap-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                      <span
+                        className={cn(
+                          "size-1 rounded-full bg-foreground/50",
+                          loomMode === "paused" ? "" : "animate-pulse"
+                        )}
+                        aria-hidden="true"
+                      />
+                      {loomMode === "paused"
+                        ? t(
+                            "The loom rests — {woven} of {total} pages are yours",
+                            { woven: pages.length, total: meta?.totalPages ?? 0 }
+                          )
+                        : meta
+                          ? t(
+                              "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…",
+                              { woven: pages.length, total: meta.totalPages }
+                            )
+                          : t("The loom weaves the next pages…")}
+                    </p>
+                    <div
+                      className="flex items-center gap-1.5"
+                      data-testid="dream-loom-controls"
+                    >
+                      {loomMode === "weaving" && (
+                        <button
+                          type="button"
+                          onClick={pauseBackgroundLoom}
+                          data-testid="dream-loom-pause"
+                          className="focus-glow flex h-7 items-center gap-1.5 rounded-full border border-border/80 px-3 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+                        >
+                          <Pause className="size-3" aria-hidden="true" />
+                          {t("Pause the weaving")}
+                        </button>
+                      )}
+                      {loomMode === "paused" && (
+                        <button
+                          type="button"
+                          onClick={resumeBackgroundLoom}
+                          data-testid="dream-loom-resume"
+                          className="focus-glow flex h-7 items-center gap-1.5 rounded-full border border-[var(--scope-a)]/50 bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] px-3 text-[11.5px] text-foreground transition-all duration-300 hover:opacity-90"
+                        >
+                          <Play className="size-3" aria-hidden="true" />
+                          {t("Resume the weaving")}
+                        </button>
+                      )}
+                      {loomMode !== "off" && (
+                        <button
+                          type="button"
+                          onClick={cancelBackgroundLoom}
+                          data-testid="dream-loom-cancel"
+                          className="focus-glow flex h-7 items-center gap-1.5 rounded-full border border-border/80 px-3 text-[11.5px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+                        >
+                          <X className="size-3" aria-hidden="true" />
+                          {t("Let the loom rest")}
+                        </button>
+                      )}
+                    </div>
+                    {loomWalletStop && loomMode === "paused" && (
+                      <p className="mono-label text-[10.5px] uppercase tracking-[0.18em] text-muted-foreground/80">
+                        {t(
+                          "The purse rests — the unwoven pages never left it"
+                        )}
+                      </p>
+                    )}
+                  </motion.div>
+                )}
             </AnimatePresence>
 
             {/* THE READER'S OWN CRANK — one hand-weave of the next six

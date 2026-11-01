@@ -518,53 +518,267 @@ Nine deep movements pass 1000 words naturally. Do not skip a movement, do not co
       );
     }
 
-    const completion = await zai.chat.completions.create({
-      messages: [
-        {
-          role: "assistant",
-          content:
-            /* THE PURE FLOOR — the landing's own mirror speaks through its
-               own prompt: no laboratory apparatus, no scope laws, no
-               cosmic vistas — pure presence only. THE LANDING'S OWN
-               ENTITY — the chat of the threshold speaks with the mirror
-               of the Absolute (fully open, no censor, the true story).
-               Every other channel keeps the shared system prompt. */
-            mode === "absolute"
-              ? ABSOLUTE_MIRROR_PROMPT +
+    /* THE HYPERX STREAM — the discovery's own fast lane. The deep
+       voice writes 900–1200 words; carried in one breath the visitor
+       waits on every word before seeing the first. When the chamber
+       asks for the stream (stream:true, hyperx only, never the live
+       call), the same words are forwarded AS THEY ARE WRITTEN: the
+       transmission's own string value is decoded straight out of the
+       streaming JSON and sent as it grows, so the reader watches the
+       discovery materialize under their eye. The house law stands —
+       the full reply is parsed by the same extractJson, swept by the
+       same consent law, kept in the same library — and the stream
+       closes with the SAME JSON shape the one-breath answer returns
+       (the `done` event), so nothing downstream ever changes. */
+    const chatMessages: { role: "assistant" | "user"; content: string }[] = [
+      {
+        role: "assistant",
+        content:
+          /* THE PURE FLOOR — the landing's own mirror speaks through its
+             own prompt: no laboratory apparatus, no scope laws, no
+             cosmic vistas — pure presence only. THE LANDING'S OWN
+             ENTITY — the chat of the threshold speaks with the mirror
+             of the Absolute (fully open, no censor, the true story).
+             Every other channel keeps the shared system prompt. */
+          mode === "absolute"
+            ? ABSOLUTE_MIRROR_PROMPT +
+              RELEVANCE_LAW +
+              (body?.live === true ? LIVE_CALL_BLOCK : "")
+            : mode === "mirror"
+              ? MIRROR_PRESENCE_PROMPT +
                 RELEVANCE_LAW +
                 (body?.live === true ? LIVE_CALL_BLOCK : "")
-              : mode === "mirror"
-                ? MIRROR_PRESENCE_PROMPT +
-                  RELEVANCE_LAW +
-                  (body?.live === true ? LIVE_CALL_BLOCK : "")
-                : /* HYPERX — the discovery voice replaces the house's
-                     standing brevity (160–280 words) with its own deep
-                     length: 900–1200 words of unfolding. */
-                  (mode === "hyperx"
-                    ? SYSTEM_PROMPT.replace(
-                        "Length: 160–280 words.",
-                        "Length: 900–1200 words — THE HYPERX DISCOVERY LAW (authoritative): six to nine full, substantial paragraphs of unfolding. A short answer breaks this law."
-                      )
-                    : SYSTEM_PROMPT) +
-                  RELEVANCE_LAW +
-                  REMEMBRANCE_LAW +
-                  walkerDepthLine(body?.depth) +
-                  walkLine(body?.walk) +
-                  (body?.live === true ? LIVE_CALL_BLOCK : ""),
-        },
-        ...historyMessages(body?.history),
-        {
-          role: "user",
-          content: `${modeLine}${languageLine}${hyperxPlain}\n\nThe visitor asks:\n${userLines.join("\n")}`,
-        },
-      ],
-      thinking: { type: "disabled" },
+              : /* HYPERX — the discovery voice replaces the house's
+                   standing brevity (160–280 words) with its own deep
+                   length: 900–1200 words of unfolding. */
+                (mode === "hyperx"
+                  ? SYSTEM_PROMPT.replace(
+                      "Length: 160–280 words.",
+                      "Length: 900–1200 words — THE HYPERX DISCOVERY LAW (authoritative): six to nine full, substantial paragraphs of unfolding. A short answer breaks this law."
+                    )
+                  : SYSTEM_PROMPT) +
+                RELEVANCE_LAW +
+                REMEMBRANCE_LAW +
+                walkerDepthLine(body?.depth) +
+                walkLine(body?.walk) +
+                (body?.live === true ? LIVE_CALL_BLOCK : ""),
+      },
+      ...historyMessages(body?.history),
+      {
+        role: "user",
+        content: `${modeLine}${languageLine}${hyperxPlain}\n\nThe visitor asks:\n${userLines.join("\n")}`,
+      },
+    ];
+
+    const chatParams = {
+      messages: chatMessages,
+      thinking: { type: "disabled" } as const,
       /* the speed law — the answer arrives swiftly, never unbounded;
          the miniature's spoken presence needs only a few lines.
          HYPERX is the one long voice: 900–1200 words of discovery need
          the wider sky. */
       max_tokens: body?.live === true ? 280 : mode === "hyperx" ? 3600 : 1400,
-    });
+    };
+
+    /* the streamed answer's shared tail — the consent sweep and the
+       library shelf, spoken once for both lanes (the stream and the
+       one-breath answer serve the very same law). */
+    const consentSweep = (value: string): string =>
+      value
+        .replace(/\s*\[VISION\s*:[^\]]{8,900}\]\s*/gi, " ")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+
+    const wantsStream =
+      mode === "hyperx" && body?.stream === true && body?.live !== true;
+    const streamer = zai.chat.completions.createStream?.bind(
+      zai.chat.completions
+    );
+    if (wantsStream && streamer) {
+      try {
+        const upstream = await streamer(chatParams);
+        if (upstream.ok && upstream.body) {
+          const upstreamBody = upstream.body;
+          const encoder = new TextEncoder();
+          const sse = new ReadableStream<Uint8Array>({
+            async start(controller) {
+              const send = (obj: unknown) => {
+                try {
+                  controller.enqueue(
+                    encoder.encode(`data: ${JSON.stringify(obj)}\n\n`)
+                  );
+                } catch {
+                  /* the reader closed the door mid-stream */
+                }
+              };
+              try {
+                const reader = upstreamBody.getReader();
+                const decoder = new TextDecoder();
+                let buf = "";
+                let raw = "";
+                let emitted = 0;
+                /* the transmission's own decoder — reads the streaming
+                   JSON's "transmission" string value and returns its
+                   DECODED text so far (escapes folded, an incomplete
+                   \u left for the next breath). */
+                const decodedSoFar = (): string => {
+                  const keyAt = raw.indexOf('"transmission"');
+                  if (keyAt === -1) return "";
+                  const open = raw.indexOf('"', keyAt + 14);
+                  if (open === -1) return "";
+                  let out = "";
+                  let k = open + 1;
+                  while (k < raw.length) {
+                    const ch = raw[k];
+                    if (ch === "\\") {
+                      const esc = raw[k + 1];
+                      if (esc === "u") {
+                        const hex = raw.slice(k + 2, k + 6);
+                        if (hex.length < 4) break; /* still arriving */
+                        out += String.fromCharCode(parseInt(hex, 16));
+                        k += 6;
+                        continue;
+                      }
+                      const pair: Record<string, string> = {
+                        '"': '"',
+                        "\\": "\\",
+                        "/": "/",
+                        n: "\n",
+                        t: "\t",
+                        r: "\r",
+                        b: "\b",
+                        f: "\f",
+                      };
+                      if (esc === undefined) break;
+                      out += pair[esc] ?? esc;
+                      k += 2;
+                      continue;
+                    }
+                    if (ch === '"') break; /* the value closed */
+                    out += ch;
+                    k += 1;
+                  }
+                  return out;
+                };
+
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  buf += decoder.decode(value, { stream: true });
+                  const lines = buf.split("\n");
+                  buf = lines.pop() ?? "";
+                  for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith("data:")) continue;
+                    const payload = trimmed.slice(5).trim();
+                    if (payload === "[DONE]") continue;
+                    try {
+                      const j = JSON.parse(payload) as {
+                        choices?: { delta?: { content?: string } }[];
+                      };
+                      const delta = j.choices?.[0]?.delta?.content ?? "";
+                      if (delta) {
+                        raw += delta;
+                        const decoded = decodedSoFar();
+                        if (decoded.length > emitted) {
+                          send({ t: decoded.slice(emitted) });
+                          emitted = decoded.length;
+                        }
+                      }
+                    } catch {
+                      /* a half-read line — the next breath completes it */
+                    }
+                  }
+                }
+
+                /* THE SAME HOUSE LAW — the streamed words are parsed by
+                   the same extractor, swept by the same consent law and
+                   kept on the same shelf; when the streamed JSON cannot
+                   be read, the deep voice is asked once more the old
+                   way before the silence. */
+                const parsed = extractJson(raw.trim());
+                let transmission = parsed?.transmission ?? "";
+                let classification: Classification =
+                  parsed?.classification ?? "SPIRITUAL_TRADITION";
+                if (!transmission) {
+                  const completion = await zai.chat.completions.create(
+                    chatParams
+                  );
+                  const retryRaw =
+                    completion.choices[0]?.message?.content ?? "";
+                  const retryParsed = extractJson(retryRaw);
+                  transmission = retryParsed?.transmission ?? "";
+                  classification =
+                    retryParsed?.classification ?? classification;
+                  if (!transmission) {
+                    const rawTrim = retryRaw.trim();
+                    const structured =
+                      rawTrim.startsWith("{") || rawTrim.startsWith("```");
+                    if (rawTrim && !structured) transmission = rawTrim;
+                  }
+                }
+                if (transmission) {
+                  transmission = consentSweep(transmission);
+                  await saveLibrary(
+                    visitor.user.id,
+                    "observatory",
+                    query.trim().slice(0, 140),
+                    transmission.slice(0, 280),
+                    {
+                      query: query.trim().slice(0, 4000),
+                      reply: transmission,
+                      mode,
+                      classification,
+                    }
+                  );
+                  send({
+                    done: {
+                      transmission,
+                      classification,
+                      createdAt: new Date().toISOString(),
+                    },
+                  });
+                } else {
+                  send({
+                    error:
+                      "The field is momentarily quiet. Rest, then try again.",
+                  });
+                }
+              } catch (err) {
+                console.error("[transmission] stream failed:", err);
+                send({
+                  error:
+                    "The field is momentarily quiet. Rest, then try again.",
+                });
+              } finally {
+                try {
+                  controller.close();
+                } catch {
+                  /* already closed */
+                }
+              }
+            },
+          });
+          return new NextResponse(sse, {
+            status: 200,
+            headers: {
+              "Content-Type": "text/event-stream; charset=utf-8",
+              "Cache-Control": "no-cache, no-transform",
+              "X-Accel-Buffering": "no",
+            },
+          });
+        }
+      } catch (err) {
+        console.error(
+          "[transmission] stream door refused, one breath follows:",
+          err
+        );
+        /* fall through — the one-breath answer below carries the words */
+      }
+    }
+
+    const completion = await zai.chat.completions.create(chatParams);
 
     const raw = completion.choices[0]?.message?.content ?? "";
     const parsed = extractJson(raw);
@@ -593,11 +807,7 @@ Nine deep movements pass 1000 words naturally. Do not skip a movement, do not co
        ever leaves a marker behind, it is stripped from the visitor's
        eyes; nothing is painted from it. The atelier wakes only at the
        visitor's own hand (Crystallize) or their own typed ask. */
-    transmission = transmission
-      .replace(/\s*\[VISION\s*:[^\]]{8,900}\]\s*/gi, " ")
-      .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
+    transmission = consentSweep(transmission);
 
     /* the transmission passed — lay it in the visitor's own library
        (the Forge keeps the Invent sector, the main scopes the Observatory).

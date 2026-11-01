@@ -3728,5 +3728,20 @@ export const el: TranslationDict = {
   "Draft bound — {n} of {y} pages, {w} words": "Πρόχειρο δεμένο — {n} από {y} σελίδες, {w} λέξεις",
   "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Η αφήγηση υφαίνεται ακόμη ή περιμένει τη σφραγίδα της — δείτε ξανά μόλις ο αργαλειός ξεκουραστεί."
 ,
-  "Bind the book as PDF": "Δέστε το βιβλίο ως PDF"
+  "Bind the book as PDF": "Δέστε το βιβλίο ως PDF",
+  /* ---- additions: Task 79 — the background loom's hands & the scales ---- */
+  "The purse rests — the loom pauses for more light": "Το πορτοφόλι αναπαύεται — ο αργαλειός σταματά για περισσότερο φως",
+  "The pages it never wove never left your purse — bring more light and the weaving continues.": "Οι σελίδες που δεν ύφανε ποτέ δεν έφυγαν από το πορτοφόλι σου — φέρσε περισσότερο φως και η ύφανση συνεχίζεται.",
+  "The loom rests — {woven} of {total} pages are yours": "Ο αργαλειός αναπαύεται — {woven} από {total} σελίδες είναι δικές σου",
+  "Pause the weaving": "Παύση της ύφανσης",
+  "Resume the weaving": "Συνέχιση της ύφανσης",
+  "The purse rests — the unwoven pages never left it": "Το πορτοφόλι αναπαύεται — οι άυφαντες σελίδες δεν έφυγαν ποτέ από αυτό",
+  "This weaving, by its own scales:": "Αυτή η ύφανση, στη δική της ζυγαριά:",
+  "≈ {n} credits": "≈ {n} μονάδες",
+  "≈ {min}–{max} credits": "≈ {min}–{max} μονάδες",
+  "{pages} pages · depth {depth}": "{pages} σελίδες · βάθος {depth}",
+  "{min}–{max} pages · depth {depth}": "{min}–{max} σελίδες · βάθος {depth}",
+  "Your purse: {n} credits": "Το πορτοφόλι σου: {n} μονάδες",
+  "Weighed page by page as the loom weaves — pause or let it rest anytime, and the unwoven pages never leave your purse.": "Ζυγίζεται σελίδα τη σελίδα καθώς ο αργαλειός υφαίνει — πάυσε ή άσε τον να αναπαυθεί όποτε θέλεις, και οι άυφαντες σελίδες δεν φεύγουν ποτέ από το πορτοφόλι σου.",
+  "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…": "Ο αργαλειός υφαίνει μπροστά — {woven} από {total} σελίδες είναι δικές σου, οι υπόλοιπες έρχονται…",
 };

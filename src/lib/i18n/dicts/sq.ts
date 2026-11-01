@@ -5876,5 +5876,20 @@ export const sq: TranslationDict = {
   "Draft bound — {n} of {y} pages, {w} words": "Skicë e lidhur — {n} nga {y} faqe, {w} fjalë",
   "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Tregimi ende po tjerr ose pret vulën e vet — lidhe sërish sapo tehu të pushojë."
 ,
-  "Bind the book as PDF": "Lidh librin si PDF"
+  "Bind the book as PDF": "Lidh librin si PDF",
+  /* ---- additions: Task 79 — the background loom's hands & the scales ---- */
+  "The purse rests — the loom pauses for more light": "Kufoja pushon — tehu ndalon për më shumë dritë",
+  "The pages it never wove never left your purse — bring more light and the weaving continues.": "Faqet që nuk i endi kurrë nuk ike nga kufoja jote — sjell më shumë dritë dhe endja vazhdon.",
+  "The loom rests — {woven} of {total} pages are yours": "Tehu pushon — {woven} nga {total} faqet janë të tuat",
+  "Pause the weaving": "Ndalo endjen",
+  "Resume the weaving": "Vazhdo endjen",
+  "The purse rests — the unwoven pages never left it": "Kufoja pushon — faqet e paendura nuk iken nga ajo",
+  "This weaving, by its own scales:": "Kjo endje, sipas peshores së vet:",
+  "≈ {n} credits": "≈ {n} kredi",
+  "≈ {min}–{max} credits": "≈ {min}–{max} kredi",
+  "{pages} pages · depth {depth}": "{pages} faqe · thellësi {depth}",
+  "{min}–{max} pages · depth {depth}": "{min}–{max} faqe · thellësi {depth}",
+  "Your purse: {n} credits": "Kufoja jote: {n} kredi",
+  "Weighed page by page as the loom weaves — pause or let it rest anytime, and the unwoven pages never leave your purse.": "Peshohet faqe pas faqeje ndërsa tehu endon — ndalo ose lëre të pushojë çdo kohë, dhe faqet e paendura nuk ikin kurrë nga kufoja jote.",
+  "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…": "Tehu endon përpara — {woven} nga {total} faqet janë të tuat, pjesa tjetër po vjen…",
 };

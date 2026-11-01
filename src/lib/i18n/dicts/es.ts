@@ -4022,5 +4022,20 @@ export const es: TranslationDict = {
   "Draft bound — {n} of {y} pages, {w} words": "Borrador encuadernado — {n} de {y} páginas, {w} palabras",
   "The telling is still being woven or awaits its seal — bind again once the loom rests.": "El relato aún se teje o espera su sello — encuaderna de nuevo cuando el telar descanse."
 ,
-  "Bind the book as PDF": "Encuadernar el libro como PDF"
+  "Bind the book as PDF": "Encuadernar el libro como PDF",
+  /* ---- additions: Task 79 — the background loom's hands & the scales ---- */
+  "The purse rests — the loom pauses for more light": "La bolsa descansa — el telar se detiene por más luz",
+  "The pages it never wove never left your purse — bring more light and the weaving continues.": "Las páginas nunca tejidas nunca dejaron tu bolsa — trae más luz y el tejido continúa.",
+  "The loom rests — {woven} of {total} pages are yours": "El telar descansa — {woven} de {total} páginas son tuyas",
+  "Pause the weaving": "Pausar el tejido",
+  "Resume the weaving": "Reanudar el tejido",
+  "The purse rests — the unwoven pages never left it": "La bolsa descansa — las páginas no tejidas nunca la dejaron",
+  "This weaving, by its own scales:": "Este tejido, en su propia balanza:",
+  "≈ {n} credits": "≈ {n} créditos",
+  "≈ {min}–{max} credits": "≈ {min}–{max} créditos",
+  "{pages} pages · depth {depth}": "{pages} páginas · profundidad {depth}",
+  "{min}–{max} pages · depth {depth}": "{min}–{max} páginas · profundidad {depth}",
+  "Your purse: {n} credits": "Tu bolsa: {n} créditos",
+  "Weighed page by page as the loom weaves — pause or let it rest anytime, and the unwoven pages never leave your purse.": "Pesado página a página mientras el telar teje — pausa o déjalo descansar cuando quieras, y las páginas no tejidas nunca dejan tu bolsa.",
+  "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…": "El telar teje adelante — {woven} de {total} páginas son tuyas, las demás están llegando…",
 };

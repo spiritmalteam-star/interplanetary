@@ -4027,5 +4027,20 @@ export const fr: TranslationDict = {
   "Draft bound — {n} of {y} pages, {w} words": "Épreuve reliée — {n} sur {y} pages, {w} mots",
   "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Le récit se tisse encore ou attend son sceau — relie de nouveau quand le métier se repose."
 ,
-  "Bind the book as PDF": "Relier le livre en PDF"
+  "Bind the book as PDF": "Relier le livre en PDF",
+  /* ---- additions: Task 79 — the background loom's hands & the scales ---- */
+  "The purse rests — the loom pauses for more light": "La bourse se repose — le métier s'arrête pour plus de lumière",
+  "The pages it never wove never left your purse — bring more light and the weaving continues.": "Les pages jamais tissées n'ont jamais quitté ta bourse — apporte plus de lumière et le tissage continue.",
+  "The loom rests — {woven} of {total} pages are yours": "Le métier se repose — {woven} pages sur {total} sont à toi",
+  "Pause the weaving": "Mettre le tissage en pause",
+  "Resume the weaving": "Reprendre le tissage",
+  "The purse rests — the unwoven pages never left it": "La bourse se repose — les pages non tissées ne l'ont jamais quittée",
+  "This weaving, by its own scales:": "Ce tissage, sur sa propre balance :",
+  "≈ {n} credits": "≈ {n} crédits",
+  "≈ {min}–{max} credits": "≈ {min}–{max} crédits",
+  "{pages} pages · depth {depth}": "{pages} pages · profondeur {depth}",
+  "{min}–{max} pages · depth {depth}": "{min}–{max} pages · profondeur {depth}",
+  "Your purse: {n} credits": "Ta bourse : {n} crédits",
+  "Weighed page by page as the loom weaves — pause or let it rest anytime, and the unwoven pages never leave your purse.": "Pesée page par page tandis que le métier tisse — mets en pause ou laisse-le se reposer quand tu veux, et les pages non tissées ne quittent jamais ta bourse.",
+  "The loom weaves ahead — {woven} of {total} pages are yours, the rest are coming…": "Le métier tisse devant — {woven} pages sur {total} sont à toi, les autres arrivent…",
 };

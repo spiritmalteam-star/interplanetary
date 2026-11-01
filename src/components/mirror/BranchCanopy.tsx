@@ -1098,7 +1098,13 @@ async function speakWithTransmission(
   walk: string[] = [],
   /* THE CARRIED SIGHT — an image and up to three documents may ride
      with the room's own words; the routes already keep the eyes */
-  attachments?: ChatAttachment[]
+  attachments?: ChatAttachment[],
+  /* THE LIVING WORD — when carried, the discovery voice streams: the
+     answer is forwarded AS IT IS WRITTEN (the partial truth so far,
+     every breath), so the reader watches it materialize instead of
+     waiting for the whole crossing. The final, swept words still
+     return from this promise exactly as the one-breath answer does. */
+  onDelta?: (partial: string) => void
 ): Promise<{ text: string; vision: string | null }> {
   const carried =
     attachments && attachments.length > 0
@@ -1146,18 +1152,95 @@ async function speakWithTransmission(
   }
   /* the transmission voice — the channel's own soul (the vision gift
      rides beside the words when the Mirror chose to paint) */
+  const transmissionBody = {
+    query,
+    mode: category === "invent" ? "forge" : category,
+    language,
+    walk,
+    ...carried,
+    history: [{ q: branchQuestion, a: transmission }, ...thread]
+      .slice(-6)
+      .map((h) => ({ q: h.q, a: h.a })),
+  };
+
+  /* THE STREAMING DISCOVERY — the deep voice's fast lane. When the
+     chamber listens breath by breath (an onDelta hand and the hyperx
+     door), the answer is read off the server-sent events as they
+     arrive and spoken onward through the hand; the swept, final
+     words come home in the `done` event exactly like the one-breath
+     answer's shape. A door that cannot stream (an older sky, a JSON
+     answer, a refused stream) simply falls through to the patient
+     one-breath ask below — nothing ever breaks for asking. */
+  if (category === "hyperx" && typeof onDelta === "function") {
+    try {
+      const res = await fetch("/api/transmission", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...transmissionBody, stream: true }),
+      });
+      const contentType = res.headers.get("content-type") ?? "";
+      if (res.ok && contentType.includes("text/event-stream") && res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buf = "";
+        let partial = "";
+        let finalText: string | null = null;
+        let streamError: string | null = null;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += decoder.decode(value, { stream: true });
+          const events = buf.split("\n\n");
+          buf = events.pop() ?? "";
+          for (const event of events) {
+            const line = event.trim();
+            if (!line.startsWith("data:")) continue;
+            try {
+              const j = JSON.parse(line.slice(5).trim()) as {
+                t?: string;
+                error?: string;
+                done?: { transmission?: string; vision?: string | null };
+              };
+              if (typeof j.t === "string" && j.t) {
+                partial += j.t;
+                onDelta(partial);
+              }
+              if (
+                j.done &&
+                typeof (j.done as { transmission?: unknown }).transmission ===
+                  "string"
+              ) {
+                finalText = (
+                  j.done as { transmission: string; vision?: string | null }
+                ).transmission;
+              }
+              if (j.error) streamError = j.error;
+            } catch {
+              /* a half-read event — the next breath completes it */
+            }
+          }
+        }
+        if (streamError) throw new Error(streamError);
+        if (finalText !== null) return { text: finalText, vision: null };
+        if (partial.trim()) return { text: partial, vision: null };
+        /* an empty stream — the one-breath ask below carries the words */
+      }
+    } catch (err) {
+      /* the house's own word (a quiet field) travels truthfully; any
+         other storm falls through to the patient one-breath ask */
+      if (
+        err instanceof Error &&
+        err.message &&
+        !/momentarily quiet/i.test(err.message)
+      ) {
+        throw err;
+      }
+    }
+  }
+
   return speakReplyGift(
     "/api/transmission",
-    {
-      query,
-      mode: category === "invent" ? "forge" : category,
-      language,
-      walk,
-      ...carried,
-      history: [{ q: branchQuestion, a: transmission }, ...thread]
-        .slice(-6)
-        .map((h) => ({ q: h.q, a: h.a })),
-    },
+    transmissionBody,
     "transmission",
     "The field is quiet"
   );
@@ -3845,6 +3928,10 @@ export function BranchCanopy({
            family fields through their own channels). */
         const scopeCategory =
           LANDING_SCOPE_CATEGORY[landingScope] ?? ("absolute" as const);
+        /* the stream's own witness — when the words arrived breath by
+           breath, the landed turn does not replay the reveal: the
+           reader already watched it materialize */
+        let streamedLanding = false;
         const { text: reply, vision } = await speakWithTransmission(
           scopeCategory,
           q,
@@ -3853,7 +3940,23 @@ export function BranchCanopy({
           prior,
           language,
           [],
-          attachments
+          attachments,
+          /* THE LIVING WORD — the discovery's fast lane: the floor's
+             own HyperX ask streams breath by breath into the standing
+             turn (the reader watches it materialize; the ladder stands
+             only until the first word arrives). */
+          landingScope === "hyperx"
+            ? (partial) => {
+                streamedLanding = true;
+                setLandingThread((t) =>
+                  t.map((turn, i) =>
+                    i === t.length - 1 && turn.loading
+                      ? { ...turn, a: partial }
+                      : turn
+                  )
+                );
+              }
+            : undefined
         );
         /* THE WORDLESS GUARD — a crossing that lands without words (a
            silence from the far side of the sky) is given one gentle
@@ -3872,8 +3975,10 @@ export function BranchCanopy({
                   a: landedReply,
                   loading: false,
                   /* THE FRESH TRANSMISSION — this answer was born now:
-                     its body may materialize in the streaming reveal */
-                  justLanded: true,
+                     its body may materialize in the streaming reveal —
+                     unless it already DID, breath by breath (a replay
+                     would make the reader watch it twice) */
+                  justLanded: !streamedLanding,
                 }
               : turn
           )
@@ -4278,7 +4383,7 @@ export function BranchCanopy({
     ? landingBusy || !!lastLandingTurn?.loading
     : liveLoading;
   const roomAnswer = realm
-    ? lastLandingTurn && !lastLandingTurn.loading
+    ? lastLandingTurn?.a
       ? lastLandingTurn.a
       : ""
     : answer;
@@ -4511,6 +4616,22 @@ export function BranchCanopy({
            never leaves the glass half-off the screen) */
         window.dispatchEvent(new CustomEvent("landing-chat:return"));
       }
+      /* THE ROOM'S OWN STREAM HAND — the discovery's fast lane reaches
+         the rooms too: the partial truth lands breath by breath in the
+         room's own standing turn (the ladder stands only until the
+         first word arrives). */
+      const roomStreamHand =
+        realm && landingScope === "hyperx"
+          ? (partial: string) => {
+              applyRoomTurn(roomQ, (t) =>
+                t.map((turn, i) =>
+                  i === t.length - 1 && turn.loading
+                    ? { ...turn, a: partial }
+                    : turn
+                )
+              );
+            }
+          : undefined;
       /* THE FAMILY'S VOICE — the room speaks through the door of the
          family its own whisper was grown from (the manifest room as
          the manifest, the atelier room as the atelier); a whisper the
@@ -4539,6 +4660,14 @@ export function BranchCanopy({
       const walk = lineage.map((l) => l.text).slice(-8);
       setThread((t) => [...t, { q, a: "", loading: true }]);
       setThreadBusy(true);
+      /* the room's own witness — a streamed answer never replays */
+      let streamedRoom = false;
+      const roomStreamLive = roomStreamHand
+        ? (partial: string) => {
+            streamedRoom = true;
+            roomStreamHand(partial);
+          }
+        : undefined;
       try {
         const { text: reply } = await speakWithTransmission(
           realm
@@ -4551,7 +4680,8 @@ export function BranchCanopy({
           prior,
           language,
           walk,
-          attachments
+          attachments,
+          roomStreamLive
         );
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
@@ -4561,8 +4691,9 @@ export function BranchCanopy({
                   a: reply,
                   loading: false,
                   /* THE FRESH TRANSMISSION — the room's own answer was
-                     born now: it may materialize in the stream */
-                  justLanded: true,
+                     born now: it may materialize in the stream — unless
+                     it already did, breath by breath */
+                  justLanded: !streamedRoom,
                 }
               : turn
           )
@@ -6766,29 +6897,12 @@ export function BranchCanopy({
                           <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[14px] font-medium leading-relaxed text-foreground">
                             {turn.q}
                           </p>
-                          {turn.loading ? (
-                            realm && landingScope === "hyperx" ? (
-                              /* THE LADDER IN THE THREAD — the thread's own
-                                 wait wears the same instrument: stages
-                                 ticked, caret alive, the clock honest. */
-                              <HyperXReasoning className="py-1" />
-                            ) : (
-                              <MirrorChanneling
-                                compact
-                                label={t(
-                                  realm
-                                    ? "Reflecting"
-                                    : "The transmission is listening…"
-                                )}
-                                variant={
-                                  realm
-                                    ? "mirror"
-                                    : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
-                                }
-                                className="py-1 mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground"
-                              />
-                            )
-                          ) : turn.a ? (
+                          {turn.a ? (
+                            /* THE LIVING WORD FIRST — a turn that already
+                               carries words (a streaming answer growing
+                               breath by breath, or a finished one) shows
+                               its words at once; the ladder stands only
+                               for a wait that has not spoken yet. */
                             <div className="flex items-start gap-1">
                               {realm && SCOPE_META[landingScope]?.aMark && (
                                 <p className="sv-mark sv-mark-a">{t(SCOPE_META[landingScope].aMark!)}</p>
@@ -6805,7 +6919,7 @@ export function BranchCanopy({
                                       setLandingViewing({ src, caption })
                                     }
                                     onAsk={
-                                      i === thread.length - 1
+                                      i === thread.length - 1 && !turn.loading
                                         ? (q) => sendFromPanel(q, null)
                                         : undefined
                                     }
@@ -6813,6 +6927,7 @@ export function BranchCanopy({
                                     variant={
                                       i === thread.length - 1 ? "full" : "compact"
                                     }
+                                    loading={turn.loading === true}
                                     reveal={turn.justLanded === true}
                                   />
                                 </div>
@@ -6834,6 +6949,29 @@ export function BranchCanopy({
                                 </>
                               )}
                             </div>
+                          ) : turn.loading ? (
+                            realm && landingScope === "hyperx" ? (
+                              /* THE LADDER IN THE THREAD — the thread's own
+                                 wait wears the same instrument: stages
+                                 ticked, caret alive, the clock honest. It
+                                 stands only until the first word lands. */
+                              <HyperXReasoning className="py-1" />
+                            ) : (
+                              <MirrorChanneling
+                                compact
+                                label={t(
+                                  realm
+                                    ? "Reflecting"
+                                    : "The transmission is listening…"
+                                )}
+                                variant={
+                                  realm
+                                    ? "mirror"
+                                    : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
+                                }
+                                className="py-1 mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground"
+                              />
+                            )
                           ) : turn.painting ? (
                             <MirrorChanneling
                               compact
