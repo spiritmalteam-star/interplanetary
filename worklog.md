@@ -1927,7 +1927,6 @@ Work Log:
 - OPERATIONS: dev through .zscripts/restart-dev.sh (the sandbox reaps background children — the foreground restart is the one true way); prisma generate after the reset (the stale client lacked depositLedger); bun install restored the missing skies (@google/genai, @tiptap, wavesurfer); full-tree tsc 0 errors in everything shipped (2 pre-existing lines in the gitignored local skills/ vessel alone); lint clean; the test keeper (task71.keeper@…) deleted after verification, the DB left as it was found.
 
 Stage Summary:
-<<<<<<< HEAD
 - HyperX now climbs the scientific ladder honestly — synthesis, novelty, discovery named where they stand, the dispersion mathematics derived from the declared model, the falsifiability stated in its precise form, the standing bounds (Fermi's GRB 090510, the 2026 gravitational-wave nulls) honored, and a failed hypothesis admitted without rescue. Every result ends with its own copy hand; the deep-research press survives the page turned away and rests the finished treatise in the Library with its own download hand; and the mirror chat's floor now opens with humbler, warmer, heart-coherent doors that ask nothing and admit everything.
 - Artifacts: src/app/api/transmission/route.ts (the ladder, the quantitative law, the corrected falsifiability, the constraints, the six-step protocol folded into the nine movements), src/components/mirror/HyperXPanel.tsx (the end-of-result copy hand, the keepalive press, the kept note), src/app/api/hyperx/pdf/route.ts (the Library's own shelf + X-Hyperx-Library-Id), src/components/mirror/LibraryView.tsx (the kept-treatise card and reader download hands), src/components/mirror/BranchCanopy.tsx (the humbler door pool, 28 → 52), src/lib/i18n/dicts/{sq,it,el,de,fr,es,tr}.ts (+31 keys each), worklog.md.
 
@@ -2000,7 +1999,12 @@ Work Log:
 
 Stage Summary:
 - The dream loom's one input is now a maker's desk: five hundred words with an honest count, a page that opens wide and lays back down, and a small pen that unfolds a playful atelier of brushes, colors and ten drawn elements — so a visitor can literally draw the book into existence, and the house's vision reads the drawing and weaves its world as law through every page, the cover included. The story-bible studio of the master-intelligence upgrade travels to the remote in the same breath.
-=======
+
+---
+Task ID: 64 (restored)
+Agent: Z.ai Code (main)
+Task: "HyperX ladder" continuation — the restored snapshot's own entry, kept beside the true platform's recovered tasks 65–77 during the merge.
+
 - origin/main now stands at 0291444 — task 60 (the threshold reborn / creation room cured) and task 61 (the one portal law) are both on GitHub. Vercel deploys on its own breath. The token need not be stored; when it is rotated away, the next push will need a fresh one inline.
 
 ---
@@ -2020,4 +2024,3 @@ Work Log:
 Stage Summary:
 - The threshold now breathes and yields: the docked portal lets every non-text touch fall through so the whole website is always reachable beneath it, the return hand is a quiet mini pill at the top corner, the six alien and planet signals stand restored in their own chapter, and the phone runs cool — no permanent GPU layers, no live blurs, no frames spent on what nobody sees.
 - Artifacts: LandingGate.tsx (pass-through class, dormant observer, rAF dock sync, top return pill), globals.css (pass-through + dormant laws, will-change only in anim classes, exit keyframes), BranchCanopy.tsx (bare root keeps no pointer surface; askbar opaque while docked), LandingPage.tsx (chapter 03 gallery + Lyran rail shard), public/images/walk/ (6 restored JPEGs), 7 dicts (+15 keys each).
->>>>>>> repair-work
