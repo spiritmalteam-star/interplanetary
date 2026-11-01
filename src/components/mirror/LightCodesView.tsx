@@ -1801,13 +1801,13 @@ export function LightCodesView() {
   }, [lcIntention, enhancing, setLcIntention, t]);
   const lcNotice = useMirror((s) => s.lcNotice);
   const playLc = useMirror((s) => s.playLc);
-  /* THE ETHERMIX OPENS ITSELF — entering the Music room raises the
-     full-screen Ethermix deck AT ONCE (the old bench switch and the
-     step sequencer are gone for good): the visitor lands IN the set,
-     never on a door to it. Laying the deck down returns to the
-     transmissions — the style door and every weave fully alive —
-     with one slim hand to raise the set again. */
-  const [deckOpen, setDeckOpen] = useState(true);
+  /* THE MAKER GREETS FIRST — entering the Music room lands on the
+     music maker itself: the transmissions, the style door and every
+     weave stand fully alive from the first breath. The Ethermix set
+     (the DJ deck) rests one slim hand away — the visitor raises it
+     only when they want to play the full set, and laying it down
+     returns here. */
+  const [deckOpen, setDeckOpen] = useState(false);
 
   /* THE KEEPING THREAD — a signed passage's shelf wakes with the room:
      the vault's rows join the history, and any weave that outlived a
@@ -1915,11 +1915,11 @@ export function LightCodesView() {
         data-testid="light-codes"
       >
         <div className="mx-auto w-full max-w-[1020px] px-4 pb-10 pt-3 sm:px-6">
-          {/* THE ETHERMIX SET — the full-screen crystal set opens DIRECTLY
-              on entering the room: two decks, the synthesizer, the
-              drums, the auto-pilot, the recorder — played on the
-              visitor's own device. The old step sequencer and the bench
-              switch are removed entirely. */}
+          {/* THE ETHERMIX SET — the full-screen crystal set, raised only
+              by its own hand: two decks, the synthesizer, the drums,
+              the auto-pilot, the recorder — played on the visitor's
+              own device. The music maker (the transmissions) stands
+              first; the set waits one touch away. */}
           {deckOpen && <EthermixDeck onClose={() => setDeckOpen(false)} />}
 
           {/* the slim re-entry hand — the deck laid down keeps one quiet

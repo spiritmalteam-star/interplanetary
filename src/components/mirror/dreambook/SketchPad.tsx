@@ -612,6 +612,33 @@ export function SketchPad({
         )}
       </div>
 
+      {/* THE SEND ROW — right beneath the sheet, so the moment the
+          drawing is done its hand is already in sight: the picture
+          rides to the input (or the atelier rests). Never scrolled
+          away, never lost below the tools. */}
+      <div className="mt-2 flex items-center justify-end gap-1.5">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="papyrus-btn focus-glow flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12.5px]"
+          data-testid="dream-sketch-cancel"
+        >
+          <X className="size-3.5" aria-hidden="true" />
+          {t("Not now")}
+        </button>
+        <button
+          type="button"
+          onClick={finish}
+          disabled={!touched}
+          title={t("Send the drawing to the input")}
+          className="akashic-btn focus-glow flex h-8 items-center gap-1.5 rounded-full px-4 text-[12.5px] font-medium disabled:cursor-not-allowed disabled:opacity-35"
+          data-testid="dream-sketch-done"
+        >
+          <Check className="size-3.5" aria-hidden="true" />
+          {t("Send to input")}
+        </button>
+      </div>
+
       {/* the brushes, the eraser, the weights */}
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         {BRUSHES.map((b) => {
@@ -754,28 +781,6 @@ export function SketchPad({
             </button>
           );
         })}
-
-        <span className="ml-auto flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="papyrus-btn focus-glow flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12.5px]"
-            data-testid="dream-sketch-cancel"
-          >
-            <X className="size-3.5" aria-hidden="true" />
-            {t("Not now")}
-          </button>
-          <button
-            type="button"
-            onClick={finish}
-            disabled={!touched}
-            className="akashic-btn focus-glow flex h-8 items-center gap-1.5 rounded-full px-3.5 text-[12.5px] font-medium disabled:cursor-not-allowed disabled:opacity-35"
-            data-testid="dream-sketch-done"
-          >
-            <Check className="size-3.5" aria-hidden="true" />
-            {t("Draw it into the book")}
-          </button>
-        </span>
       </div>
     </div>
   );

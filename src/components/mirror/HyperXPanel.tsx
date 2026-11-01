@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy, FileDown, Gem, Loader2 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { flowAnswerText } from "@/lib/text-flow";
@@ -108,6 +108,93 @@ interface VisionState {
   failed?: boolean;
 }
 
+/* ------------------------------------------------------------------ */
+/*  THE REASONING LADDER — the discovery chat never waits like the     */
+/*  others. While the deep voice gathers, a precise instrument reads   */
+/*  its own process aloud: fixed stages ticked in order, each with     */
+/*  its check when it lands, a live caret on the stage at work, and    */
+/*  the elapsed time kept honest at the right. The house's other       */
+/*  rooms breathe orbs, tides and blooms; HyperX shows its workings.   */
+/* ------------------------------------------------------------------ */
+
+const REASONING_STEPS = [
+  "Decoding the question",
+  "Mapping the underlying structure",
+  "Cross-checking every layer",
+  "Assembling the transmission",
+];
+
+export function HyperXReasoning({ className }: { className?: string }) {
+  const [stage, setStage] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    /* the stages advance on their own clock and rest on the final one —
+       the caret keeps working there, the truth never pretends to be       */
+    const stepTimer = window.setInterval(
+      () => setStage((s) => Math.min(s + 1, REASONING_STEPS.length - 1)),
+      3400
+    );
+    const secTimer = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => {
+      window.clearInterval(stepTimer);
+      window.clearInterval(secTimer);
+    };
+  }, []);
+  return (
+    <div
+      className={cn("hx-ladder flex flex-col gap-[5px]", className)}
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      data-testid="hyperx-reasoning"
+    >
+      <span className="mono-label flex items-center justify-between gap-3 text-[8.5px] uppercase tracking-[0.24em] text-muted-foreground/60">
+        <span className="flex items-center gap-1.5">
+          <Gem className="size-2.5 text-[#e879f9]" aria-hidden="true" />
+          Reasoning
+        </span>
+        <span className="tabular-nums text-[#22d3ee]/85">T+{elapsed}s</span>
+      </span>
+      {REASONING_STEPS.map((step, i) => {
+        const done = i < stage;
+        const active = i === stage;
+        return (
+          <span
+            key={step}
+            className={cn(
+              "mono-label flex min-w-0 items-center gap-2 text-[10px] uppercase tracking-[0.18em] transition-colors duration-500",
+              done
+                ? "text-muted-foreground/50"
+                : active
+                  ? "text-[#e879f9]"
+                  : "text-muted-foreground/35"
+            )}
+          >
+            {done ? (
+              <Check
+                className="size-3 shrink-0 text-[#22d3ee]"
+                aria-hidden="true"
+              />
+            ) : (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "size-[5px] shrink-0 rounded-full",
+                  active ? "hx-step-dot bg-[#e879f9]" : "bg-muted-foreground/40"
+                )}
+              />
+            )}
+            <span className="truncate">
+              {step}
+              {active && <span className="hx-caret" aria-hidden="true" />}
+            </span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export function HyperXAnswer({
   question,
   answer,
@@ -139,6 +226,20 @@ export function HyperXAnswer({
     .split(/\n{2,}/)
     .map((p) => p.trim())
     .filter(Boolean);
+  /* THE INSTRUMENT'S OWN READING — measured from the words themselves,
+     never advertised: the transmission's words, its derivation steps,
+     the truths that can crystallize, and the honest reading time. */
+  const stats = useMemo(() => {
+    const words = body.trim()
+      ? body.trim().split(/\s+/).filter(Boolean).length
+      : 0;
+    return {
+      words,
+      paras: paragraphs.length,
+      crystals: crystals.length,
+      readMin: words > 0 ? Math.max(1, Math.round(words / 210)) : 0,
+    };
+  }, [body, paragraphs.length, crystals.length]);
   const [visions, setVisions] = useState<Record<number, VisionState>>({});
   const [pdfState, setPdfState] = useState<
     "idle" | "weaving" | "failed" | "kept"
@@ -266,14 +367,43 @@ export function HyperXAnswer({
       className="hx-answer flex flex-col gap-1"
       data-testid={`${testId}-answer`}
     >
-      {/* ------------- THE TRANSMISSION, PARAGRAPH BY PARAGRAPH ---------- */}
-      {paragraphs.map((para, idx) => {
+      {/* -------------- THE INSTRUMENT LINE — no other chat wears this:
+          the transmission opens with its own precision header, the
+          reading measured from the words themselves (words, derivation
+          steps, crystals, reading time) — the discovery voice shows
+          its figures the way an instrument shows its dials. */}
+      {answer.trim().length > 0 && (
+        <div className="hx-meta" data-testid={`${testId}-meta`}>
+          <span className="mono-label flex shrink-0 items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-[#e879f9]">
+            <Gem className="size-2.5" aria-hidden="true" />
+            Truth synthesis
+          </span>
+          <span className="mono-label min-w-0 truncate text-[9px] uppercase tracking-[0.14em] text-muted-foreground/70 tabular-nums">
+            {stats.words.toLocaleString()} words · {stats.paras} paras ·{" "}
+            {stats.crystals} crystals · ~{stats.readMin} min
+          </span>
+        </div>
+      )}
+
+      {/* ------------- THE TRANSMISSION, PARAGRAPH BY PARAGRAPH ----------
+          THE DERIVATION SPINE — the paragraphs stand on a numbered
+          rail (01, 02, 03…), a derivation chain no casual chat
+          carries: every step of the reasoning visibly numbered along
+          one glowing filament. */}
+      {paragraphs.length > 0 && (
+        <div className="hx-spine-wrap">
+          <span aria-hidden="true" className="hx-spine" />
+          {paragraphs.map((para, idx) => {
         const crystal = crystals[idx];
         const label = crystal?.label ?? "This paragraph's truth";
         const focus = crystal?.focus ?? deriveFocus(para);
         const st = visions[idx];
         return (
-          <div key={idx} className="hx-para">
+          <div key={idx} className="hx-para flex items-start gap-2.5">
+            <span aria-hidden="true" className="hx-node mono-label">
+              {String(idx + 1).padStart(2, "0")}
+            </span>
+            <div className="min-w-0 flex-1">
             <div className="flex items-start gap-1">
               <p className="hx-para-text min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90">
                 {para}
@@ -361,9 +491,12 @@ export function HyperXAnswer({
                 </figcaption>
               </figure>
             )}
+            </div>
           </div>
         );
       })}
+        </div>
+      )}
 
       {/* -------------- THE COPY HAND AT THE RESULT'S END ---------------
           THE ALWAYS LAW — the hand rests at the result's tail from the

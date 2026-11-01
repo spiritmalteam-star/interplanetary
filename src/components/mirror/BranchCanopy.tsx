@@ -134,7 +134,7 @@ import { useT } from "@/lib/i18n";
 import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import { flowAnswerText } from "@/lib/text-flow";
-import { HyperXAnswer, splitCrystals } from "./HyperXPanel";
+import { HyperXAnswer, HyperXReasoning, splitCrystals } from "./HyperXPanel";
 import { ListenButton } from "./ListenButton";
 import { tuneSeedBatch } from "@/lib/question-voice";
 import {
@@ -6636,25 +6636,30 @@ export function BranchCanopy({
                       lastLandingTurn.imageUrl
                     ) && (
                       <div className="py-5 text-muted-foreground">
-                        <MirrorChanneling
-                          label={t(
-                            lastLandingTurn?.painting
-                              ? "Painting the vision"
-                              : realm
-                                ? landingScope === "hyperx"
-                                  ? "Discovering"
-                                  : "Reflecting"
-                                : "Channeling"
-                          )}
-                          variant={
-                            realm
-                              ? landingScope === "hyperx"
-                                ? "hyperx"
-                                : "mirror"
-                              : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
-                          }
-                          className="mono-label text-[11px] uppercase tracking-[0.22em]"
-                        />
+                        {realm && landingScope === "hyperx" ? (
+                          /* THE DISCOVERY'S OWN WAIT — the reasoning ladder,
+                             not a spinner: fixed stages ticked in order, a
+                             live caret on the stage at work, the elapsed
+                             time honest at the right. No other chat waits
+                             like an instrument at work. */
+                          <HyperXReasoning />
+                        ) : (
+                          <MirrorChanneling
+                            label={t(
+                              lastLandingTurn?.painting
+                                ? "Painting the vision"
+                                : realm
+                                  ? "Reflecting"
+                                  : "Channeling"
+                            )}
+                            variant={
+                              realm
+                                ? "mirror"
+                                : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
+                            }
+                            className="mono-label text-[11px] uppercase tracking-[0.22em]"
+                          />
+                        )}
                       </div>
                     )
                   )}
@@ -6750,24 +6755,27 @@ export function BranchCanopy({
                             {turn.q}
                           </p>
                           {turn.loading ? (
-                            <MirrorChanneling
-                              compact
-                              label={t(
-                                realm
-                                  ? landingScope === "hyperx"
-                                    ? "Discovering"
-                                    : "Reflecting"
-                                  : "The transmission is listening…"
-                              )}
-                              variant={
-                                realm
-                                  ? landingScope === "hyperx"
-                                    ? "hyperx"
-                                    : "mirror"
-                                  : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
-                              }
-                              className="py-1 mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground"
-                            />
+                            realm && landingScope === "hyperx" ? (
+                              /* THE LADDER IN THE THREAD — the thread's own
+                                 wait wears the same instrument: stages
+                                 ticked, caret alive, the clock honest. */
+                              <HyperXReasoning className="py-1" />
+                            ) : (
+                              <MirrorChanneling
+                                compact
+                                label={t(
+                                  realm
+                                    ? "Reflecting"
+                                    : "The transmission is listening…"
+                                )}
+                                variant={
+                                  realm
+                                    ? "mirror"
+                                    : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
+                                }
+                                className="py-1 mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground"
+                              />
+                            )
                           ) : turn.a ? (
                             <div className="flex items-start gap-1">
                               {realm && SCOPE_META[landingScope]?.aMark && (

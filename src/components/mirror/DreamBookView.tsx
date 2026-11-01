@@ -2778,7 +2778,11 @@ export function DreamBookView() {
           </div>
 
           {/* THE SKETCH ATELIER — unfolds above the words when the pen
-              is asked for; the finished drawing rides into the loom */}
+              is asked for; the finished drawing rides into the loom.
+              THE WHOLE SECTION, ALWAYS REACHABLE: the atelier lives in
+              its own height-bounded, scrollable sheet, so no hand —
+              however small the screen — ever loses the brushes, the
+              elements or the send row below the room's edge. */}
           <AnimatePresence initial={false}>
             {drawOpen && (
               <motion.div
@@ -2789,16 +2793,21 @@ export function DreamBookView() {
                 className="overflow-hidden"
               >
                 <div className="pb-2 pt-0.5">
-                  <SketchPad
-                    onDone={(dataUrl, meta) => {
-                      sketchRef.current = dataUrl;
-                      sketchMetaRef.current = meta;
-                      setSketch(dataUrl);
-                      setSketchMeta(meta);
-                      setDrawOpen(false);
-                    }}
-                    onCancel={() => setDrawOpen(false)}
-                  />
+                  <div
+                    className="nice-scroll max-h-[min(56dvh,560px)] overflow-y-auto overscroll-contain"
+                    data-testid="dream-sketch-zone"
+                  >
+                    <SketchPad
+                      onDone={(dataUrl, meta) => {
+                        sketchRef.current = dataUrl;
+                        sketchMetaRef.current = meta;
+                        setSketch(dataUrl);
+                        setSketchMeta(meta);
+                        setDrawOpen(false);
+                      }}
+                      onCancel={() => setDrawOpen(false)}
+                    />
+                  </div>
                 </div>
               </motion.div>
             )}
