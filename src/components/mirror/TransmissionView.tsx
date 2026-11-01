@@ -11,6 +11,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
+import { cleanCopyText } from "@/lib/copy-clean";
 import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
 import { auraFor, INK_AURA, type Aura } from "@/lib/aura";
 import { useTheme } from "next-themes";
@@ -422,7 +423,7 @@ export const Exchange = memo(function Exchange({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message.text);
+      await navigator.clipboard.writeText(cleanCopyText(message.text));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2200);
     } catch {

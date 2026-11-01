@@ -133,6 +133,8 @@ import { LANDING_SCOPE_CATEGORY, SCOPE_META } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
 import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
+import { cleanCopyText } from "@/lib/copy-clean";
+import { ScopeAmbient } from "./ScopeAmbient";
 import { flowAnswerText } from "@/lib/text-flow";
 import { HyperXAnswer, HyperXReasoning, splitCrystals } from "./HyperXPanel";
 import { ListenButton } from "./ListenButton";
@@ -1263,7 +1265,8 @@ const RoomShareButton = memo(function RoomShareButton({
   const t = useT();
   const [shared, setShared] = useState(false);
   const share = async () => {
-    const clean = text.trim();
+    /* THE DIAMONDS' OWN LAW — the words travel, the elements stay home */
+    const clean = cleanCopyText(text);
     if (!clean) return;
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
@@ -1313,9 +1316,10 @@ const RoomCopyButton = memo(function RoomCopyButton({
     <button
       type="button"
       onClick={async () => {
+        const cleaned = cleanCopyText(text);
         try {
           if (navigator.clipboard?.writeText) {
-            await navigator.clipboard.writeText(text);
+            await navigator.clipboard.writeText(cleaned);
           } else {
             throw new Error("no clipboard");
           }
@@ -1324,7 +1328,7 @@ const RoomCopyButton = memo(function RoomCopyButton({
              copies by selection, the old way that always works */
           try {
             const ta = document.createElement("textarea");
-            ta.value = text;
+            ta.value = cleaned;
             ta.style.position = "fixed";
             ta.style.opacity = "0";
             document.body.appendChild(ta);
@@ -2282,6 +2286,44 @@ export function BranchCanopy({
   const [mounted, setMounted] = useState(open);
   const [shown, setShown] = useState(false);
   const [seenOpen, setSeenOpen] = useState(open);
+
+  /* THE SCOPE'S OWN SKY — the room's themed background layer (the
+     science of HyperX, the orbits of the interplanetary, the breath
+     of healing, the daubs of the atelier…), poured far behind the
+     words so every scope feels like the room it is. THE WRITING
+     YIELD — the sky folds away the moment the visitor starts writing
+     (any line of the room takes the caret) and returns when the line
+     rests again; it never takes a touch and never competes with the
+     text. (landingScope itself is read further below, where the
+     standing field is kept.) */
+  const [ambientDormant, setAmbientDormant] = useState(false);
+  const ambientRootRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const root = ambientRootRef.current;
+    if (!root || !mounted) return;
+    const isWritingSpot = (el: Element | null): boolean =>
+      !!el &&
+      (el.tagName === "INPUT" ||
+        el.tagName === "TEXTAREA" ||
+        (el instanceof HTMLElement && el.isContentEditable));
+    const onFocusIn = (e: FocusEvent) => {
+      setAmbientDormant(isWritingSpot(e.target as Element));
+    };
+    const onFocusOut = () => {
+      window.setTimeout(() => {
+        const now = document.activeElement;
+        setAmbientDormant(
+          !!now && root.contains(now) && isWritingSpot(now)
+        );
+      }, 0);
+    };
+    root.addEventListener("focusin", onFocusIn);
+    root.addEventListener("focusout", onFocusOut);
+    return () => {
+      root.removeEventListener("focusin", onFocusIn);
+      root.removeEventListener("focusout", onFocusOut);
+    };
+  }, [mounted]);
 
   /* ------------------- THE ZOOM — the answer's room ------------------
      `restored` carries the transmission of a PREVIOUS branch — the
@@ -5041,6 +5083,7 @@ export function BranchCanopy({
 
   return (
     <div
+      ref={ambientRootRef}
       data-testid={testIdPrefix}
       aria-hidden={!shown}
       className={cn(
@@ -5062,6 +5105,9 @@ export function BranchCanopy({
           : undefined
       }
     >
+      {/* THE SCOPE'S OWN SKY — the themed living background beneath the
+          room's every word (folds away while the visitor writes) */}
+      <ScopeAmbient scope={landingScope} dormant={ambientDormant} />
       {/* ---------------------------- header ---------------------------
           THE COMPASS — the whole house's steering, one calm row. THE
           MENU carries where the walk stands (the compass, the depth,

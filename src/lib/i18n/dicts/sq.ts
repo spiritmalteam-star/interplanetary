@@ -5882,6 +5882,11 @@ export const sq: TranslationDict = {
   "The pages it never wove never left your purse — bring more light and the weaving continues.": "Faqet që nuk i endi kurrë nuk ike nga kufoja jote — sjell më shumë dritë dhe endja vazhdon.",
   "The loom rests — {woven} of {total} pages are yours": "Tehu pushon — {woven} nga {total} faqet janë të tuat",
   "Pause the weaving": "Ndalo endjen",
+  /* --- THE KARAOKE ROOM — the words grown big, riding the melody --- */
+  "Karaoke": "Karaoke",
+  "Karaoke — sing with the melody": "Karaoke — këndaj me melodinë",
+  "Leave the karaoke": "Dil nga karaokeu",
+  "Travel to this line": "Udhëto te ky varg",
   "Resume the weaving": "Vazhdo endjen",
   "The purse rests — the unwoven pages never left it": "Kufoja pushon — faqet e paendura nuk iken nga ajo",
   "This weaving, by its own scales:": "Kjo endje, sipas peshores së vet:",

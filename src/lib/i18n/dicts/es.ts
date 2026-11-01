@@ -4028,6 +4028,11 @@ export const es: TranslationDict = {
   "The pages it never wove never left your purse — bring more light and the weaving continues.": "Las páginas nunca tejidas nunca dejaron tu bolsa — trae más luz y el tejido continúa.",
   "The loom rests — {woven} of {total} pages are yours": "El telar descansa — {woven} de {total} páginas son tuyas",
   "Pause the weaving": "Pausar el tejido",
+  /* --- THE KARAOKE ROOM — the words grown big, riding the melody --- */
+  "Karaoke": "Karaoke",
+  "Karaoke — sing with the melody": "Karaoke — canta con la melodía",
+  "Leave the karaoke": "Dejar el karaoke",
+  "Travel to this line": "Viajar a este verso",
   "Resume the weaving": "Reanudar el tejido",
   "The purse rests — the unwoven pages never left it": "La bolsa descansa — las páginas no tejidas nunca la dejaron",
   "This weaving, by its own scales:": "Este tejido, en su propia balanza:",

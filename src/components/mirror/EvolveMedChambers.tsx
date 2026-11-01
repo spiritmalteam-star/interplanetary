@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useMirror } from "@/lib/mirror-store";
+import { cleanCopyText } from "@/lib/copy-clean";
 import { useT } from "@/lib/i18n";
 import {
   emDesigns,
@@ -479,7 +480,7 @@ export function EmCopyButton({ text }: { text: string }) {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(cleanCopyText(text));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {

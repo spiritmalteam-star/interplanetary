@@ -927,8 +927,8 @@ html:not(.dark) .scope-lightcodes {
 .scope-gradient-text {
   background-image: linear-gradient(
     100deg,
-    color-mix(in srgb, var(--scope-a) 72%, white),
-    color-mix(in srgb, var(--scope-b) 66%, white)
+    color-mix(in srgb, var(--scope-a, #a855f7) 72%, white),
+    color-mix(in srgb, var(--scope-b, #d8c9a8) 66%, white)
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -941,14 +941,14 @@ html:not(.dark) .scope-lightcodes {
 
 /* The formula plate — where the formulas that run reality rest. */
 .px-formula {
-  border: 1px solid color-mix(in srgb, var(--scope-a) 26%, transparent);
+  border: 1px solid color-mix(in srgb, var(--scope-a, #a855f7) 26%, transparent);
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--scope-a) 6%, transparent),
+      color-mix(in srgb, var(--scope-a, #a855f7) 6%, transparent),
       transparent
     ),
-    color-mix(in srgb, var(--scope-a) 3%, transparent);
+    color-mix(in srgb, var(--scope-a, #a855f7) 3%, transparent);
 }
 
 /* A slow quantum shimmer along the plate's seam — ink only. */
@@ -1010,14 +1010,14 @@ html:not(.dark) .scope-lightcodes {
 
 /* Themed frame card */
 .scope-frame-card {
-  border: 1px solid color-mix(in srgb, var(--scope-a) 20%, transparent);
+  border: 1px solid color-mix(in srgb, var(--scope-a, #a855f7) 20%, transparent);
   box-shadow:
-    0 0 40px -20px color-mix(in srgb, var(--scope-a) 28%, transparent),
-    inset 0 1px 0 color-mix(in srgb, var(--scope-a) 9%, transparent);
+    0 0 40px -20px color-mix(in srgb, var(--scope-a, #a855f7) 28%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--scope-a, #a855f7) 9%, transparent);
 }
 
 .scope-glow-text {
-  text-shadow: 0 0 20px color-mix(in srgb, var(--scope-a) 24%, transparent);
+  text-shadow: 0 0 20px color-mix(in srgb, var(--scope-a, #a855f7) 24%, transparent);
 }
 
 /* Corner ornaments for the frame */
@@ -1025,7 +1025,7 @@ html:not(.dark) .scope-lightcodes {
   position: absolute;
   width: 22px;
   height: 22px;
-  border-color: color-mix(in srgb, var(--scope-a) 55%, transparent);
+  border-color: color-mix(in srgb, var(--scope-a, #a855f7) 55%, transparent);
   pointer-events: none;
 }
 .scope-corner-tl { top: 10px; left: 10px; border-top: 1px solid; border-left: 1px solid; border-top-left-radius: 10px; }
@@ -4458,7 +4458,7 @@ html:not(.dark) .lp-sigil-img {
    and the musical chamber's own atmosphere: layered purple washes and
    three huge blurred liquid blobs drifting on long, slow loops —
    CSS-only transforms, paused under the eco tier and for visitors who
-   ask for reduced motion. Everything tints itself from var(--scope-a),
+   ask for reduced motion. Everything tints itself from var(--scope-a, #a855f7),
    so each room's own accent dresses its own chips.
    ====================================================================== */
 
@@ -5132,4 +5132,349 @@ html:not(.dark) .lp-sigil-img {
 }
 .hx-fade-in {
   animation: hx-para-in 0.6s ease-out both;
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE SCOPE'S OWN SKY — the themed living background of every chat   */
+/*  scope (ScopeAmbient.tsx): few elements, low light, the edges of    */
+/*  the room. THE LAWS: it never takes a touch; it folds away while    */
+/*  the visitor writes; a visitor who asked for less motion receives   */
+/*  a still sky.                                                       */
+/* ------------------------------------------------------------------ */
+.scope-ambient {
+  opacity: 1;
+  transition: opacity 0.7s ease;
+}
+.scope-ambient[data-dormant="true"] {
+  opacity: 0;
+}
+
+/* the scientist's own paper — the blueprint grid HyperX stands on */
+.hx-sky-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, #22d3ee 9%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, #22d3ee 9%, transparent) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(
+    120% 90% at 50% 0%,
+    black 0%,
+    transparent 72%
+  );
+  mask-image: radial-gradient(
+    120% 90% at 50% 0%,
+    black 0%,
+    transparent 72%
+  );
+  opacity: 0.5;
+}
+
+/* the drifting handwriting of the machinery */
+.hx-sky-formula {
+  opacity: 0.12;
+  animation-name: amb-formula;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+.dark .hx-sky-formula {
+  opacity: 0.16;
+}
+
+/* the rising motes of the Mirror's beam and the Healing breath */
+.amb-mote {
+  opacity: 0.4;
+  animation-name: amb-mote;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes amb-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(2.5%, -3.5%, 0);
+  }
+}
+@keyframes amb-sway {
+  0%,
+  100% {
+    transform: rotate(-2.5deg) translateY(0);
+  }
+  50% {
+    transform: rotate(2.5deg) translateY(-2%);
+  }
+}
+@keyframes amb-walk {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(38vw, -22vh) scale(0.85);
+  }
+  92% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(76vw, 4vh) scale(1);
+    opacity: 0;
+  }
+}
+@keyframes amb-twinkle {
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.15);
+  }
+}
+@keyframes amb-breathe {
+  0% {
+    transform: scale(0.62);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+@keyframes amb-dash {
+  to {
+    stroke-dashoffset: -240;
+  }
+}
+@keyframes amb-formula {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.07;
+  }
+  50% {
+    transform: translate3d(0, -14px, 0);
+    opacity: 0.2;
+  }
+}
+@keyframes amb-mote {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.45;
+  }
+  85% {
+    opacity: 0.35;
+  }
+  100% {
+    transform: translateY(-108vh);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-ambient *,
+  .scope-ambient {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE SQUARE THAT FILLS — the vision's own developing plate. The     */
+/*  moment a vision is asked for, its space stands reserved and the    */
+/*  square fills with the coming image: a slow developing wave, one    */
+/*  scan line sweeping, and the room's own accent leading the light    */
+/*  (the accent rides in as --vision-accent).                          */
+/* ------------------------------------------------------------------ */
+.vision-filling {
+  --vision-accent: var(--scope-a, #a855f7);
+  background:
+    radial-gradient(
+      110% 90% at 30% 0%,
+      color-mix(in srgb, var(--vision-accent) 10%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(165deg, color-mix(in srgb, var(--vision-accent) 7%, transparent), transparent 70%);
+}
+/* the developing wave — the fill that breathes upward, again and
+   again, until the true image lands */
+.vision-filling-wave {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--vision-accent) 34%, transparent),
+    color-mix(in srgb, var(--vision-accent) 10%, transparent) 46%,
+    transparent 78%
+  );
+  animation: vision-fill 5.2s ease-in-out infinite;
+  transform-origin: bottom;
+}
+@keyframes vision-fill {
+  0% {
+    transform: scaleY(0.06);
+    opacity: 0.55;
+  }
+  55% {
+    transform: scaleY(0.72);
+    opacity: 0.9;
+  }
+  78% {
+    transform: scaleY(0.88);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scaleY(0.94);
+    opacity: 0.4;
+  }
+}
+/* the scan line — one bright edge sweeping down the coming image */
+.vision-filling-scan {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  height: 2px;
+  top: 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--vision-accent) 85%, white 8%),
+    transparent
+  );
+  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--vision-accent) 80%, transparent);
+  animation: vision-scan 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes vision-scan {
+  0% {
+    transform: translateY(4px);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  88% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(calc(100% * 12));
+    opacity: 0;
+  }
+}
+/* the lattice — the coming image's own faint scaffolding */
+.vision-filling-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--vision-accent) 12%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--vision-accent) 12%, transparent) 1px, transparent 1px);
+  background-size: 34px 34px;
+  -webkit-mask-image: radial-gradient(
+    90% 90% at 50% 50%,
+    black 30%,
+    transparent 85%
+  );
+  mask-image: radial-gradient(
+    90% 90% at 50% 50%,
+    black 30%,
+    transparent 85%
+  );
+  opacity: 0.65;
+}
+@media (prefers-reduced-motion: reduce) {
+  .vision-filling-wave,
+  .vision-filling-scan {
+    animation: none !important;
+  }
+  .vision-filling-wave {
+    transform: scaleY(0.5);
+    opacity: 0.5;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE KARAOKE ROOM — the words grown big, riding the melody.         */
+/* ------------------------------------------------------------------ */
+.lc-karaoke {
+  background: #0d0a14;
+}
+.lc-karaoke-note {
+  opacity: 0.35;
+  animation-name: karaoke-float;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  filter: blur(0.2px);
+}
+@keyframes karaoke-float {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(-6deg);
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate3d(3vw, -46vh, 0) rotate(7deg);
+  }
+  82% {
+    opacity: 0.32;
+  }
+  100% {
+    transform: translate3d(-2vw, -96vh, 0) rotate(-5deg);
+    opacity: 0;
+  }
+}
+/* the sung line — the room's own light poured through the words */
+.lc-karaoke-gradient {
+  background-image: linear-gradient(
+    100deg,
+    var(--scope-a, #a855f7) 8%,
+    color-mix(in srgb, var(--scope-a, #a855f7) 40%, #ffffff) 48%,
+    var(--lp-gold, #e8d9b0) 96%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(
+    0 0 18px color-mix(in srgb, var(--scope-a, #a855f7) 55%, transparent)
+  );
+}
+.lc-karaoke-line-active {
+  animation: karaoke-line-breathe 2.6s ease-in-out infinite;
+}
+@keyframes karaoke-line-breathe {
+  0%,
+  100% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
+.lc-karaoke-mic {
+  animation: karaoke-mic-glow 3.2s ease-in-out infinite;
+}
+@keyframes karaoke-mic-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px -4px color-mix(in srgb, var(--scope-a, #a855f7) 60%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 22px -4px color-mix(in srgb, var(--scope-a, #a855f7) 85%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lc-karaoke-note,
+  .lc-karaoke-line-active,
+  .lc-karaoke-mic {
+    animation: none !important;
+  }
 }

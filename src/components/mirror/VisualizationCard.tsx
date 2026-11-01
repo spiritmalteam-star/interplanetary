@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -80,12 +80,27 @@ export function VisualizationPending({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="glass relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-5 py-5"
+      className="glass relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-4"
       data-testid={`${testIdPrefix}-pending`}
       aria-busy="true"
       aria-live="polite"
     >
-      <p className="mono-label text-[11px] uppercase tracking-[0.24em] text-muted-foreground/70">
+      {/* THE SPACE THE CLICK MAKES — the moment the vision is asked for,
+          the place it will occupy stands reserved: a SQUARE section that
+          fills with the coming image while the atelier works. The fill
+          breathes upward (the developing plate), a scan line sweeps it,
+          and the room's own accent leads the light. */}
+      <div
+        className="vision-filling relative mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)]"
+        style={{ "--vision-accent": accent } as CSSProperties}
+        data-testid={`${testIdPrefix}-pending-plate`}
+        aria-hidden="true"
+      >
+        <span className="vision-filling-grid absolute inset-0" />
+        <span className="vision-filling-wave" />
+        <span className="vision-filling-scan" />
+      </div>
+      <p className="mono-label mt-3 text-center text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70">
         {repaint ? t("Repainting the vision…") : t("Creating visualization…")}
       </p>
       <div className="mt-3 flex items-center gap-4">

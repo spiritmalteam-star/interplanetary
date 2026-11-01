@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useMirror } from "@/lib/mirror-store";
+import { cleanCopyText } from "@/lib/copy-clean";
 import { useWorkspaceMemory } from "@/lib/workspace-memory";
 import { useT } from "@/lib/i18n";
 import {
@@ -240,7 +241,7 @@ export function AkashicView() {
   const handleCopy = async () => {
     if (!recordText) return;
     try {
-      await navigator.clipboard.writeText(recordText);
+      await navigator.clipboard.writeText(cleanCopyText(recordText));
       setCopied(true);
       toast.success(t("The record is copied."));
       window.setTimeout(() => setCopied(false), 2200);
@@ -261,7 +262,7 @@ export function AkashicView() {
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
       try {
-        await navigator.clipboard.writeText(recordText);
+        await navigator.clipboard.writeText(cleanCopyText(recordText));
         toast.success(t("Sharing is quiet here — the record is copied instead."));
       } catch {
         toast.error(t("The copying did not take — select and copy by hand."));

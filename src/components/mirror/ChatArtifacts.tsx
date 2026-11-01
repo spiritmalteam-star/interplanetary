@@ -43,6 +43,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useMirror } from "@/lib/mirror-store";
+import { cleanCopyText } from "@/lib/copy-clean";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { bookToText, dedupeChapters } from "@/lib/book-text";
@@ -1226,7 +1227,7 @@ function PoemCard({ resonance }: { resonance: string }) {
       ...(poem.seal ? [`— ${poem.seal}`] : []),
     ].join("\n\n");
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(cleanCopyText(text));
       setCopied(true);
       toast.success(t("copied"));
     } catch {

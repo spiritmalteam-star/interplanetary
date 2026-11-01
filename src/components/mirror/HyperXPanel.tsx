@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy, FileDown, Gem, Loader2 } from "lucide-react";
+import { cleanCopyText } from "@/lib/copy-clean";
 import { useMirror } from "@/lib/mirror-store";
 import { flowAnswerText } from "@/lib/text-flow";
 import { cn } from "@/lib/utils";
@@ -297,8 +298,12 @@ export function HyperXAnswer({
      a run of thin one-sentence paragraphs weaves back into the prose
      it was meant to be, and only then is the reading cut into its
      paragraphs (the old order flowed each paragraph alone and the
-     thin-tall strips survived the cut). */
-  const flowedBody = useMemo(() => flowAnswerText(body), [body]);
+     thin-tall strips survived the cut). The flow is keyed on the
+     answer's own prop — the one truth the room never mutates. */
+  const flowedBody = useMemo(
+    () => flowAnswerText(splitCrystals(answer).body),
+    [answer]
+  );
   const paragraphs = useMemo(
     () =>
       flowedBody
@@ -351,20 +356,6 @@ export function HyperXAnswer({
   const shown = useTransmissionReveal(streamTotal, revealArmed);
   const revealing = shown !== null;
   const streamAt = shown ?? Number.MAX_SAFE_INTEGER;
-  /* THE INSTRUMENT'S OWN READING — measured from the words themselves,
-     never advertised: the transmission's words, its derivation steps,
-     the truths that can crystallize, and the honest reading time. */
-  const stats = useMemo(() => {
-    const words = body.trim()
-      ? body.trim().split(/\s+/).filter(Boolean).length
-      : 0;
-    return {
-      words,
-      paras: paragraphs.length,
-      crystals: crystals.length,
-      readMin: words > 0 ? Math.max(1, Math.round(words / 210)) : 0,
-    };
-  }, [body, paragraphs.length, crystals.length]);
   const [visions, setVisions] = useState<Record<number, VisionState>>({});
   const [pdfState, setPdfState] = useState<
     "idle" | "weaving" | "failed" | "kept"
@@ -464,17 +455,22 @@ export function HyperXAnswer({
   }, [question, answer, language]);
 
   /* THE END-OF-RESULT COPY — the transmission alone (the crystal
-     machinery never rides along), straight from the answer's tail. */
+     machinery never rides along), straight from the answer's tail.
+     THE DIAMONDS' OWN LAW — the copy is run through the one cleaner:
+     the diamonds are elements on the screen, never words on a page,
+     so no diamond ever falls into the visitor's copy. */
   const copyDiscovery = useCallback(async () => {
     const { body: prose, crystals: own } = splitCrystals(answer);
     const crystalsBlock =
       own.length > 0
         ? `\n\nCRYSTALS\n${own
-            .map((c) => `◇ ${c.label} — ${c.focus}`)
+            .map((c) => `${c.label} — ${c.focus}`)
             .join("\n")}`
         : "";
     try {
-      await navigator.clipboard.writeText(`${prose.trim()}${crystalsBlock}`);
+      await navigator.clipboard.writeText(
+        cleanCopyText(`${prose.trim()}${crystalsBlock}`)
+      );
     } catch {
       /* the clipboard may rest behind a permission — the silent hand
          never breaks the reading */
@@ -492,20 +488,16 @@ export function HyperXAnswer({
       className="hx-answer flex flex-col gap-1"
       data-testid={`${testId}-answer`}
     >
-      {/* -------------- THE INSTRUMENT LINE — no other chat wears this:
-          the transmission opens with its own precision header, the
-          reading measured from the words themselves (words, derivation
-          steps, crystals, reading time) — the discovery voice shows
-          its figures the way an instrument shows its dials. */}
+      {/* -------------- THE TRANSMISSION'S OWN SEAL — no other chat
+          wears this: the transmission opens with its own quiet gem
+          seal. THE NUMBERS ARE GONE (the visitor's law): no words,
+          no paras, no crystals, no minutes counted at the top — the
+          truth stands alone, unmeasured for the crowd. */}
       {answer.trim().length > 0 && (
         <div className="hx-meta" data-testid={`${testId}-meta`}>
           <span className="mono-label flex shrink-0 items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-[#e879f9]">
             <Gem className="size-2.5" aria-hidden="true" />
             Truth synthesis
-          </span>
-          <span className="mono-label min-w-0 truncate text-[9px] uppercase tracking-[0.14em] text-muted-foreground/70 tabular-nums">
-            {stats.words.toLocaleString()} words · {stats.paras} paras ·{" "}
-            {stats.crystals} crystals · ~{stats.readMin} min
           </span>
         </div>
       )}
@@ -597,17 +589,32 @@ export function HyperXAnswer({
               </span>
             </div>
             {/* THE SPACE THE CHAT MAKES — the vision opens right beneath
-                the paragraph it illuminates */}
+                the paragraph it illuminates. THE SQUARE THAT FILLS (the
+                visitor's law): the moment the button is touched, the
+                space the vision will occupy stands reserved — a square
+                plate that fills with the coming image while it weaves. */}
             {st?.loading && (
               <div
-                className="hx-plate-wait mono-label mt-1.5 flex w-full max-w-[340px] items-center gap-2 rounded-xl border px-3 py-2.5 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/85"
+                className="hx-plate-wait mt-1.5 w-full max-w-[340px] overflow-hidden rounded-xl border"
                 data-testid={`${testId}-plate-${idx}-waiting`}
+                role="status"
+                aria-live="polite"
               >
-                <Loader2
-                  className="size-3.5 animate-spin text-[#e879f9]"
-                  aria-hidden="true"
-                />
-                Crystallizing “{label}”…
+                <div className="vision-filling relative aspect-square w-full">
+                  <span aria-hidden="true" className="vision-filling-wave" />
+                  <span aria-hidden="true" className="vision-filling-scan" />
+                  <span
+                    aria-hidden="true"
+                    className="vision-filling-grid absolute inset-0"
+                  />
+                  <span className="mono-label absolute inset-0 flex flex-col items-center justify-center gap-1.5 px-3 text-center text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/85">
+                    <Gem
+                      className="size-3.5 animate-pulse text-[#e879f9]"
+                      aria-hidden="true"
+                    />
+                    Crystallizing “{label}”…
+                  </span>
+                </div>
               </div>
             )}
             {st?.failed && (
@@ -637,7 +644,7 @@ export function HyperXAnswer({
                     src={st.imageUrl}
                     alt={st.imageTitle ?? label}
                     loading="lazy"
-                    className="aspect-[7/4] w-full bg-background/40 object-cover"
+                    className="aspect-square w-full bg-background/40 object-cover"
                   />
                 </button>
                 <figcaption className="mono-label flex items-center gap-1.5 px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">

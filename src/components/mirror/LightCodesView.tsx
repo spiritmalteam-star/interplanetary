@@ -41,6 +41,7 @@ import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { EthermixDeck } from "./living/EthermixDeck";
+import { LcKaraoke } from "./LcKaraoke";
 import {
   LC_MODES,
   LC_SHAPE,
@@ -451,6 +452,9 @@ function PlayerBar() {
   const [muted, setMuted] = useState(false);
   const [shelfOpen, setShelfOpen] = useState(false);
   const [waveFailed, setWaveFailed] = useState(false);
+  /* THE KARAOKE DOOR — open only for a transmission woven with words:
+     the room where the lyrics stand tall and the melody carries them */
+  const [karaokeOpen, setKaraokeOpen] = useState(false);
   /* THE QUIET MORE-DOOR — the craft hands (new version, reshape,
      download, translation) rest folded inside one more-hand, so
      the transport stays small, symmetric and uncluttered */
@@ -761,6 +765,24 @@ function PlayerBar() {
                 </span>
               </button>
 
+              {/* THE KARAOKE HAND — only a transmission woven with words
+                  may be sung: the door stands here, one touch and the
+                  lyrics grow tall enough to sing with the melody */}
+              {active.lyrics && (
+                <button
+                  type="button"
+                  onClick={() => setKaraokeOpen(true)}
+                  aria-label={t("Karaoke — sing with the melody")}
+                  title={t("Karaoke — sing with the melody")}
+                  aria-pressed={karaokeOpen}
+                  data-testid="lc-karaoke-open"
+                  className={cn("btn-chip uppercase", karaokeOpen && "btn-chip-active")}
+                >
+                  <Mic className="size-3" aria-hidden="true" />
+                  <span className="whitespace-nowrap">{t("Karaoke")}</span>
+                </button>
+              )}
+
               {/* THE QUIET MORE-HAND — the craft hands folded inside one
                   small dial, so the transport stays symmetric */}
               <span className="relative">
@@ -934,6 +956,20 @@ function PlayerBar() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* THE KARAOKE ROOM — the words grown big, riding the melody;
+                opened by the transport's own hand, left by its own door */}
+            <LcKaraoke
+              open={karaokeOpen}
+              onClose={() => setKaraokeOpen(false)}
+              lyrics={active.lyrics ?? ""}
+              title={active.title}
+              playing={playing}
+              time={time}
+              dur={dur}
+              onToggle={toggle}
+              onSeekRatio={seekTo}
+            />
           </>
         ) : weaving ? (
           /* THE CHANNELING ON THE STAGE — the music that is about to be

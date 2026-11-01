@@ -3528,6 +3528,11 @@ export const tr: TranslationDict = {
   "The pages it never wove never left your purse — bring more light and the weaving continues.": "Hiç dokunmayan sayfalar kesenizden hiç ayrılmadı — daha fazla ışık getirin ve dokuma sürsün.",
   "The loom rests — {woven} of {total} pages are yours": "Dokuma tezgahı dinleniyor — {total} sayfanın {woven} tanesi sizin",
   "Pause the weaving": "Dokumayı duraklat",
+  /* --- THE KARAOKE ROOM — the words grown big, riding the melody --- */
+  "Karaoke": "Karaoke",
+  "Karaoke — sing with the melody": "Karaoke — melodiyle söyle",
+  "Leave the karaoke": "Karaoke'den ayrıl",
+  "Travel to this line": "Bu dizeye git",
   "Resume the weaving": "Dokumayı sürdür",
   "The purse rests — the unwoven pages never left it": "Kese dinleniyor — dokunmamış sayfalar onu hiç terk etmedi",
   "This weaving, by its own scales:": "Bu dokuma, kendi terazisinde:",

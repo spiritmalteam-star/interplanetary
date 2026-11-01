@@ -5487,3 +5487,11 @@ export function findDossier(kind: DossierKind, id: string) {
   const list = kind === "civilization" ? civilizations : interdimensional;
   return list.find((d) => d.id === id) ?? null;
 }
+
+/* THE DEVELOPER'S KEYHOLE — in development builds alone the store's
+   hand rests on the window, so the house's keepers (and the browser's
+   own tests) may read and set the chamber's state from the console.
+   Production builds carry no keyhole at all. */
+if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).__mirrorStore = useMirror;
+}

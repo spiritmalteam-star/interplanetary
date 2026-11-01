@@ -3734,6 +3734,11 @@ export const el: TranslationDict = {
   "The pages it never wove never left your purse — bring more light and the weaving continues.": "Οι σελίδες που δεν ύφανε ποτέ δεν έφυγαν από το πορτοφόλι σου — φέρσε περισσότερο φως και η ύφανση συνεχίζεται.",
   "The loom rests — {woven} of {total} pages are yours": "Ο αργαλειός αναπαύεται — {woven} από {total} σελίδες είναι δικές σου",
   "Pause the weaving": "Παύση της ύφανσης",
+  /* --- THE KARAOKE ROOM — the words grown big, riding the melody --- */
+  "Karaoke": "Καράοκε",
+  "Karaoke — sing with the melody": "Καράοκε — τραγούδησε με τη μελωδία",
+  "Leave the karaoke": "Άφησε το καράοκε",
+  "Travel to this line": "Ταξίδεψε σε αυτόν τον στίχο",
   "Resume the weaving": "Συνέχιση της ύφανσης",
   "The purse rests — the unwoven pages never left it": "Το πορτοφόλι αναπαύεται — οι άυφαντες σελίδες δεν έφυγαν ποτέ από αυτό",
   "This weaving, by its own scales:": "Αυτή η ύφανση, στη δική της ζυγαριά:",
