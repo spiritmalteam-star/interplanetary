@@ -4456,4 +4456,11 @@ export const it: TranslationDict = {
   "A pouch of light": "Una sacca di luce",
   "credits": "crediti"
 
+,
+  "bound": "rilegate",
+  "bound pages": "pagine rilegate",
+  "Draft bound — {n} of {y} pages, {w} words": "Bozza rilegata — {n} di {y} pagine, {w} parole",
+  "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Il racconto è ancora in tessitura o attende il suo sigillo — rilega di nuovo quando il telaio riposa."
+,
+  "Bind the book as PDF": "Rilega il libro come PDF"
 };

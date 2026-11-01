@@ -4016,4 +4016,11 @@ export const es: TranslationDict = {
   "A pouch of light": "Una bolsa de luz",
   "credits": "créditos"
 
+,
+  "bound": "encuadernadas",
+  "bound pages": "páginas encuadernadas",
+  "Draft bound — {n} of {y} pages, {w} words": "Borrador encuadernado — {n} de {y} páginas, {w} palabras",
+  "The telling is still being woven or awaits its seal — bind again once the loom rests.": "El relato aún se teje o espera su sello — encuaderna de nuevo cuando el telar descanse."
+,
+  "Bind the book as PDF": "Encuadernar el libro como PDF"
 };

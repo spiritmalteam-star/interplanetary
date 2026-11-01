@@ -4021,4 +4021,11 @@ export const fr: TranslationDict = {
   "A pouch of light": "Une pochette de lumière",
   "credits": "crédits"
 
+,
+  "bound": "reliées",
+  "bound pages": "pages reliées",
+  "Draft bound — {n} of {y} pages, {w} words": "Épreuve reliée — {n} sur {y} pages, {w} mots",
+  "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Le récit se tisse encore ou attend son sceau — relie de nouveau quand le métier se repose."
+,
+  "Bind the book as PDF": "Relier le livre en PDF"
 };

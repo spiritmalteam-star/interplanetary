@@ -15,6 +15,8 @@
 /*  final acceptance gate. A book is never COMPLETE on vibes.          */
 /* ================================================================== */
 
+import { countWords, LENGTH_TOLERANCE, specForAge } from "@/lib/book-layout";
+
 export interface PressPage {
   n: number;
   part?: string;
@@ -718,13 +720,17 @@ export function gateCheck(args: {
   bible?: StoryBibleLike | null;
   editorial?: EditorialReport | null;
   plannedChapters?: number;
-  /** the volume's planned page count — the gate measures the
-      manuscript's real length against it, so a requested 300-page
-      novel can never pass as a thin pamphlet wearing its name */
+  /** the volume's planned page count — a BOUND-PAGE plan: the gate
+      measures the manuscript's words against the ONE layout spec, so
+      a requested 300-page novel can never pass as a thin pamphlet
+      wearing its name */
   plannedPages?: number;
   /** whether the plan promises full typeset pages (novels, sagas,
       grown classics) or the short bright pages of picture books */
   fullPages?: boolean;
+  /** the reader's age key — picks the layout spec the words are
+      measured against (the same spec the binding press sets) */
+  age?: string;
 }): { pass: boolean; items: GateItem[] } {
   const { pages, bible, editorial } = args;
   const report = runPress(pages, bible);
@@ -789,28 +795,55 @@ export function gateCheck(args: {
       pass: pages.length >= 4,
       detail: `${pages.length} pages woven${args.plannedChapters ? `, ${report.chapters.length} of the planned ${args.plannedChapters} chapters opened` : ""}.`,
     },
-    ...lengthItems(pages, args.plannedPages, args.fullPages),
+    /* GATE F — the ending must actually stand: the last chapter's
+       pages exist and no planned chapter is missing from the spine */
+    (() => {
+      const planned = args.plannedChapters ?? 0;
+      const opened = new Set(
+        pages.map((p) => (p.chapter ?? "").trim().toLowerCase()).filter(Boolean)
+      ).size;
+      const missing = planned > 0 && opened < planned;
+      return {
+        key: "spine",
+        label: "Every planned chapter stands",
+        pass: !missing,
+        detail: missing
+          ? `${opened} of the planned ${planned} chapters exist — the missing ones must be woven before the seal.`
+          : planned > 0
+            ? `All ${planned} planned chapters stand in the manuscript.`
+            : `${opened} chapters stand in the manuscript.`,
+      };
+    })(),
+    ...lengthItems(pages, args.plannedPages, args.fullPages, args.age),
   ];
   return { pass: items.every((i) => i.pass), items };
 }
 
 /** THE LENGTH LAW — the woven page count is not the narrative length.
-    The gate measures the manuscript's words against the plan: full-page
-    volumes owe near a full typeset page (~300 words) per planned page,
-    picture-book volumes a gentler measure. A book far short of its own
-    plan cannot pass the gate — the pages were counted, not written. */
+    The gate measures the manuscript's words against the ONE layout
+    spec: a bound-page plan owes boundPages × wordsPerSheet(age) words
+    (the press's real carrying capacity), within the honest tolerance.
+    A book far short of its own plan cannot pass the gate — the pages
+    were counted, not written. */
 function lengthItems(
   pages: PressPage[],
   plannedPages?: number,
-  fullPages?: boolean
+  fullPages?: boolean,
+  age?: string
 ): GateItem[] {
   if (!plannedPages || plannedPages < 8) return [];
-  const words = pages.reduce(
-    (acc, p) => acc + p.paragraphs.join(" ").split(/\s+/).filter(Boolean).length,
-    0
+  const words = countWords(
+    pages.flatMap((p) => p.paragraphs)
   );
-  const perPage = fullPages ? 170 : 60; /* honest tolerance, not the ideal */
-  const expected = plannedPages * perPage;
+  /* THE ONE LAYOUT LAW: the plan is a BOUND-PAGE plan; the words it
+     owes are boundPages × wordsPerSheet(age) — the press's real
+     carrying capacity — within the honest tolerance. (The story-page
+     measure only converts the budget into loom leaves; the bound
+     sheets are filled by words, whatever the reader's age.) */
+  const spec = specForAge(age);
+  const expected = Math.round(
+    plannedPages * spec.wordsPerSheet * LENGTH_TOLERANCE
+  );
   const pass = words >= expected;
   return [
     {
@@ -818,8 +851,8 @@ function lengthItems(
       label: "The manuscript holds its planned length",
       pass,
       detail: pass
-        ? `${words} words across ${pages.length} pages — the telling fills the ${plannedPages}-page plan.`
-        : `${words} words stand where near ${expected} are owed — the ${plannedPages}-page plan was counted, not written.`,
+        ? `${words} words across ${pages.length} pages — the telling fills the ${plannedPages}-bound-page plan (${spec.wordsPerSheet} words a sheet, ${spec.label}).`
+        : `${words} words stand where near ${expected} are owed — the ${plannedPages}-bound-page plan was counted, not written.`,
     },
   ];
 }

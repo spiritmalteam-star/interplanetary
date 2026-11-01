@@ -24,6 +24,14 @@ export interface DownloadEntry {
   subtitle?: string;
   pages: number;
   boundAt: string;
+  /* THE TRUTHFUL MEASUREMENTS — the plan the book promised and the
+     verified count the press bound (targetPages = bound-page plan;
+     words = manuscript words; draft = the manuscript had not passed
+     its gate when this copy was bound). */
+  targetPages?: number;
+  words?: number;
+  contentHash?: string;
+  draft?: boolean;
   /* the volume's own payload — enough to press the same PDF again */
   meta: {
     title: string;
@@ -32,6 +40,7 @@ export interface DownloadEntry {
     axiom?: string;
     dedication?: string;
     totalPages?: number;
+    age?: string;
   };
   pageList: {
     n: number;

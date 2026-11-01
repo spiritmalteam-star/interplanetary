@@ -142,6 +142,24 @@ interface BookMeta {
   axiom: string;
   dedication: string;
   totalPages: number;
+  /* THE BOUND-PAGE PLAN — the visitor's number is a plan of BOUND
+     sheets in the exported book (the ONE layout law); the story-page
+     count above serves it, never replaces it. */
+  boundPages?: number;
+  age?: string;
+}
+
+/* THE TRUTHFUL MEASUREMENTS — the five numbers that may never be
+   equated: the bound-page plan, the words woven, the story pages,
+   the press's own estimate, and the honest status. */
+interface BookMeasures {
+  targetPages?: number;
+  wordBudget?: number;
+  wordsWoven?: number;
+  storyPages?: number;
+  layoutEstimate?: number;
+  completionStatus?: string;
+  exportedPages?: number;
 }
 
 /* The narrator voice each book speaks with — THE KIND LADY READER,
@@ -360,6 +378,10 @@ export function DreamBookView() {
 
   /* ---- the book ---- */
   const [meta, setMeta] = useState<BookMeta | null>(null);
+  /* THE TRUTHFUL MEASUREMENTS — carried beside the book, spoken in
+     the reader, the reveal and the binding (never a false COMPLETE) */
+  const [measures, setMeasures] = useState<BookMeasures>({});
+  const measuresRef = useRef<BookMeasures>({});
   const narrateRef = useRef<((auto?: boolean) => Promise<void> | void) | null>(null);
   const [pages, setPages] = useState<WeavePage[]>([]);
   const [ended, setEnded] = useState(false);
@@ -1191,6 +1213,10 @@ export function DreamBookView() {
       if (phase === "open") {
         coverRef.current = null;
         setCover(null);
+        /* a fresh conjuring arrives bare — the last volume's plan and
+           its truthful measurements never ride onto the new book */
+        measuresRef.current = {};
+        setMeasures({});
         /* and the last drawing's transcription never rides either — a
            book summoned without a brush is not told it was drawn */
         sketchSubjectsRef.current = [];
@@ -1396,8 +1422,23 @@ export function DreamBookView() {
             axiom: typeof data.axiom === "string" ? data.axiom : "",
             dedication: data.dedication ?? "",
             totalPages: data.totalPages ?? 96,
+            /* THE BOUND-PAGE PLAN — the plan the book was born with */
+            ...(typeof data.boundPages === "number"
+              ? { boundPages: data.boundPages }
+              : {}),
+            ...(typeof data.age === "string" ? { age: data.age } : {}),
           };
           setMeta(metaRef.current);
+          if (
+            data.measurements &&
+            typeof data.measurements === "object"
+          ) {
+            measuresRef.current = {
+              ...measuresRef.current,
+              ...(data.measurements as BookMeasures),
+            };
+            setMeasures(measuresRef.current);
+          }
           /* THE BOOK'S OWN FACE — the cover brush starts the moment the
              volume has a name: the plate paints while the reader reads */
           void paintCover();
@@ -1418,6 +1459,29 @@ export function DreamBookView() {
              hand asks for a different length */
           metaRef.current = { ...metaRef.current, totalPages: data.totalPages };
           setMeta(metaRef.current);
+        }
+        /* THE TRUTHFUL MEASUREMENTS — every stride reports the real
+           numbers: words woven, story pages, the press's estimate and
+           the honest status (never a false COMPLETE). THE MONOTONIC
+           LAW — strides may land out of order (the reader's prefetch
+           races the reveal), so the words woven may only ever climb:
+           a stale response can never unread what the loom has
+           already written. */
+        if (
+          data.measurements &&
+          typeof data.measurements === "object"
+        ) {
+          const incoming = data.measurements as BookMeasures;
+          const prev = measuresRef.current;
+          const woven =
+            Math.max(prev.wordsWoven ?? 0, incoming.wordsWoven ?? 0) ||
+            incoming.wordsWoven;
+          measuresRef.current = {
+            ...prev,
+            ...incoming,
+            ...(woven ? { wordsWoven: woven } : {}),
+          };
+          setMeasures(measuresRef.current);
         }
         /* GENERATION TRANSPARENCY — the stage the studio speaks */
         if (typeof data.stage === "string") {
@@ -1963,8 +2027,21 @@ export function DreamBookView() {
            (six open pages, then eight more: 14 against a plan of 12).
            The old guard broke here and the book never received its
            Seal of Closing. Now the seal lands wherever the story
-           stands: at or past the plan, the close is woven. */
-        if (have >= plan) {
+           stands: at or past the plan, the close is woven.
+           THE WORD BUDGET'S OWN LAW — the plan's pages are not the
+           narrative length: the close is woven only when the pages
+           stand AND the manuscript holds near its word budget (the
+           bound-page plan's own measure). A book whose leaves ran
+           lean keeps weaving — the seal is never asked to bless a
+           volume the press would bind short of its promise. The
+           stride cap keeps the law honest when the sky keeps
+           running light: eight strides past the plan, the close is
+           attempted anyway and the gate speaks its true verdict. */
+        const budget = measuresRef.current.wordBudget ?? 0;
+        const wordsNow = measuresRef.current.wordsWoven ?? 0;
+        const wordsMet =
+          !(budget > 0) || wordsNow >= Math.round(budget * 0.88);
+        if (have >= plan && (wordsMet || have >= plan + 48)) {
           /* the planned end reached — the Seal of Closing is woven.
              A long breath is given to the seal too: the audit and the
              ending ride the same slow ink as any stride. */
@@ -2033,7 +2110,10 @@ export function DreamBookView() {
   }, []);
 
   /* THE BINDING PRESS — the whole book, pages and front matter, bound
-     into one ink PDF and handed to the visitor's own hands */
+     into one ink PDF and handed to the visitor's own hands. THE HONEST
+     LABEL — the press's verified sheet count is spoken as measured;
+     a manuscript that has not passed its gate binds as a DRAFT, never
+     wearing a completion it has not earned. */
   const downloadWhole = useCallback(async () => {
     if (binding || !meta || pagesRef.current.length === 0) return;
     setBinding(true);
@@ -2058,9 +2138,18 @@ export function DreamBookView() {
              concluded — a book still being woven never carries a
              false "The End" */
           concluded: endedRef.current,
+          /* the sheet's own typography — the age's layout law */
+          age: meta.age,
         },
         bound
       );
+      /* THE EXPORT'S OWN TRUTH — the verified count against the plan:
+         a book short of its bound-page plan is labeled a draft, and
+         the label speaks the numbers, never a vague comfort */
+      const target = measuresRef.current.targetPages ?? meta.boundPages ?? 0;
+      const wordsBound = boundPdf.words;
+      const isDraft =
+        !endedRef.current || (target > 0 && boundPdf.pdfPages < target * 0.85);
       /* the shelf of bound works — the volume keeps itself on the
          visitor's own device so the profile's downloads can hand it
          back, bound again, whenever it is wanted */
@@ -2068,6 +2157,10 @@ export function DreamBookView() {
         title: meta.title,
         subtitle: meta.subtitle,
         pages: boundPdf.pdfPages,
+        ...(target > 0 ? { targetPages: target } : {}),
+        words: wordsBound,
+        contentHash: boundPdf.contentHash,
+        draft: isDraft,
         meta: {
           title: meta.title,
           subtitle: meta.subtitle,
@@ -2075,15 +2168,37 @@ export function DreamBookView() {
           axiom: meta.axiom,
           dedication: meta.dedication,
           totalPages: meta.totalPages,
+          ...(meta.age ? { age: meta.age } : {}),
         },
         pageList: bound,
       });
-      toast.success(
-        t("The book is bound — {n} pages, {w} words", {
-          n: boundPdf.pdfPages,
-          w: boundPdf.words,
-        })
-      );
+      if (isDraft && target > 0) {
+        toast.success(
+          t("Draft bound — {n} of {y} pages, {w} words", {
+            n: boundPdf.pdfPages,
+            y: target,
+            w: wordsBound,
+          }),
+          {
+            description: t(
+              "The telling is still being woven or awaits its seal — bind again once the loom rests."
+            ),
+          }
+        );
+      } else {
+        toast.success(
+          t("The book is bound — {n} pages, {w} words", {
+            n: boundPdf.pdfPages,
+            w: wordsBound,
+          })
+        );
+      }
+      /* the export's verified count joins the truthful measurements */
+      measuresRef.current = {
+        ...measuresRef.current,
+        exportedPages: boundPdf.pdfPages,
+      };
+      setMeasures(measuresRef.current);
     } catch {
       toast.error(t("The binding press needs a breath — try again"));
     } finally {
@@ -3257,6 +3372,27 @@ export function DreamBookView() {
           >
             <BookDown className="size-4" aria-hidden="true" />
           </button>
+          {/* THE BINDING HAND — the whole volume bound into its ink PDF
+              from the reader itself: the press verifies the sheet count
+              by reopening the finished document, and the toast speaks
+              the truth (a book short of its plan binds labeled a
+              draft). No finished volume should wait for a reveal to
+              hold its own bound copy. */}
+          <button
+            type="button"
+            onClick={() => void downloadWhole()}
+            disabled={binding || pages.length === 0}
+            aria-label={t("Bind the book as PDF")}
+            title={t("Bind the book as PDF")}
+            data-testid="dream-bind-pdf"
+            className={cn(inkIconBtn, "shrink-0 disabled:opacity-35")}
+          >
+            {binding ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Download className="size-4" aria-hidden="true" />
+            )}
+          </button>
           {/* THE FOCUS READING — the column widens, the frame quiets */}
           <button
             type="button"
@@ -3297,13 +3433,19 @@ export function DreamBookView() {
               <PenLine className="size-4" aria-hidden="true" />
             </button>
           )}
-          {/* THE QUIET COUNT — the volume's own weight, honestly said */}
+          {/* THE QUIET COUNT — the volume's own weight, honestly said:
+              the words woven, the loom's leaves, and — when the volume
+              carries a bound-page plan — the sheets the press would
+              bind from what stands so far, against the plan's truth */}
           {pages.length > 0 && (
             <span
               className="mono-label hidden shrink-0 whitespace-nowrap text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/70 md:inline"
               data-testid="dream-wordcount"
             >
               {formatArchiveNumber(bookWords, language)} {t("words")} · {formatArchiveNumber(pages.length, language)} {t("pages")}
+              {measures.targetPages ? (
+                <> · ≈{formatArchiveNumber(measures.layoutEstimate ?? 0, language)}/{formatArchiveNumber(measures.targetPages, language)} {t("bound")}</>
+              ) : null}
             </span>
           )}
           <button
@@ -4433,6 +4575,17 @@ export function DreamBookView() {
                 .replace("{n}", String(Math.min(wholeReveal.woven, wholeReveal.total)))
                 .replace("{y}", String(wholeReveal.total))}
             </p>
+            {/* THE TRUTHFUL MEASUREMENTS — the reveal never equates the
+                loom's leaves with the bound book: the plan's own words
+                stand beneath the page count, honestly, while it walks */}
+            {measures.targetPages ? (
+              <p
+                className="mono-label mt-1 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/70"
+                data-testid="dream-whole-measures"
+              >
+                {formatArchiveNumber(measures.wordsWoven ?? 0, language)}/{formatArchiveNumber(measures.wordBudget ?? 0, language)} {t("words")} · ≈{formatArchiveNumber(measures.layoutEstimate ?? 0, language)}/{formatArchiveNumber(measures.targetPages, language)} {t("bound pages")}
+              </p>
+            ) : null}
             <div className="mt-5 h-[3px] w-60 overflow-hidden rounded-full bg-foreground/10">
               <div
                 className="h-full rounded-full bg-foreground/65 transition-all duration-700"

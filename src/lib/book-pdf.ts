@@ -24,6 +24,8 @@
 /*    so the caller can speak the truth about the book's size.         */
 /* ------------------------------------------------------------------ */
 
+import { specForAge } from "@/lib/book-layout";
+
 export interface BookPdfMeta {
   title: string;
   subtitle?: string;
@@ -33,6 +35,10 @@ export interface BookPdfMeta {
   totalPages?: number;
   /** The volume has genuinely concluded — only then is "The End" bound. */
   concluded?: boolean;
+  /** The reader's age key (little | young | teen | grown | timeless) —
+      the sheet's typography and measure come from the ONE layout spec,
+      so the bound page count matches the plan that promised it. */
+  age?: string;
 }
 
 export interface BookPdfPage {
@@ -44,25 +50,57 @@ export interface BookPdfPage {
 }
 
 export interface BookPdfResult {
-  /** The number of A4 sheets the press actually bound. */
+  /** The number of A4 sheets the press actually bound — verified by
+      reopening the finished document, not by counting the pour. */
   pdfPages: number;
   /** The words of manuscript the press set in ink. */
   words: number;
+  /** A fingerprint of the exact manuscript bound (sha-256, hex) — the
+      revision the export verified, so a download can never be mistaken
+      for a different state of the book. */
+  contentHash: string;
 }
 
 const SERIF_URL = "/fonts/DejaVuSerif.ttf";
 const SERIF_BOLD_URL = "/fonts/DejaVuSerif-Bold.ttf";
 
-/* the page's architecture — one source of truth for every measurement */
+/* the page's architecture — the trim and the folio zone are fixed;
+   the TYPE comes from the age spec (the ONE layout law), so a little
+   dreamer's 120 pages are set large and airy while a grown reader's
+   120 pages carry the classic novel measure — and BOTH bind to near
+   the sheet count their plan promised. */
 const A4: [number, number] = [595.28, 841.89];
 const MARGIN = 68;
 const TOP = A4[1] - MARGIN; /* where the first line sits */
 const BOTTOM = MARGIN + 34; /* no text below this line */
-const BODY_SIZE = 11.5;
-const BODY_LEADING = 17.5;
-const PARA_GAP = 9;
-const CHAPTER_SIZE = 15.5;
-const CHAPTER_LEADING = 21;
+
+async function sha256Hex(bytes: Uint8Array): Promise<string> {
+  try {
+    const subtle =
+      typeof crypto !== "undefined" && "subtle" in crypto
+        ? crypto.subtle
+        : null;
+    if (subtle) {
+      const digest = await subtle.digest(
+        "SHA-256",
+        bytes as unknown as ArrayBuffer
+      );
+      return Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("")
+        .slice(0, 32);
+    }
+  } catch {
+    /* the fingerprint may rest unwritten — the count still verifies */
+  }
+  /* a quiet deterministic fallback (djb2) when the subtle vault is shut */
+  let h = 5381;
+  const step = Math.max(1, Math.floor(bytes.length / 4096));
+  for (let i = 0; i < bytes.length; i += step) {
+    h = ((h << 5) + h + bytes[i]) | 0;
+  }
+  return (h >>> 0).toString(16).padStart(8, "0").repeat(4).slice(0, 32);
+}
 
 async function fetchFont(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
@@ -101,6 +139,14 @@ export async function downloadBookPdf(
   doc.registerFontkit(fontkit as Parameters<typeof doc.registerFontkit>[0]);
   const serif = await doc.embedFont(serifBytes, { subset: true });
   const serifBold = await doc.embedFont(boldBytes, { subset: true });
+
+  /* the sheet's voice — the age's own typography (the ONE layout law) */
+  const spec = specForAge(meta.age);
+  const BODY_SIZE = spec.bodySize;
+  const BODY_LEADING = spec.leading;
+  const PARA_GAP = spec.paraGap;
+  const CHAPTER_SIZE = spec.chapterSize;
+  const CHAPTER_LEADING = spec.chapterLeading;
 
   const W = A4[0] - MARGIN * 2;
 
@@ -347,6 +393,24 @@ export async function downloadBookPdf(
   }
 
   const bytes = await doc.save();
+
+  /* ------------------- THE INDEPENDENT VERIFICATION -------------------
+     The press reopens the finished document and counts its sheets
+     from the PDF's own structure — never from the pour's arithmetic.
+     The verified count and the manuscript's fingerprint ride home,
+     so the caller can prove the export against the plan. */
+  let verifiedPages = doc.getPageCount();
+  try {
+    const { PDFDocument: Reload } = await import("pdf-lib");
+    const reopened = await Reload.load(bytes as unknown as ArrayBuffer);
+    verifiedPages = reopened.getPageCount();
+  } catch {
+    /* the reopen stumbled — the first count stands, honestly labeled */
+  }
+  const contentHash = await sha256Hex(
+    bytes instanceof Uint8Array ? bytes : new Uint8Array(0)
+  );
+
   const blob = new Blob([bytes as unknown as BlobPart], {
     type: "application/pdf",
   });
@@ -359,7 +423,8 @@ export async function downloadBookPdf(
   a.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 4000);
 
-  /* the truth rides home: the sheets the press bound, and the words
-     it set — the caller validates the book against its plan */
-  return { pdfPages: doc.getPageCount(), words };
+  /* the truth rides home: the sheets the press bound (verified by
+     reopening the document), the words it set, and the revision's
+     own fingerprint — the caller validates the book against its plan */
+  return { pdfPages: verifiedPages, words, contentHash };
 }

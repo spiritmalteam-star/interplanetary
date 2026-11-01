@@ -15,6 +15,11 @@ import {
 } from "@/lib/book-resonance";
 import { detectShortBookAsk, topicHoldsGround } from "@/lib/book-length";
 import {
+  estimateBoundPages,
+  planFromBoundPages,
+  specForAge,
+} from "@/lib/book-layout";
+import {
   qcManuscript,
   expectsFullPages,
   type QcReport,
@@ -376,7 +381,7 @@ function strictJsonLine(languageName: string): string {
   return `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word you create — the title, subtitle, dedication, chapter titles, every paragraph of every page and the thread summary — in fluent, natural ${languageName}. The JSON keys stay exactly as listed.`;
 }
 
-function systemPrompt(vein?: string): string {
+function systemPrompt(vein?: string, storyWordsPerPage?: number): string {
   /* THE VEIN'S OWN VOICE — the Ground vein re-tunes the whole channel:
      the same craft laws stand, but the telling reads like a fine novel
      written by a master of its own genre — a normal book, with none
@@ -438,6 +443,7 @@ THE REAL BOOK LAW (the volume is bound like a printed book — AUTHORITATIVE)
 
 THE FULL PAGE LAW (a page is a real book page — AUTHORITATIVE)
 - A page is never a fragment and never a lone paragraph: for grown readers each page carries THREE TO FIVE full paragraphs of real prose (3–6 sentences each — roughly 300–450 words resting on the page); for young readers two to four shorter paragraphs. One paragraph does not make a page; a torn leaf does not leave the loom.
+- THE PAGE'S MEASURE (binding): one woven page carries near ${storyWordsPerPage ?? 170} words for this reader's age — hold every page close to that measure, page after page, so the volume's leaves and its bound sheets agree.
 - Compose the page like a printed book composes it: scene and summary taking turns, dialogue carrying its own line, description that moves the story, a short paragraph allowed for a beat — but the beat never becomes the whole page.
 - Fullness is not padding: every paragraph advances the story, deepens a character, or turns the world one ring wider. Zero filler dressed as length.
 
@@ -566,6 +572,10 @@ function buildUserPrompt(body: {
   sketchSubjects?: string[];
   /* true when the sketch itself arrived with this very opening breath */
   sketchFresh?: boolean;
+  /* THE PAGE'S OWN MEASURE — the words one woven page carries for this
+     reader's age (the ONE layout spec); spoken into the page law so
+     the loom's leaves and the bound sheets can never disagree */
+  storyWordsPerPage?: number;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
   const span = Math.min(8, Math.max(2, Math.round(body.span ?? 2)));
@@ -766,11 +776,11 @@ function buildUserPrompt(body: {
       SEALED_NAME_LAW,
       ``,
       `Write the NEXT ${span === 2 ? "TWO pages" : `${span} pages`} (pages ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}) of the same volume, in the same voice. Advance the story: a new event, a new consequence, a chapter's purpose moved one honest step forward. Open a new chapter here ONLY if the loom's rhythm asks for it${bibleLines.length ? " — and when a chapter opens, it must be the NEXT chapter of the architecture, doing exactly that chapter's planned work" : ""}.`,
-      `THE FULL PAGE LAW holds: ${span === 2 ? "both pages are real book pages — three to five full paragraphs each (grown readers; two to four for the young), never a lone paragraph" : "every page is a real book page, never a lone paragraph"}. Plant or pay at least one promise of the ledger in these pages.`,
+      `THE FULL PAGE LAW holds: ${span === 2 ? "both pages are real book pages — three to five full paragraphs each (grown readers; two to four for the young), never a lone paragraph" : "every page is a real book page, never a lone paragraph"}. THE PAGE'S MEASURE: each of these pages carries near ${specForAge(age).storyWordsPerPage} words — hold the measure, page after page. Plant or pay at least one promise of the ledger in these pages.`,
       ...(span > 2
         ? [
             body.reveal
-              ? `THE REVEAL STRIDE (absolute — the visitor asked the loom to channel the whole book): return ALL ${span} pages, never fewer — each page carries 1–2 paragraphs (3 only at a true turning point), every paragraph 2–4 sentences. The reader turns quickly; the telling stays whole but never lingers. Return exactly ${span} page objects, numbered in order, no gaps.`
+              ? `THE REVEAL STRIDE (absolute — the visitor asked the loom to channel the whole book): return ALL ${span} pages, never fewer — each page carries 1–2 paragraphs (3 only at a true turning point), every paragraph 2–4 sentences, each page carrying near ${specForAge(age).storyWordsPerPage} words — the page's own measure is binding here too. The reader turns quickly; the telling stays whole but never lingers. Return exactly ${span} page objects, numbered in order, no gaps.`
               : `THE BACKGROUND BATCH (absolute — these ${span} pages are channeled in the background while the visitor reads the earlier ones): return ALL ${span} pages, never fewer, at FULL depth — each page carries 3–4 full paragraphs exactly as any hand-woven page would; the reader must never feel a page was written in haste. End the batch on a pull, not a full stop: the next stride must feel inevitable. Return exactly ${span} page objects, numbered in order, no gaps.`,
           ]
         : []),
@@ -1196,7 +1206,11 @@ function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
   return pages;
 }
 
-const clampTotal = (n: number) => Math.min(320, Math.max(8, Math.round(n / 2) * 2));
+/* THE STORY-PAGE CLAMP — story pages may run far past the bound-page
+   plan they serve (a little dreamer's 120 bound sheets weave as ~270
+   bright story pages), so the ceiling is generous; the WORD BUDGET is
+   the true law, and the seal's gate measures it. */
+const clampTotal = (n: number) => Math.min(720, Math.max(8, Math.round(n / 2) * 2));
 
 /** The architect's syllable seeds, carried back by the room so the
     writer's conjuring and the bible's cast share one naming law. */
@@ -1646,7 +1660,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const askLoom = async (reminder: boolean, suffix = ""): Promise<string> => {
       const completion = await zai.chat.completions.create({
         messages: [
-          { role: "assistant", content: systemPrompt(vein) },
+          { role: "assistant", content: systemPrompt(vein, specForAge(age).storyWordsPerPage) },
           {
             role: "user",
             content:
@@ -1679,6 +1693,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                 sketchVision: sketchVision || undefined,
                 sketchSubjects: sketchSubjects.length ? sketchSubjects : undefined,
                 sketchFresh: phase === "open" && !!sketch,
+                storyWordsPerPage: specForAge(age).storyWordsPerPage,
               }) +
               suffix +
               (reminder
@@ -1805,13 +1820,29 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     let mendAudit: BookAudit | null = null;
     let outThreadsOverride = "";
     if (phase === "close") {
-      const plannedPages =
-        typeof bookMeta?.totalPages === "number" && bookMeta.totalPages >= 8
-          ? bookMeta.totalPages
-          : totalPages;
+      /* THE BOUND PLAN — the words the gate owes come from the bound-page
+         plan the volume was born with (the visitor's number), never
+         from the story-page count; the age picks the layout measure. */
+      const keptBound =
+        typeof bookMeta?.boundPages === "number" && bookMeta.boundPages >= 8
+          ? Math.floor(bookMeta.boundPages)
+          : 0;
+      const plannedBound =
+        keptBound ||
+        (typeof bookMeta?.totalPages === "number" && bookMeta.totalPages >= 8
+          ? Math.max(
+              8,
+              Math.round(
+                (bookMeta.totalPages * specForAge(age).storyWordsPerPage) /
+                  specForAge(age).wordsPerSheet
+              )
+            )
+          : totalPages);
+      const plannedPages = plannedBound;
       qc = qcManuscript(buildQcPages(pages), mergedLedger, {
         expectsFullPages: fullPages,
         plannedPages,
+        age,
       });
       const findings = qc.issues
         .filter((i) => i.severity !== "note")
@@ -1862,6 +1893,7 @@ Land every unresolved thread the findings name, let the ending be a true ending,
           qc = qcManuscript(buildQcPages(pages), mergedLedger, {
             expectsFullPages: fullPages,
             plannedPages,
+            age,
           });
         }
       }
@@ -1921,23 +1953,39 @@ Land every unresolved thread the findings name, let the ending be a true ending,
       /* the loom may widen its plan, never thin it below the chosen
          shape's floor — a "classic tale" can never arrive as 8 pages,
          and a SHORT book can never arrive as a sprawling epic: the
-         plan's band (min–max) is clamped hard on both sides */
+         plan's band (min–max) is clamped hard on both sides.
+         THE BOUND-PAGE LAW — the visitor's number is a BOUND-PAGE plan
+         (physical sheets in the exported book): the word budget and
+         the story-page target both derive from the ONE layout spec,
+         so the woven volume and the bound volume can never disagree
+         about what "120 pages" means. */
       const plan = BOOK_PLAN[volumeKey] ?? BOOK_PLAN.classic;
-      out.totalPages = clampTotal(
-        Math.min(
-          plan.max,
-          Math.max(
-            plan.min,
-            typeof parsed.totalPages === "number" ? parsed.totalPages : plan.min
-          )
-        )
+      const askedBound =
+        plannedPages >= 20 && plannedPages <= 300 ? plannedPages : 0;
+      const boundTarget = askedBound
+        ? Math.min(300, Math.max(8, askedBound))
+        : Math.min(plan.max, Math.max(plan.min, 96));
+      const layout = planFromBoundPages(boundTarget, age);
+      const wordsWoven = pages.reduce(
+        (acc, p) =>
+          acc +
+          p.paragraphs.reduce(
+            (a, para) => a + para.split(/\s+/).filter(Boolean).length,
+            0
+          ),
+        0
       );
-      /* THE VISITOR'S OWN NUMBER — a length the visitor named in the
-       atelier (20–300) outranks the plan's band: the loom lands the
-       whole story inside the pages the visitor asked for */
-      if (plannedPages && !ground.tiny) {
-        out.totalPages = clampTotal(plannedPages);
-      }
+      out.boundPages = layout.boundPages;
+      out.age = age;
+      out.totalPages = clampTotal(layout.storyPageTarget);
+      out.measurements = {
+        targetPages: layout.boundPages,
+        wordBudget: layout.wordBudget,
+        wordsWoven,
+        storyPages: out.totalPages,
+        layoutEstimate: estimateBoundPages(wordsWoven, age),
+        completionStatus: "generating",
+      };
       /* THE SHELF OF KEPT VOLUMES — a fresh conjuring no longer erases
          the past: the previous living volume steps into the keeper's
          history (the kept shelf, twelve deep), and the new book takes
@@ -1980,6 +2028,7 @@ Land every unresolved thread the findings name, let the ending be a true ending,
             axiom: out.axiom,
             dedication: out.dedication,
             totalPages: out.totalPages,
+            boundPages: out.boundPages,
             pages,
             threads: out.threads,
             ...(mergedLedger ? { ledger: mergedLedger } : {}),
@@ -2005,15 +2054,31 @@ Land every unresolved thread the findings name, let the ending be a true ending,
     ) {
       /* the loom may widen or narrow the book ONLY when a rewriting
          wish actually speaks of the book's length — a short book
-         stretched by hand still stays a short book (capped at 40),
-         and a poem asked by name is never widened past its leaves
-         (capped at 12) */
+         stretched by hand still stays a short book (capped at 72
+         story pages), and a poem asked by name is never widened past
+         its leaves (capped at 12). The story-page ceiling is generous
+         (story pages serve the bound-page plan, never equal it). */
       out.totalPages = clampTotal(
         Math.min(
-          volumeKey === "tiny" ? 12 : volumeKey === "short" ? 40 : 300,
+          volumeKey === "tiny" ? 12 : volumeKey === "short" ? 72 : 720,
           parsed.totalPages
         )
       );
+      /* the widening re-speaks the bound-page law from the kept plan */
+      const keptBound =
+        typeof bookMeta?.boundPages === "number" && bookMeta.boundPages >= 8
+          ? Math.floor(bookMeta.boundPages)
+          : 0;
+      if (keptBound) {
+        out.boundPages = keptBound;
+        const spec = specForAge(age);
+        out.measurements = {
+          ...(out.measurements as Record<string, unknown> | undefined),
+          targetPages: keptBound,
+          wordBudget: Math.round(keptBound * spec.wordsPerSheet),
+          storyPages: out.totalPages,
+        };
+      }
     }
 
     if (phase !== "open" && bookId) {
@@ -2051,6 +2116,53 @@ Land every unresolved thread the findings name, let the ending be a true ending,
         ) as Record<string, unknown>,
         1_200_000
       );
+    }
+
+    /* THE TRUTHFUL MEASUREMENTS — every response carries the five
+       numbers the directive demands, each measured, never equated:
+       targetPages (the bound-page plan), wordsWoven (validated
+       manuscript content), storyPages (the loom's own leaves),
+       layoutEstimate (sheets the press would bind from these words —
+       the press's verified count always outranks it), and the honest
+       completionStatus. Progress can never again masquerade as
+       completion: only the gate's pass turns this word COMPLETE. */
+    {
+      const allPages = [...pressPages, ...pages];
+      const wordsWoven = allPages.reduce(
+        (acc, p) =>
+          acc +
+          p.paragraphs.reduce(
+            (a, para) => a + para.split(/\s+/).filter(Boolean).length,
+            0
+          ),
+        0
+      );
+      const keptBound =
+        typeof out.boundPages === "number"
+          ? out.boundPages
+          : typeof bookMeta?.boundPages === "number" &&
+              bookMeta.boundPages >= 8
+            ? Math.floor(bookMeta.boundPages)
+            : 0;
+      if (keptBound) {
+        const existing =
+          (out.measurements as Record<string, unknown> | undefined) ?? {};
+        out.measurements = {
+          ...existing,
+          targetPages: keptBound,
+          wordBudget: Math.round(keptBound * specForAge(age).wordsPerSheet),
+          wordsWoven,
+          storyPages:
+            typeof out.totalPages === "number"
+              ? out.totalPages
+              : allPages.length,
+          layoutEstimate: estimateBoundPages(wordsWoven, age),
+          completionStatus:
+            phase === "close" && !(qc && qc.blocking)
+              ? "complete"
+              : "generating",
+        };
+      }
     }
 
     return withAnonCookie(NextResponse.json(out), visitor);
@@ -2488,7 +2600,7 @@ async function studioRoom(ctx: StudioCtx): Promise<NextResponse> {
       const zai = await ZAI.create();
       const raw = await askStudio(
         zai,
-        systemPrompt(vein),
+        systemPrompt(vein, specForAge(age).storyWordsPerPage),
         buildRepairPrompt({
           directives: repairDirectives,
           pageTexts,
@@ -2704,11 +2816,24 @@ async function studioRoom(ctx: StudioCtx): Promise<NextResponse> {
         bible,
         editorial: carriedEditorial,
         plannedChapters: bible?.chapters?.length,
+        /* THE BOUND PLAN — the gate measures words against the bound-page
+           plan the volume was born with, measured by the ONE layout
+           spec for this age — never against the story-page count */
         plannedPages:
-          typeof bookMeta?.totalPages === "number" && bookMeta.totalPages >= 8
-            ? bookMeta.totalPages
-            : plannedPages,
+          typeof bookMeta?.boundPages === "number" && bookMeta.boundPages >= 8
+            ? Math.floor(bookMeta.boundPages)
+            : typeof bookMeta?.totalPages === "number" &&
+                bookMeta.totalPages >= 8
+              ? Math.max(
+                  8,
+                  Math.round(
+                    (bookMeta.totalPages * specForAge(age).storyWordsPerPage) /
+                      specForAge(age).wordsPerSheet
+                  )
+                )
+              : plannedPages,
         fullPages: expectsFullPages(age, volume, tale),
+        age,
       });
       const stage = gate.pass ? "publication-ready" : "editorial";
       await persist(stage, {

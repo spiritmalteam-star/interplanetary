@@ -4038,4 +4038,11 @@ export const de: TranslationDict = {
   "A pouch of light": "Ein Beutel Licht",
   "credits": "Lichter"
 
+,
+  "bound": "gebunden",
+  "bound pages": "gebundene Seiten",
+  "Draft bound — {n} of {y} pages, {w} words": "Entwurf gebunden — {n} von {y} Seiten, {w} Wörter",
+  "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Die Erzählung wird noch gewoben oder wartet auf ihr Siegel — binde erneut, sobald der Webstuhl ruht."
+,
+  "Bind the book as PDF": "Das Buch als PDF binden"
 };

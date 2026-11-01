@@ -5870,4 +5870,11 @@ export const sq: TranslationDict = {
   "A pouch of light": "Një çantë drite",
   "credits": "kredite"
 
+,
+  "bound": "të lidhura",
+  "bound pages": "faqe të lidhura",
+  "Draft bound — {n} of {y} pages, {w} words": "Skicë e lidhur — {n} nga {y} faqe, {w} fjalë",
+  "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Tregimi ende po tjerr ose pret vulën e vet — lidhe sërish sapo tehu të pushojë."
+,
+  "Bind the book as PDF": "Lidh librin si PDF"
 };

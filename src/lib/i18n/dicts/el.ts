@@ -3722,4 +3722,11 @@ export const el: TranslationDict = {
   "A pouch of light": "Ένα πουγκί φωτός",
   "credits": "πίστευοι"
 
+,
+  "bound": "δεμένες",
+  "bound pages": "δεμένες σελίδες",
+  "Draft bound — {n} of {y} pages, {w} words": "Πρόχειρο δεμένο — {n} από {y} σελίδες, {w} λέξεις",
+  "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Η αφήγηση υφαίνεται ακόμη ή περιμένει τη σφραγίδα της — δείτε ξανά μόλις ο αργαλειός ξεκουραστεί."
+,
+  "Bind the book as PDF": "Δέστε το βιβλίο ως PDF"
 };

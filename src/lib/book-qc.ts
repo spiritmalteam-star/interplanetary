@@ -26,6 +26,7 @@
 /* ------------------------------------------------------------------ */
 
 import type { BookLedger } from "@/lib/book-ledger";
+import { LENGTH_TOLERANCE, specForAge } from "@/lib/book-layout";
 
 export interface QcPage {
   n: number;
@@ -63,8 +64,9 @@ export interface QcReport {
 }
 
 /* A plan's fullness: how many words one woven page should carry when
-   the book is told in full pages (novels, grown tellings). Picture-
-   book pages are honest at far fewer words. */
+   the book is told in full pages (novels, grown tellings). Kept as a
+   legacy export — the ONE layout spec (book-layout.ts) now speaks the
+   per-age measure; this constant stays the grown full-page word law. */
 export const FULL_PAGE_WORDS = 300;
 export const FULL_PAGE_TOLERANCE = 0.55; /* 55% of full is still a page */
 
@@ -115,7 +117,7 @@ function jaccard(a: Set<string>, b: Set<string>): number {
 export function qcManuscript(
   pages: QcPage[],
   ledger: BookLedger | null,
-  plan: { expectsFullPages: boolean; plannedPages: number }
+  plan: { expectsFullPages: boolean; plannedPages: number; age?: string }
 ): QcReport {
   const issues: QcIssue[] = [];
 
@@ -135,16 +137,22 @@ export function qcManuscript(
     }
   }
   const chapters = ledger?.chapters?.length ?? chapterStart.size;
-  const estTypesetPages = Math.max(1, Math.round(words / 350));
+  /* THE ONE LAYOUT LAW — the bound-sheet estimate comes from the same
+     spec the binding press sets, never a private constant */
+  const spec = specForAge(plan.age);
+  const estTypesetPages = Math.max(
+    1,
+    Math.round(words / spec.wordsPerSheet)
+  );
 
   /* ---------------- length vs the plan ----------------
-     The woven page count is NOT the narrative length. When the plan
-     promised full pages, the manuscript must hold enough words to
-     typeset near the planned count; when it promised a picture book,
-     far fewer words per page are honest. */
-  const expectedWords = plan.expectsFullPages
-    ? plan.plannedPages * FULL_PAGE_WORDS * FULL_PAGE_TOLERANCE
-    : plan.plannedPages * 60; /* picture-book pages, gently judged */
+     The woven page count is NOT the narrative length. The plan is a
+     BOUND-PAGE plan; the words it owes are boundPages × wordsPerSheet
+     (the press's real carrying capacity for this age) within the
+     honest tolerance — whatever the reader's age, the bound sheets
+     are filled by words. */
+  const expectedWords =
+    plan.plannedPages * spec.wordsPerSheet * LENGTH_TOLERANCE;
   if (pages.length > 0 && words < expectedWords * 0.45) {
     issues.push({
       kind: "length",
@@ -293,8 +301,11 @@ export function qcManuscript(
   }
 
   /* ---------------- thin pages / no movement ---------------- */
-  if (plan.expectsFullPages && pages.length > 0) {
-    const thin = pageWords.filter((w) => w < FULL_PAGE_WORDS * FULL_PAGE_TOLERANCE).length;
+  if (pages.length > 0) {
+    /* the page's own measure — the age's story-page law, not a
+       private constant */
+    const pageMeasure = spec.storyWordsPerPage;
+    const thin = pageWords.filter((w) => w < pageMeasure * 0.45).length;
     if (thin > pages.length * 0.4) {
       issues.push({
         kind: "thin-page",

@@ -3516,4 +3516,11 @@ export const tr: TranslationDict = {
   "A pouch of light": "Bir ışık kesesi",
   "credits": "kredi"
 
+,
+  "bound": "ciltli",
+  "bound pages": "ciltli sayfa",
+  "Draft bound — {n} of {y} pages, {w} words": "Taslak ciltlendi — {y} sayfadan {n}, {w} sözcük",
+  "The telling is still being woven or awaits its seal — bind again once the loom rests.": "Anlatı hâlâ dokunuyor ya da mührünü bekliyor — tezgâh dinlendiğinde yeniden ciltle."
+,
+  "Bind the book as PDF": "Kitabı PDF olarak ciltle"
 };
