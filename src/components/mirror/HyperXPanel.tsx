@@ -357,10 +357,21 @@ export function HyperXAnswer({
   const revealing = shown !== null;
   const streamAt = shown ?? Number.MAX_SAFE_INTEGER;
   const [visions, setVisions] = useState<Record<number, VisionState>>({});
+  /* THE DEEP RESEARCH LEVER — the press's length is the visitor's own
+     choice (3 pages to the full 8), and the press itself is a WORK IN
+     MOTION: once begun it runs behind the response, its honest progress
+     rides the hall, and the finished treatise rests in the Library. */
+  const [leverOpen, setLeverOpen] = useState(false);
+  const [pdfPages, setPdfPages] = useState(8);
   const [pdfState, setPdfState] = useState<
-    "idle" | "weaving" | "failed" | "kept"
+    "idle" | "pressing" | "failed" | "kept"
   >("idle");
   const [pdfNote, setPdfNote] = useState<string | null>(null);
+  const [pdfJob, setPdfJob] = useState<{
+    id: string;
+    progress: number;
+    stage: string | null;
+  } | null>(null);
   /* the copy hand at the discovery's own end — the visitor's law: every
      HyperX result closes with its copy of the truth alone */
   const [copied, setCopied] = useState(false);
@@ -403,24 +414,93 @@ export function HyperXAnswer({
     [language, question]
   );
 
-  const weavePdf = useCallback(async () => {
-    setPdfState("weaving");
+  /* THE PRESS'S OWN WATCH — while a press runs, the hall is read every
+     four seconds and the button breathes with the work's own percent;
+     done or failed, the watch rests. The timer lives in a ref and its
+     only lifecycle cleanup is the unmount hand — a question typed
+     mid-press never multiplies the watchers. */
+  const jobRef = useRef<string | null>(null);
+  const watchTimer = useRef<number | null>(null);
+  useEffect(() => {
+    return () => {
+      if (watchTimer.current) {
+        window.clearInterval(watchTimer.current);
+        watchTimer.current = null;
+      }
+    };
+  }, []);
+  const watchJob = (id: string) => {
+    if (watchTimer.current) {
+      window.clearInterval(watchTimer.current);
+      watchTimer.current = null;
+    }
+    watchTimer.current = window.setInterval(async () => {
+      if (!jobRef.current) return;
+      try {
+        const res = await fetch("/api/processes", { cache: "no-store" });
+        const data = (await res.json().catch(() => null)) as {
+          jobs?: {
+            id: string;
+            status: string;
+            progress: number;
+            stage: string | null;
+            error: string | null;
+          }[];
+        } | null;
+        const mine = data?.jobs?.find((j) => j.id === jobRef.current);
+        if (!mine) return;
+        if (mine.status === "done") {
+          setPdfJob({ id: mine.id, progress: 100, stage: mine.stage });
+          setPdfState("kept");
+          setPdfNote(
+            "The deep research document is yours — it rests in your Library, ready whenever you return for it (Profile → The Library)."
+          );
+          jobRef.current = null;
+          if (watchTimer.current) {
+            window.clearInterval(watchTimer.current);
+            watchTimer.current = null;
+          }
+        } else if (mine.status === "failed") {
+          setPdfJob({ id: mine.id, progress: mine.progress, stage: mine.stage });
+          setPdfState("failed");
+          setPdfNote(
+            mine.error ||
+              "The press rested — the deep research document could not be woven. Try once more."
+          );
+          jobRef.current = null;
+          if (watchTimer.current) {
+            window.clearInterval(watchTimer.current);
+            watchTimer.current = null;
+          }
+        } else {
+          setPdfJob({
+            id: mine.id,
+            progress: mine.progress,
+            stage: mine.stage,
+          });
+        }
+      } catch {
+        /* a quiet tick missed — the next one carries the watch */
+      }
+    }, 4000);
+  };
+
+  const beginPress = async () => {
+    setPdfState("pressing");
     setPdfNote(null);
+    setLeverOpen(false);
     try {
-      /* THE PATIENT PRESS — keepalive keeps the weaving alive through
-         a page turned away: the deep research document completes on
-         the server no matter where the visitor walks, and rests in
-         the Library until they return for it. */
       const res = await fetch("/api/hyperx/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         keepalive: true,
-        body: JSON.stringify({ question, answer, language }),
+        body: JSON.stringify({ question, answer, language, pages: pdfPages }),
       });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as {
-          error?: string;
-        } | null;
+      const data = (await res.json().catch(() => null)) as {
+        id?: string;
+        error?: string;
+      } | null;
+      if (!res.ok || !data?.id) {
         setPdfState("failed");
         setPdfNote(
           data?.error ??
@@ -428,31 +508,19 @@ export function HyperXAnswer({
         );
         return;
       }
-      const keptInLibrary = res.headers.get("x-hyperx-library-id");
-      const blob = await res.blob();
-      const header = res.headers.get("content-disposition") ?? "";
-      const nameMatch = header.match(/filename="?([^";]+)"?/i);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = nameMatch?.[1] ?? "HyperX-Deep-Research.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 20_000);
-      setPdfState("kept");
+      jobRef.current = data.id;
+      setPdfJob({ id: data.id, progress: 4, stage: "The press is waking…" });
       setPdfNote(
-        keptInLibrary
-          ? "The deep research document is yours — and it rests in your Library, ready whenever you return for it."
-          : null
+        "The press continues even if you leave — find it under Profile → Works in Motion. When it lands, the treatise rests in your Library."
       );
+      watchJob(data.id);
     } catch {
       setPdfState("failed");
       setPdfNote(
         "The press rested — the deep research document could not be woven. Try once more."
       );
     }
-  }, [question, answer, language]);
+  };
 
   /* THE END-OF-RESULT COPY — the transmission alone (the crystal
      machinery never rides along), straight from the answer's tail.
@@ -729,31 +797,123 @@ export function HyperXAnswer({
       {/* --------------------- THE DEEP RESEARCH PRESS -------------------- */}
       {variant === "full" && (
         <div className="mt-2 flex flex-col items-start gap-1.5">
-          <button
-            type="button"
-            onClick={() => void weavePdf()}
-            disabled={pdfState === "weaving" || loading}
-            aria-label="Press the deep research PDF — the truth extended up to 8000 words"
-            title="The deep research press — this truth extended up to 8000 words, pressed into a PDF for deep research projects"
-            data-testid={`${testId}-pdf`}
-            className={cn(
-              "hx-pdf focus-glow inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] transition-all duration-300",
-              (pdfState === "weaving" || loading) && "cursor-wait opacity-80"
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                if (pdfState === "pressing") return;
+                if (pdfState === "kept") {
+                  setPdfNote(
+                    "The deep research document rests in your Library (Profile → The Library), ready to download."
+                  );
+                  return;
+                }
+                setLeverOpen((v) => !v);
+              }}
+              disabled={pdfState === "pressing" || loading}
+              aria-expanded={leverOpen}
+              aria-haspopup="dialog"
+              aria-label="Press the deep research PDF — choose its length, 3 to 8 pages"
+              title="The deep research press — choose the treatise's length (3–8 pages); it weaves in the Works in Motion hall and rests in your Library"
+              data-testid={`${testId}-pdf`}
+              className={cn(
+                "hx-pdf focus-glow inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] transition-all duration-300",
+                (pdfState === "pressing" || loading) && "cursor-wait opacity-80"
+              )}
+            >
+              {pdfState === "pressing" ? (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <FileDown className="size-3.5" aria-hidden="true" />
+              )}
+              <span className="mono-label uppercase tracking-[0.16em]">
+                {pdfState === "pressing"
+                  ? `Pressing the treatise… ${pdfJob ? `${pdfJob.progress}%` : ""}`
+                  : pdfState === "kept"
+                    ? "Deep Research PDF — in your Library"
+                    : pdfState === "failed"
+                      ? "Deep Research PDF — the press rested, try again"
+                      : "Deep Research PDF — 3 to 8 pages"}
+              </span>
+            </button>
+            {pdfState === "pressing" && pdfJob && (
+              <span
+                aria-hidden="true"
+                className="relative h-1.5 w-28 overflow-hidden rounded-full bg-[color-mix(in_srgb,#22d3ee_16%,transparent)]"
+                data-testid={`${testId}-pdf-progress`}
+              >
+                <span
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#22d3ee] to-[#e879f9] transition-all duration-700"
+                  style={{ width: `${Math.max(4, pdfJob.progress)}%` }}
+                />
+              </span>
             )}
-          >
-            {pdfState === "weaving" ? (
-              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-            ) : (
-              <FileDown className="size-3.5" aria-hidden="true" />
-            )}
-            <span className="mono-label uppercase tracking-[0.16em]">
-              {pdfState === "weaving"
-                ? "Weaving the deep research…"
-                : pdfState === "kept"
-                  ? "Deep Research PDF — in your Library"
-                  : "Deep Research PDF — up to 8000 words"}
-            </span>
-          </button>
+          </div>
+
+          {/* THE LEVER — the treatise's own length, the visitor's hand */}
+          {leverOpen && pdfState !== "pressing" && (
+            <div
+              role="dialog"
+              aria-label="Choose the deep research length"
+              data-testid={`${testId}-pdf-lever`}
+              className="w-full max-w-[420px] rounded-2xl border p-3.5"
+              style={{
+                borderColor: "color-mix(in srgb, #22d3ee 30%, transparent)",
+                background: "color-mix(in srgb, #22d3ee 6%, var(--background))",
+              }}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                  The press's length
+                </p>
+                <p
+                  className="mono-label text-[10px] font-semibold tabular-nums text-[#22d3ee]"
+                  data-testid={`${testId}-pdf-lever-value`}
+                >
+                  {pdfPages} {pdfPages === 1 ? "page" : "pages"} · ~
+                  {pdfPages * 1000} words
+                </p>
+              </div>
+              <input
+                type="range"
+                min={3}
+                max={8}
+                step={1}
+                value={pdfPages}
+                onChange={(e) => setPdfPages(Number(e.target.value))}
+                aria-valuetext={`${pdfPages} pages, about ${pdfPages * 1000} words`}
+                aria-label="The deep research length, from 3 pages to the full 8"
+                data-testid={`${testId}-pdf-lever-range`}
+                className="mt-2.5 w-full accent-[#22d3ee]"
+              />
+              <div className="mt-0.5 flex justify-between font-mono text-[9.5px] text-muted-foreground/80">
+                <span>3</span>
+                <span>full 8</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => void beginPress()}
+                disabled={loading}
+                data-testid={`${testId}-pdf-begin`}
+                className="focus-glow mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-[12px] font-semibold transition-all duration-300 hover:brightness-110"
+                style={{
+                  borderColor: "color-mix(in srgb, #22d3ee 45%, transparent)",
+                  background: "color-mix(in srgb, #22d3ee 14%, transparent)",
+                  color: "#22d3ee",
+                }}
+              >
+                <FileDown className="size-3.5" aria-hidden="true" />
+                Begin the press — {pdfPages} {pdfPages === 1 ? "page" : "pages"}
+              </button>
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                Once begun the press never waits on this page — it weaves in
+                the Works in Motion hall (Profile → Works in Motion), where its
+                progress can be checked and a rested press asked to rise again.
+                The finished treatise rests in your Library.
+              </p>
+            </div>
+          )}
+
           {pdfNote && (
             <p
               className="rounded-xl border px-3 py-2 text-[12px] leading-relaxed text-[#b8860b] dark:text-[#f59e0b]"

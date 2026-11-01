@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Activity,
   ArrowLeft,
   BookMarked,
   Check,
@@ -10,6 +11,7 @@ import {
   Copy,
   CreditCard,
   Dna,
+  FileDown,
   Flame,
   Gem,
   History,
@@ -113,6 +115,7 @@ interface VesselKeyRow {
 type SectionId =
   | "profile"
   | "history"
+  | "processes"
   | "settings"
   | "downloads"
   | "seeds"
@@ -123,6 +126,21 @@ type SectionId =
   | "admin"
   | "account"
   | "transactions";
+
+/* THE HALL'S OWN ROW — one carrying process, as the hall speaks it */
+interface ProcessJobLite {
+  id: string;
+  kind: string;
+  title: string;
+  subtitle: string | null;
+  status: string;
+  progress: number;
+  stage: string | null;
+  error: string | null;
+  result: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export function ProfilePage() {
   const t = useT();
@@ -187,6 +205,9 @@ export function ProfilePage() {
   /* THE HISTORY OF EVERY WORK — the shelf the mistakes cannot close */
   const [works, setWorks] = useState<ToolWork[] | null>(null);
   const [resumingWork, setResumingWork] = useState<string | null>(null);
+  /* THE WORKS IN MOTION — the hall of carrying processes */
+  const [processJobs, setProcessJobs] = useState<ProcessJobLite[] | null>(null);
+  const [resumingJob, setResumingJob] = useState<string | null>(null);
   /* the Mirror Intelligence API room */
   const [asking, setAsking] = useState(false);
   const [offerAnswer, setOfferAnswer] = useState<string | null>(null);
@@ -315,6 +336,65 @@ export function ProfilePage() {
     }
     setWorks(listToolWorks(lcHistory));
   }, [open, section, lcHistory]);
+
+  /* THE WORKS IN MOTION — the hall is read the moment its door opens,
+     and while any work still carries, the hall reads itself every
+     three seconds (the visitor sees the bars breathe without ever
+     asking twice). When nothing runs, the quiet returns. */
+  const readProcesses = useMemo(
+    () =>
+      async (signal?: AbortSignal): Promise<ProcessJobLite[] | null> => {
+        try {
+          const res = await fetch("/api/processes", {
+            cache: "no-store",
+            signal,
+          });
+          const data = (await res.json().catch(() => null)) as {
+            jobs?: ProcessJobLite[];
+          } | null;
+          return data?.jobs ?? [];
+        } catch {
+          return null;
+        }
+      },
+    []
+  );
+  useEffect(() => {
+    if (!open || section !== "processes") return;
+    const controller = new AbortController();
+    let timer = 0;
+    const tick = async () => {
+      const jobs = await readProcesses(controller.signal);
+      if (jobs) setProcessJobs(jobs);
+      const carrying = jobs?.some((j) => j.status === "running") ?? false;
+      if (carrying) timer = window.setTimeout(tick, 3000);
+    };
+    void tick();
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [open, section, readProcesses]);
+
+  /* THE SECOND BREATH — a failed work asked to rise again */
+  const resumeProcess = async (id: string) => {
+    setResumingJob(id);
+    try {
+      const res = await fetch("/api/processes/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        const jobs = await readProcesses();
+        if (jobs) setProcessJobs(jobs);
+      }
+    } catch {
+      /* the hall keeps the failed work — the hand may ask again */
+    } finally {
+      setResumingJob(null);
+    }
+  };
 
   /* THE PRECISE WAY BACK — every work resumes into its own room,
      restored exactly as it stood; the profile room closes first so
@@ -591,6 +671,13 @@ export function ProfilePage() {
       testId: "profile-nav-history",
     },
     {
+      id: "processes",
+      label: "Works in Motion",
+      icon: Activity,
+      available: true,
+      testId: "profile-nav-processes",
+    },
+    {
       id: "transactions",
       label: "Transactions",
       icon: ScrollText,
@@ -642,6 +729,8 @@ export function ProfilePage() {
         return me?.admin ? ["profile", "admin", "account"] : ["profile", "account"];
       case "history":
         return ["history"];
+      case "processes":
+        return ["processes"];
       case "transactions":
         return ["transactions"];
       case "library":
@@ -1290,6 +1379,185 @@ export function ProfilePage() {
                           <RotateCcw className="size-3.5" aria-hidden="true" />
                           {t("Resume")}
                         </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        );
+      }
+
+      case "processes": {
+        /* THE WORK KIND'S OWN FACE — every kind carries its icon and
+           its own honest name in the hall */
+        const PROCESS_KINDS: Record<
+          string,
+          { icon: typeof Activity; label: string }
+        > = {
+          "hyperx-pdf": {
+            icon: FileDown,
+            label: "Deep research press",
+          },
+        };
+        const fmtDay = new Intl.DateTimeFormat(undefined, {
+          month: "short",
+          day: "numeric",
+        });
+        const fmtClock = new Intl.DateTimeFormat(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return (
+          <div data-testid="profilepage-processes">
+            <SectionHead
+              title={t("Works in Motion")}
+              desc={t(
+                "Every long weaving you have begun — its honest progress, its stage, its resting place. A page turned away never takes a work with it, and a work that failed may be asked to rise again."
+              )}
+            />
+            <section className={cn(panel, "p-4 sm:p-5")}>
+              {processJobs === null ? (
+                <p
+                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  aria-busy="true"
+                >
+                  <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                  {t("The hall is being read…")}
+                </p>
+              ) : processJobs.length === 0 ? (
+                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                  {t(
+                    "No works carry just now — when you begin a deep research press (or any long weaving), it stands here with its own loading bar, checkable and resumable."
+                  )}
+                </p>
+              ) : (
+                <div
+                  className="max-h-[56vh] space-y-2 overflow-y-auto pr-1 nice-scroll"
+                  data-testid="profilepage-processes-list"
+                >
+                  {processJobs.map((job) => {
+                    const kind =
+                      PROCESS_KINDS[job.kind] ??
+                      ({ icon: Activity, label: job.kind } as const);
+                    const Icon = kind.icon;
+                    const running = job.status === "running";
+                    const done = job.status === "done";
+                    const failed = job.status === "failed";
+                    const created = new Date(job.createdAt);
+                    const words =
+                      job.result && typeof job.result.words === "number"
+                        ? (job.result.words as number)
+                        : null;
+                    return (
+                      <div
+                        key={job.id}
+                        className="rounded-xl border hairline bg-[var(--glass-bg)] px-3.5 py-3"
+                        data-testid="profilepage-processes-row"
+                        data-status={job.status}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={cn(
+                              "mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline",
+                              running && "text-[var(--cy)]",
+                              failed && "text-[var(--destructive)]",
+                              done && "text-emerald-500"
+                            )}
+                            aria-hidden="true"
+                          >
+                            {running ? (
+                              <LoaderCircle className="size-3.5 animate-spin" />
+                            ) : (
+                              <Icon className="size-3.5" />
+                            )}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-medium text-foreground/90">
+                              {job.title || t("A work in motion")}
+                            </p>
+                            <p className="mono-label mt-0.5 truncate text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                              {t(kind.label)}
+                              {job.subtitle ? ` · ${job.subtitle}` : ""} ·{" "}
+                              {fmtDay.format(created)}{" "}
+                              {fmtClock.format(created)}
+                            </p>
+                            {/* THE WORK'S OWN BAR — the honest breath of
+                                the weaving, filled by its own progress */}
+                            <div
+                              className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)]"
+                              role="progressbar"
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={job.progress}
+                              aria-label={`${job.title}: ${job.progress}%`}
+                            >
+                              <div
+                                className={cn(
+                                  "h-full rounded-full transition-all duration-700",
+                                  failed
+                                    ? "bg-[var(--destructive)]"
+                                    : "bg-gradient-to-r from-[var(--scope-a,var(--cy))] to-[color-mix(in_srgb,var(--scope-b,#d8c9a8)_60%,var(--scope-a,var(--cy)))]"
+                                )}
+                                style={{
+                                  width: done
+                                    ? "100%"
+                                    : `${Math.max(4, job.progress)}%`,
+                                }}
+                              />
+                            </div>
+                            <p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground">
+                              {failed
+                                ? (job.error ??
+                                  t("The work rested — ask it to rise again."))
+                                : done
+                                  ? job.stage ??
+                                    t("The work is done — it rests in your Library")
+                                  : (job.stage ??
+                                      t("The work carries on…")) + ` · ${job.progress}%`}
+                              {done && words ? ` · ${t("{n} words", { n: words })}` : ""}
+                            </p>
+                          </div>
+                          {failed && (
+                            <button
+                              type="button"
+                              onClick={() => void resumeProcess(job.id)}
+                              disabled={resumingJob === job.id}
+                              aria-label={`${t("Resume")}: ${job.title}`}
+                              data-testid="profilepage-processes-resume"
+                              className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] px-3 text-[11.5px] font-medium text-foreground transition-all duration-300 hover:glow-sm disabled:opacity-40"
+                            >
+                              {resumingJob === job.id ? (
+                                <LoaderCircle
+                                  className="size-3.5 animate-spin"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <RotateCcw className="size-3.5" aria-hidden="true" />
+                              )}
+                              {t("Resume")}
+                            </button>
+                          )}
+                          {done &&
+                            typeof job.result?.libraryId === "string" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                exitTo(() => {
+                                  openLibrary();
+                                  setLibraryFocus("observatory");
+                                })
+                              }
+                              aria-label={`${t("Open the Library")}: ${job.title}`}
+                              data-testid="profilepage-processes-open"
+                              className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline-active)] px-3 text-[11.5px] font-medium text-foreground transition-all duration-300 hover:glow-sm"
+                            >
+                              <LibraryBig className="size-3.5" aria-hidden="true" />
+                              {t("Open the Library")}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}

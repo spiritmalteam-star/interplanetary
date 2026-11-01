@@ -524,6 +524,30 @@ model CreationArtifact {
 }
 
 // ---------------------------------------------------------------------------
+// THE WORKS IN MOTION — the visitor's own hall of carrying processes: every
+// long weaving that has begun keeps its honest progress here, so a page
+// turned away never loses the work, and a failed press may be asked to rise
+// again. The Profile's "Works in Motion" room reads this hall and speaks it.
+// ---------------------------------------------------------------------------
+model ProcessJob {
+  id        String   @id @default(cuid())
+  userId    String // the visitor's own id (a signed keeper, or the anon cookie's user row)
+  kind      String // "hyperx-pdf" — the deep research press (more kinds may follow)
+  title     String   @default("") // the work's own name, spoken in the hall
+  subtitle  String? // one honest line beneath the name (the question, the topic)
+  status    String   @default("running") // running | done | failed
+  progress  Int      @default(0) // 0..100
+  stage     String? // the stage the work stands at, spoken plainly
+  input     String   @default("{}") // JSON: everything the work needs to rise again (resume)
+  result    String? // JSON: what the work made (libraryId, filename, words, pages)
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
 // THE KEEPER'S OWN CONSOLE — live platform configuration. Prices, packs and
 // service switches the administrator may tune without a redeploy; every row
 // remembers who last moved it. The code's defaults stand whenever a row

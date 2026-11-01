@@ -156,6 +156,9 @@ interface LcBody {
     | "chorus"
     | "simplify"
     | "poetic";
+  /** THE WORD MEASURE — the visitor's chosen size of the lyric sheet
+      (about-N-words, up to 1000, matched to the melody's own length). */
+  lyricsWords?: number;
   interp?: {
     title?: string;
     style?: string;
@@ -475,6 +478,17 @@ const LYRIC_OPS: Record<
 function lyricsPrompt(b: LcBody, languageName: string): string {
   const interp = b.interp ?? {};
   const op = LYRIC_OPS[b.lyricsOp ?? "generate"] ?? LYRIC_OPS.generate;
+  /* THE WORD MEASURE — a long melody deserves long words: the asked
+     size (up to 1000 words) is woven into the sheet's own law, with
+     an architecture that carries it honestly (more verses, a second
+     bridge, the chorus returning grown) — never padded repetition. */
+  const words = Math.max(0, Math.min(1000, Math.round(b.lyricsWords ?? 0)));
+  const measure =
+    words > 0
+      ? `THE WORD MEASURE (the melody's own length demands it): this lyric sheet carries ABOUT ${words} words. To carry them honestly, grow the song's architecture — additional [Verse] and [Pre-Chorus] sections, a second [Bridge], an [Instrumental Break] rest, a [Final Chorus] in which the returning words have deepened — never repeat a section verbatim to pad the count; every section must carry new substance, new imagery, a new turn of the feeling.`
+      : "";
+  const craft =
+    "CRAFT (the better words): concrete sensory images over abstractions; one honest detail per section (a room, a season, a hand, a light); lines that breathe when sung — open vowels where lines land, stresses that fall naturally; the feeling ARCING from first line to last (never one flat mood); a chorus a stranger could hum after one listen.";
   return [
     "You are the MIRROR ENTITY in its LIGHT CODES chamber, writing in its LYRICS LABORATORY.",
     "You shape only WORDS — never production instructions, never chord names, never engine directions inside the lines.",
@@ -489,7 +503,9 @@ function lyricsPrompt(b: LcBody, languageName: string): string {
     "",
     `YOUR CRAFT HAND: ${op}`,
     "",
-    "LAWS: section tags [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro] — use only the sections the song needs; the chorus returns; one bridge rests mid-song. Write the lyric lines in " +
+    measure,
+    craft,
+    "LAWS: section tags [Intro], [Verse 1], [Pre-Chorus], [Chorus], [Verse 2], [Bridge], [Outro] — use only the sections the song needs (the word measure may open more); the chorus returns; one bridge rests mid-song. Write the lyric lines in " +
       languageName +
       ". Spare lines, honest words, no medical or cure language.",
     "",
@@ -507,7 +523,17 @@ async function craftLyrics(
 ): Promise<{ lyrics: string; notes: string }> {
   const zai = await ZAI.create();
   const languageName = LANG_NAMES[b.language ?? "en"] ?? "English";
-  for (let attempt = 0; attempt < 2; attempt++) {
+  /* the word measure breathes into the token purse: ~2.2 tokens per
+     word, never below the old purse, never past the sky's ceiling */
+  const words = Math.max(0, Math.min(1000, Math.round(b.lyricsWords ?? 0)));
+  const purse = Math.min(3200, Math.max(900, Math.round(words * 2.2)));
+  const sheetLimit = words > 320 ? 7400 : 1400;
+
+  /* one JSON ask — a single hand writing the whole sheet */
+  const askOnce = async (wordsThisTime: number): Promise<{
+    lyrics: string;
+    notes: string;
+  } | null> => {
     const completion = await zai.chat.completions.create({
       messages: [
         { role: "system", content: lyricsPrompt(b, languageName) },
@@ -516,34 +542,160 @@ async function craftLyrics(
           content:
             b.lyricsOp === "language"
               ? `Translate the lyrics into ${languageName}.`
-              : `Craft hand: ${b.lyricsOp ?? "generate"}.`,
+              : `Craft hand: ${b.lyricsOp ?? "generate"}.${wordsThisTime > 0 ? ` The sheet carries about ${wordsThisTime} words — count your sections before you answer and let the sheet FILL its measure.` : ""}`,
         },
       ],
       temperature: 0.8,
-      max_tokens: 900,
+      max_tokens: purse,
       thinking: { type: "disabled" },
     });
     const raw = completion.choices?.[0]?.message?.content ?? "";
     const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) continue;
+    if (!match) return null;
     try {
       const parsed = JSON.parse(match[0]) as {
         lyrics?: string;
         notes?: string;
       };
-      const lyrics = (parsed.lyrics ?? "").trim().slice(0, 1200);
-      if (!lyrics) continue;
-      return {
-        lyrics,
-        notes: (parsed.notes ?? "").slice(0, 300),
-      };
+      const lyrics = (parsed.lyrics ?? "").trim();
+      if (!lyrics) return null;
+      return { lyrics, notes: (parsed.notes ?? "").slice(0, 300) };
     } catch {
-      /* one more breath */
+      return null;
     }
+  };
+
+  /* THE LONG SHEET'S OWN LOOM — a word measure past 400 words is
+     woven in MOVEMENTS, like the deep research press: each movement
+     lays its own honest share, and the next continues the song
+     without repeating it. One single ask cannot honestly fill a
+     thousand words; joined hands can. */
+  if (words > 400) {
+    /* the model lays ~a hundred faithful words per hand — so the loom
+       splits the measure into movements small enough to be filled:
+       a thousand words ride eight movements, never one stretched ask */
+    const MOVEMENT_WORDS = 140;
+    const parts = Math.min(8, Math.max(2, Math.ceil(words / MOVEMENT_WORDS)));
+    const per = Math.round(words / parts);
+    /* the movement's own section law — each hand knows exactly which
+       rooms of the song it is laying, so no measure is left empty;
+       the rooms walk in circles (verse → pre-chorus → chorus → new
+       verse) the way long songs truly grow */
+    const SECTION_PLANS: string[][] = [
+      ["[Intro]", "[Verse 1]", "[Pre-Chorus]", "[Chorus]"],
+      ["[Verse 2]", "[Pre-Chorus]", "[Chorus]"],
+      ["[Verse 3]", "[Pre-Chorus]", "[Chorus]"],
+      ["[Verse 4]", "[Bridge]", "[Chorus]"],
+      ["[Verse 5]", "[Pre-Chorus]", "[Chorus]"],
+      ["[Verse 6]", "[Bridge]", "[Chorus]"],
+      ["[Verse 7]", "[Pre-Chorus]", "[Chorus]"],
+      ["[Final Verse]", "[Final Chorus]", "[Outro]"],
+    ];
+    const partPrompt = (part: number, carrySheet: string): string => {
+      const base = lyricsPrompt(b, languageName);
+      const rooms = (SECTION_PLANS[Math.min(part, SECTION_PLANS.length - 1)] ?? [])
+        .join(" → ");
+      const lines = Math.round(per / 7);
+      const roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"][part] ?? part + 1;
+      if (part === 0) {
+        return (
+          base +
+          `\n\nTHE LONG SHEET — MOVEMENT ${roman} of ${parts}: lay the rooms ${rooms}. THE MEASURE: this movement carries ABOUT ${per} words — at least ${lines} sung LINES (a stanza is four lines). Count your lines as you write; a short movement breaks the song.`
+        );
+      }
+      return (
+        base +
+        `\n\nTHE LONG SHEET — MOVEMENT ${roman} of ${parts}: continue EXACTLY the song already begun, laying these rooms ${rooms}. THE MEASURE: ABOUT ${per} words — at least ${lines} sung LINES. THE SHEET SO FAR (never repeat it, always continue it):\n${carrySheet.slice(-1100)}`
+      );
+    };
+    let sheet = "";
+    let notes = "";
+    for (let part = 0; part < parts; part++) {
+      let piece: { lyrics: string; notes: string } | null = null;
+      for (let attempt = 0; attempt < 2 && !piece; attempt++) {
+        piece = await askLongPart(
+          zai,
+          partPrompt(part, sheet),
+          Math.round(per * 3.4) + 700,
+          b,
+          languageName,
+          part === 0 ? 0 : 1
+        );
+      }
+      if (!piece) {
+        /* a movement never arrived — what stands still sings */
+        if (sheet) break;
+        throw new Error(
+          "The Lyrics Laboratory's hand slipped — ask for the craft once more."
+        );
+      }
+      sheet = sheet ? `${sheet}\n\n${piece.lyrics}` : piece.lyrics;
+      if (!notes) notes = piece.notes;
+    }
+    return { lyrics: sheet.slice(0, sheetLimit), notes };
+  }
+
+  /* the single-shot sheet — with one honest re-ask when the hand
+     came back clearly short of its measure */
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const piece = await askOnce(words);
+    if (!piece) continue;
+    if (
+      attempt === 0 &&
+      words >= 200 &&
+      piece.lyrics.split(/\s+/).filter(Boolean).length < words * 0.55
+    ) {
+      continue; /* the measure was barely filled — ask once more */
+    }
+    return {
+      lyrics: piece.lyrics.slice(0, sheetLimit),
+      notes: piece.notes,
+    };
   }
   throw new Error(
     "The Lyrics Laboratory's hand slipped — ask for the craft once more."
   );
+}
+
+/** One movement of the long sheet's loom — the same JSON shape, the
+    continuation law spoken in the user's own turn. */
+async function askLongPart(
+  zai: Awaited<ReturnType<typeof ZAI.create>>,
+  systemPrompt: string,
+  purse: number,
+  b: LcBody,
+  languageName: string,
+  part: 0 | 1
+): Promise<{ lyrics: string; notes: string } | null> {
+  try {
+    const completion = await zai.chat.completions.create({
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content:
+            part === 0
+              ? `Craft hand: ${b.lyricsOp ?? "generate"}. Lay the sheet's first half; the word measure fills it.`
+              : `Craft hand: ${b.lyricsOp ?? "generate"}. Continue the sheet — the second half, ${languageName}, new sections only.`,
+        },
+      ],
+      temperature: 0.8,
+      max_tokens: purse,
+      thinking: { type: "disabled" },
+    });
+    const raw = completion.choices?.[0]?.message?.content ?? "";
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    const parsed = JSON.parse(match[0]) as {
+      lyrics?: string;
+      notes?: string;
+    };
+    const lyrics = (parsed.lyrics ?? "").trim();
+    if (!lyrics) return null;
+    return { lyrics, notes: (parsed.notes ?? "").slice(0, 300) };
+  } catch {
+    return null;
+  }
 }
 
 /* ------------------------- the Lyria door ------------------------- */

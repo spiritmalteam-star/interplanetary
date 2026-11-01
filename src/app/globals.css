@@ -5152,8 +5152,8 @@ html:not(.dark) .lp-sigil-img {
 /* the scientist's own paper — the blueprint grid HyperX stands on */
 .hx-sky-grid {
   background-image:
-    linear-gradient(to right, color-mix(in srgb, #22d3ee 9%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, #22d3ee 9%, transparent) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in srgb, #22d3ee 15%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, #22d3ee 15%, transparent) 1px, transparent 1px);
   background-size: 46px 46px;
   -webkit-mask-image: radial-gradient(
     120% 90% at 50% 0%,
@@ -5165,18 +5165,28 @@ html:not(.dark) .lp-sigil-img {
     black 0%,
     transparent 72%
   );
-  opacity: 0.5;
+  opacity: 0.62;
+}
+
+/* THE VISIBLE SKY — each science figure carries a soft glow of its
+   own color, so the sky is found by the eye without hunting */
+.hx-sky-glow-cyan {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, #22d3ee 40%, transparent));
+}
+.hx-sky-glow-magenta {
+  filter: drop-shadow(0 0 10px color-mix(in srgb, #e879f9 38%, transparent));
 }
 
 /* the drifting handwriting of the machinery */
 .hx-sky-formula {
-  opacity: 0.12;
+  opacity: 0.24;
+  text-shadow: 0 0 12px color-mix(in srgb, #22d3ee 45%, transparent);
   animation-name: amb-formula;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
 .dark .hx-sky-formula {
-  opacity: 0.16;
+  opacity: 0.34;
 }
 
 /* the rising motes of the Mirror's beam and the Healing breath */
@@ -5185,6 +5195,157 @@ html:not(.dark) .lp-sigil-img {
   animation-name: amb-mote;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE REALISTIC BUBBLE — the small floating particles, reborn:       */
+/*  a translucent sphere with a lit rim, a highlight high on its       */
+/*  shoulder, the room's own color refracted faintly inside, and a     */
+/*  wobbling liquid climb. At rest (reduced motion) it hangs still,    */
+/*  honestly round.                                                    */
+/* ------------------------------------------------------------------ */
+.amb-bubble {
+  position: absolute;
+  bottom: -6%;
+  border-radius: 9999px;
+  opacity: var(--bb-op, 0.5);
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 32% 30%,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.3) 13%,
+      rgba(255, 255, 255, 0.06) 30%,
+      transparent 47%
+    ),
+    radial-gradient(
+      circle at 68% 78%,
+      color-mix(in srgb, var(--bb-tint, #ffffff) 36%, transparent) 0%,
+      transparent 44%
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 56%,
+      color-mix(in srgb, var(--bb-tint, #ffffff) 32%, rgba(255, 255, 255, 0.3)) 67%,
+      rgba(255, 255, 255, 0.55) 75%,
+      transparent 79%
+    );
+  box-shadow:
+    inset -2px -3px 6px color-mix(in srgb, var(--bb-tint, #ffffff) 22%, transparent),
+    inset 2px 3px 5px rgba(255, 255, 255, 0.5),
+    0 0 10px -3px color-mix(in srgb, var(--bb-tint, #ffffff) 40%, transparent);
+  animation-name: amb-bubble-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+.amb-bubble::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  top: 11%;
+  width: 27%;
+  height: 19%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 0) 80%
+  );
+  transform: rotate(-24deg);
+}
+@keyframes amb-bubble-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.85);
+    opacity: 0;
+  }
+  9% {
+    opacity: var(--bb-op, 0.5);
+  }
+  27% {
+    transform: translate3d(calc(var(--bb-drift, -4vw) * 0.45), -30vh, 0) scale(1);
+  }
+  51% {
+    transform: translate3d(calc(var(--bb-drift, -4vw) * -0.55), -57vh, 0) scale(0.97);
+  }
+  75% {
+    transform: translate3d(calc(var(--bb-drift, -4vw) * 0.6), -83vh, 0) scale(1.05);
+  }
+  93% {
+    opacity: var(--bb-op, 0.5);
+  }
+  100% {
+    transform: translate3d(calc(var(--bb-drift, -4vw) * 0.2), -113vh, 0) scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE BEAT STAGE — the wordless karaoke room's heart: the orb (the   */
+/*  bass's own heart), the halo it breathes into, the spectrum ring    */
+/*  (32 bars, each its own band of the true sound) and the rings a     */
+/*  real beat opens. The transforms are written by the analyser's own  */
+/*  rAF hand; the CSS below only gives each piece its skin.            */
+/* ------------------------------------------------------------------ */
+.beat-orb {
+  background:
+    radial-gradient(
+      circle at 34% 30%,
+      rgba(255, 255, 255, 0.85) 0%,
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 50% 55%,
+      color-mix(in srgb, var(--scope-a, #a855f7) 72%, #ffffff 6%) 0%,
+      color-mix(in srgb, var(--scope-a, #a855f7) 30%, transparent) 58%,
+      transparent 72%
+    );
+  box-shadow:
+    0 0 60px -6px color-mix(in srgb, var(--scope-a, #a855f7) 80%, transparent),
+    inset 0 0 34px color-mix(in srgb, var(--scope-b, #d8c9a8) 34%, transparent);
+  will-change: transform, opacity;
+}
+.beat-halo {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--scope-a, #a855f7) 30%, transparent) 0%,
+    transparent 68%
+  );
+  filter: blur(6px);
+  will-change: transform, opacity;
+}
+.beat-bar {
+  width: 3px;
+  height: 5.2vmin;
+  margin-left: -1.5px;
+  border-radius: 3px;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--scope-b, #d8c9a8) 85%, #ffffff),
+    color-mix(in srgb, var(--scope-a, #a855f7) 80%, transparent)
+  );
+  box-shadow: 0 0 8px -2px
+    color-mix(in srgb, var(--scope-a, #a855f7) 70%, transparent);
+  will-change: transform;
+}
+.beat-ring {
+  position: absolute;
+  width: 30vmin;
+  height: 30vmin;
+  border-radius: 9999px;
+  border: 1.5px solid
+    color-mix(in srgb, var(--scope-a, #a855f7) 65%, transparent);
+  animation: beat-ring-open 2.4s ease-out forwards;
+}
+@keyframes beat-ring-open {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.75;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
 }
 
 @keyframes amb-drift {
@@ -5257,11 +5418,11 @@ html:not(.dark) .lp-sigil-img {
   0%,
   100% {
     transform: translate3d(0, 0, 0);
-    opacity: 0.07;
+    opacity: 0.14;
   }
   50% {
     transform: translate3d(0, -14px, 0);
-    opacity: 0.2;
+    opacity: 0.32;
   }
 }
 @keyframes amb-mote {

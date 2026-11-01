@@ -896,6 +896,10 @@ interface MirrorState {
   lcShape: LcShape;
   /** The weave's length: the 30-second preview or the full song. */
   lcLength: "preview" | "full" | "loop";
+  /** THE WORD MEASURE — the lyric sheet's chosen size: "auto" rides
+      the melody's own length; a number asks for about-N words (up to
+      1000). The Lyrics Laboratory's hands weave to it. */
+  lcLyricsLength: "auto" | 150 | 400 | 700 | 1000;
   /* THE VISITOR'S OWN STYLE — the image look chosen through the "/"
      hand in any composer; every crystallization wears it. */
   visualStyle: string | null;
@@ -942,6 +946,7 @@ interface MirrorState {
   setLcUserLyrics: (v: string) => void;
   setLcShape: (shape: Partial<LcShape>) => void;
   setLcLength: (length: "preview" | "full" | "loop") => void;
+  setLcLyricsLength: (v: "auto" | 150 | 400 | 700 | 1000) => void;
   setVisualStyle: (style: string | null) => void;
   /** Mirror translation → the weave → the player. The chamber's full
       round: the Mirror composes the brief, then the engine renders it.
@@ -1579,6 +1584,19 @@ function persistLcHistory(history: LcTrack[]): void {
   }
 }
 
+/** THE WORD MEASURE'S OWN SCALE — "auto" rides the melody's own
+    length (a preview carries few words, the endless journey many);
+    a chosen number is the visitor's own ask, capped at 1000. */
+function resolveLcLyricsWords(
+  choice: "auto" | 150 | 400 | 700 | 1000,
+  length: "preview" | "full" | "loop"
+): number {
+  if (choice !== "auto") return choice;
+  if (length === "loop") return 500;
+  if (length === "full") return 280;
+  return 130;
+}
+
 /** Fold the vault's rows into the chamber's shelf: server rows are the
     truth for their own ids, local rows stand untouched beside them. */
 function mergeVaultShelf(
@@ -1777,6 +1795,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcUserLyrics: "",
   lcShape: { ...LC_DEFAULT_SHAPE },
   lcLength: "preview" as "preview" | "full" | "loop",
+  lcLyricsLength: "auto" as "auto" | 150 | 400 | 700 | 1000,
   visualStyle: null,
   lcStatus: "idle" as "idle" | "interpreting" | "polling" | "ready" | "error",
   lcBrief: null,
@@ -2109,6 +2128,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
   setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
   setLcLength: (length) => set({ lcLength: length }),
+  setLcLyricsLength: (v) => set({ lcLyricsLength: v }),
   setVisualStyle: (style) => set({ visualStyle: style }),
   setLcRaw: (v) => set({ lcRaw: v }),
   /* THE CHAMBER'S ROUND — the Mirror composes the brief; the visitor
@@ -2450,6 +2470,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           intention: brief.intention,
           language: s.language,
           lyricsOp: op,
+          lyricsWords: resolveLcLyricsWords(s.lcLyricsLength, s.lcLength),
           interp: {
             title: brief.title,
             style: brief.style,

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AudioLines,
+  AudioWaveform,
   Check,
   ChevronDown,
   Copy,
@@ -765,23 +766,36 @@ function PlayerBar() {
                 </span>
               </button>
 
-              {/* THE KARAOKE HAND — only a transmission woven with words
-                  may be sung: the door stands here, one touch and the
-                  lyrics grow tall enough to sing with the melody */}
-              {active.lyrics && (
-                <button
-                  type="button"
-                  onClick={() => setKaraokeOpen(true)}
-                  aria-label={t("Karaoke — sing with the melody")}
-                  title={t("Karaoke — sing with the melody")}
-                  aria-pressed={karaokeOpen}
-                  data-testid="lc-karaoke-open"
-                  className={cn("btn-chip uppercase", karaokeOpen && "btn-chip-active")}
-                >
+              {/* THE KARAOKE HAND — every transmission may open the room:
+                  one woven with words grows them tall enough to sing
+                  with the melody; a wordless one opens the beat room,
+                  the true sound's own orb, spectrum and rings */}
+              <button
+                type="button"
+                onClick={() => setKaraokeOpen(true)}
+                aria-label={
+                  active.lyrics
+                    ? t("Karaoke — sing with the melody")
+                    : t("Beat visuals — watch the melody")
+                }
+                title={
+                  active.lyrics
+                    ? t("Karaoke — sing with the melody")
+                    : t("Beat visuals — watch the melody")
+                }
+                aria-pressed={karaokeOpen}
+                data-testid="lc-karaoke-open"
+                className={cn("btn-chip uppercase", karaokeOpen && "btn-chip-active")}
+              >
+                {active.lyrics ? (
                   <Mic className="size-3" aria-hidden="true" />
-                  <span className="whitespace-nowrap">{t("Karaoke")}</span>
-                </button>
-              )}
+                ) : (
+                  <AudioWaveform className="size-3" aria-hidden="true" />
+                )}
+                <span className="whitespace-nowrap">
+                  {active.lyrics ? t("Karaoke") : t("Visuals")}
+                </span>
+              </button>
 
               {/* THE QUIET MORE-HAND — the craft hands folded inside one
                   small dial, so the transport stays symmetric */}
@@ -963,6 +977,7 @@ function PlayerBar() {
               open={karaokeOpen}
               onClose={() => setKaraokeOpen(false)}
               lyrics={active.lyrics ?? ""}
+              audioUrl={active.audioUrl}
               title={active.title}
               playing={playing}
               time={time}
@@ -1330,6 +1345,10 @@ function BriefCard() {
   /* the honesty line, read live from the store — has a sound already
      been woven this session? */
   const hasAudio = useMirror((s) => Boolean(s.lcTrack));
+  /* THE WORD MEASURE — the lyric sheet's chosen size */
+  const lcLyricsLength = useMirror((s) => s.lcLyricsLength);
+  const setLcLyricsLength = useMirror((s) => s.setLcLyricsLength);
+  const lcLength = useMirror((s) => s.lcLength);
   const t = useT();
 
   const [styleOpen, setStyleOpen] = useState(false);
@@ -1430,14 +1449,71 @@ function BriefCard() {
           </label>
           <textarea
             id="lc-brief-lyrics"
-            rows={Math.min(10, Math.max(3, (brief.lyrics ?? "").split("\n").length + 1))}
+            rows={Math.min(14, Math.max(3, (brief.lyrics ?? "").split("\n").length + 1))}
             value={brief.lyrics ?? ""}
             onChange={(e) => updateBriefDraft({ lyrics: e.target.value })}
             placeholder={t("The words the song will carry — write them here, or ask a craft hand below.")}
-            maxLength={1200}
+            maxLength={7400}
             data-testid="lc-brief-lyrics"
             className="focus-glow nice-scroll mt-1.5 w-full resize-none rounded-lg border border-transparent bg-transparent px-1 font-serif text-[14px] italic leading-relaxed text-foreground outline-none transition-colors duration-300 placeholder:text-muted-foreground/50 hover:border-[var(--hairline)] focus:border-[var(--hairline)]"
           />
+          {/* THE WORD MEASURE — the sheet's own size: the melody's own
+              length by default, or a chosen reach up to 1000 words;
+              the next craft hand weaves to it */}
+          <div
+            role="group"
+            aria-label={t("The lyric sheet's size")}
+            className="mt-2 flex flex-wrap items-center gap-1"
+            data-testid="lc-lyrics-length"
+          >
+            <span className="mono-label mr-0.5 text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              {t("Words")}
+            </span>
+            {(
+              [
+                {
+                  v: "auto" as const,
+                  label: t("Match the melody"),
+                  title: t(
+                    "The sheet's size rides the music's own length — a preview carries few words, an endless journey many"
+                  ),
+                },
+                { v: 150 as const, label: "~150", title: t("A short song's sheet — about 150 words") },
+                { v: 400 as const, label: "~400", title: t("A long song's sheet — about 400 words") },
+                { v: 700 as const, label: "~700", title: t("An epic's sheet — about 700 words") },
+                { v: 1000 as const, label: t("Full 1000"), title: t("The full measure — about 1000 words, the most the melody can carry") },
+              ]
+            ).map((o) => (
+              <button
+                key={String(o.v)}
+                type="button"
+                onClick={() => setLcLyricsLength(o.v)}
+                aria-pressed={lcLyricsLength === o.v}
+                title={o.title}
+                data-testid={`lc-lyrics-length-${String(o.v)}`}
+                className={cn(
+                  "focus-glow rounded-full border px-2 py-0.5 text-[11px] transition-all duration-300",
+                  lcLyricsLength === o.v
+                    ? "border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] font-semibold text-[var(--scope-a)]"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {o.label}
+              </button>
+            ))}
+            {lcLyricsLength === "auto" && (
+              <span className="mono-label ml-0.5 text-[9px] text-muted-foreground/60">
+                (
+                {lcLength === "loop"
+                  ? "~500"
+                  : lcLength === "full"
+                    ? "~280"
+                    : "~130"}
+                {" "}
+                {t("words now")})
+              </span>
+            )}
+          </div>
           {/* the craft hands — one at a time */}
           <div className="mt-2 flex flex-wrap gap-1.5" data-testid="lc-lyric-hands">
             {LYRIC_HANDS.map((hand) => (
@@ -1859,10 +1935,11 @@ export function LightCodesView() {
   const busy = lcStatus === "interpreting" || lcStatus === "polling";
 
   /* FOCUS THE CHANNELING — after the visitor sends their describe
-     input, the room glides to the Mirror's brief and hands it the
-     focus (scrollIntoView nearest, smooth unless reduced motion is
-     asked; the focus is real, so screen readers land on the sheet).
-     An aria-live line above announces the composing and its arrival. */
+     input, the room glides so the Mirror's brief stands CLOSEST TO
+     THE INPUT: the sheet's tail rests right against the composer at
+     the floor (block: "end"), the focus is real, so screen readers
+     land on the sheet. An aria-live line above announces the
+     composing and its arrival. */
   const briefFocusRef = useRef<HTMLDivElement | null>(null);
   const focusChanneling = useCallback(() => {
     const el = briefFocusRef.current;
@@ -1871,7 +1948,7 @@ export function LightCodesView() {
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({
-      block: "nearest",
+      block: "end",
       behavior: reduce ? "auto" : "smooth",
     });
     window.setTimeout(
@@ -2071,19 +2148,6 @@ export function LightCodesView() {
                   >
                     <p className="text-[13.5px] leading-relaxed text-muted-foreground">{lcNotice}</p>
                   </motion.div>
-                )}
-
-                {/* THE MIRROR'S BRIEF — the channeling, before the sound.
-                    This sheet takes the focus after every describe-send. */}
-                {lcBrief && lcStatus !== "ready" && (
-                  <div
-                    ref={briefFocusRef}
-                    tabIndex={-1}
-                    data-testid="lc-brief-wrap"
-                    className="mt-4 scroll-mt-4 outline-none"
-                  >
-                    <BriefCard />
-                  </div>
                 )}
 
                 {/* THE STYLE DOOR — one compact dropdown instead of the
@@ -2368,6 +2432,21 @@ export function LightCodesView() {
                     )}
                   </AnimatePresence>
                 </div>
+
+                {/* THE MIRROR'S BRIEF — the channeling, before the sound,
+                    standing CLOSEST TO THE INPUT: the sheet the visitor
+                    shapes rests right above the composer at the floor,
+                    and it takes the focus after every describe-send. */}
+                {lcBrief && lcStatus !== "ready" && (
+                  <div
+                    ref={briefFocusRef}
+                    tabIndex={-1}
+                    data-testid="lc-brief-wrap"
+                    className="mt-4 scroll-mt-4 outline-none"
+                  >
+                    <BriefCard />
+                  </div>
+                )}
 
               </div>
 

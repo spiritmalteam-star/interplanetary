@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 /* ------------------------------------------------------------------ */
 /*  THE SCOPE'S OWN SKY — every room of the house breathes beneath     */
@@ -21,7 +21,77 @@ import { memo } from "react";
 /*  an atom with its electrons, a strand of DNA, the molecular         */
 /*  lattice, the wave, and the formulas themselves drifting — so no    */
 /*  other chat can be mistaken for it.                                 */
+/*                                                                     */
+/*  THE VISIBLE SKY (the visitor's law): the room's sky is SEEN —      */
+/*  every element stands at a presence the eye finds without hunting   */
+/*  (roughly twice the old light), each science figure carrying a      */
+/*  soft glow of its own color — while the words still lead, never     */
+/*  covered, never touched.                                            */
+/*                                                                     */
+/*  THE BUBBLE'S OWN SKIN: wherever small particles floated, real      */
+/*  bubbles now rise — a lit rim, a highlight carried high on the      */
+/*  sphere's shoulder, a faint inner refraction and a wobbling,        */
+/*  liquid climb (the amb-bubble keyframes). Not dots: bubbles.        */
 /* ------------------------------------------------------------------ */
+
+/* --------------------- THE REALISTIC BUBBLES ------------------------ */
+/*  Wherever the skies once floated bare dots, real bubbles now climb:
+    a translucent sphere with a lit rim, a highlight high on its
+    shoulder, an inner refraction of the room's own color, and a
+    wobbling liquid rise (the amb-bubble keyframes). Deterministic
+    seeds — the same sky on every render, no hydration surprise. */
+
+const bubbleFrac = (n: number) => n - Math.floor(n);
+
+function AmbientBubbles({
+  tint,
+  count = 5,
+}: {
+  /** the room's own color, refracted faintly through each sphere */
+  tint: string;
+  count?: number;
+}) {
+  const seeds = useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => {
+        const r1 = bubbleFrac(Math.sin((i + 1) * 12.9898) * 43758.5453);
+        const r2 = bubbleFrac(Math.sin((i + 1) * 78.233) * 12543.123);
+        const r3 = bubbleFrac(Math.sin((i + 1) * 39.425) * 28731.44);
+        return {
+          left: `${(4 + r1 * 88).toFixed(1)}%`,
+          size: 6 + Math.round(r2 * 11),
+          delay: `${(-r3 * 26).toFixed(1)}s`,
+          dur: `${(17 + r2 * 15).toFixed(1)}s`,
+          drift: `${(r1 * 12 - 6).toFixed(1)}vw`,
+          op: (0.34 + r3 * 0.3).toFixed(2),
+        };
+      }),
+    [count]
+  );
+  return (
+    <>
+      {seeds.map((b, i) => (
+        <span
+          key={i}
+          aria-hidden="true"
+          className="amb-bubble"
+          style={
+            {
+              left: b.left,
+              width: `${b.size}px`,
+              height: `${b.size}px`,
+              animationDelay: b.delay,
+              animationDuration: b.dur,
+              "--bb-tint": tint,
+              "--bb-op": b.op,
+              "--bb-drift": b.drift,
+            } as React.CSSProperties
+          }
+        />
+      ))}
+    </>
+  );
+}
 
 /* ------------------------- HYPERX — the science sky ---------------- */
 
@@ -39,14 +109,14 @@ const SCIENCE_FORMULAS = [
 function HyperXScienceSky() {
   return (
     <>
-      {/* the blueprint grid — the scientist's own paper, faint */}
+      {/* the blueprint grid — the scientist's own paper */}
       <span className="hx-sky-grid absolute inset-0" aria-hidden="true" />
 
       {/* THE SPACETIME WARP — the grid bent by a mass at its heart:
           relativity's own picture, resting behind the room */}
       <svg
         viewBox="0 0 400 260"
-        className="absolute right-[-6%] bottom-[-4%] w-[min(400px,72vw)] opacity-[0.1] dark:opacity-[0.13]"
+        className="hx-sky-glow-cyan absolute right-[-6%] bottom-[-4%] w-[min(430px,78vw)] opacity-[0.22] dark:opacity-[0.3] [animation:amb-drift_26s_ease-in-out_infinite]"
         aria-hidden="true"
       >
         <g fill="none" stroke="#22d3ee" strokeWidth="0.9">
@@ -70,7 +140,7 @@ function HyperXScienceSky() {
           the spacetime's own ripple */}
       <svg
         viewBox="0 0 300 160"
-        className="absolute left-[2%] bottom-[4%] w-[min(260px,58vw)] opacity-[0.13] dark:opacity-[0.16]"
+        className="hx-sky-glow-magenta absolute left-[2%] bottom-[4%] w-[min(280px,62vw)] opacity-[0.26] dark:opacity-[0.32] [animation:amb-drift_33s_ease-in-out_infinite_reverse]"
         aria-hidden="true"
       >
         <g fill="none" stroke="#e879f9" strokeWidth="1.2">
@@ -86,7 +156,7 @@ function HyperXScienceSky() {
           the discovery room's own sigil, slowly turning */}
       <svg
         viewBox="0 0 200 200"
-        className="absolute -left-10 top-[6%] w-[190px] opacity-[0.13] dark:opacity-[0.16] [animation:amb-drift_24s_ease-in-out_infinite]"
+        className="hx-sky-glow-cyan absolute -left-10 top-[6%] w-[210px] opacity-[0.26] dark:opacity-[0.33] [animation:amb-drift_24s_ease-in-out_infinite]"
         aria-hidden="true"
       >
         <g fill="none" stroke="#22d3ee" strokeWidth="1.1">
@@ -115,7 +185,7 @@ function HyperXScienceSky() {
       {/* THE HELIX — the ladder of life, one slow turn at the edge */}
       <svg
         viewBox="0 0 60 260"
-        className="absolute -right-2 top-[34%] h-[240px] w-[56px] opacity-[0.12] dark:opacity-[0.15] [animation:amb-sway_19s_ease-in-out_infinite]"
+        className="hx-sky-glow-magenta absolute -right-2 top-[34%] h-[260px] w-[60px] opacity-[0.24] dark:opacity-[0.3] [animation:amb-sway_19s_ease-in-out_infinite]"
         aria-hidden="true"
       >
         <g fill="none" stroke="#e879f9" strokeWidth="1.4">
@@ -139,7 +209,7 @@ function HyperXScienceSky() {
       {/* THE LATTICE — a cluster of the molecular hexagons, resting */}
       <svg
         viewBox="0 0 180 130"
-        className="absolute bottom-[4%] left-[6%] w-[150px] opacity-[0.1] dark:opacity-[0.13] [animation:amb-drift_29s_ease-in-out_infinite_reverse]"
+        className="hx-sky-glow-cyan absolute bottom-[4%] left-[6%] w-[165px] opacity-[0.22] dark:opacity-[0.28] [animation:amb-drift_29s_ease-in-out_infinite_reverse]"
         aria-hidden="true"
       >
         <g fill="none" stroke="#22d3ee" strokeWidth="1.1">
@@ -159,7 +229,7 @@ function HyperXScienceSky() {
           redrawn along its own length */}
       <svg
         viewBox="0 0 320 60"
-        className="absolute right-[8%] top-[8%] w-[240px] opacity-[0.14] dark:opacity-[0.17]"
+        className="hx-sky-glow-cyan absolute right-[8%] top-[8%] w-[260px] opacity-[0.28] dark:opacity-[0.34]"
         aria-hidden="true"
       >
         <path
@@ -172,12 +242,15 @@ function HyperXScienceSky() {
         />
       </svg>
 
+      {/* the small bubbles — the chamber's own breath, rising */}
+      <AmbientBubbles tint="#22d3ee" count={5} />
+
       {/* THE FORMULAS — the machinery's own handwriting, drifting */}
       {SCIENCE_FORMULAS.map((f) => (
         <span
           key={f.text}
           aria-hidden="true"
-          className="hx-sky-formula absolute font-mono text-[12px] tracking-[0.14em] text-[#22d3ee]"
+          className="hx-sky-formula absolute font-mono text-[13.5px] tracking-[0.14em] text-[#22d3ee]"
           style={{
             top: f.top,
             left: f.left,
@@ -200,33 +273,14 @@ function MirrorAmbientSky() {
       {/* the halo — the Mirror's own quiet crown of light */}
       <span
         aria-hidden="true"
-        className="absolute left-1/2 top-[-18%] h-[46vh] w-[46vh] -translate-x-1/2 rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] opacity-40 [animation:amb-breathe_13s_ease-in-out_infinite]"
+        className="absolute left-1/2 top-[-18%] h-[46vh] w-[46vh] -translate-x-1/2 rounded-full border border-[color-mix(in_srgb,var(--gd)_42%,transparent)] opacity-55 [animation:amb-breathe_13s_ease-in-out_infinite]"
       />
       <span
         aria-hidden="true"
-        className="absolute left-1/2 top-[-14%] h-[30vh] w-[30vh] -translate-x-1/2 rounded-full border border-[color-mix(in_srgb,var(--gd)_22%,transparent)] opacity-35 [animation:amb-breathe_13s_ease-in-out_0.9s_infinite]"
+        className="absolute left-1/2 top-[-14%] h-[30vh] w-[30vh] -translate-x-1/2 rounded-full border border-[color-mix(in_srgb,var(--gd)_32%,transparent)] opacity-50 [animation:amb-breathe_13s_ease-in-out_0.9s_infinite]"
       />
-      {/* the light motes — few, slow, rising like dust in a beam */}
-      {[
-        { left: "12%", delay: "0s", dur: "24s", size: "3px" },
-        { left: "30%", delay: "-8s", dur: "29s", size: "2px" },
-        { left: "58%", delay: "-15s", dur: "26s", size: "3px" },
-        { left: "79%", delay: "-4s", dur: "31s", size: "2px" },
-        { left: "91%", delay: "-19s", dur: "23s", size: "3px" },
-      ].map((m, i) => (
-        <span
-          key={i}
-          aria-hidden="true"
-          className="amb-mote absolute bottom-[-4%] rounded-full bg-[var(--gd)]"
-          style={{
-            left: m.left,
-            width: m.size,
-            height: m.size,
-            animationDelay: m.delay,
-            animationDuration: m.dur,
-          }}
-        />
-      ))}
+      {/* the still water's own bubbles — real spheres, rising */}
+      <AmbientBubbles tint="#cbb7f0" count={6} />
     </>
   );
 }
@@ -239,7 +293,7 @@ function InterplanetaryAmbientSky() {
       {/* THE RINGED PLANET — one slow giant at the shoulder of the sky */}
       <svg
         viewBox="0 0 220 140"
-        className="absolute -right-12 top-[10%] w-[210px] opacity-[0.13] dark:opacity-[0.16] [animation:amb-drift_31s_ease-in-out_infinite]"
+        className="hx-sky-glow-magenta absolute -right-12 top-[10%] w-[230px] opacity-[0.26] dark:opacity-[0.34] [animation:amb-drift_31s_ease-in-out_infinite]"
         aria-hidden="true"
       >
         <circle cx="110" cy="70" r="34" fill="#c9a7f5" opacity="0.55" />
@@ -258,9 +312,11 @@ function InterplanetaryAmbientSky() {
       {/* the little moon on its long walk around the room */}
       <span
         aria-hidden="true"
-        className="absolute left-[6%] top-[64%] size-2 rounded-full bg-[#f7c873] opacity-50 [animation:amb-walk_38s_linear_infinite]"
+        className="absolute left-[6%] top-[64%] size-2.5 rounded-full bg-[#f7c873] opacity-70 [animation:amb-walk_38s_linear_infinite]"
       />
-      {/* the far stars — five, barely lit */}
+      {/* the voyage's own bubbles — drifting past the giant */}
+      <AmbientBubbles tint="#f7c873" count={4} />
+      {/* the far stars — five, clearly lit */}
       {[
         { top: "16%", left: "18%", d: "0s" },
         { top: "40%", left: "70%", d: "-6s" },
@@ -271,7 +327,7 @@ function InterplanetaryAmbientSky() {
         <span
           key={i}
           aria-hidden="true"
-          className="absolute size-[3px] rounded-full bg-foreground opacity-25 [animation:amb-twinkle_7s_ease-in-out_infinite]"
+          className="absolute size-[3.5px] rounded-full bg-foreground opacity-45 [animation:amb-twinkle_7s_ease-in-out_infinite]"
           style={{ top: s.top, left: s.left, animationDelay: s.d }}
         />
       ))}
@@ -287,7 +343,7 @@ function QuantumAmbientSky() {
       {/* the probability wave — the uncertainty drawn honestly */}
       <svg
         viewBox="0 0 360 70"
-        className="absolute bottom-[10%] left-[4%] w-[min(320px,72vw)] opacity-[0.13] dark:opacity-[0.16]"
+        className="absolute bottom-[10%] left-[4%] w-[min(340px,76vw)] opacity-[0.26] dark:opacity-[0.32]"
         aria-hidden="true"
       >
         <path
@@ -302,7 +358,7 @@ function QuantumAmbientSky() {
       {/* the chamber tracks — particles writing their own curves */}
       <svg
         viewBox="0 0 140 200"
-        className="absolute -left-6 top-[8%] h-[190px] opacity-[0.12] dark:opacity-[0.15]"
+        className="absolute -left-6 top-[8%] h-[200px] opacity-[0.24] dark:opacity-[0.3]"
         aria-hidden="true"
       >
         <g fill="none" strokeWidth="1.3">
@@ -313,19 +369,8 @@ function QuantumAmbientSky() {
         <circle cx="130" cy="78" r="3" fill="#7fd7c4" />
         <circle cx="58" cy="4" r="3" fill="#b8a7f5" />
       </svg>
-      {/* the drifting sparks — the chamber's own dust */}
-      {[
-        { top: "24%", left: "62%", d: "0s" },
-        { top: "48%", left: "82%", d: "-7s" },
-        { top: "70%", left: "50%", d: "-13s" },
-      ].map((s, i) => (
-        <span
-          key={i}
-          aria-hidden="true"
-          className="absolute size-[4px] rounded-full bg-[#7fd7c4] opacity-30 [animation:amb-twinkle_8s_ease-in-out_infinite]"
-          style={{ top: s.top, left: s.left, animationDelay: s.d }}
-        />
-      ))}
+      {/* the chamber's own bubbles — condensation rising off the tracks */}
+      <AmbientBubbles tint="#7fd7c4" count={5} />
     </>
   );
 }
@@ -340,14 +385,14 @@ function HealingAmbientSky() {
         <span
           key={i}
           aria-hidden="true"
-          className="absolute bottom-[-22%] left-[64%] size-[34vh] rounded-full border border-[color-mix(in_srgb,#a7e8c8_38%,transparent)] [animation:amb-breathe_12s_ease-in-out_infinite]"
+          className="absolute bottom-[-22%] left-[64%] size-[34vh] rounded-full border border-[color-mix(in_srgb,#a7e8c8_52%,transparent)] [animation:amb-breathe_12s_ease-in-out_infinite]"
           style={{ animationDelay: `${i * 4}s` }}
         />
       ))}
       {/* the pulse — one honest heartbeat drawn along its line */}
       <svg
         viewBox="0 0 300 60"
-        className="absolute left-[6%] top-[14%] w-[min(260px,64vw)] opacity-[0.15] dark:opacity-[0.18]"
+        className="absolute left-[6%] top-[14%] w-[min(280px,68vw)] opacity-[0.3] dark:opacity-[0.36]"
         aria-hidden="true"
       >
         <path
@@ -359,25 +404,8 @@ function HealingAmbientSky() {
           className="[animation:amb-dash_10s_linear_infinite]"
         />
       </svg>
-      {/* the warm motes — gentle lights rising like breath */}
-      {[
-        { left: "22%", delay: "0s", dur: "27s" },
-        { left: "48%", delay: "-11s", dur: "31s" },
-        { left: "70%", delay: "-6s", dur: "25s" },
-      ].map((m, i) => (
-        <span
-          key={i}
-          aria-hidden="true"
-          className="amb-mote absolute bottom-[-4%] rounded-full bg-[#a7e8c8]"
-          style={{
-            left: m.left,
-            width: "3px",
-            height: "3px",
-            animationDelay: m.delay,
-            animationDuration: m.dur,
-          }}
-        />
-      ))}
+      {/* the breath's own bubbles — warm spheres rising like breath */}
+      <AmbientBubbles tint="#a7e8c8" count={6} />
     </>
   );
 }
@@ -398,7 +426,7 @@ function ArtxAmbientSky() {
         <span
           key={i}
           aria-hidden="true"
-          className="absolute rounded-full opacity-[0.12] blur-xl dark:opacity-[0.15] [animation:amb-drift_28s_ease-in-out_infinite]"
+          className="absolute rounded-full opacity-[0.22] blur-xl dark:opacity-[0.27] [animation:amb-drift_28s_ease-in-out_infinite]"
           style={{
             top: b.top,
             left: b.left,
@@ -409,10 +437,12 @@ function ArtxAmbientSky() {
           }}
         />
       ))}
+      {/* the atelier's own bubbles — pigment spheres afloat in the wash */}
+      <AmbientBubbles tint="#f28ab2" count={4} />
       {/* the brush arcs — two strokes that never dry */}
       <svg
         viewBox="0 0 200 120"
-        className="absolute bottom-[8%] left-[30%] w-[180px] opacity-[0.12] dark:opacity-[0.15]"
+        className="absolute bottom-[8%] left-[30%] w-[195px] opacity-[0.24] dark:opacity-[0.3]"
         aria-hidden="true"
       >
         <path
