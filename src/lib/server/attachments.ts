@@ -49,6 +49,42 @@ export async function describeImage(
 }
 
 /**
+ * See one hand-drawn sketch — the visitor drew a book into existence.
+ * Returns what the drawing holds (creatures, places, objects, colors,
+ * mood, the world it imagines) so the loom can weave that world, or
+ * null when the vision field is quiet.
+ */
+export async function describeSketch(
+  zai: Awaited<ReturnType<typeof ZAI.create>>,
+  dataUrl: string
+): Promise<string | null> {
+  try {
+    const response = await zai.chat.completions.createVision({
+      model: "glm-4.6v",
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text:
+                "This is a hand-drawn sketch a visitor made to summon a book — they drew this book into existence. Describe the drawing faithfully in at most 150 words: every creature, character, place, object, symbol and element it shows; the colors, the mood, and the kind of world it imagines. Include everything you can truly see; do not invent details that are not there. Begin directly with the description — no preamble, no 'this sketch shows'.",
+            },
+            { type: "image_url", image_url: { url: dataUrl } },
+          ],
+        },
+      ],
+      thinking: { type: "disabled" },
+    });
+    const text = (response.choices?.[0]?.message?.content ?? "").trim();
+    return text ? text.slice(0, 1200) : null;
+  } catch (err) {
+    console.error("[attachments] sketch vision failed:", err);
+    return null;
+  }
+}
+
+/**
  * Fold extracted documents into one faithful text block for the prompt.
  */
 export function documentBlock(docs: IncomingDocument[]): string | null {

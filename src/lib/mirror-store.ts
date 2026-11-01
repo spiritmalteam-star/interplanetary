@@ -364,6 +364,9 @@ export interface DreamBookResume {
     /** The level of lecture the volume was woven at (older volumes may not carry one). */
     level?: string;
     topic: string;
+    /** The vision's own reading of the hand-drawn sketch the volume was
+     *  drawn from (volumes conjured before the sketch atelier rest bare). */
+    sketchVision?: string;
   };
   meta: {
     title: string;
@@ -382,6 +385,14 @@ export interface DreamBookResume {
   /** The volume's own face — the album cover painted by the sky
    *  (optional: volumes woven before the cover brush rested bare). */
   cover?: string;
+  /** THE STUDIO — the publishing workflow rides home with the volume
+   *  (story bible, editorial verdict, gate report, plates, stage). */
+  bible?: unknown;
+  editorial?: unknown;
+  gate?: unknown;
+  art?: unknown;
+  artPlan?: unknown;
+  stage?: string;
 }
 
 /* ------- the chat's own paused volume — the weaving instrument ------

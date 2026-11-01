@@ -104,6 +104,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     axiom?: string;
     subject?: string;
     vein?: string;
+    sketchHint?: string;
     language?: string;
   } | null;
 
@@ -133,6 +134,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const sigil = body?.sigil?.trim().slice(0, 200) ?? "";
   const axiom = body?.axiom?.trim().slice(0, 300) ?? "";
   const subject = body?.subject?.trim().slice(0, 600) ?? "";
+  /* the drawn book's face — the vision's reading of the sketch the
+     volume was drawn from, so the cover is born from the same hand */
+  const sketchHint = body?.sketchHint?.trim().slice(0, 900) ?? "";
   const vein = body?.vein === "ground" ? "grounded" : "metaphysical, mystique";
   const langCode = body?.language ?? "en";
   const languageName = isLanguageCode(langCode)
@@ -147,6 +151,9 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     (sigil ? `THE BOOK'S OPENING INVOCATION: "${sigil}". ` : "") +
     (axiom ? `WHY THIS BOOK EXISTS: "${axiom}". ` : "") +
     (subject ? `THE STORY THE BOOK TELLS: ${subject}. ` : "") +
+    (sketchHint
+      ? `THE VISITOR'S OWN DRAWING THE BOOK WAS BORN FROM — the visitor hand-drew this book into existence, and this is what their drawing holds: ${sketchHint} Let the cover be born from the same hand: its creatures, places, palette and mood, transformed into polished cover art that clearly honors the drawing's world. `
+      : "") +
     `THE TELLING'S VEIN: ${vein}. ` +
     `Paint the story's soul as one evocative, atmospheric composition — the world, its central mystery or its key figure, rendered with cinematic light and a palette tuned to the book's mood. ` +
     `THE PLATE'S LAW: absolutely NO written words, NO letters, NO typography, NO title text painted anywhere in the image — the words are typeset beside the plate, never inside it. ` +

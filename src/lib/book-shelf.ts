@@ -30,7 +30,16 @@ export interface ShelfVolume {
   totalPages: number;
   ended: boolean;
   savedAt: string;
-  config: { age: string; tale: string; volume: string; level: string; topic: string };
+  config: {
+    age: string;
+    tale: string;
+    volume: string;
+    level: string;
+    topic: string;
+    /** The vision's own reading of the hand-drawn sketch the volume
+     *  was drawn from (volumes conjured before the atelier rest bare). */
+    sketchVision?: string;
+  };
   threads: string;
   pages: ShelfPage[];
   /** Where the reading rested — the page the visitor last stood on
@@ -40,6 +49,14 @@ export interface ShelfVolume {
   /** The volume's own face — the album cover the sky's own Gemini
    *  painted for this story (optional: older shelves rest bare). */
   cover?: string;
+  /** THE STUDIO — the publishing state rides the shelf: story bible,
+   *  editorial verdict, gate report, painted plates, the honest stage. */
+  bible?: unknown;
+  editorial?: unknown;
+  gate?: unknown;
+  art?: unknown;
+  artPlan?: unknown;
+  stage?: string;
 }
 
 const SHELF_KEY = "mirror-dream-shelf";

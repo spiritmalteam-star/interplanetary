@@ -58,11 +58,22 @@ interface LibraryEntry {
       volume?: string;
       level?: string;
       topic?: string;
+      /* the vision's own reading of the drawn sketch the volume was
+         born from (volumes conjured before the atelier rest bare) */
+      sketchVision?: string;
     };
     title?: string;
     sigil?: string;
     subtitle?: string;
     totalPages?: number;
+    /* THE STUDIO — the publishing state of a dream book (story bible,
+       editorial verdict, gate report, plates, the honest stage) */
+    bible?: Record<string, unknown>;
+    editorial?: Record<string, unknown>;
+    gate?: { pass?: boolean; items?: { key: string; label: string; pass: boolean; detail: string }[] };
+    art?: { style?: string; plates?: { page?: number; title?: string; url: string }[] };
+    artPlan?: { style?: string; plates?: { page: number; title?: string; scene: string }[] };
+    stage?: string;
     /* THE DEEP RESEARCH PRESS — a HyperX treatise kept whole (the
        pressed PDF rides as base64, ready to be carried again) */
     kind?: string;
@@ -458,6 +469,10 @@ export function LibraryView() {
                                           volume: e.content?.config?.volume ?? "classic",
                                           level: e.content?.config?.level ?? "",
                                           topic: e.content?.config?.topic ?? e.content?.topic ?? "",
+                                          ...(typeof e.content?.config?.sketchVision === "string" &&
+                                            e.content.config.sketchVision
+                                            ? { sketchVision: e.content.config.sketchVision }
+                                            : {}),
                                         },
                                         meta: {
                                           title: e.content?.title ?? e.title,
@@ -470,6 +485,14 @@ export function LibraryView() {
                                         pages: bookPages,
                                         threads: e.content?.threads ?? "",
                                         ended: Boolean(e.content?.ended),
+                                        /* THE STUDIO — the publishing state
+                                           returns with the volume */
+                                        ...(e.content?.bible ? { bible: e.content.bible } : {}),
+                                        ...(e.content?.editorial ? { editorial: e.content.editorial } : {}),
+                                        ...(e.content?.gate ? { gate: e.content.gate } : {}),
+                                        ...(e.content?.art ? { art: e.content.art } : {}),
+                                        ...(e.content?.artPlan ? { artPlan: e.content.artPlan } : {}),
+                                        ...(typeof e.content?.stage === "string" ? { stage: e.content.stage } : {}),
                                       });
                                     }}
                                     data-testid="library-continue"
