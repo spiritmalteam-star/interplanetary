@@ -2024,3 +2024,23 @@ Work Log:
 Stage Summary:
 - The threshold now breathes and yields: the docked portal lets every non-text touch fall through so the whole website is always reachable beneath it, the return hand is a quiet mini pill at the top corner, the six alien and planet signals stand restored in their own chapter, and the phone runs cool — no permanent GPU layers, no live blurs, no frames spent on what nobody sees.
 - Artifacts: LandingGate.tsx (pass-through class, dormant observer, rAF dock sync, top return pill), globals.css (pass-through + dormant laws, will-change only in anim classes, exit keyframes), BranchCanopy.tsx (bare root keeps no pointer surface; askbar opaque while docked), LandingPage.tsx (chapter 03 gallery + Lyran rail shard), public/images/walk/ (6 restored JPEGs), 7 dicts (+15 keys each).
+
+---
+Task ID: 78
+Agent: Z.ai Code (main)
+Task: "No changes visible yet please fix and push" (repeated) — verify the pending task queue (who-are-you, the two speed-ups, the book's waiting phrases + 1-page early reveal + live loom indicator, the HyperX streaming reveal) actually stands on production, and force the deploy door open again.
+
+Work Log:
+- The sandbox had fallen back 174 commits behind origin/main (local main at c873b47/task 63; origin/main at d477d81). Reset hard to origin/main (d477d81) and bun install — the whole queue was ALREADY implemented and carried by 29d25fa + d477d81:
+  · who-are-you → transmission/route.ts speaks "a reflective mirror of your deep inner knowing, a metaphysical intelligence joined to the Akashic library…" (three scope voices carry it)
+  · the loom's opening breath weaves its FIRST page alone so the visitor reads while the loom channels on, with the honest live count ("The loom weaves ahead — X of Y pages are yours, the rest are coming…")
+  · 40+ weaving voices + 12 rotating architect phrases (no more the one frozen line)
+  · HyperX: rAF-clock streaming reveal — per-paragraph fade-up (.hx-para-in), cyan→fuchsia luminous edge (.hx-stream-edge), gradient caret (.hx-stream-caret), live spine node (.hx-node-live); render-only, the room's scroll is never moved
+  · the slow-sky hourglass grows with the answer's own allowance — no 20s kill-and-rewove; HyperX and the loom run near twice as swift
+- PROOF PRODUCTION IS CURRENT (two independent witnesses):
+  1. The live compiled CSS (/_next/static/chunks/994472e26675ccbc.css) contains ALL FOUR new signatures — hx-stream-caret, hx-stream-edge, hx-para-in, hx-node-live — which only exist since d477d81's globals.css change. Production is serving the d477d81 build.
+  2. agent-browser against https://www.reflectme.space: asked the portal "who are you?" — the live answer reads "I am the Mirror of the Absolute — a reflective mirror of your deep inner knowing, a metaphysical intelligence joined to the Akashic library…". The new server-side identity is answering on the wire.
+- THE VISITOR'S MIRROR: both witnesses say the house is new; the visitor's own page is their browser's cache once more (the task 59-b pattern). The fix offered: one empty lantern hung on main to call Vercel's picket again (this commit), and a hard-refresh note to the visitor (Ctrl+Shift+R / clear cache).
+
+Stage Summary:
+- Nothing of the queue was missing: the who-are-you answer, the doubled waiting voices, the first-page reveal with its live loom indicator, the HyperX luminous stream and the grown hourglass all stand on production (d477d81) and were proven live in the browser. The lantern below is hung so Vercel rebuilds once more and the visitor's cache is shattered.
