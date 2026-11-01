@@ -826,6 +826,26 @@ function skyRefused(err: unknown): boolean {
 const SLOW_SKY_MS = Number(process.env.SLOW_SKY_MS ?? 20_000);
 const SLOW_SKY = Symbol("slow-sky");
 
+/*  THE LONG ANSWER'S OWN PATIENCE — the hourglass protects the visitor
+    from a sky that hangs, but a sky WRITING a long answer is not hung:
+    it is working. The patience now grows with the generation's own
+    allowance (the base breath + a measured slice per allowed token,
+    capped just beneath the cloud's own 300s ceiling). Without this, a
+    1000-word discovery or a book stride (8192 tokens) could never
+    finish inside twenty seconds — the hourglass killed every long
+    answer mid-flight and the second sky wove the SAME words again
+    from zero: every deep question and every page paid the crossing
+    twice. A hanging sky still falls over in its own first breaths
+    (dead connections error at once); only genuinely slow WORK is
+    now given the room to finish. */
+const SLOW_SKY_TOKEN_MS = Number(process.env.SLOW_SKY_TOKEN_MS ?? 30);
+const SLOW_SKY_CEILING_MS = Number(process.env.SLOW_SKY_CEILING_MS ?? 240_000);
+
+function slowSkyPatience(maxTokens?: number): number {
+  if (!(typeof maxTokens === "number") || !(maxTokens > 0)) return SLOW_SKY_MS;
+  return Math.min(SLOW_SKY_MS + maxTokens * SLOW_SKY_TOKEN_MS, SLOW_SKY_CEILING_MS);
+}
+
 function raceSlow<T>(p: Promise<T>, ms: number): Promise<T> {
   if (!(ms > 0)) return p;
   return new Promise<T>((resolve, reject) => {
@@ -862,10 +882,11 @@ function raceSlow<T>(p: Promise<T>, ms: number): Promise<T> {
 
 function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
   const withFallback = async (
-    run: (sky: ZAIClient) => Promise<ChatCompletion>
+    run: (sky: ZAIClient) => Promise<ChatCompletion>,
+    patience: number
   ): Promise<ChatCompletion> => {
     try {
-      return await raceSlow(run(primary), SLOW_SKY_MS);
+      return await raceSlow(run(primary), patience);
     } catch (err) {
       /* the slow sky falls to the second exactly like a refused one */
       if (err === SLOW_SKY || skyRefused(err)) return run(fallback);
@@ -876,9 +897,15 @@ function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
     chat: {
       completions: {
         create: (params: ChatParams) =>
-          withFallback((sky) => sky.chat.completions.create(params)),
+          withFallback(
+            (sky) => sky.chat.completions.create(params),
+            slowSkyPatience(params.max_tokens)
+          ),
         createVision: (params: ChatParams) =>
-          withFallback((sky) => sky.chat.completions.createVision(params)),
+          withFallback(
+            (sky) => sky.chat.completions.createVision(params),
+            slowSkyPatience(params.max_tokens)
+          ),
       },
     },
     audio: primary.audio,
@@ -895,14 +922,15 @@ function chainThreeBackends(
   third: ZAIClient
 ): ZAIClient {
   const withFallback = async (
-    run: (sky: ZAIClient) => Promise<ChatCompletion>
+    run: (sky: ZAIClient) => Promise<ChatCompletion>,
+    patience: number
   ): Promise<ChatCompletion> => {
     try {
-      return await raceSlow(run(primary), SLOW_SKY_MS);
+      return await raceSlow(run(primary), patience);
     } catch (err) {
       if (err === SLOW_SKY || skyRefused(err)) {
         try {
-          return await raceSlow(run(second), SLOW_SKY_MS);
+          return await raceSlow(run(second), patience);
         } catch (err2) {
           if (err2 === SLOW_SKY || skyRefused(err2)) return run(third);
           throw err2;
@@ -915,9 +943,15 @@ function chainThreeBackends(
     chat: {
       completions: {
         create: (params: ChatParams) =>
-          withFallback((sky) => sky.chat.completions.create(params)),
+          withFallback(
+            (sky) => sky.chat.completions.create(params),
+            slowSkyPatience(params.max_tokens)
+          ),
         createVision: (params: ChatParams) =>
-          withFallback((sky) => sky.chat.completions.createVision(params)),
+          withFallback(
+            (sky) => sky.chat.completions.createVision(params),
+            slowSkyPatience(params.max_tokens)
+          ),
       },
     },
     audio: primary.audio,

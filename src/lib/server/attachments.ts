@@ -88,6 +88,11 @@ export async function describeSketch(
         },
       ],
       thinking: { type: "disabled" },
+      /* the reading is one short paragraph — a small ceiling keeps the
+         answer swift and gives the slow-sky hourglass its own measure
+         (patience grows with the allowance), so a working vision is
+         never mistaken for a hanging one */
+      max_tokens: 900,
     });
     const raw = (response.choices?.[0]?.message?.content ?? "").trim();
     if (!raw) return null;
