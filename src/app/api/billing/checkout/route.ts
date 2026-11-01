@@ -12,11 +12,17 @@ import {
   WALLET_PLANS,
   WALLET_TOPUP,
   ensureWallet,
+  grantWalletCredits,
   packById,
   type PlanTier,
 } from "@/lib/server/wallet";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
+import {
+  allocationFor,
+  getComplimentaryConfig,
+  packageMayBeFree,
+} from "@/lib/server/features";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/billing/checkout — a Stripe Checkout session.            */
@@ -69,7 +75,8 @@ export async function POST(req: NextRequest) {
     }
     /* THE VERIFICATION GATE — coins change hands only through a passage
        that has proven its mailbox (a direct API call cannot walk around
-       it — the gate lives ahead of any Stripe session) */
+       it — the gate lives ahead of any Stripe session). The complimentary
+       door keeps the same law: a confirmed passage, free or paid. */
     if (emailGateRequired(user)) {
       return NextResponse.json(
         {
@@ -79,7 +86,16 @@ export async function POST(req: NextRequest) {
         { status: 403, headers: { "cache-control": "private, no-store" } }
       );
     }
-    if (!stripeConfigured()) {
+
+    const body = await req.json().catch(() => null);
+    const planId = typeof body?.plan === "string" ? body.plan.toUpperCase() : null;
+    const packId = typeof body?.pack === "string" ? body.pack : null;
+    const wantsFree = body?.free === true;
+
+    /* the paid door needs Stripe's key; the complimentary door does not
+       — the free branch below reads the body first, so it can open even
+       while the coin keeper still rests */
+    if (!wantsFree && !stripeConfigured()) {
       return NextResponse.json(
         {
           error:
@@ -90,9 +106,209 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = await req.json().catch(() => null);
-    const planId = typeof body?.plan === "string" ? body.plan.toUpperCase() : null;
-    const packId = typeof body?.pack === "string" ? body.pack : null;
+    /* ---------------- THE COMPLIMENTARY DOOR (the owner's own mode) ---
+       The same packages, the same credit allocations, the same
+       entitlements — laid in through a COMPLIMENTARY transaction
+       instead of a bank one. NEVER recorded as paid:
+         Payment.type      = "complimentary"
+         Payment.status    = "NOT_REQUIRED"
+         Payment.amount    = 0 (the original value kept in description)
+         Ledger.metadata   = { complimentary: true, reason:
+                              "DEVELOPMENT_ACCESS", originalValueCents }
+       Every number comes from the SERVER-SIDE definitions (the
+       wallet's own plan constants); nothing from the request but the
+       package's name. The grant is idempotent (one activation per
+       package per user per day, by referenceId) and atomic (the
+       ledger's own transaction). */
+    if (wantsFree) {
+      const config = await getComplimentaryConfig();
+      if (!config.complimentaryCheckout && !config.openAccessMode) {
+        return NextResponse.json(
+          {
+            error:
+              "The complimentary door rests closed. The owner's own switch (COMPLIMENTARY_CHECKOUT) opens it.",
+            code: "complimentary_disabled",
+          },
+          { status: 403 }
+        );
+      }
+
+      /* which package? — the same names the paid door knows */
+      const isWalletPlan = planId === "SEEKER" || planId === "OBSERVATORY_PRO";
+      const isWalletTopup = packId === WALLET_TOPUP.id;
+      const walletPack = packId ? packById(packId) : null;
+      const legacyPlan = planId && planId in PLANS && planId !== "FREE" ? planId : null;
+      const legacyPack = packId ? CREDIT_PACKS.find((p) => p.id === packId) : null;
+
+      if (!isWalletPlan && !isWalletTopup && !walletPack && !legacyPlan && !legacyPack) {
+        return NextResponse.json(
+          { error: 'Say which plan ("plan") or credit pack ("pack") the free door should open.' },
+          { status: 400 }
+        );
+      }
+
+      const packageKey = isWalletPlan
+        ? (planId as string)
+        : isWalletTopup
+          ? WALLET_TOPUP.id
+          : walletPack
+            ? walletPack.id
+            : legacyPlan
+              ? (legacyPlan as string)
+              : (legacyPack as { id: string }).id;
+
+      if (!packageMayBeFree(config, packageKey)) {
+        return NextResponse.json(
+          {
+            error: "That package is not offered through the complimentary door right now.",
+            code: "complimentary_package_closed",
+          },
+          { status: 403 }
+        );
+      }
+
+      /* the allocation — the package's own normal credits (or the
+         owner's explicit override); never a client number */
+      const normalCredits = isWalletPlan
+        ? WALLET_PLANS[packageKey as PlanTier].monthlyCredits
+        : isWalletTopup
+          ? WALLET_TOPUP.credits
+          : walletPack
+            ? walletPack.credits
+            : legacyPlan
+              ? PLANS[legacyPlan as keyof typeof PLANS].monthlyCredits
+              : (legacyPack as { credits: number }).credits;
+      const credits = allocationFor(config, packageKey, normalCredits);
+      const originalValueCents = isWalletPlan
+        ? WALLET_PLANS[packageKey as PlanTier].priceCents
+        : isWalletTopup
+          ? WALLET_TOPUP.priceCents
+          : walletPack
+            ? walletPack.priceCents
+            : legacyPlan
+              ? PLANS[legacyPlan as keyof typeof PLANS].priceCents
+              : (legacyPack as { priceCents: number }).priceCents;
+      const currency = walletPack ? walletPack.currency : "eur";
+
+      /* the eligibility law — the owner's daily ceiling per user */
+      const dayKey = new Date().toISOString().slice(0, 10);
+      const referenceId = `complimentary:${user.id}:${packageKey}:${dayKey}`;
+      const todaysGrants = await db.payment.count({
+        where: {
+          userId: user.id,
+          type: "complimentary",
+          createdAt: { gte: new Date(`${dayKey}T00:00:00.000Z`) },
+        },
+      });
+      if (todaysGrants >= config.dailyLimit) {
+        return NextResponse.json(
+          {
+            error: `The day's complimentary activations rest (${config.dailyLimit} for today). Tomorrow the door opens again.`,
+            code: "complimentary_daily_limit",
+          },
+          { status: 429 }
+        );
+      }
+
+      /* the transaction record — paid for by nothing, honestly labelled */
+      const payment = await db.payment
+        .create({
+          data: {
+            userId: user.id,
+            stripeId: `comp_${referenceId}`,
+            type: "complimentary",
+            amountCents: 0,
+            currency,
+            status: "NOT_REQUIRED",
+            description: JSON.stringify({
+              reason: "DEVELOPMENT_ACCESS",
+              package: packageKey,
+              creditsGranted: credits,
+              originalPackageValueCents: originalValueCents,
+              originalPackageValue: `${(originalValueCents / 100).toFixed(2)} ${currency.toUpperCase()}`,
+              transaction_type: "COMPLIMENTARY",
+              payment_status: "NOT_REQUIRED",
+            }),
+          },
+        })
+        .catch(() => null);
+
+      if (!payment) {
+        /* the same activation was already recorded today — the unique
+           reference refused the duplicate, the credits stand as they are */
+        return NextResponse.json(
+          { activated: true, duplicate: true, package: packageKey, credits },
+          { status: 200 }
+        );
+      }
+
+      /* the grant — through the wallet's own ledger, atomic + idempotent
+         (the same referenceId can never fill the purse twice). No mint
+         from the deposit: the complimentary mode is honestly free —
+         DEVELOPMENT_ACCESS, no bank behind it — and the ledger row
+         carries the complimentary labels beside the reference. */
+      const isSubscription = isWalletPlan || Boolean(legacyPlan);
+      const grant = await grantWalletCredits(user.id, {
+        credits,
+        actionType: isSubscription ? "SUBSCRIPTION_GRANT" : "TOPUP_PURCHASE",
+        referenceId,
+        description: `Complimentary activation — ${packageKey} (development access, nothing charged)`,
+        planTier: isWalletPlan ? (packageKey as PlanTier) : null,
+        actorEmail: user.email,
+        mintFromDeposit: false,
+        extraMetadata: {
+          complimentary: true,
+          reason: "DEVELOPMENT_ACCESS",
+          package: packageKey,
+          originalValueCents,
+          transaction_type: "COMPLIMENTARY",
+          payment_status: "NOT_REQUIRED",
+        },
+      });
+
+      if (!grant.ok) {
+        /* the record cannot stand without its grant — honest rollback */
+        await db.payment.delete({ where: { id: payment.id } }).catch(() => null);
+        return NextResponse.json(
+          { error: "The purse could not be filled. Rest, then try again." },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        activated: true,
+        duplicate: Boolean(grant.duplicate),
+        package: packageKey,
+        credits,
+        originalValueCents,
+        total: grant.total,
+        transaction: {
+          id: payment.id,
+          type: "COMPLIMENTARY",
+          payment_status: "NOT_REQUIRED",
+          amount_paid: 0,
+          reason: "DEVELOPMENT_ACCESS",
+        },
+      });
+    }
+
+    /* ---------------- the future bank gateway's readiness law ---------
+       CREDINS_ENABLED announces the bank gateway the owner will connect;
+       until its keys rest in the vault, the paid door says so honestly
+       (and Stripe keeps serving as the paid gateway meanwhile). */
+    if (planId || packId) {
+      const config = await getComplimentaryConfig();
+      if (config.credinsEnabled && !stripeConfigured()) {
+        return NextResponse.json(
+          {
+            error:
+              "The bank gateway (CredIns) is announced but not yet connected — its keys are not in the vault. Paid checkout waits for them.",
+            code: "credins_not_configured",
+          },
+          { status: 503 }
+        );
+      }
+    }
 
     const stripe = getStripe();
 

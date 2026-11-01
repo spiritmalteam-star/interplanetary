@@ -11,6 +11,7 @@ import {
   Mail,
   MailCheck,
   RefreshCw,
+  ShieldCheck,
   UserRound,
 } from "lucide-react";
 import Image from "next/image";
@@ -38,18 +39,17 @@ import { cn } from "@/lib/utils";
 /*  (?verified=…) is spoken here as a gentle word too.                 */
 /*                                                                     */
 /*  THE PROOF OF THE MAILBOX — a new email passage receives a letter   */
-/*  with a single-use key: the CHECK-EMAIL room holds the visitor's    */
-/*  hand while it waits (resend with a cool-down, a change of address  */
-/*  for the letters that went astray), and the letter's own link       */
-/*  (?verify=…) opens the CONFIRM room — one human touch, one POST,    */
-/*  and the mailbox is proven and the thirty-day session carved (the  */
-/*  same passage the Google door gives — no second sign-in). Email     */
-/*  scanners and link previews follow the link with a bare GET; only   */
-/*  the button's POST may ever spend a key, so a preview spends        */
-/*  nothing.                                                           */
+/*  with a six-digit code: the CODE room holds the visitor's hand      */
+/*  while it waits (resend with a cool-down, a change of address for   */
+/*  the letters that went astray), and the code — typed once — proves  */
+/*  the mailbox and carves the thirty-day session (the same passage    */
+/*  the Google door gives — no second sign-in). The code rests ten     */
+/*  minutes, works once, is stored only as a scrypt echo, and the      */
+/*  flood-gates keep the brute force out. The older letter-link rooms  */
+/*  (check / confirm) still serve any letter already in flight.        */
 /* ------------------------------------------------------------------ */
 
-type DoorView = "signin" | "register" | "forgot" | "reset" | "check" | "confirm";
+type DoorView = "signin" | "register" | "forgot" | "reset" | "check" | "confirm" | "code" | "reset-code";
 
 export function AuthModal() {
   const t = useT();
@@ -76,6 +76,8 @@ export function AuthModal() {
   const [resendCool, setResendCool] = useState(0);
   const [changeOpen, setChangeOpen] = useState(false);
   const [changeEmail, setChangeEmail] = useState("");
+  /* THE SIX DOORS — the code rooms' own keeping */
+  const [code, setCode] = useState("");
   const [verifyToken, setVerifyToken] = useState<string | null>(null);
   const [verifyNext, setVerifyNext] = useState<string | null>(null);
   const [verifyState, setVerifyState] = useState<"idle" | "busy" | "done" | "spent">("idle");
@@ -292,7 +294,10 @@ export function AuthModal() {
     setDoorNote(null);
     try {
       if (view === "forgot") {
-        const res = await fetch("/api/auth/password/forgot", {
+        /* THE FORGOTTEN SECRET — the email alone summons a six-digit
+           code; the answer's shape never varies with the email's
+           existence, so no stranger learns who holds a passage here */
+        const res = await fetch("/api/auth/forgot-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
@@ -300,11 +305,18 @@ export function AuthModal() {
         const data = (await res.json().catch(() => null)) as
           | { message?: string; configured?: boolean; error?: string }
           | null;
+        setPendingEmail(email.trim().toLowerCase());
+        setCode("");
+        setPassword("");
+        setResendCool(45);
+        setChangeOpen(false);
+        setChangeEmail("");
+        setView("reset-code");
         setDoorNote({
           ok: true,
           text: t(
             data?.message ??
-              "If a passage holds that email, a letter of return is on its way (or rests in the server log when no messenger is configured)."
+              "If a passage holds that email, a six-digit code is on its way. It rests for ten minutes."
           ),
         });
         return;
@@ -348,9 +360,31 @@ export function AuthModal() {
             user?: { email: string; name: string | null; tier: "crystalline" | "light"; emailVerified?: boolean };
             verificationSent?: boolean;
             mailConfigured?: boolean;
+            needsVerification?: boolean;
+            email?: string;
             error?: string;
+            code?: string;
           }
         | null;
+
+      /* THE CONFIRMATION DOOR — register leads through it when the
+         messenger stands; a sign-in of an unconfirmed passage meets the
+         same door (a fresh code flew the moment the password proved
+         the visitor) */
+      if (data?.needsVerification || data?.code === "email_unverified") {
+        setPendingEmail(data.email ?? email.trim().toLowerCase());
+        setCode("");
+        setPassword("");
+        setResendCool(45);
+        setChangeOpen(false);
+        setChangeEmail("");
+        setView("code");
+        toast.message(t("Six doors were sent to your email"), {
+          description: t("Read the newest letter — the code rests for ten minutes."),
+        });
+        return;
+      }
+
       if (!res.ok || !data?.user) {
         toast.error(data?.error ?? t("The passage did not open. Rest, then try again."));
         return;
@@ -387,6 +421,98 @@ export function AuthModal() {
     }
   };
 
+  /* THE SIX DOORS' OWN RESEND — a fresh code flies to the address
+     the visitor names (register flow), or to the passage's own email
+     (the reset flow); the flood-gates keep the pace honest. */
+  const resendCode = async (flow: "register" | "reset", to?: string) => {
+    if (busy || resendCool > 0) return;
+    const target = (to ?? (flow === "reset" ? pendingEmail : email)).trim().toLowerCase();
+    if (!target) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/resend-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: target, flow }),
+      });
+      const data = (await res.json().catch(() => null)) as { message?: string; error?: string } | null;
+      if (!res.ok) {
+        toast.error(data?.error ?? t("The letter could not be written. Rest, then try again."));
+        return;
+      }
+      setResendCool(45);
+      toast.message(t("A fresh code is on its way"), {
+        description: t("Read the newest letter — the code rests for ten minutes."),
+      });
+    } catch {
+      toast.error(t("The letter could not be written. Rest, then try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* THE CODE'S OWN HAND — six digits typed once, the mailbox proven,
+     the thirty-day session carved in the same breath */
+  const submitCode = async () => {
+    if (busy || code.length !== 6) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail, code }),
+      });
+      const data = (await res.json().catch(() => null)) as
+        | {
+            user?: { email: string; name: string | null; tier?: "crystalline" | "light"; emailVerified?: boolean; admin?: boolean; image?: string | null; provider?: string };
+            verified?: boolean;
+            error?: string;
+          }
+        | null;
+      if (!res.ok || !data?.user) {
+        toast.error(data?.error ?? t("That code does not open this door. Read the newest letter again."));
+        return;
+      }
+      setCode("");
+      setMe(data.user as never);
+      void refreshMe(true);
+      closeAuth();
+      toast.success(t("The email is yours now — the passage stands confirmed."));
+    } catch {
+      toast.error(t("The passage did not open. Rest, then try again."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /* THE NEW SECRET, BEHIND SIX DOORS — the code claimed and the new
+     phrase set in the same stroke; the passage stands confirmed too */
+  const submitResetCode = async () => {
+    if (busy || code.length !== 6 || password.length < 8) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail, code, password }),
+      });
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        setDoorNote({ ok: false, text: data?.error ?? t("The new secret could not be set. Rest, then try again.") });
+        return;
+      }
+      setCode("");
+      setPassword("");
+      setEmail(pendingEmail);
+      setView("signin");
+      setDoorNote({ ok: true, text: t("The passage holds a new secret now — sign in with it.") });
+    } catch {
+      setDoorNote({ ok: false, text: t("The new secret could not be set. Rest, then try again.") });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const google = () => {
     if (googleConfigured) {
       /* THE WAY BACK IS KEPT — the room the visitor signs in from
@@ -413,31 +539,50 @@ export function AuthModal() {
     view === "register"
       ? { title: t("Carve your passage"), description: t("The passage simply keeps your cosmic library — every transmission, every book — with you, on every device.") }
       : view === "forgot"
-        ? { title: t("The letter of return"), description: t("Name the passage's email — a key to carve it anew travels out to you alone.") }
+        ? { title: t("The letter of return"), description: t("Name the passage's email — a six-digit code travels out to you alone, resting for ten minutes.") }
         : view === "reset"
           ? { title: t("Carve the passage anew"), description: t("The letter's key opened this room. Choose a new secret phrase — then sign in with it as always.") }
-          : view === "check"
+          : view === "code"
             ? {
-                title: t("Check your email"),
+                title: t("Confirm your email"),
                 description: t(
-                  "A letter of proof flies to your inbox — one touch and the mailbox is yours, the session already yours until then and after."
+                  "Six doors were sent to {email}. Enter them here and the passage opens — this once, then never again.",
+                  { email: pendingEmail || email }
                 ),
               }
-            : view === "confirm"
+            : view === "reset-code"
               ? {
-                  title: t("Prove the mailbox"),
+                  title: t("A new secret for your passage"),
                   description: t(
-                    "The letter's key opened this room. One touch confirms this browser is the hand that holds the letter — and your thirty-day passage is carved at once."
+                    "The code from the newest letter, and the new secret that will hold the door from now on."
                   ),
                 }
-              : { title: t("Enter your passage"), description: t("Welcome back. Your cosmic library is waiting, exactly where you left it.") };
+              : view === "check"
+                ? {
+                    title: t("Check your email"),
+                    description: t(
+                      "A letter of proof flies to your inbox — one touch and the mailbox is yours, the session already yours until then and after."
+                    ),
+                  }
+                : view === "confirm"
+                  ? {
+                      title: t("Prove the mailbox"),
+                      description: t(
+                        "The letter's key opened this room. One touch confirms this browser is the hand that holds the letter — and your thirty-day passage is carved at once."
+                      ),
+                    }
+                  : { title: t("Enter your passage"), description: t("Welcome back. Your cosmic library is waiting, exactly where you left it.") };
 
   const canSubmit =
     view === "forgot"
       ? Boolean(email.trim())
       : view === "reset"
         ? password.length >= 8 && Boolean(resetToken)
-        : Boolean(email.trim()) && Boolean(password);
+        : view === "code"
+          ? code.length === 6
+          : view === "reset-code"
+            ? code.length === 6 && password.length >= 8
+            : Boolean(email.trim()) && Boolean(password);
 
   return (
     <ModalShell
@@ -711,14 +856,218 @@ export function AuthModal() {
           </div>
         )}
 
+        {/* THE SIX DOORS — the code room (registration's confirmation) */}
+        {view === "code" && (
+          <div className="mt-4" data-testid="passage-code">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-4 py-5 text-center">
+              <span className="flex size-11 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--lp-gold)_12%,transparent)]">
+                <ShieldCheck className="size-5 text-[var(--lp-gold)]" aria-hidden="true" />
+              </span>
+              <p className="text-[15px] font-medium text-foreground" data-testid="passage-code-email">
+                {pendingEmail || email}
+              </p>
+              <div className="mt-1 w-full max-w-[240px]">
+                <label htmlFor="passage-code-input" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t("The six-digit code")}
+                </label>
+                <input
+                  id="passage-code-input"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="······"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  autoFocus
+                  data-testid="passage-code-input"
+                  className="mt-2 h-13 w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-center text-[24px] tracking-[0.4em] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void submitCode()}
+              disabled={busy || code.length !== 6}
+              data-testid="passage-code-submit"
+              className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[15px] font-medium tracking-[0.02em] text-[var(--lp-veil-solid)] shadow-[0_12px_30px_-14px_rgba(154,120,30,0.6),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-px hover:brightness-[1.06] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {busy ? (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <ShieldCheck className="size-4" aria-hidden="true" />
+              )}
+              {t("Confirm and enter")}
+            </button>
+            <div className="mt-3 space-y-2">
+              <button
+                type="button"
+                onClick={() => void resendCode("register")}
+                disabled={busy || resendCool > 0}
+                data-testid="passage-code-resend"
+                className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg)] text-[14px] text-foreground/85 transition-colors duration-300 hover:border-[rgba(232,217,176,0.5)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? (
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                )}
+                {resendCool > 0 ? t("A fresh code in {n}s", { n: resendCool }) : t("Send a fresh code")}
+              </button>
+              {!changeOpen ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setChangeOpen(true);
+                    setChangeEmail("");
+                  }}
+                  data-testid="passage-code-change-email"
+                  className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg-soft)] text-[14px] text-foreground/75 transition-colors duration-300 hover:text-foreground"
+                >
+                  <Mail className="size-3.5" aria-hidden="true" />
+                  {t("The letter went astray — change the address")}
+                </button>
+              ) : (
+                <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3">
+                  <label htmlFor="passage-code-change-input" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                    {t("The new address")}
+                  </label>
+                  <div className={fieldShell}>
+                    <Mail className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden="true" />
+                    <input
+                      id="passage-code-change-input"
+                      type="email"
+                      required
+                      value={changeEmail}
+                      onChange={(e) => setChangeEmail(e.target.value)}
+                      autoComplete="email"
+                      placeholder="you@somewhere.earth"
+                      data-testid="passage-code-change-input"
+                      className={fieldInput}
+                    />
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (changeEmail.trim()) {
+                          void resendCode("register", changeEmail.trim().toLowerCase());
+                          setPendingEmail(changeEmail.trim().toLowerCase());
+                        }
+                        setChangeOpen(false);
+                        setChangeEmail("");
+                      }}
+                      disabled={busy}
+                      className="focus-glow h-9 flex-1 rounded-lg bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[13px] font-medium text-[var(--lp-veil-solid)] disabled:opacity-40"
+                    >
+                      {t("Send the fresh letter")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChangeOpen(false)}
+                      className="focus-glow h-9 rounded-lg border hairline px-3 text-[13px] text-muted-foreground hover:text-foreground"
+                    >
+                      {t("Keep the old address")}
+                    </button>
+                  </div>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setView("signin");
+                  setCode("");
+                }}
+                data-testid="passage-code-back"
+                className="focus-glow w-full pt-1 text-center text-[13.5px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {t("Back to the passage")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* THE NEW SECRET, BEHIND SIX DOORS — the reset-code room */}
+        {view === "reset-code" && (
+          <div className="mt-4" data-testid="passage-reset-code">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-4 py-5 text-center">
+              <span className="flex size-11 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--lp-gold)_12%,transparent)]">
+                <KeyRound className="size-5 text-[var(--lp-gold)]" aria-hidden="true" />
+              </span>
+              <p className="text-[15px] font-medium text-foreground" data-testid="passage-reset-code-email">
+                {pendingEmail || email}
+              </p>
+              <div className="mt-1 w-full max-w-[240px]">
+                <label htmlFor="passage-reset-code-input" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
+                  {t("The six-digit code")}
+                </label>
+                <input
+                  id="passage-reset-code-input"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="······"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  autoFocus
+                  data-testid="passage-reset-code-input"
+                  className="mt-2 h-13 w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 text-center text-[24px] tracking-[0.4em] text-foreground focus:border-[var(--hairline-active)] focus:outline-none"
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => void submitResetCode()}
+              disabled={busy || code.length !== 6 || password.length < 8}
+              data-testid="passage-reset-code-submit"
+              className="focus-glow mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[linear-gradient(180deg,var(--lp-gold),var(--lp-gold-soft))] text-[15px] font-medium tracking-[0.02em] text-[var(--lp-veil-solid)] shadow-[0_12px_30px_-14px_rgba(154,120,30,0.6),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:-translate-y-px hover:brightness-[1.06] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {busy ? (
+                <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <KeyRound className="size-4" aria-hidden="true" />
+              )}
+              {t("Set the new secret")}
+            </button>
+            <p className="mt-2 text-center text-[12.5px] leading-relaxed text-muted-foreground">
+              {t("The new secret phrase stands ready in the field above — eight characters or more.")}
+            </p>
+            <div className="mt-3 space-y-2">
+              <button
+                type="button"
+                onClick={() => void resendCode("reset")}
+                disabled={busy || resendCool > 0}
+                className="focus-glow flex h-11 w-full items-center justify-center gap-2 rounded-xl border hairline bg-[var(--glass-bg)] text-[14px] text-foreground/85 transition-colors duration-300 hover:border-[rgba(232,217,176,0.5)] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? (
+                  <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RefreshCw className="size-4" aria-hidden="true" />
+                )}
+                {resendCool > 0 ? t("A fresh code in {n}s", { n: resendCool }) : t("Send a fresh code")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setView("signin");
+                  setCode("");
+                  setPassword("");
+                }}
+                className="focus-glow w-full pt-1 text-center text-[13.5px] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-foreground"
+              >
+                {t("Back to the passage")}
+              </button>
+            </div>
+          </div>
+        )}
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            void submit();
+            void (view === "code" ? submitCode() : view === "reset-code" ? submitResetCode() : submit());
           }}
           className={cn(
             "mt-5 space-y-3.5",
-            (view === "check" || view === "confirm") && "hidden"
+            (view === "check" || view === "confirm" || view === "code" || view === "reset-code") && "hidden"
           )}
         >
           {view === "register" && (
@@ -738,7 +1087,7 @@ export function AuthModal() {
               </div>
             </div>
           )}
-          {view !== "reset" && (
+          {(view !== "reset" && view !== "code" && view !== "reset-code") && (
             <div>
               <label htmlFor="passage-email" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("Email")}
@@ -759,7 +1108,7 @@ export function AuthModal() {
               </div>
             </div>
           )}
-          {(view === "signin" || view === "register" || view === "reset") && (
+          {(view === "signin" || view === "register" || view === "reset" || view === "reset-code") && (
             <div>
               <label htmlFor="passage-password" className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
                 {view === "reset" ? t("The new secret phrase") : t("Secret phrase")}
@@ -775,7 +1124,7 @@ export function AuthModal() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete={view === "signin" ? "current-password" : "new-password"}
                   placeholder="••••••••"
-                  data-testid="passage-password"
+                  data-testid={view === "reset-code" ? "passage-new-password" : "passage-password"}
                   className={fieldInput}
                 />
                 <button

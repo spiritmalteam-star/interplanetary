@@ -211,14 +211,28 @@ export function CreditsNeededModal({
   const openAuth = useMirror((s) => s.openAuth);
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
+  /* THE COMPLIMENTARY DOOR — the server alone decides whether the
+     FREE activation stands open and which packages it serves; the
+     frontend only reads the verdict and shows the door. */
+  const [freeOpen, setFreeOpen] = useState(false);
+  const [freePackages, setFreePackages] = useState<string[]>([]);
+  const [freeDone, setFreeDone] = useState<{ credits: number; packageName: string } | null>(null);
 
   const signedIn = Boolean(me) && !me!.email.startsWith("anon:");
 
   useEffect(() => {
     if (open) {
       setFailed(null);
+      setFreeDone(null);
       /* the packs are the server's own law — read fresh when the modal rises */
       void useMirror.getState().refreshWallet();
+      fetch("/api/wallet")
+        .then((r) => r.json().catch(() => null))
+        .then((d: { complimentary?: { enabled?: boolean; packages?: string[] } } | null) => {
+          setFreeOpen(Boolean(d?.complimentary?.enabled));
+          setFreePackages(Array.isArray(d?.complimentary?.packages) ? d!.complimentary!.packages : []);
+        })
+        .catch(() => setFreeOpen(false));
     }
   }, [open]);
 
@@ -239,6 +253,37 @@ export function CreditsNeededModal({
       setFailed(data?.error ?? "The passage could not be opened. Rest, then try again.");
     } catch {
       setFailed("The passage could not be opened. Rest, then try again.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /* THE COMPLIMENTARY ACTIVATION — the same packages, the same credits,
+     laid in through the FREE door; the request carries only the
+     package's NAME — every number is computed on the server. */
+  const chooseFree = async (id: string, plan: string | null, packageName: string) => {
+    setBusy(id);
+    setFailed(null);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ free: true, ...(plan ? { plan } : { pack: id }) }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        activated?: boolean;
+        credits?: number;
+        error?: string;
+      } | null;
+      if (res.ok && data?.activated) {
+        setFreeDone({ credits: data.credits ?? 0, packageName });
+        window.dispatchEvent(new Event("wallet:refresh"));
+        void useMirror.getState().refreshWallet();
+        return;
+      }
+      setFailed(data?.error ?? "The free door did not open. Rest, then try again.");
+    } catch {
+      setFailed("The free door did not open. Rest, then try again.");
     } finally {
       setBusy(null);
     }
@@ -368,6 +413,129 @@ export function CreditsNeededModal({
                 </div>
               );
             })}
+            {freeDone && (
+              <div
+                role="status"
+                data-testid="free-activation-success"
+                className="rounded-xl border border-[color-mix(in_srgb,#a78bfa_45%,transparent)] bg-[color-mix(in_srgb,#a78bfa_8%,var(--background))] p-4"
+              >
+                <p className="flex items-center gap-2 text-[14.5px] font-medium text-foreground/90">
+                  <Sparkles className="size-4 text-[#a78bfa]" aria-hidden="true" />
+                  {t("Free access is yours — {credits} lights granted.", { credits: freeDone.credits })}
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+                  {t(
+                    "{name} was activated through a complimentary transaction — the same credits it always grants, recorded honestly as free, no money charged.",
+                    { name: freeDone.packageName }
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="focus-glow mt-3 w-full rounded-full bg-foreground py-2.5 text-[14px] font-medium text-background transition-opacity hover:opacity-90"
+                >
+                  {t("Return to the mirror")}
+                </button>
+              </div>
+            )}
+
+            {!freeDone && freeOpen && (
+              <>
+                <div className="flex items-center gap-2 px-1">
+                  <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
+                  <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground/70">
+                    {t("Development access — no card, no charge")}
+                  </span>
+                  <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
+                </div>
+                {packs
+                  .filter((p) => freePackages.includes(p.id))
+                  .map((p) => (
+                    <div
+                      key={`free-${p.id}`}
+                      data-testid={`free-option-${p.id}`}
+                      className="rounded-xl border border-[color-mix(in_srgb,#a78bfa_35%,transparent)] bg-[color-mix(in_srgb,#a78bfa_6%,var(--background))] p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,#a78bfa_40%,transparent)] bg-[color-mix(in_srgb,#a78bfa_12%,transparent)]">
+                          <ShoppingBag className="size-4 text-[#a78bfa]" aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[14.5px] font-medium text-foreground/90">
+                            {p.credits} {t("lights")}
+                            <span className="mono-label ml-2 rounded-full border border-[color-mix(in_srgb,#a78bfa_40%,transparent)] px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em] text-[#a78bfa]">
+                              FREE
+                            </span>
+                          </p>
+                          <p className="text-[13px] text-muted-foreground">
+                            {t(p.note)} · {t("complimentary transaction — the original price rests unwritten")}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void chooseFree(p.id, null, `${p.credits} ${t("lights")}`)}
+                        disabled={busy !== null}
+                        data-testid={`free-activate-${p.id}`}
+                        className="focus-glow mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,#a78bfa_45%,transparent)] text-[13px] font-medium text-foreground/90 transition-all hover:bg-[color-mix(in_srgb,#a78bfa_12%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {busy === p.id ? (
+                          <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Sparkles className="size-3.5" aria-hidden="true" />
+                        )}
+                        {t("Activate Free Access")}
+                      </button>
+                    </div>
+                  ))}
+                {PASSES.filter((p) => freePackages.includes(p.id)).map((p) => {
+                  const Icon = p.icon;
+                  return (
+                    <div
+                      key={`free-${p.id}`}
+                      data-testid={`free-option-${p.id}`}
+                      className="rounded-xl border border-[color-mix(in_srgb,#a78bfa_35%,transparent)] bg-[color-mix(in_srgb,#a78bfa_6%,var(--background))] p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,#a78bfa_40%,transparent)] bg-[color-mix(in_srgb,#a78bfa_12%,transparent)]">
+                          <Icon className="size-4 text-[#a78bfa]" aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[14.5px] font-medium text-foreground/90">
+                            {p.name}
+                            <span className="mono-label ml-2 rounded-full border border-[color-mix(in_srgb,#a78bfa_40%,transparent)] px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em] text-[#a78bfa]">
+                              FREE
+                            </span>
+                          </p>
+                          <p className="text-[13px] text-muted-foreground">
+                            {t(p.credits)} · {t("complimentary transaction — the original price rests unwritten")}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void chooseFree(p.id, p.plan, p.name)}
+                        disabled={busy !== null}
+                        data-testid={`free-activate-${p.id}`}
+                        className="focus-glow mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,#a78bfa_45%,transparent)] text-[13px] font-medium text-foreground/90 transition-all hover:bg-[color-mix(in_srgb,#a78bfa_12%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {busy === p.id ? (
+                          <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Sparkles className="size-3.5" aria-hidden="true" />
+                        )}
+                        {t("Activate Free Access")}
+                      </button>
+                    </div>
+                  );
+                })}
+                <p className="px-1 text-[11.5px] leading-relaxed text-muted-foreground/70">
+                  {t(
+                    "No card details required. No money charged. Credits granted through a complimentary transaction, recorded honestly as free (reason: development access)."
+                  )}
+                </p>
+              </>
+            )}
             {failed && (
               <p role="alert" className="px-1 text-[13px] text-red-500/90">
                 {failed}

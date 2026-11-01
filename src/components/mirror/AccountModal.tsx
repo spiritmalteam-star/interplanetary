@@ -22,6 +22,7 @@ import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ModalShell } from "./ModalShell";
+import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
 /*  THE ACCOUNT CHAMBER — plan, credits, usage, ledger, security and   */
@@ -53,7 +54,7 @@ interface Summary {
   };
   transactions: { id: string; amount: number; type: string; description: string; createdAt: string }[];
   libraryCount: number;
-  capabilities: { stripe: boolean; stripeWebhook: boolean; mail: boolean; google: boolean; creditsEnforced: boolean };
+  capabilities: { stripe: boolean; stripeWebhook: boolean; mail: boolean; google: boolean; creditsEnforced: boolean; owner?: boolean };
   offers: {
     plans: { id: string; label: string; priceCents: number; monthlyCredits: number; features: string[]; available: boolean }[];
     packs: { id: string; label: string; credits: number; priceCents: number; available: boolean }[];
@@ -597,6 +598,9 @@ export function AccountModal() {
                 law) now lives in the profile's Transactions room, read
                 from /api/wallet/ledger. */}
 
+            {/* -------- the owner's own hand (complimentary mode) -------- */}
+            {summary.capabilities.owner && <OwnerPanel />}
+
             {/* -------- security -------- */}
             <section aria-label={t("Security")} className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
               <div className="flex items-center justify-between gap-3">
@@ -803,5 +807,291 @@ export function AccountModal() {
         )}
       </div>
     </ModalShell>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE OWNER'S OWN HAND — the complimentary mode's controls, visible  */
+/*  only when the signed passage is the keeper's own (ADMIN_EMAIL in   */
+/*  the vault). Turn the FREE door on and off, choose which packages   */
+/*  it serves, set the daily eligibility ceiling, and read the two     */
+/*  transaction books side by side — complimentary and paid, never     */
+/*  mixed. Every switch is turned server-side; this panel only speaks  */
+/*  to /api/admin/complimentary, which answers to the keeper alone.    */
+/* ------------------------------------------------------------------ */
+
+const FREE_PACKAGE_OPTIONS = [
+  { id: "SEEKER", label: "Seeker" },
+  { id: "OBSERVATORY_PRO", label: "Mirror Pro" },
+  { id: "topup", label: "A pouch of light" },
+  { id: "pack_100", label: "One hundred lights" },
+  { id: "pack_250", label: "Two hundred fifty lights" },
+  { id: "pack_700", label: "Seven hundred lights" },
+] as const;
+
+interface AdminState {
+  config: {
+    openAccessMode: boolean;
+    complimentaryCheckout: boolean;
+    credinsEnabled: boolean;
+    packages: string[];
+    allocations: Record<string, number>;
+    dailyLimit: number;
+  };
+  counts: { type: string; count: number }[];
+  transactions: {
+    complimentary: { id: string; userId: string; amountCents: number; status: string; description: { package?: string; creditsGranted?: number; originalPackageValue?: string } | null; createdAt: string }[];
+    paid: { id: string; type: string; amountCents: number; status: string; createdAt: string }[];
+  };
+}
+
+function OwnerPanel() {
+  const t = useT();
+  const [state, setState] = useState<AdminState | null>(null);
+  const [packages, setPackages] = useState<string[]>([]);
+  const [alloc, setAlloc] = useState<Record<string, string>>({});
+  const [dailyLimit, setDailyLimit] = useState("5");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/complimentary");
+      if (!res.ok) return;
+      const data = (await res.json()) as AdminState;
+      setState(data);
+      setPackages(data.config.packages);
+      setAlloc(Object.fromEntries(Object.entries(data.config.allocations).map(([k, v]) => [k, String(v)])));
+      setDailyLimit(String(data.config.dailyLimit));
+    } catch {
+      /* the panel rests quiet when the vault's hand is absent */
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const save = async (patch: Record<string, unknown>) => {
+    setBusy(true);
+    setMsg(null);
+    try {
+      const res = await fetch("/api/admin/complimentary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setMsg(res.ok ? t("The switches are turned.") : (data?.error ?? t("The switches could not be turned.")));
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveAllocations = () => {
+    const clean: Record<string, number> = {};
+    for (const [k, v] of Object.entries(alloc)) {
+      const n = Number(v);
+      if (v.trim() !== "" && Number.isFinite(n) && n >= 0) clean[k] = Math.floor(n);
+    }
+    void save({ allocations: clean, dailyLimit: Math.max(1, Number(dailyLimit) || 5) });
+  };
+
+  if (!state) return null;
+  const cfg = state.config;
+  const compCount = state.counts.find((c) => c.type === "complimentary")?.count ?? 0;
+
+  return (
+    <section
+      aria-label={t("The owner's hand — complimentary mode")}
+      data-testid="owner-panel"
+      className="rounded-xl border border-[color-mix(in_srgb,#a78bfa_35%,transparent)] bg-[color-mix(in_srgb,#a78bfa_5%,var(--glass-bg-soft))] p-4"
+    >
+      <p className="mono-label flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground">
+        <ShieldCheck className="size-3 text-[#a78bfa]" aria-hidden="true" />
+        {t("The owner's hand — complimentary mode")}
+      </p>
+
+      <div className="mt-3 space-y-2.5">
+        <label className="flex items-center justify-between gap-3 text-[13px] text-foreground/90">
+          {t("Complimentary checkout (the FREE door)")}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={cfg.complimentaryCheckout}
+            disabled={busy}
+            data-testid="owner-toggle-complimentary"
+            onClick={() => void save({ complimentaryCheckout: !cfg.complimentaryCheckout })}
+            className={cn(
+              "focus-glow relative h-6 w-11 shrink-0 rounded-full border transition-colors disabled:opacity-50",
+              cfg.complimentaryCheckout ? "border-[#a78bfa] bg-[color-mix(in_srgb,#a78bfa_35%,transparent)]" : "hairline bg-[var(--glass-bg)]"
+            )}
+          >
+            <span
+              className={cn(
+                "absolute top-0.5 size-4 rounded-full bg-foreground/80 transition-all",
+                cfg.complimentaryCheckout ? "left-[22px]" : "left-0.5"
+              )}
+              aria-hidden="true"
+            />
+          </button>
+        </label>
+
+        <label className="flex items-center justify-between gap-3 text-[13px] text-foreground/90">
+          {t("Open access mode (everything grants freely)")}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={cfg.openAccessMode}
+            disabled={busy}
+            onClick={() => void save({ openAccessMode: !cfg.openAccessMode })}
+            className={cn(
+              "focus-glow relative h-6 w-11 shrink-0 rounded-full border transition-colors disabled:opacity-50",
+              cfg.openAccessMode ? "border-[#a78bfa] bg-[color-mix(in_srgb,#a78bfa_35%,transparent)]" : "hairline bg-[var(--glass-bg)]"
+            )}
+          >
+            <span
+              className={cn(
+                "absolute top-0.5 size-4 rounded-full bg-foreground/80 transition-all",
+                cfg.openAccessMode ? "left-[22px]" : "left-0.5"
+              )}
+              aria-hidden="true"
+            />
+          </button>
+        </label>
+
+        <p className="flex items-center justify-between gap-3 text-[13px] text-muted-foreground">
+          {t("CredIns bank gateway (announced)")}
+          <span className="mono-label rounded-full border hairline px-2 py-0.5 text-[9px] uppercase tracking-[0.14em]">
+            {cfg.credinsEnabled ? "ENABLED" : "OFF"}
+          </span>
+        </p>
+
+        <div>
+          <p className="mono-label text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Packages the FREE door serves")}
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {FREE_PACKAGE_OPTIONS.map((p) => {
+              const on = packages.includes(p.id);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  aria-pressed={on}
+                  disabled={busy}
+                  onClick={() => setPackages((cur) => (on ? cur.filter((x) => x !== p.id) : [...cur, p.id]))}
+                  className={cn(
+                    "focus-glow rounded-full border px-3 py-1 text-[12px] transition-colors disabled:opacity-50",
+                    on
+                      ? "border-[#a78bfa] text-[#a78bfa]"
+                      : "hairline text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {t(p.label)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-2">
+          {FREE_PACKAGE_OPTIONS.map((p) => (
+            <label key={`alloc-${p.id}`} className="min-w-[110px] flex-1">
+              <span className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground">
+                {t(p.label)}
+              </span>
+              <input
+                inputMode="numeric"
+                placeholder={t("normal allocation")}
+                value={alloc[p.id] ?? ""}
+                onChange={(e) => setAlloc((cur) => ({ ...cur, [p.id]: e.target.value.replace(/\D/g, "") }))}
+                className="focus-glow mt-1 h-9 w-full rounded-xl border hairline bg-[var(--glass-bg)] px-2.5 text-[13px] text-foreground/90 placeholder:text-muted-foreground/50"
+              />
+            </label>
+          ))}
+          <label className="min-w-[110px] flex-1">
+            <span className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground">
+              {t("Daily limit per user")}
+            </span>
+            <input
+              inputMode="numeric"
+              value={dailyLimit}
+              onChange={(e) => setDailyLimit(e.target.value.replace(/\D/g, ""))}
+              className="focus-glow mt-1 h-9 w-full rounded-xl border hairline bg-[var(--glass-bg)] px-2.5 text-[13px] text-foreground/90"
+            />
+          </label>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={saveAllocations}
+            disabled={busy}
+            data-testid="owner-save-allocations"
+            className="focus-glow h-9 rounded-xl border border-[color-mix(in_srgb,#a78bfa_45%,transparent)] px-4 text-[12.5px] text-foreground/90 transition-all hover:bg-[color-mix(in_srgb,#a78bfa_10%,transparent)] disabled:opacity-50"
+          >
+            {busy ? "…" : t("Save allocations & limits")}
+          </button>
+          {packages.join(",") !== cfg.packages.join(",") && (
+            <button
+              type="button"
+              onClick={() => void save({ packages })}
+              disabled={busy}
+              className="focus-glow h-9 rounded-xl border border-[color-mix(in_srgb,#a78bfa_45%,transparent)] px-4 text-[12.5px] text-foreground/90 transition-all hover:bg-[color-mix(in_srgb,#a78bfa_10%,transparent)] disabled:opacity-50"
+            >
+              {t("Save package selection")}
+            </button>
+          )}
+        </div>
+        {msg && <p className="text-[12.5px] text-muted-foreground">{msg}</p>}
+
+        {/* the two books, side by side — complimentary never reads as paid */}
+        <div className="grid gap-2 pt-1 sm:grid-cols-2">
+          <div className="rounded-xl border hairline bg-[var(--glass-bg)] p-3">
+            <p className="mono-label text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+              {t("Complimentary transactions")} · {compCount}
+            </p>
+            <div className="nice-scroll mt-1.5 max-h-36 space-y-1.5 overflow-y-auto">
+              {state.transactions.complimentary.length === 0 && (
+                <p className="text-[12px] text-muted-foreground/70">{t("None yet.")}</p>
+              )}
+              {state.transactions.complimentary.slice(0, 8).map((tx) => (
+                <p key={tx.id} className="text-[12px] leading-snug text-muted-foreground">
+                  <span className="text-foreground/85">{tx.description?.package ?? "—"}</span>
+                  {" · "}
+                  {tx.description?.creditsGranted ?? 0} {t("lights")}
+                  {" · "}
+                  <span className="uppercase">{tx.status}</span>
+                  {" · "}
+                  {new Date(tx.createdAt).toLocaleString()}
+                </p>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl border hairline bg-[var(--glass-bg)] p-3">
+            <p className="mono-label text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+              {t("Paid transactions")}
+            </p>
+            <div className="nice-scroll mt-1.5 max-h-36 space-y-1.5 overflow-y-auto">
+              {state.transactions.paid.length === 0 && (
+                <p className="text-[12px] text-muted-foreground/70">{t("None yet.")}</p>
+              )}
+              {state.transactions.paid.slice(0, 8).map((tx) => (
+                <p key={tx.id} className="text-[12px] leading-snug text-muted-foreground">
+                  <span className="text-foreground/85">{tx.type}</span>
+                  {" · "}
+                  {(tx.amountCents / 100).toFixed(2)}
+                  {" · "}
+                  <span className="uppercase">{tx.status}</span>
+                  {" · "}
+                  {new Date(tx.createdAt).toLocaleString()}
+                </p>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

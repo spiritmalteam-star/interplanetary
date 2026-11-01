@@ -12,6 +12,8 @@ import {
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 import { isAdminEmail } from "@/lib/server/admin";
+import { mailConfigured } from "@/lib/server/mail";
+import { sendCodeEmail } from "@/lib/server/codes";
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,6 +54,32 @@ export async function POST(req: NextRequest) {
 
     /* the shared signing key before the passage is carved */
     await ensureSteadySecret();
+
+    /* THE CONFIRMATION LAW — only a confirmed email opens the passage.
+       The everyday door itself never asks for a code: email + password
+       is (and stays) the whole law of sign-in. A passage carved before
+       it was confirmed meets the code door once — a fresh code flies to
+       its own inbox the moment the password proves the visitor. */
+    if (
+      user.provider === "email" &&
+      !user.emailVerifiedAt &&
+      mailConfigured()
+    ) {
+      try {
+        await sendCodeEmail(email, "email_code");
+      } catch (codeErr) {
+        console.error("[auth/login] code letter failed:", codeErr);
+      }
+      return NextResponse.json(
+        {
+          error:
+            "This passage is waiting for its email confirmation — a six-digit code was just sent. Enter it once and the door is yours.",
+          code: "email_unverified",
+          email,
+        },
+        { status: 403 }
+      );
+    }
 
     const res = NextResponse.json({
       user: {

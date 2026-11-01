@@ -8,6 +8,7 @@ import { CREDIT_PACKS, PLANS, planOrFree } from "@/lib/server/plans";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 import { ensureWallet } from "@/lib/server/wallet";
 import { isAdminEmail } from "@/lib/server/admin";
+import { isOwnerEmail } from "@/lib/server/features";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/account/summary — everything the dashboard needs, in one  */
@@ -141,6 +142,7 @@ export async function GET(req: NextRequest) {
         mail: mailConfigured(),
         google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
         creditsEnforced: process.env.CREDITS_ENFORCED === "true",
+        owner: isOwnerEmail(user.email),
       },
       offers: {
         plans: Object.values(PLANS).map((p) => ({

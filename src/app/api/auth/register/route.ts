@@ -13,8 +13,8 @@ import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 import { ensureWallet } from "@/lib/server/wallet";
 import { isAdminEmail } from "@/lib/server/admin";
-import { mailConfigured, sendLetter, envelope } from "@/lib/server/mail";
-import { randomBytes } from "crypto";
+import { mailConfigured } from "@/lib/server/mail";
+import { sendCodeEmail } from "@/lib/server/codes";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -71,11 +71,39 @@ export async function POST(req: NextRequest) {
     }
 
     const existing = await db.user.findUnique({ where: { email } });
-    if (existing) {
+
+    /* THE CONFIRMATION LAW — a passage that exists but was never
+       confirmed meets the code door again (a fresh six-digit code flies
+       to its own inbox); a confirmed one simply answers "sign in".
+       The code can only be read by the inbox's true owner, so nothing
+       is handed to a stranger. */
+    if (existing && existing.emailVerifiedAt) {
       return NextResponse.json(
         { error: "This email already holds a passage. Sign in instead." },
         { status: 409 }
       );
+    }
+    if (existing && !existing.emailVerifiedAt) {
+      const codeGate = rateLimit(`code-issue:${email}`, GATES.password);
+      if (!codeGate.ok) {
+        return NextResponse.json(
+          { error: "The letters rest a while. Return in a little." },
+          { status: 429, headers: { "retry-after": String(codeGate.retryAfterSec) } }
+        );
+      }
+      await sendCodeEmail(email, "email_code");
+      const res = NextResponse.json(
+        {
+          needsVerification: true,
+          email,
+          user: publicUser(existing),
+          mailConfigured: true,
+          verificationSent: true,
+        },
+        { status: 200 }
+      );
+      res.headers.set("cache-control", "private, no-store");
+      return res;
     }
 
     /* the keeper's binding at the door: when the platform's ADMIN_EMAIL
@@ -96,13 +124,48 @@ export async function POST(req: NextRequest) {
     /* the shared signing key before the passage is carved */
     await ensureSteadySecret();
 
+    /* THE CONFIRMATION LAW — with a messenger standing (RESEND_API_KEY),
+       the passage waits for its six-digit echo: the session is granted
+       only when the code verifies (POST /api/auth/verify-code), and the
+       registration screen itself is untouched. Without a messenger (a
+       development vault) the birth itself is the confirmation — honest,
+       nothing faked. */
+    if (mailConfigured()) {
+      const codeGate = rateLimit(`code-issue:${email}`, GATES.password);
+      if (!codeGate.ok) {
+        return NextResponse.json(
+          { error: "The letters rest a while. Return in a little." },
+          { status: 429, headers: { "retry-after": String(codeGate.retryAfterSec) } }
+        );
+      }
+      try {
+        await sendCodeEmail(email, "email_code");
+      } catch (codeErr) {
+        console.error("[auth/register] code letter failed:", codeErr);
+      }
+      const res = NextResponse.json(
+        {
+          needsVerification: true,
+          email,
+          user: publicUser(user),
+          mailConfigured: true,
+          verificationSent: true,
+        },
+        { status: 201 }
+      );
+      res.headers.set("cache-control", "private, no-store");
+      return res;
+    }
+
+    await db.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } });
+
     const res = NextResponse.json(
       {
         user: publicUser(user),
         /* the door's own honest word: whether a letter of light is on
            its way, so the screen can show the "check your email" room */
         mailConfigured: mailConfigured(),
-        verificationSent: mailConfigured(),
+        verificationSent: false,
       },
       { status: 201 }
     );
@@ -116,32 +179,6 @@ export async function POST(req: NextRequest) {
       await mergeAnonLibrary(readAnonId(req), user.id);
     } catch (mergeErr) {
       console.error("[auth/register] library merge stumbled (the passage stands):", mergeErr);
-    }
-
-    /* when a messenger is configured, a verification letter flies out;
-       without one the account simply works (honest, nothing faked) */
-    if (mailConfigured()) {
-      try {
-        const raw = randomBytes(32).toString("base64url");
-        await db.verificationToken.create({
-          data: {
-            identifier: email,
-            tokenHash: hashPassword(raw),
-            type: "verify_email",
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-          },
-        });
-        const origin = process.env.APP_URL || req.nextUrl.origin;
-        const link = `${origin}/?verify=${raw}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
-        const { text, html } = envelope(
-          "Welcome to your laboratory. One tap and your email is part of your passage.",
-          link,
-          "Verify my email"
-        );
-        void sendLetter({ to: email, subject: "Welcome to the Laboratory — Reflective Me", text, html });
-      } catch (verifyErr) {
-        console.error("[auth/register] verification letter failed:", verifyErr);
-      }
     }
 
     return res;

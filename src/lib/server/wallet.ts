@@ -708,8 +708,13 @@ export async function grantWalletCredits(
     /** who moved the well (the keeper's email on fuel/console grants) */
     actorEmail?: string | null;
     /** set false only for grants that RETURN existing light — the
-        house's default is a mint that draws from the deposit */
+        house's default is a mint that draws from the deposit.
+        THE COMPLIMENTARY GRANT passes false too: no deposit stands
+        behind it — the mode is honestly named DEVELOPMENT_ACCESS. */
     mintFromDeposit?: boolean;
+    /** extra metadata riding the ledger row (complimentary's own
+        honest labels: complimentary · reason · package · value) */
+    extraMetadata?: Record<string, unknown> | null;
   }
 ): Promise<GrantResult> {
   const credits = Math.max(0, Math.floor(input.credits));
@@ -768,6 +773,7 @@ export async function grantWalletCredits(
           metadata: {
             description: input.description,
             referenceId: input.referenceId ?? null,
+            ...(input.extraMetadata ?? {}),
           },
         },
       });
