@@ -367,6 +367,9 @@ export interface DreamBookResume {
     /** The vision's own reading of the hand-drawn sketch the volume was
      *  drawn from (volumes conjured before the sketch atelier rest bare). */
     sketchVision?: string;
+    /** What the drawing was seen to hold — the transcribed elements
+     *  ("a little bird", "golden coins") the volume was born from. */
+    sketchSubjects?: string[];
   };
   meta: {
     title: string;

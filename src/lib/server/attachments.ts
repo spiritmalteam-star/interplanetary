@@ -48,16 +48,27 @@ export async function describeImage(
   }
 }
 
+export interface SketchPerception {
+  /* the faithful reading of the drawing — rides the prompts as law */
+  vision: string;
+  /* what each drawn thing was seen to represent — "a little bird",
+     "golden coins" — transcribed from the picture into words, so a
+     child's own marks become the book's own imagery */
+  subjects: string[];
+}
+
 /**
- * See one hand-drawn sketch — the visitor drew a book into existence.
- * Returns what the drawing holds (creatures, places, objects, colors,
- * mood, the world it imagines) so the loom can weave that world, or
- * null when the vision field is quiet.
+ * See one hand-drawn sketch — the visitor (often a child) drew a book
+ * into existence. The drawing is TRANSCRIBED INTO TEXT: every element
+ * is named for what it represents ("this looks like a bird", "these
+ * look like coins"), together with the colors, the mood and the world
+ * it imagines. That transcription is what the loom weaves the book
+ * from. Returns null when the vision field is quiet.
  */
 export async function describeSketch(
   zai: Awaited<ReturnType<typeof ZAI.create>>,
   dataUrl: string
-): Promise<string | null> {
+): Promise<SketchPerception | null> {
   try {
     const response = await zai.chat.completions.createVision({
       model: "glm-4.6v",
@@ -68,7 +79,9 @@ export async function describeSketch(
             {
               type: "text",
               text:
-                "This is a hand-drawn sketch a visitor made to summon a book — they drew this book into existence. Describe the drawing faithfully in at most 150 words: every creature, character, place, object, symbol and element it shows; the colors, the mood, and the kind of world it imagines. Include everything you can truly see; do not invent details that are not there. Begin directly with the description — no preamble, no 'this sketch shows'.",
+                "A child drew this picture by hand to create their own picture book — the book will be written from what you see here. Look at it the way a kind grown-up would: recognize what each drawn thing is meant to be, even when the drawing is simple or wobbly (a round shape with wings is a bird; small circles are coins, suns, or faces; wobbly lines are grass, rain or hair). " +
+                'Return STRICT JSON only, no markdown fences: {"vision":"<one faithful paragraph, at most 150 words, naming every creature, character, place, object, symbol and element by what it represents, plus the colors, the mood and the kind of world it imagines>","subjects":["<short name for each drawn thing, e.g. a little bird, golden coins, a smiling sun, a small house>"]} ' +
+                "Rules: name only what can truly be seen — do not invent elements that are not there; \"subjects\" holds 1–10 short names, one per drawn thing; the vision begins directly, no preamble.",
             },
             { type: "image_url", image_url: { url: dataUrl } },
           ],
@@ -76,8 +89,34 @@ export async function describeSketch(
       ],
       thinking: { type: "disabled" },
     });
-    const text = (response.choices?.[0]?.message?.content ?? "").trim();
-    return text ? text.slice(0, 1200) : null;
+    const raw = (response.choices?.[0]?.message?.content ?? "").trim();
+    if (!raw) return null;
+    /* the vision may answer with or without fences — read either way */
+    const clean = raw.replace(/```json|```/g, "").trim();
+    let vision = "";
+    let subjects: string[] = [];
+    try {
+      const start = clean.indexOf("{");
+      const end = clean.lastIndexOf("}");
+      if (start !== -1 && end > start) {
+        const parsed = JSON.parse(clean.slice(start, end + 1)) as {
+          vision?: unknown;
+          subjects?: unknown;
+        };
+        if (typeof parsed.vision === "string") vision = parsed.vision.trim();
+        if (Array.isArray(parsed.subjects)) {
+          subjects = parsed.subjects
+            .filter((s): s is string => typeof s === "string")
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .slice(0, 10);
+        }
+      }
+    } catch {
+      /* the JSON never opened — the whole reply is the reading */
+    }
+    if (!vision) vision = clean.slice(0, 1200);
+    return { vision, subjects };
   } catch (err) {
     console.error("[attachments] sketch vision failed:", err);
     return null;

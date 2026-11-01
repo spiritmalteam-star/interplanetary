@@ -248,11 +248,11 @@ const chipFace = (label: string) => DB_CHIP_FACES[label] ?? label;
 
 const pageText = (p: WeavePage) => p.paragraphs.join(" ");
 
-/* THE FIVE HUNDRED WORDS — the loom's one input holds up to five
-   hundred words now: a whisper, a scene, or a whole world spoken in
-   full. The count is honest and the clamp is gentle — past the limit,
-   the extra breath simply never lands. */
-const WORD_LIMIT = 500;
+/* THE THOUSAND WORDS — the loom's one input holds up to a thousand
+   words now: a whisper, a scene, or a whole world spoken in full.
+   The count is honest and the clamp is gentle — past the limit, the
+   extra breath simply never lands. */
+const WORD_LIMIT = 1000;
 const countWords = (s: string) => {
   const trimmed = s.trim();
   return trimmed ? trimmed.split(/\s+/).length : 0;
@@ -315,6 +315,12 @@ export function DreamBookView() {
   const sketchRef = useRef<string | null>(null);
   const sketchMetaRef = useRef<SketchMeta | null>(null);
   const sketchVisionRef = useRef<string>("");
+  /* WHAT THE DRAWING SAID — the vision's own transcription of the
+     sketch into words ("a little bird", "golden coins"…), shown to
+     the young maker so they see their drawing was truly understood,
+     and carried into every page the loom weaves from it. */
+  const [sketchSubjects, setSketchSubjects] = useState<string[]>([]);
+  const sketchSubjectsRef = useRef<string[]>([]);
 
   /* ---- THE ZOOMED PAGE — the composer opened wide ----
      The expand button lifts the input into a full-room sheet where
@@ -479,6 +485,9 @@ export function DreamBookView() {
     /* the vision's own reading of the drawn sketch — rides the config
        so every later page keeps the drawn world's law */
     sketchVision?: string;
+    /* what the drawing was seen to hold — the transcribed elements
+       (a bird, coins…) that name the book's own imagery */
+    sketchSubjects?: string[];
   }>({ age, tale, volume, level, topic, vein, pageCount });
   /* THE BOOK'S OWN FACE — the album cover the sky's own Gemini paints
      for every woven story (the visitor named it): painted a breath
@@ -608,6 +617,9 @@ export function DreamBookView() {
       ...(sketchVisionRef.current
         ? { sketchVision: sketchVisionRef.current }
         : {}),
+      ...(sketchSubjectsRef.current.length
+        ? { sketchSubjects: sketchSubjectsRef.current }
+        : {}),
     };
   }, [age, tale, volume, level, topic, vein, pageCount]);
 
@@ -722,9 +734,18 @@ export function DreamBookView() {
         ...(typeof r.config.sketchVision === "string" && r.config.sketchVision
           ? { sketchVision: r.config.sketchVision }
           : {}),
+        ...(Array.isArray(r.config.sketchSubjects)
+          ? { sketchSubjects: r.config.sketchSubjects }
+          : {}),
       };
       sketchVisionRef.current =
         typeof r.config.sketchVision === "string" ? r.config.sketchVision : "";
+      sketchSubjectsRef.current = Array.isArray(r.config.sketchSubjects)
+        ? r.config.sketchSubjects
+            .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+            .slice(0, 12)
+        : [];
+      setSketchSubjects(sketchSubjectsRef.current);
       setAge(r.config.age);
       setTale(r.config.tale);
       setVolume(r.config.volume);
@@ -1090,9 +1111,15 @@ export function DreamBookView() {
           axiom: m.axiom,
           subject: configRef.current.topic,
           vein: configRef.current.vein,
-          /* a drawn book wears the drawing's world on its face */
+          /* a drawn book wears the drawing's world on its face — the
+             vision's reading AND the exact elements it transcribed */
           ...(sketchVisionRef.current
-            ? { sketchHint: sketchVisionRef.current }
+            ? {
+                sketchHint:
+                  sketchSubjectsRef.current.length
+                    ? `${sketchVisionRef.current} The elements seen in the drawing: ${sketchSubjectsRef.current.join(", ")}.`
+                    : sketchVisionRef.current,
+              }
             : {}),
           language,
         }),
@@ -1141,6 +1168,10 @@ export function DreamBookView() {
       if (phase === "open") {
         coverRef.current = null;
         setCover(null);
+        /* and the last drawing's transcription never rides either — a
+           book summoned without a brush is not told it was drawn */
+        sketchSubjectsRef.current = [];
+        setSketchSubjects([]);
       }
 
       try {
@@ -1317,6 +1348,22 @@ export function DreamBookView() {
             configRef.current = {
               ...configRef.current,
               sketchVision: sketchVisionRef.current,
+            };
+          }
+          /* WHAT THE DRAWING SAID — the transcribed elements (a bird,
+             coins…) enter the keeping too: shown to the young maker,
+             spoken to the loom, worn by the cover */
+          if (Array.isArray(data.sketchSubjects) && data.sketchSubjects.length) {
+            sketchSubjectsRef.current = data.sketchSubjects
+              .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+              .map((s) => s.trim().slice(0, 60))
+              .slice(0, 12);
+            setSketchSubjects(sketchSubjectsRef.current);
+            configRef.current = {
+              ...configRef.current,
+              ...(sketchSubjectsRef.current.length
+                ? { sketchSubjects: sketchSubjectsRef.current }
+                : {}),
             };
           }
           metaRef.current = {
@@ -2562,9 +2609,42 @@ export function DreamBookView() {
           book's own signature channel hand (the waves) at its right.
           Above the words now stand the hand's own small doors — the
           DRAW atelier (the book drawn into existence), the ZOOMED page
-          (the input opened wide), the honest word count of the five
-          hundred words, and the sketch chip when a drawing rides. */}
+          (the input opened wide), the honest word count of the
+          thousand words, and the sketch chip when a drawing rides. */}
       <div className="shrink-0 px-3 pb-3 pt-1 sm:px-4">
+        {/* WHAT THE DRAWING SAID — the vision's own transcription of the
+            young maker's sketch, spoken back as small word-chips: the
+            child sees their bird, their coins, their world was truly
+            SEEN, and knows the book grows from their own hand. */}
+        {sketchSubjects.length > 0 && (
+          <div
+            className="mb-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border px-3 py-2"
+            style={{
+              borderColor: "color-mix(in srgb, var(--scope-a) 26%, transparent)",
+              background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
+            }}
+            data-testid="dream-perception"
+          >
+            <Sparkles
+              className="size-3.5 shrink-0 text-[var(--scope-a)]"
+              aria-hidden="true"
+            />
+            <span className="text-[12px] italic text-foreground/75">
+              {t("We saw in your drawing:")}
+            </span>
+            {sketchSubjects.map((s, i) => (
+              <span
+                key={`${i}-${s}`}
+                className="rounded-full border border-border/70 bg-card/60 px-2 py-0.5 font-[family-name(var(--font-literata))] text-[12px] italic text-foreground/85"
+              >
+                {s}
+              </span>
+            ))}
+            <span className="text-[12px] italic text-muted-foreground/70">
+              {t("— your book grows from these.")}
+            </span>
+          </div>
+        )}
         <form
           onSubmit={channelBook}
           id="dream-composer-form"
@@ -2693,7 +2773,7 @@ export function DreamBookView() {
               }}
               rows={1}
               placeholder={t(
-                "Pour your imagination onto these pages — up to 500 words, or draw the book into existence: everything you give becomes living ink…"
+                "Pour your imagination onto these pages — up to 1000 words, or draw the book into existence: everything you give becomes living ink…"
               )}
               data-testid="dream-topic-input"
               className="nice-scroll max-h-24 min-h-[26px] min-w-0 flex-1 resize-none bg-transparent py-1 font-[family-name(var(--font-literata))] text-[15px] italic leading-relaxed text-foreground outline-none placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60"
@@ -2714,7 +2794,7 @@ export function DreamBookView() {
     </div>
 
     {/* THE ZOOMED PAGE — the input opened wide: a full-room sheet where
-        the five hundred words can be seen, changed and arranged with
+        the thousand words can be seen, changed and arranged with
         ease. Enter makes a new line here (the sending waits for its
         button), and the minimize lays everything back into the quiet
         standing bar, exactly as it was left. */}
@@ -3216,6 +3296,39 @@ export function DreamBookView() {
           </button>
         </div>
       </header>
+
+      {/* WHAT THE DRAWING SAID — the transcription of the young maker's
+          sketch stands above the book while they read: the child sees
+          their bird, their sun, their world was truly SEEN and the
+          volume in their hands grew from their own drawing. */}
+      {sketchSubjects.length > 0 && !immersed && (
+        <div className="relative z-10 shrink-0 px-3 pb-1 pt-1 sm:px-5">
+          <div
+            className="mx-auto flex max-w-[700px] flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border px-3 py-1.5"
+            style={{
+              borderColor: "color-mix(in srgb, var(--scope-a) 26%, transparent)",
+              background: "color-mix(in srgb, var(--scope-a) 8%, transparent)",
+            }}
+            data-testid="dream-perception-reading"
+          >
+            <Sparkles className="size-3.5 shrink-0 text-[var(--scope-a)]" aria-hidden="true" />
+            <span className="text-[12px] italic text-foreground/75">
+              {t("We saw in your drawing:")}
+            </span>
+            {sketchSubjects.map((s, i) => (
+              <span
+                key={`r-${i}-${s}`}
+                className="rounded-full border border-border/70 bg-card/60 px-2 py-0.5 font-[family-name(var(--font-literata))] text-[12px] italic text-foreground/85"
+              >
+                {s}
+              </span>
+            ))}
+            <span className="text-[12px] italic text-muted-foreground/70">
+              {t("— your book grows from these.")}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* the book itself — one page at a time, sliding, each page
           stretching the full height of the screen once revealed — or,

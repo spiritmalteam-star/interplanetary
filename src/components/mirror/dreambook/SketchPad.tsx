@@ -6,10 +6,10 @@
 /*  A small, playful drawing room that opens above the dream loom's    */
 /*  one input: brushes (ink, glow, rainbow, starlight), an eraser,     */
 /*  a palette of colors, three weights, and a shelf of stampable       */
-/*  elements — stars, moons, hearts, flowers, clouds, suns, trees,     */
-/*  mountains, birds and fish — so a visitor of any age can draw the   */
-/*  world the book will be born from. The finished drawing rides       */
-/*  into the loom as the book's own visual seed.                       */
+/*  elements — stars, moons, hearts, coins, flowers, clouds, suns,     */
+/*  trees, mountains, birds and fish — so a visitor of any age can     */
+/*  draw the world the book will be born from. The finished drawing    */
+/*  rides into the loom as the book's own visual seed.                 */
 /*                                                                     */
 /*  Pure canvas 2D — no dependencies, no network, nothing saved.       */
 /* ================================================================== */
@@ -19,6 +19,7 @@ import {
   Bird,
   Check,
   Cloud,
+  Coins,
   Eraser,
   Fish,
   Flower,
@@ -49,7 +50,10 @@ export interface SketchMeta {
 
 const CANVAS_W = 1280;
 const CANVAS_H = 800;
-const EXPORT_W = 640;
+/* the export travels wide enough for the vision to truly SEE what the
+   child drew — a bird stays a bird, coins stay coins — while still
+   riding light as a JPEG data URL */
+const EXPORT_W = 900;
 const PARCHMENT = "#fbf6ea";
 const UNDO_DEPTH = 14;
 
@@ -86,6 +90,7 @@ type StampId =
   | "star"
   | "moon"
   | "heart"
+  | "coin"
   | "flower"
   | "cloud"
   | "sun"
@@ -210,14 +215,37 @@ const STAMP_DRAWERS: Record<
     ctx.fill();
   },
   bird: (ctx, x, y, s, color) => {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = Math.max(3, s * 0.22);
+    /* a proper child's bird — filled body, head, beak, tail and a
+       wing, so the vision always sees a BIRD and never a bare squiggle */
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(x, y, s * 0.62, s * 0.44, -0.18, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x + s * 0.5, y - s * 0.34, s * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x + s * 0.74, y - s * 0.44);
+    ctx.lineTo(x + s * 1.08, y - s * 0.3);
+    ctx.lineTo(x + s * 0.74, y - s * 0.16);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(x - s * 0.46, y - s * 0.1);
+    ctx.lineTo(x - s * 1.04, y - s * 0.34);
+    ctx.lineTo(x - s * 0.94, y + s * 0.18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = PARCHMENT;
+    ctx.lineWidth = Math.max(4, s * 0.12);
     ctx.lineCap = "round";
     ctx.beginPath();
-    ctx.moveTo(x - s, y + s * 0.24);
-    ctx.quadraticCurveTo(x - s * 0.5, y - s * 0.62, x, y + s * 0.02);
-    ctx.quadraticCurveTo(x + s * 0.5, y - s * 0.62, x + s, y + s * 0.24);
+    ctx.arc(x - s * 0.05, y + s * 0.06, s * 0.34, Math.PI * 1.12, Math.PI * 1.92);
     ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + s * 0.56, y - s * 0.4, s * 0.07, 0, Math.PI * 2);
+    ctx.fillStyle = PARCHMENT;
+    ctx.fill();
   },
   fish: (ctx, x, y, s, color) => {
     ctx.beginPath();
@@ -235,12 +263,38 @@ const STAMP_DRAWERS: Record<
     ctx.fillStyle = PARCHMENT;
     ctx.fill();
   },
+  coin: (ctx, x, y, s, color) => {
+    /* a treasure coin — a bold disc with a pressed rim and star, so
+       "coins" is what the vision names when a child draws treasure */
+    ctx.beginPath();
+    ctx.arc(x, y, s * 0.7, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = PARCHMENT;
+    ctx.lineWidth = Math.max(3, s * 0.1);
+    ctx.beginPath();
+    ctx.arc(x, y, s * 0.5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 === 0 ? s * 0.2 : s * 0.09;
+      const a = -Math.PI / 2 + (i * Math.PI) / 5;
+      const px = x + Math.cos(a) * r;
+      const py = y + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.lineWidth = Math.max(2, s * 0.07);
+    ctx.stroke();
+  },
 };
 
 const STAMPS: { id: StampId; Icon: typeof Star }[] = [
   { id: "star", Icon: Star },
   { id: "moon", Icon: Moon },
   { id: "heart", Icon: Heart },
+  { id: "coin", Icon: Coins },
   { id: "flower", Icon: Flower },
   { id: "cloud", Icon: Cloud },
   { id: "sun", Icon: Sun },
@@ -443,7 +497,7 @@ export function SketchPad({
       const drawer = STAMP_DRAWERS[tool as StampId];
       if (!drawer) return;
       const scale =
-        (sizePx === 5 ? 24 : sizePx === 11 ? 38 : 56) * (0.9 + Math.random() * 0.24);
+        (sizePx === 5 ? 58 : sizePx === 11 ? 96 : 150) * (0.9 + Math.random() * 0.24);
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate((Math.random() - 0.5) * 0.5);

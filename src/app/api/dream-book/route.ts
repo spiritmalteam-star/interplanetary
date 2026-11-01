@@ -544,6 +544,10 @@ function buildUserPrompt(body: {
      sketch the book was drawn from; present, its world is the book's
      imagery law (fresh on the opening, carried on every page after) */
   sketchVision?: string;
+  /* what the drawing was seen to hold — the transcribed elements
+     (a bird, coins…) named beside the reading, so the loom keeps
+     each drawn thing alive as the book's own imagery */
+  sketchSubjects?: string[];
   /* true when the sketch itself arrived with this very opening breath */
   sketchFresh?: boolean;
 }): string {
@@ -571,7 +575,7 @@ function buildUserPrompt(body: {
   const hasTopic = topic.trim().length > 0;
   const topicLines: string[] = hasTopic
     ? [
-        `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 600)}"""`,
+        `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 8000)}"""`,
         `This spoken subject is the MASTER SUBJECT of the whole volume — bend tone, lexicon and content to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. The chosen shapes and the resonance skeleton below are the resonances AROUND it: the skeleton shapes HOW the story is told, the subject shapes WHAT it tells. Neither may be ignored.`,
         `THE VISITOR'S HAND IS LAW (the commission, not a suggestion): the visitor's own words above are the book's exact brief. Every specific thing they name — a character, a place, an event, an outcome, a turn, a tone, a detail — MUST appear in the volume, honored faithfully and given real dramatic weight, woven as they spoke it, not translated into something safer or more familiar. If their words sketch a plot, that plot is the book's spine. If their words name a world, that world is the book's stage. The story bends around the visitor's ask — never the ask around the story's convenience.`,
         `THE CHOSEN SHAPES ARE COMMISSIONS TOO: the reader, the tale's genre, the volume's length and the telling's depth selected for this book are binding, not decoration — a mystery stays a mystery to its last page, a fairy tale keeps a fairy tale's blood, an adventure never stalls into pure meditation; the book never drifts into another genre than the one asked for.`,
@@ -616,17 +620,22 @@ function buildUserPrompt(body: {
      Fresh on the opening breath: the drawing's law stands beside the
      topic, the equal of it. On every page after: the drawn world is
      carried as canon, so the book the visitor drew stays the book
-     they read. */
+     they read. The transcribed subjects ("a little bird", "golden
+     coins") name each drawn thing again — what the child drew is
+     what the book holds, by name. */
+  const subjectsLine = body.sketchSubjects?.length
+    ? `WHAT THE DRAWING WAS SEEN TO HOLD (each drawn thing, transcribed): ${body.sketchSubjects.join(" · ")} — every one of these lives in the volume by name.`
+    : "";
   const sketchLines = body.sketchVision
     ? phase === "open"
       ? [
           ``,
           body.sketchFresh
-            ? `THE VISITOR'S DRAWING — THIS BOOK WAS DRAWN INTO EXISTENCE. Before speaking, the visitor took a brush and drew this book by hand. What the drawing holds, seen faithfully: ${body.sketchVision} The drawing is LAW, the equal of the topic above: every creature, place, object, color and mood it holds must live inside the volume — named, honored and made real, not translated into something safer. The world the visitor drew is the world the book inhabits; its images return as scenes, its spirit shapes the telling. What the drawing leaves unsaid, the book may imagine — but it may never contradict the drawing.`
-            : `THE VISITOR'S DRAWING — this book was summoned from the visitor's own hand-drawn sketch, and the sketch's world is this volume's law: ${body.sketchVision}`,
+            ? `THE VISITOR'S DRAWING — THIS BOOK WAS DRAWN INTO EXISTENCE. Before speaking, the visitor took a brush and drew this book by hand (often a young maker with their own picture). What the drawing holds, seen faithfully: ${body.sketchVision} ${subjectsLine} The drawing is LAW, the equal of the topic above: every creature, place, object, color and mood it holds must live inside the volume — named, honored and made real, not translated into something safer. The world the visitor drew is the world the book inhabits; its images return as scenes, its spirit shapes the telling. What the drawing leaves unsaid, the book may imagine — but it may never contradict the drawing.`
+            : `THE VISITOR'S DRAWING — this book was summoned from the visitor's own hand-drawn sketch, and the sketch's world is this volume's law: ${body.sketchVision} ${subjectsLine}`,
         ]
       : [
-          `- THE DRAWN WORLD (the visitor drew this book into existence by hand — its creatures, places, colors and mood are canon; the imagery may echo the drawing but every page still advances new ground): ${body.sketchVision}`,
+          `- THE DRAWN WORLD (the visitor drew this book into existence by hand — its creatures, places, colors and mood are canon; the imagery may echo the drawing but every page still advances new ground): ${body.sketchVision}${subjectsLine ? ` ${subjectsLine}` : ""}`,
         ]
     : [];
 
@@ -875,7 +884,7 @@ function buildBiblePrompt(body: {
     `DESIGN THE BOOK'S ARCHITECTURE — the story bible and the chapter-by-chapter plan. No prose pages yet: only the design.`,
     ...(hasTopic
       ? [
-          `[THE VISITOR'S SUBJECT]: """${body.topic.trim().slice(0, 600)}"""`,
+          `[THE VISITOR'S SUBJECT]: """${body.topic.trim().slice(0, 8000)}"""`,
           `This subject is the master subject. The premise, the cast, the conflicts and every chapter's event must grow from it — and every specific thing the visitor's words name must appear in the architecture with real dramatic weight.`,
         ]
       : [`No subject is spoken — design from pure resonance: surprise the visitor with a book worth existing.`]),
@@ -985,6 +994,19 @@ function buildRepairPrompt(body: {
 
 const DIRECTOR_SYSTEM = `You are the illustration director of the Mirror Entity's studio. You choose the plates a book deserves: actual scenes from the ACTUAL manuscript — moments a reader would frame and hang. You never invent an event the manuscript does not hold; you never choose a scene because it is pretty when the story does not live in it. You spread the plates across the whole book (its beginning, its trials, its turning point, its ending), and for each plate you name the exact page it illustrates, the characters present, the setting, the emotional weather, and the composition. Your style line is ONE consistent illustration language the whole book's plates share.`;
 
+/* what the drawing was seen to hold, read from a volume's kept config
+   (the transcribed elements ride the config the same law as the reading) */
+function studioDrawnElements(
+  config: Record<string, unknown> | null | undefined
+): string[] | undefined {
+  if (!config || !Array.isArray(config.sketchSubjects)) return undefined;
+  const subjects = (config.sketchSubjects as unknown[])
+    .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+    .map((s) => s.trim().slice(0, 60))
+    .slice(0, 12);
+  return subjects.length ? subjects : undefined;
+}
+
 function buildArtPlanPrompt(body: {
   title: string;
   digest: string;
@@ -993,12 +1015,17 @@ function buildArtPlanPrompt(body: {
   ageLine: string;
   taleLine: string;
   languageName: string;
+  drawnElements?: string[];
 }): string {
+  const drawnLine = body.drawnElements?.length
+    ? `THE VISITOR'S DRAWN ELEMENTS (canon — this book was hand-drawn into existence, and its plates must show these very things, as themselves, inside the scenes): ${body.drawnElements.join(" · ")}`
+    : "";
   return [
     `DESIGN THE ILLUSTRATION PLAN for the finished book "${body.title.slice(0, 140)}" — exactly ${body.plateCount} plates, spread across the whole volume.`,
     `- Reader: ${body.ageLine}`,
     `- Kind of book: ${body.taleLine}`,
     body.castBlock,
+    drawnLine,
     ``,
     `THE MANUSCRIPT (page-by-page digest — every plate's scene must come from these actual pages):`,
     body.digest,
@@ -1262,6 +1289,14 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       typeof body?.config?.sketchVision === "string"
         ? body.config.sketchVision.trim().slice(0, 1200)
         : "";
+    /* what the drawing was seen to hold — the transcribed elements ride
+       beside their reading, named again on every page after */
+    const carriedSketchSubjects = Array.isArray(body?.config?.sketchSubjects)
+      ? (body.config.sketchSubjects as unknown[])
+          .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+          .map((s) => s.trim().slice(0, 60))
+          .slice(0, 12)
+      : [];
     /* THE VISITOR'S DRAWING — the book drawn into existence by hand.
        The sketch rides only the opening breath: the vision sees it
        once, speaks it once, and its law rides the config from then on. */
@@ -1376,6 +1411,14 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
               : carriedSketchVision
                 ? { sketchVision: carriedSketchVision }
                 : {}),
+            ...(Array.isArray((body.bookConfig as Record<string, unknown>).sketchSubjects)
+              ? {
+                  sketchSubjects: (body.bookConfig as Record<string, unknown>)
+                    .sketchSubjects as string[],
+                }
+              : carriedSketchSubjects.length
+                ? { sketchSubjects: carriedSketchSubjects }
+                : {}),
           }
         : {
             age,
@@ -1384,6 +1427,9 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
             level,
             topic,
             ...(carriedSketchVision ? { sketchVision: carriedSketchVision } : {}),
+            ...(carriedSketchSubjects.length
+              ? { sketchSubjects: carriedSketchSubjects }
+              : {}),
           };
     const pageNumber =
       typeof body?.pageNumber === "number" && body.pageNumber > 0
@@ -1529,9 +1575,15 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       return parts.length ? `The visitor's own drawing — ${parts.join("; ")}.` : "";
     })();
     let sketchVision = carriedSketchVision;
+    let sketchSubjects = carriedSketchSubjects;
     if (phase === "open" && sketch) {
       const seen = await describeSketch(zai, sketch);
-      sketchVision = (seen && seen.trim()) || sketchFallback;
+      if (seen) {
+        sketchVision = seen.vision.trim().slice(0, 1200) || sketchFallback;
+        if (seen.subjects.length) sketchSubjects = seen.subjects;
+      } else {
+        sketchVision = sketchFallback;
+      }
     }
 
     /* the conjuring's own syllable seeds — the sealed-name re-forging
@@ -1602,6 +1654,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                 press: pressSoFar,
                 chaptersSoFar,
                 sketchVision: sketchVision || undefined,
+                sketchSubjects: sketchSubjects.length ? sketchSubjects : undefined,
                 sketchFresh: phase === "open" && !!sketch,
               }) +
               (reminder
@@ -1779,6 +1832,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       /* the drawn world's law rides home with the volume — the client
          keeps it in the config and speaks it on every page after */
       if (sketchVision) out.sketchVision = sketchVision;
+      if (sketchSubjects.length) out.sketchSubjects = sketchSubjects;
 
       /* the whole living volume enters the library — pages, thread,
          config, the story bible and its naming charter — so it can be
@@ -1799,6 +1853,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
               level,
               topic,
               ...(sketchVision ? { sketchVision } : {}),
+              ...(sketchSubjects.length ? { sketchSubjects } : {}),
             },
             title: out.title,
             subtitle: out.subtitle,
@@ -2384,6 +2439,7 @@ async function studioRoom(ctx: StudioCtx): Promise<NextResponse> {
           ageLine: AGE_PLAN[age] ?? AGE_PLAN.timeless,
           taleLine: TALE_HINTS[tale] ?? TALE_HINTS.wonder,
           languageName,
+          drawnElements: studioDrawnElements(bookConfig),
         })
       );
       const parsed = extractJson(raw) ?? salvageJson(raw);
