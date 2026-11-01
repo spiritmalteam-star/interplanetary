@@ -19,6 +19,13 @@ import {
   type BookLedger,
   type BookAudit,
 } from "@/lib/book-ledger";
+import {
+  qcManuscript,
+  expectsFullPages,
+  FULL_PAGE_WORDS,
+  type QcReport,
+  type QcPage,
+} from "@/lib/book-qc";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book — THE REAL-TIME DYNAMIC CODEX ENGINE.         */
@@ -68,6 +75,16 @@ const BOOK_PLAN: Record<string, { min: number; max: number; label: string }> = {
   bedtime: { min: 80, max: 104, label: "a soft bedtime treasure — short luminous pages, a calm nightly cadence" },
   classic: { min: 96, max: 120, label: "a classic tale — full pages, an evergreen storybook voice" },
   saga: { min: 120, max: 220, label: "a grand saga — an epic breadth of pages up to 220, a mythic storyteller's breath" },
+  /* THE NOVEL — when the visitor speaks a long book by name (a novel,
+     three hundred pages), the loom plans a true novel: each woven page
+     a FULL typeset page of prose, the whole manuscript measured at the
+     seal — page count never confused with narrative length. */
+  novel: {
+    min: 240,
+    max: 320,
+    label:
+      "a FULL NOVEL — two hundred forty to three hundred twenty pages, every page a complete typeset page of living prose; arcs, acts and chapters planned like a printed book, never a page-count wearing a novel's name",
+  },
   /* THE POEM ITSELF — when the visitor's own words ask for a poem (no
      book word spoken), the loom weaves the poem, not a book: verses on
      a few leaves, complete in the hand. THE GROUND LAW (see
@@ -98,6 +115,16 @@ const AGE_PLAN: Record<string, string> = {
   grown: "grown readers — full literary depth; meaning, loss, beauty and transformation woven with an adult hand; no explicit content",
   timeless: "all ages at once — a true storybook voice that a child can enter and an adult can marvel at; layered but never dark",
 };
+
+/* THE FULL PAGE LAW — when a volume is told in full pages (novels,
+   grand sagas, grown classics), every woven page must carry a FULL
+   typeset page of prose: page count and narrative length must be the
+   SAME thing, never a thin leaf wearing a page's number. */
+const FULL_PAGE_LAW = `THE FULL PAGE LAW (absolute — this volume is told in FULL PAGES, like a printed novel):
+- Every page you return is a REAL PAGE of prose: ${FULL_PAGE_WORDS}–450 words, three to five paragraphs, paragraphs of three to six sentences. A page of two short paragraphs is NOT a page — it is a fragment wearing a page's number, and fragments are forbidden.
+- The book's planned page count is a promise of MANUSCRIPT LENGTH: a 300-page novel must hold near 300 full pages of prose. Never confuse the number of page objects returned with the length of the story.
+- Every page must still MOVE — a full page is earned by events, choices, revelations and consequences, never by padded description or restated philosophy. When a scene runs long, deepen it: new sensory detail, new friction, new information, new turns of relationship.
+- Chapters continue to open every 10–16 pages with a title on their first page; a chapter's page span is a real span of full pages.`;
 
 /* The depth of the telling — the DEPTH and multidimensional nature of
    the writing itself, chosen on the loom's depth bar (1–5). This rides
@@ -395,6 +422,9 @@ function buildUserPrompt(body: {
   ground?: { tale?: string; short: boolean; tiny: boolean };
   /* THE LEDGER (V10) — the book's own durable memory, handed back */
   ledger?: BookLedger | null;
+  /* THE FULL PAGE LAW — whether this volume tells itself in full
+     typeset pages (novels, sagas, grown classics) */
+  fullPages?: boolean;
   /* THE SPAN — how many pages one continuation writes (2 by default;
      the whole-book reveal strides four at a time) */
   span?: number;
@@ -408,6 +438,10 @@ function buildUserPrompt(body: {
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
   const isShortVolume = volume === "short" || volume === "tiny";
+  /* THE FULL PAGE LAW — spoken when the volume tells itself in full
+     pages: novels, grand sagas, grown classics (never verse, never
+     short books, never picture-book pages). */
+  const fullPages = body.fullPages ?? false;
   const levelLine =
     LEVEL_PLAN[LEGACY_LEVEL_MAP[body.level] ?? body.level] ?? "";
   const isVerse = VERSE_FORMS.has(tale);
@@ -426,7 +460,7 @@ function buildUserPrompt(body: {
   const hasTopic = topic.trim().length > 0;
   const topicLines: string[] = hasTopic
     ? [
-        `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 600)}"""`,
+        `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 8000)}"""`,
         `This spoken subject is the MASTER SUBJECT of the whole volume — bend tone, lexicon and content to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. The chosen shapes and the resonance skeleton below are the resonances AROUND it: the skeleton shapes HOW the story is told, the subject shapes WHAT it tells. Neither may be ignored.`,
       ]
     : [];
@@ -494,9 +528,10 @@ function buildUserPrompt(body: {
               ]
             : []),
       ...(isShortVolume && !body.ground?.tiny ? [``, SHORT_BOOK_LAW] : []),
+      ...(fullPages && !isShortVolume ? [``, FULL_PAGE_LAW] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       wishes.trim()
-        ? `- Whispered wishes (honor them faithfully, fold them in as the book's own bones): """${wishes.trim().slice(0, 1200)}"""`
+        ? `- Whispered wishes (honor them faithfully, fold them in as the book's own bones): """${wishes.trim().slice(0, 4000)}"""`
         : `- No whispered wishes — open the book from resonance alone: choose the shapes the visitor's choices already imply and surprise them with the rest.`,
       ``,
       stratum,
@@ -516,6 +551,7 @@ function buildUserPrompt(body: {
       `- Reader: ${ageLine}`,
       ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
       `- Kind of resonance: ${taleLine}`,
+      ...(fullPages && !isShortVolume ? [`THE FULL PAGE LAW HOLDS: every page is a full typeset page of prose.`] : []),
       ...(isShortVolume
         ? [
             `- THE SHORT BOOK LAW HOLDS: this volume is SHORT (planned ${
@@ -527,7 +563,7 @@ function buildUserPrompt(body: {
       body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
       ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
-        ? `- THE PAGES JUST READ (continue seamlessly from exactly this voice and moment — never re-tell them, never contradict them):\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
+        ? `- THE PAGES JUST READ (continue seamlessly from exactly this voice and moment — never re-tell them, never contradict them):\n"""${body.recentPages.join("\n\n").slice(-4000)}"""`
         : "",
       ``,
       stratum,
@@ -568,7 +604,7 @@ function buildUserPrompt(body: {
       } pages; ${
         isShortVolume
           ? "add 6 to 10 pages (a multiple of 2), never exceeding 40 total — this volume stays a short book"
-          : "add 48 to 72 pages (a multiple of 2), never exceeding 220 total"
+          : "add 48 to 72 pages (a multiple of 2), never exceeding 320 total"
       }. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread and the updated ledger.`
     );
   } else {
@@ -601,7 +637,7 @@ function buildUserPrompt(body: {
       ...rewrites.map((r, i) => `  ${i + 1}. """${r}"""`),
       ``,
       wishesLength(rewrites)
-        ? `A wish explicitly asks for a different length of the book — you MUST therefore return a new "totalPages" (an even number between 8 and 220) that honors that wish. Do not omit it.`
+        ? `A wish explicitly asks for a different length of the book — you MUST therefore return a new "totalPages" (an even number between 8 and 320) that honors that wish. Do not omit it.`
         : `No wish touches the book's length — omit "totalPages" entirely.`
     );
   }
@@ -610,7 +646,7 @@ function buildUserPrompt(body: {
     ``,
     `OUTPUT FORMAT — return STRICT JSON only, no markdown fences, no text outside the JSON:`,
     `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","ledger":{"brief":{"premise":"<one line>","question":"<one line>","dilemma":"<one line>","chain":"<one line>","ending":"<one line — the desired effect on the reader>"},"canon":["<world rule>"],"characters":["<Name — desire, wound, state, who knows what>"],"objects":["<object — state (page changed)>"],"timeline":["<event — when, where>"],"promises":["<foreshadowing / open promise>"],"motifs":["<recurring image — its developing meaning>"],"chapters":[{"title":"<chapter>","pages":"<n–m>","summary":"<one line>"}]},"pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]${phase === "close" ? `,"audit":{"prose":{"score":<0–10>,"evidence":"<one line from the finished writing>"},"originality":{...},"worldbuilding":{...},"character":{...},"structure":{...},"emotion":{...},"philosophy":{...},"pacing":{...},"continuity":{...},"endings":{...}}` : ""}}`,
-    `Rules: exactly ${span === 2 ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}` : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter" — given ONLY when a genuinely new chapter opens on that page (a new chapter every 10–16 pages AT MOST; most page-pairs carry NO chapter at all; NEVER repeat a chapter title already given — a page must not wear a chapter it did not open). Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
+    `Rules: exactly ${span === 2 ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}` : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`}. Each page carries ${fullPages && !isShortVolume ? `3–5 paragraphs totalling ${FULL_PAGE_WORDS}–450 words — a FULL typeset page (verse forms and picture-book pages keep their shorter honest telling)` : "1–3 paragraphs (young readers: shorter paragraphs; grown: fuller)"}. "chapter" is a plain title without the word "Chapter" — given ONLY when a genuinely new chapter opens on that page (a new chapter every 10–16 pages AT MOST; most page-pairs carry NO chapter at all; NEVER repeat a chapter title already given — a page must not wear a chapter it did not open). Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
     phase === "open"
       ? `The "ledger" is REQUIRED in this opening: fill it with the private brief and every canon line, character, object, promise and motif the first pages establish — the room keeps it and hands it back at every continuation.`
       : `The "ledger" is REQUIRED: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, paid promises are marked paid, and the new chapter (if any) is appended to "chapters". THE LEDGER STAYS LEAN — a fast loom is a kind loom: every ledger line is ONE short clause (at most ~12 words); canon at most 10 lines, characters at most 12, objects at most 10, timeline at most 16 (when it overflows, the earliest events fold into one summarizing line), promises at most 10, motifs at most 8, and "chapters" carries only the LAST 12 chapters, each summary one short line.`,
@@ -666,7 +702,7 @@ function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
   return pages;
 }
 
-const clampTotal = (n: number) => Math.min(220, Math.max(8, Math.round(n / 2) * 2));
+const clampTotal = (n: number) => Math.min(320, Math.max(8, Math.round(n / 2) * 2));
 
 /* a wish may only move the book's length when it actually speaks of length —
    the channel sometimes answers "totalPages" to any rewrite, and a
@@ -693,7 +729,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const volume = typeof body?.config?.volume === "string" ? body.config.volume : "classic";
     const level = typeof body?.config?.level === "string" ? body.config.level : "";
     const topic =
-      typeof body?.config?.topic === "string" ? body.config.topic.trim().slice(0, 600) : "";
+      typeof body?.config?.topic === "string" ? body.config.topic.trim().slice(0, 8000) : "";
     const seed =
       typeof body?.config?.seed === "string" ? body.config.seed.trim().slice(0, 80) : "";
     const wishes = typeof body?.config?.wishes === "string" ? body.config.wishes : "";
@@ -710,26 +746,38 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
        otherwise chosen. */
     const shortAsk =
       volume === "short" || detectShortBookAsk(`${topic} ${wishes}`);
+    /* THE NOVEL ASK — when the visitor's own words speak a long book
+       by name (a novel, three hundred pages), the loom plans a true
+       novel: full pages, the whole measured at the seal. */
+    const NOVEL_ASK =
+      /\b(novels?|\d{3}\s*pages?|three\s+hundred(?:\s+pages?)?|roman)\b/i;
+    const novelAsk =
+      volume === "novel" || (!shortAsk && NOVEL_ASK.test(`${topic} ${wishes}`));
     /* THE GROUND LAW — the visitor's own words outrank the shapes.
        A topic that speaks a form (a poem, a riddle, a ballad) or a
        length (short, brief) holds the ground: a short poem is woven as
        the poem itself, never again as a ninety-five page book. */
     const ground = topicHoldsGround(`${topic} ${wishes}`);
-    const volumeKey = ground.tiny ? "tiny" : shortAsk ? "short" : volume;
+    const volumeKey = ground.tiny ? "tiny" : shortAsk ? "short" : novelAsk ? "novel" : volume;
     /* the form the visitor SPOKE outranks the form they selected —
        "the chat holds the ground" — in every phase, so continuations
        of a poem-asked volume stay verse */
     const taleKey = ground.tale ?? tale;
+    /* THE FULL PAGE LAW — one truth for the prompt and the examiner:
+       novels, sagas and grown classics are told in full pages. */
+    const fullPages = expectsFullPages(age, volumeKey, taleKey);
 
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
     /* THE LEDGER (V10) — the room hands the book's own memory back */
     const incomingLedger = parseLedger(body?.ledger);
     /* THE SPAN — the whole-book reveal strides eight pages at a time;
        every other call writes the classic pair. The wider stride is
-       the speed law: half the sky-crossings for the same book. */
+       the speed law: half the sky-crossings for the same book. Full-
+       page volumes carry a whole typeset page per woven page, so
+       their stride is gentler — four full pages are a heavy breath. */
     const spanRaw = Number(body?.span);
     const span = phase === "next" && Number.isFinite(spanRaw)
-      ? Math.min(8, Math.max(2, Math.round(spanRaw)))
+      ? Math.min(fullPages ? 4 : 8, Math.max(2, Math.round(spanRaw)))
       : 2;
     const rewrites: string[] = Array.isArray(body?.rewrites)
       ? body.rewrites
@@ -800,7 +848,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const priorEcho = phase === "open" ? sanitizeEcho(body?.priorResonance) : {};
     const resonance: ResonanceDraw | null =
       phase === "open" ? drawResonance(priorEcho) : null;
-    const askLoom = async (reminder: boolean): Promise<string> => {
+    const askLoom = async (reminder: boolean, suffix = ""): Promise<string> => {
       const completion = await zai.chat.completions.create({
         messages: [
           { role: "assistant", content: systemPrompt() },
@@ -826,9 +874,11 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                 resonance: resonance ? resonanceCharter(resonance) : undefined,
                 ground,
                 ledger: incomingLedger,
+                fullPages,
                 span,
                 vein,
               }) +
+              suffix +
               (reminder
                 ? "\n\nREMINDER: the loom could not read the last reply. Return ONLY the raw JSON object — no text, no markdown, nothing before or after it."
                 : ""),
@@ -851,9 +901,10 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
        first and locally — a full second sky-crossing for a name swap
        made the visitor wait a whole page-turn longer for nothing they
        could feel. The unreadable-reply reminder (below) stays a real
-       second ask, because no local hand can mend a broken reply. */
-    const channelReply = async (reminder: boolean): Promise<string> => {
-      const text = await askLoom(reminder);
+       second ask, because no local hand can mend a broken reply.
+       A mend suffix (the seal's repair) rides the same door. */
+    const channelReply = async (reminder: boolean, suffix = ""): Promise<string> => {
+      const text = await askLoom(reminder, suffix);
       const sealed = findSealedNames(text);
       if (sealed.length === 0) return text;
       return reforgeSealedNames(text, seeds);
@@ -875,21 +926,110 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     /* THE LEDGER — the reply's own memory merged over the room's: a
        line that still holds is never dropped */
     const mergedLedger = mergeLedger(incomingLedger, parseLedger(parsed.ledger));
+    let finalLedger = mergedLedger;
+    let outThreadsOverride = "";
+
+    /* THE LOOM'S EXAMINER — before the seal lands, the whole manuscript
+       (every page woven before this close, plus the closing pages) is
+       read back: length vs the plan, chapters, repetition, missing
+       characters, unresolved threads, thin pages. A BLOCKING verdict
+       forbids the seal — one mend attempt is made (the examiner's
+       findings spoken to the loom), and if the manuscript still cannot
+       honestly end, the room refuses to mark the book finished. */
+    const buildQcPages = (fresh: WeavePage[]): QcPage[] => [
+      ...bookPages
+        .map((p) => p as Record<string, unknown>)
+        .filter((p) => Array.isArray(p.paragraphs))
+        .map((p) => ({
+          n: typeof p.n === "number" ? p.n : 0,
+          ...(typeof p.chapter === "string" && p.chapter
+            ? { chapter: p.chapter }
+            : {}),
+          paragraphs: (p.paragraphs as unknown[]).filter(
+            (s): s is string => typeof s === "string"
+          ),
+        })),
+      ...fresh.map((p) => ({
+        n: p.n,
+        ...(p.chapter ? { chapter: p.chapter } : {}),
+        paragraphs: p.paragraphs,
+      })),
+    ];
+
+    let qc: QcReport | null = null;
+    let mendAudit: BookAudit | null = null;
+    if (phase === "close") {
+      qc = qcManuscript(buildQcPages(pages), finalLedger, {
+        expectsFullPages: fullPages,
+        plannedPages: totalPages,
+      });
+      /* THE MEND ATTEMPT — one breath: the examiner's findings ride
+         back into the loom, and the closing pages are re-woven with
+         the unfinished work named. */
+      const findings = qc.issues
+        .filter((i) => i.severity !== "note")
+        .map((i) => `- [${i.kind}] ${i.message}`)
+        .join("\n");
+      if (findings) {
+        const mendReply = await channelReply(
+          false,
+          `
+
+THE SEAL'S REPAIR (the manuscript was read back before the seal, and these findings stand — mend them within these final pages, and only where the findings point):
+${findings}
+
+Land every unresolved thread the findings name, let the ending be a true ending, and return the closing pages again — with the updated ledger, the updated thread and the audit.`
+        );
+        const mendParsed = extractJson(mendReply);
+        const mendPages = mendParsed
+          ? normalizePages(mendParsed.pages, pageNumber, span)
+          : [];
+        if (mendParsed && mendPages.length > 0) {
+          parsed = mendParsed;
+          pages = mendPages;
+          finalLedger =
+            mergeLedger(finalLedger, parseLedger(mendParsed.ledger)) ??
+            finalLedger;
+          if (
+            typeof mendParsed.threads === "string" &&
+            mendParsed.threads.trim()
+          ) {
+            outThreadsOverride = mendParsed.threads.trim().slice(0, 2000);
+          }
+          mendAudit = parseAudit(mendParsed.audit);
+          /* the mended manuscript is measured again — the verdict that
+             stands is the one taken from the pages that will ship */
+          qc = qcManuscript(buildQcPages(pages), finalLedger, {
+            expectsFullPages: fullPages,
+            plannedPages: totalPages,
+          });
+        }
+      }
+    }
 
     const out: Record<string, unknown> = {
       pages,
       threads:
-        typeof parsed.threads === "string" && parsed.threads.trim()
+        outThreadsOverride ||
+        (typeof parsed.threads === "string" && parsed.threads.trim()
           ? parsed.threads.trim().slice(0, 2000)
-          : threads ?? "",
-      ...(mergedLedger ? { ledger: mergedLedger } : {}),
-      ended: phase === "close",
+          : threads ?? ""),
+      ...(finalLedger ? { ledger: finalLedger } : {}),
+      /* THE HONEST SEAL — the book ends only when the examiner allows
+         it: a volume with blocking findings stays open, never wearing
+         a false "The End". */
+      ended: phase === "close" && !(qc && qc.blocking),
     };
 
     /* THE HONEST AUDIT — the closing volume carries its private report */
     if (phase === "close") {
-      const audit = parseAudit(parsed.audit);
+      const audit = mendAudit ?? parseAudit(parsed.audit);
       if (audit) out.audit = audit;
+      /* THE EXAMINER'S REPORT — carried to the reader's hand beside
+         the audit: the manuscript's measures and every finding */
+      if (qc) {
+        out.qc = qc;
+      }
     }
 
     if (phase === "open") {
@@ -949,7 +1089,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           totalPages: out.totalPages,
           pages,
           threads: out.threads,
-          ...(mergedLedger ? { ledger: mergedLedger } : {}),
+          ...(finalLedger ? { ledger: finalLedger } : {}),
           ended: false,
           /* the volume's own birth echo — kept FOR the visitor alone,
              never read back by the mirror: creation consults nothing */
@@ -971,7 +1111,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
          (capped at 12) */
       out.totalPages = clampTotal(
         Math.min(
-          volumeKey === "tiny" ? 12 : volumeKey === "short" ? 40 : 300,
+          volumeKey === "tiny" ? 12 : volumeKey === "short" ? 40 : 320,
           parsed.totalPages
         )
       );
@@ -995,7 +1135,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                 : undefined,
           pages: [...bookPages, ...pages],
           threads: out.threads,
-          ...(mergedLedger ? { ledger: mergedLedger } : {}),
+          ...(finalLedger ? { ledger: finalLedger } : {}),
           ended: phase === "close" ? true : Boolean(bookMeta?.ended),
         },
         400000

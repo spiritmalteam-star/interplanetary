@@ -1,11 +1,27 @@
 /* ------------------------------------------------------------------ */
 /*  book-pdf.ts — the Dream Book's own binding press (client side).    */
 /*                                                                     */
-/*  Binds a woven volume — front matter and every page — into one      */
-/*  classic ink PDF (A4, serif, page numbers, chapter openings),       */
-/*  entirely in the browser. The DejaVu serif faces are embedded       */
-/*  through fontkit so every tongue the house speaks renders true      */
-/*  (Latin, Greek, Cyrillic — the whole press).                        */
+/*  Binds a woven volume — front matter and the whole manuscript —     */
+/*  into one classic ink PDF (A4, serif, page numbers, chapter         */
+/*  openings), entirely in the browser. The DejaVu serif faces are     */
+/*  embedded through fontkit so every tongue the house speaks renders  */
+/*  true (Latin, Greek, Cyrillic — the whole press).                   */
+/*                                                                     */
+/*  THE PRESS'S LAWS (re-forged after the great audit):                */
+/*  - Text runs in NATURAL READING ORDER — top of the page downward.   */
+/*    (The old press laid its first line at the foot of the sheet and  */
+/*    stacked every later line above it: a mirrored book.)             */
+/*  - The manuscript FLOWS: pages are cast by measuring the real room  */
+/*    left on each sheet — never one story-page per sheet. A page      */
+/*    holding two lines and a page holding twenty both find their     */
+/*    natural place; no artificial near-empty leaves are ever bound.   */
+/*  - A chapter opens on a fresh leaf, as books have always done.      */
+/*  - A paragraph is never left hanging one line at the foot of a      */
+/*    sheet: the press carries it whole to the next leaf instead.      */
+/*  - "The End" is sealed ONLY when the volume itself has truly        */
+/*    concluded (meta.concluded) — never by default.                   */
+/*  - The press returns the count of the sheets it actually bound,     */
+/*    so the caller can speak the truth about the book's size.         */
 /* ------------------------------------------------------------------ */
 
 export interface BookPdfMeta {
@@ -15,6 +31,8 @@ export interface BookPdfMeta {
   axiom?: string;
   dedication?: string;
   totalPages?: number;
+  /** The volume has genuinely concluded — only then is "The End" bound. */
+  concluded?: boolean;
 }
 
 export interface BookPdfPage {
@@ -23,8 +41,26 @@ export interface BookPdfPage {
   paragraphs: string[];
 }
 
+export interface BookPdfResult {
+  /** The number of A4 sheets the press actually bound. */
+  pdfPages: number;
+  /** The words of manuscript the press set in ink. */
+  words: number;
+}
+
 const SERIF_URL = "/fonts/DejaVuSerif.ttf";
 const SERIF_BOLD_URL = "/fonts/DejaVuSerif-Bold.ttf";
+
+/* the page's architecture — one source of truth for every measurement */
+const A4: [number, number] = [595.28, 841.89];
+const MARGIN = 68;
+const TOP = A4[1] - MARGIN; /* where the first line sits */
+const BOTTOM = MARGIN + 34; /* no text below this line */
+const BODY_SIZE = 11.5;
+const BODY_LEADING = 17.5;
+const PARA_GAP = 9;
+const CHAPTER_SIZE = 15.5;
+const CHAPTER_LEADING = 21;
 
 async function fetchFont(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url);
@@ -44,11 +80,12 @@ function slugify(title: string): string {
   );
 }
 
-/** Bind the volume. Throws when the press jams — the caller speaks. */
+/** Bind the volume. Throws when the press jams — the caller speaks.
+    Returns the truth about the bound book: its sheets and its words. */
 export async function downloadBookPdf(
   meta: BookPdfMeta,
   pages: BookPdfPage[]
-): Promise<void> {
+): Promise<BookPdfResult> {
   const [{ PDFDocument, rgb }, fontkitMod, serifBytes, boldBytes] =
     await Promise.all([
       import("pdf-lib"),
@@ -63,16 +100,13 @@ export async function downloadBookPdf(
   const serif = await doc.embedFont(serifBytes, { subset: true });
   const serifBold = await doc.embedFont(boldBytes, { subset: true });
 
-  const A4: [number, number] = [595.28, 841.89];
-  const M = 68;
-  const W = A4[0] - M * 2;
-  const BOTTOM = M + 30;
+  const W = A4[0] - MARGIN * 2;
 
   const ink = rgb(0.16, 0.14, 0.13);
   const soft = rgb(0.42, 0.4, 0.38);
   const faint = rgb(0.62, 0.6, 0.57);
 
-  const wrap = (text: string, font: typeof serif, size: number): string[] => {
+  const wrap = (text: string, font: typeof serif, size: number, width = W): string[] => {
     const out: string[] = [];
     for (const rawLine of text.split(/\n/)) {
       const words = rawLine.split(/\s+/).filter(Boolean);
@@ -83,10 +117,11 @@ export async function downloadBookPdf(
       let line = "";
       for (const w of words) {
         const cand = line ? `${line} ${w}` : w;
-        if (font.widthOfTextAtSize(cand, size) <= W) {
+        if (font.widthOfTextAtSize(cand, size) <= width) {
           line = cand;
         } else {
           if (line) out.push(line);
+          /* a single word longer than the measure is set whole */
           line = w;
         }
       }
@@ -95,13 +130,21 @@ export async function downloadBookPdf(
     return out;
   };
 
+  /* ------------------- the sheet itself ------------------- */
   let page = doc.addPage(A4);
-  let y = M;
+  let y = TOP; /* the pen begins at the TOP of the sheet and walks down */
+  let sheetNo = 0; /* the title leaf is sheet 0; the story begins on 1 */
 
-  const newPage = () => {
+  const newSheet = () => {
     page = doc.addPage(A4);
-    y = M;
+    y = TOP;
+    sheetNo += 1;
+    return sheetNo;
   };
+
+  /* how many body lines still fit on the current sheet */
+  const roomForLines = (): number =>
+    Math.floor((y - BOTTOM) / BODY_LEADING + 1e-9);
 
   /* ------------------- the title leaf ------------------- */
   {
@@ -152,39 +195,103 @@ export async function downloadBookPdf(
     });
   }
 
-  /* ------------------- the story pages ------------------- */
+  /* ------------------- the manuscript, flowed -------------------
+     The story pages arrive as the loom wove them (n, chapter,
+     paragraphs). The press does NOT cast one sheet per story page:
+     it pours the whole manuscript into a continuous measure, so a
+     sheet holds exactly as much as it can carry and no leaf is left
+     near-empty. A chapter's title always begins a fresh leaf. */
+  let words = 0;
+  let onTitleLeaf = true; /* the story never pours onto the title leaf */
+
   for (const p of pages) {
-    newPage();
-    y = M;
-    if (p.chapter) {
-      for (const l of wrap(p.chapter, serifBold, 14.5)) {
-        page.drawText(l, { x: M, y, size: 14.5, font: serifBold, color: ink });
-        y += 20;
-      }
-      y += 6;
-    }
-    for (const para of p.paragraphs) {
-      const lines = wrap(para, serif, 11.5);
-      for (const l of lines) {
-        if (y > A4[1] - BOTTOM) newPage();
-        page.drawText(l, { x: M, y, size: 11.5, font: serif, color: ink });
-        y += 17.5;
-      }
-      y += 9; /* the breath between paragraphs */
-    }
-    const num = String(p.n);
-    page.drawText(num, {
-      x: A4[0] / 2 - serif.widthOfTextAtSize(num, 9) / 2,
-      y: 40,
-      size: 9,
-      font: serif,
-      color: faint,
+    /* the chapter opening — measured, then laid on a fresh leaf */
+    const chapterLines = p.chapter
+      ? wrap(p.chapter, serifBold, CHAPTER_SIZE)
+      : [];
+
+    /* the paragraphs' wrapped lines, gathered first so the press
+       knows exactly what must fit */
+    const paraLines: string[][] = p.paragraphs.map((para) => {
+      words += para.split(/\s+/).filter(Boolean).length;
+      return wrap(para, serif, BODY_SIZE);
     });
+
+    /* A fresh leaf is taken whenever the current sheet cannot
+       honestly receive what comes:
+       - the story's very first page always leaves the title leaf;
+       - a chapter opening always begins a leaf of its own;
+       - a paragraph is never begun with a single line of room
+         (no one-line widows stranded at the foot of a sheet). */
+    const firstLineRoom = roomForLines();
+    const needsFreshLeaf =
+      onTitleLeaf ||
+      chapterLines.length > 0 ||
+      (paraLines.length > 0 && firstLineRoom < Math.min(paraLines[0].length, 2));
+    if (needsFreshLeaf) newSheet();
+    onTitleLeaf = false;
+
+    if (chapterLines.length > 0) {
+      /* the chapter's own quiet kicker — a hairline and space above */
+      y -= 12;
+      for (const l of chapterLines) {
+        page.drawText(l, {
+          x: MARGIN,
+          y,
+          size: CHAPTER_SIZE,
+          font: serifBold,
+          color: ink,
+        });
+        y -= CHAPTER_LEADING;
+      }
+      y -= 14; /* the breath between the heading and the body */
+    }
+
+    for (const lines of paraLines) {
+      /* paragraph integrity: never begin a paragraph whose first
+         lines would straddle the foot — carry it whole to the next
+         leaf when fewer than two lines of room remain */
+      if (lines.length > roomForLines() && roomForLines() < 2) {
+        newSheet();
+      }
+      for (const l of lines) {
+        if (y < BOTTOM) newSheet();
+        page.drawText(l, {
+          x: MARGIN,
+          y,
+          size: BODY_SIZE,
+          font: serif,
+          color: ink,
+        });
+        y -= BODY_LEADING;
+      }
+      y -= PARA_GAP; /* the breath between paragraphs */
+    }
   }
 
-  /* ------------------- the seal of closing ------------------- */
-  newPage();
-  {
+  /* the folios — pressed after the pour: every sheet from the story's
+     first onward carries its own number at the foot, so the count
+     the reader sees is the count of leaves actually bound */
+  if (sheetNo >= 1) {
+    const all = doc.getPages();
+    for (let i = 1; i < all.length; i++) {
+      const p = all[i];
+      const num = String(i);
+      p.drawText(num, {
+        x: A4[0] / 2 - serif.widthOfTextAtSize(num, 9) / 2,
+        y: 40,
+        size: 9,
+        font: serif,
+        color: faint,
+      });
+    }
+  }
+
+  /* ------------------- the seal of closing -------------------
+     Bound ONLY when the volume has genuinely concluded — a book the
+     loom is still weaving never carries a false "The End". */
+  if (meta.concluded) {
+    newSheet();
     const cx = A4[0] / 2;
     const ty = A4[1] * 0.5;
     const end = "The End";
@@ -218,4 +325,8 @@ export async function downloadBookPdf(
   a.click();
   a.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+  /* the truth rides home: the sheets the press bound, and the words
+     it set — the caller validates the book against its plan */
+  return { pdfPages: doc.getPageCount(), words };
 }

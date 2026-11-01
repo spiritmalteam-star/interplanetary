@@ -20,14 +20,19 @@ import {
   ChevronsUpDown,
   Copy,
   Download,
+  Eraser,
   Feather,
   History,
   LoaderCircle,
+  Maximize2,
   MoonStar,
   Pause,
+  PenLine,
   Play,
   Sparkles,
   Square,
+  Trash2,
+  Undo2,
   Volume2,
   VolumeX,
   Waves,
@@ -62,6 +67,7 @@ import type { DreamBookResume } from "@/lib/mirror-store";
 import type { VoiceId } from "@/lib/i18n/core";
 import type { BookAudit, BookLedger } from "@/lib/book-ledger";
 import { AUDIT_DIMENSIONS } from "@/lib/book-ledger";
+import type { QcReport } from "@/lib/book-qc";
 import { downloadBookPdf } from "@/lib/book-pdf";
 import { recordDownload } from "@/lib/downloads-log";
 import { cn } from "@/lib/utils";
@@ -112,6 +118,40 @@ const BOOK_VOICE: VoiceId = "reader";
 
 const ZOOM_STEPS = [15.5, 17.5, 19.5, 21.5, 24];
 
+/* THE LOOM'S ONE INPUT — a thousand words of wishing. Whatever the
+   visitor speaks — a subject, a whole plot, a child's own drawing
+   transcribed to words — the input holds it. */
+const MAX_WORDS = 1000;
+
+const countWords = (text: string): number =>
+  text.trim() ? text.trim().split(/\s+/).length : 0;
+
+/* THE DRAWING ATELIER — a small, bright press for children's hands:
+   ten crayons, three brushes, an eraser, an undo and a clean sheet.
+   The drawing is not painted back — it is READ, and its reading
+   becomes the words the book is woven from. */
+const DRAW_COLORS = [
+  "#1c1917",
+  "#b91c1c",
+  "#c2410c",
+  "#ca8a04",
+  "#15803d",
+  "#0f766e",
+  "#1d4ed8",
+  "#7e22ce",
+  "#9d174d",
+  "#78350f",
+];
+const DRAW_SIZES = [3, 6, 12];
+const DRAW_PAPER = "#faf7f1";
+
+interface DrawStroke {
+  color: string;
+  size: number;
+  erase: boolean;
+  points: Array<{ x: number; y: number }>;
+}
+
 const pageText = (p: WeavePage) => p.paragraphs.join(" ");
 
 /* the slide of the pages — one leaf glides out, the next glides in.
@@ -144,12 +184,37 @@ export function DreamBookView() {
   const [level, setLevel] = useState("");
   const [topic, setTopic] = useState("");
   const [topicDraft, setTopicDraft] = useState("");
+  /* THE WIDE INPUT — when the wish is long (a whole plot, a thousand
+     words, a child's own transcribed drawing), the one input opens
+     into a great quiet sheet; minimize folds it back. */
+  const [composerZoom, setComposerZoom] = useState(false);
+  /* THE DRAWING ATELIER — a canvas beside the loom: the child draws,
+     the loom reads, and the reading becomes the words of the book. */
+  const [drawOpen, setDrawOpen] = useState(false);
+  const [drawColor, setDrawColor] = useState(DRAW_COLORS[0]);
+  const [drawSize, setDrawSize] = useState(DRAW_SIZES[1]);
+  const [drawErase, setDrawErase] = useState(false);
+  const [readingSketch, setReadingSketch] = useState(false);
+  const drawCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawStrokesRef = useRef<DrawStroke[]>([]);
+  const drawActiveRef = useRef<DrawStroke | null>(null);
+  /* the channeling's own hand — a fresh token every conjuring; a
+     cancelled one lets the late reply land without dragging the
+     visitor back into a room they chose to leave */
+  const channelTokenRef = useRef(0);
+  const [pendingOpen, setPendingOpen] = useState(false);
+  /* the X of the weaving room — one press arms it, a second confirms:
+     the channeling is never ended by a single stray touch */
+  const [cancelArmed, setCancelArmed] = useState(false);
   /* THE VEIN — the big choice of the loom: ephemeral (metaphysical,
      mystique) or ground (a normal book). The channel's own breath has
      always been ephemeral, so it is the resting hand. */
   const [vein, setVein] = useState<"ephemeral" | "ground">("ephemeral");
   const [phaseIdx, setPhaseIdx] = useState(0);
 
+  /* THE CHANNELING'S OWN VOICE — the loom speaks while it works: a
+     slow drift of small, true, strange comforts (never the word
+     "loading"), one every few breaths until the book arrives. */
   const WEAVING_PHASES = useMemo(
     () => [
       t("Tuning the loom to your subject…"),
@@ -158,6 +223,20 @@ export function DreamBookView() {
       t("Folding the first pages of the world…"),
       t("Sharpening the ink of beginnings…"),
       t("Waking the characters one by one…"),
+      t("Laying the four corners of the story…"),
+      t("The first sentence is testing its own voice…"),
+      t("Somewhere, a door only your book can open…"),
+      t("Weather is being decided for chapter one…"),
+      t("A name is being whispered for the first time ever…"),
+      t("The villain is learning their reasons…"),
+      t("Old prophecies are being reworded so they come true…"),
+      t("Maps are drawing themselves along the story's edges…"),
+      t("Two strangers are about to meet for the plot's sake…"),
+      t("The ending is being kept secret from everyone, even you…"),
+      t("Paper is learning patience…"),
+      t("Ink is flowing uphill to reach the right page…"),
+      t("Every borrowed idea is being sent home — this one is only yours…"),
+      t("The quill dips. The loom breathes. The pages turn…"),
       t("Binding the book with a breath…"),
     ],
     [t]
@@ -217,8 +296,15 @@ export function DreamBookView() {
      OUT of the book unless the reader asks to see it */
   const [audit, setAudit] = useState<BookAudit | null>(null);
   const [auditOpen, setAuditOpen] = useState(false);
+  /* THE EXAMINER'S REPORT — the manuscript's own measures and findings,
+     read back before the seal landed; kept beside the audit */
+  const [qc, setQc] = useState<QcReport | null>(null);
+  const [qcOpen, setQcOpen] = useState(false);
   /* the binding press — while the PDF is gathered */
   const [binding, setBinding] = useState(false);
+
+  /* the honest counter of the one input — a thousand words of wishing */
+  const wordCount = useMemo(() => countWords(topicDraft), [topicDraft]);
 
   const pagesRef = useRef<WeavePage[]>([]);
   const threadsRef = useRef("");
@@ -340,6 +426,10 @@ export function DreamBookView() {
       setPageIdx(0);
       setSlideDir(1);
       setZoom(1);
+      setAudit(null);
+      setAuditOpen(false);
+      setQc(null);
+      setQcOpen(false);
       setStage("reading");
     },
     [stopNarration]
@@ -675,6 +765,11 @@ export function DreamBookView() {
         if (phase === "close" && data.audit && typeof data.audit === "object") {
           setAudit(data.audit as BookAudit);
         }
+        /* THE EXAMINER'S REPORT — the manuscript read back before the
+           seal landed: its measures, its findings, its verdict */
+        if (phase === "close" && data.qc && typeof data.qc === "object") {
+          setQc(data.qc as QcReport);
+        }
 
         const fresh: WeavePage[] = data.pages;
         /* THE LOOM NEVER WRITES A PAGE TWICE — a page whose number the
@@ -719,8 +814,12 @@ export function DreamBookView() {
           setMeta(metaRef.current);
         }
         if (phase === "close") {
-          endedRef.current = true;
-          setEnded(true);
+          /* THE HONEST SEAL — the room only calls the book finished when
+             the loom's examiner allowed the seal: a blocking verdict
+             keeps the volume open, never wearing a false "The End". */
+          const honestEnd = data.ended !== false;
+          endedRef.current = honestEnd;
+          setEnded(honestEnd);
         }
         if (phase === "open") {
           void useMirror.getState().refreshMe();
@@ -757,11 +856,19 @@ export function DreamBookView() {
   );
 
   const openBook = useCallback(async () => {
-    if (weavingRef.current) return;
+    if (weavingRef.current || pendingOpen) return;
+    const token = ++channelTokenRef.current;
     setWeaveError(false);
+    setCancelArmed(false);
     setStage("weaving");
     setPhaseIdx(0);
+    setPendingOpen(true);
     const ok = await weave("open", 1);
+    /* a cancelled channeling never drags the visitor back: if the
+       token moved on (the X confirmed, a new conjuring began), the
+       late reply is received in silence */
+    if (token !== channelTokenRef.current) return;
+    setPendingOpen(false);
     if (ok) {
       setStage("reading");
       setPageIdx(0);
@@ -770,24 +877,185 @@ export function DreamBookView() {
       /* stay in the weaving room — it now speaks for itself */
       setWeaveError(true);
     }
-  }, [weave]);
+  }, [weave, pendingOpen]);
 
   /* the one input — whatever is spoken, its send begins the channeling:
-     a totally authentic, never-repeating volume, woven in real time */
+     a totally authentic, never-repeating volume, woven in real time.
+     A thousand words of wishing may be spoken; the drawing atelier's
+     transcription lands here too, as the visitor's own words. */
   const channelBook = useCallback(
     (e?: FormEvent) => {
       e?.preventDefault();
-      const text = topicDraft.trim().slice(0, 600);
+      const words = countWords(topicDraft);
+      if (!topicDraft.trim() || words > MAX_WORDS) return;
+      const text = topicDraft.trim();
       /* the final gate — at least one thread must be held before the
          loom may begin; nothing beyond that is ever forced */
-      if (!text || weavingRef.current || !(age || tale || volume || level)) return;
+      if (weavingRef.current || pendingOpen || !(age || tale || volume || level)) return;
       setTopicDraft("");
+      setComposerZoom(false);
       setTopic(text);
       configRef.current = { ...configRef.current, topic: text };
       void openBook();
     },
-    [topicDraft, age, tale, volume, level, openBook]
+    [topicDraft, age, tale, volume, level, openBook, pendingOpen]
   );
+
+  /* ---------------- the drawing atelier ----------------
+     The child draws the front of their book; the loom READS the
+     drawing and transcribes it into the visitor's own words. The
+     picture itself is never sent to become an image — its reading
+     becomes the text the book is woven from. */
+
+  const paintStroke = useCallback(
+    (ctx: CanvasRenderingContext2D, s: DrawStroke) => {
+      if (s.points.length === 0) return;
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      if (s.erase) {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.strokeStyle = "rgba(0,0,0,1)";
+      } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = s.color;
+      }
+      ctx.lineWidth = s.size;
+      ctx.beginPath();
+      const first = s.points[0];
+      ctx.moveTo(first.x, first.y);
+      if (s.points.length === 1) {
+        ctx.lineTo(first.x + 0.01, first.y + 0.01);
+      } else {
+        for (let i = 1; i < s.points.length; i++) ctx.lineTo(s.points[i].x, s.points[i].y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    },
+    []
+  );
+
+  const repaintAll = useCallback(() => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = DRAW_PAPER;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (const s of drawStrokesRef.current) paintStroke(ctx, s);
+  }, [paintStroke]);
+
+  /* the sheet is stretched to its container once, in device pixels,
+     so every stroke stays crisp on every screen */
+  useEffect(() => {
+    if (!drawOpen) return;
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+    const parent = canvas.parentElement;
+    if (!parent) return;
+    const rect = parent.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.max(300, Math.round(rect.width * dpr));
+    canvas.height = Math.max(220, Math.round(rect.height * dpr));
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = `${rect.height}px`;
+    repaintAll();
+  }, [drawOpen, repaintAll]);
+
+  const canvasPoint = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((e.clientY - rect.top) / rect.height) * canvas.height,
+    };
+  };
+
+  const drawBegin = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const p = canvasPoint(e);
+    if (!p) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drawActiveRef.current = {
+      color: drawColor,
+      size: (drawSize * Math.min(2, window.devicePixelRatio || 1)),
+      erase: drawErase,
+      points: [p],
+    };
+  };
+
+  const drawMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const active = drawActiveRef.current;
+    const canvas = drawCanvasRef.current;
+    if (!active || !canvas) return;
+    const p = canvasPoint(e);
+    if (!p) return;
+    active.points.push(p);
+    const ctx = canvas.getContext("2d");
+    if (ctx) paintStroke(ctx, { ...active, points: active.points.slice(-2) });
+  };
+
+  const drawEnd = () => {
+    const active = drawActiveRef.current;
+    if (!active) return;
+    drawStrokesRef.current.push(active);
+    drawActiveRef.current = null;
+  };
+
+  const drawUndo = useCallback(() => {
+    drawStrokesRef.current.pop();
+    repaintAll();
+  }, [repaintAll]);
+
+  const drawClear = useCallback(() => {
+    drawStrokesRef.current = [];
+    repaintAll();
+  }, [repaintAll]);
+
+  /* THE READING — the drawing is handed to the loom's eye and its
+     transcription returns as the visitor's own words, seated in the
+     one input (beside anything already spoken, never over it). */
+  const readTheDrawing = useCallback(async () => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas || readingSketch) return;
+    /* an empty sheet has nothing to say */
+    if (drawStrokesRef.current.length === 0) {
+      toast(t("Draw something first — a bird, coins, a whole world."));
+      return;
+    }
+    setReadingSketch(true);
+    try {
+      const dataUrl = canvas.toDataURL("image/png");
+      const res = await fetch("/api/dream-book/sketch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: dataUrl, language }),
+        signal: AbortSignal.timeout(110000),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.text) {
+        throw new Error(data?.error || "quiet");
+      }
+      const reading = String(data.text).trim();
+      setTopicDraft((cur) => {
+        const base = cur.trim();
+        const merged = base ? `${base} ${reading}` : reading;
+        /* the input never overflows its thousand words */
+        const words = merged.split(/\s+/);
+        return words.length > MAX_WORDS ? words.slice(0, MAX_WORDS).join(" ") : merged;
+      });
+      setDrawOpen(false);
+      drawStrokesRef.current = [];
+      toast.success(t("The loom read your drawing — its words are in your wish."));
+    } catch {
+      toast.error(t("The loom could not read the drawing."), {
+        description: t("Rest, then let it look again."),
+      });
+    } finally {
+      setReadingSketch(false);
+    }
+  }, [readingSketch, language, t]);
 
   /* ---------------- the reader's logic ----------------
      page 0 = the title page; page k ≥ 1 = story page n k.
@@ -875,8 +1143,13 @@ export function DreamBookView() {
     setLevel("");
     setAudit(null);
     setAuditOpen(false);
+    setQc(null);
+    setQcOpen(false);
     setWholeMode(false);
     setWholeReveal(null);
+    setCancelArmed(false);
+    setComposerZoom(false);
+    setDrawOpen(false);
     setStage("atelier");
   }, [stopNarration, keepCurrent, clearDreamResume]);
 
@@ -886,7 +1159,9 @@ export function DreamBookView() {
   }, [weave]);
 
   const letRest = useCallback(async () => {
-    const ok = await weave("close", pagesRef.current.length + 1);
+    /* the close may carry the examiner's mend pass — a second loom
+       breath — so the seal is given the room's longest patience */
+    const ok = await weave("close", pagesRef.current.length + 1, 2, 290000);
     if (ok) setPageIdx((s) => s + 1);
   }, [weave]);
 
@@ -945,9 +1220,10 @@ export function DreamBookView() {
         }
         if (have >= plan) {
           /* the planned end reached — the Seal of Closing is woven.
-             A long breath is given to the seal too: the audit and the
-             ending ride the same slow ink as any stride. */
-          const ok = await weave("close", have + 1, 2, 240000);
+             A long breath is given to the seal too: the audit, the
+             examiner's reading and a possible mend pass ride the
+             same slow ink as any stride. */
+          const ok = await weave("close", have + 1, 2, 290000);
           if (cancelRevealRef.current) break;
           if (!ok) {
             if (weavingRef.current) continue; /* contention, not silence */
@@ -1000,7 +1276,9 @@ export function DreamBookView() {
   }, []);
 
   /* THE BINDING PRESS — the whole book, pages and front matter, bound
-     into one ink PDF and handed to the visitor's own hands */
+     into one ink PDF and handed to the visitor's own hands. The press
+     flows the manuscript by real page capacity — its returned sheet
+     count is the truth the visitor hears, never the woven page plan. */
   const downloadWhole = useCallback(async () => {
     if (binding || !meta || pagesRef.current.length === 0) return;
     setBinding(true);
@@ -1010,7 +1288,7 @@ export function DreamBookView() {
         ...(p.chapter ? { chapter: p.chapter } : {}),
         paragraphs: p.paragraphs,
       }));
-      await downloadBookPdf(
+      const boundPdf = await downloadBookPdf(
         {
           title: meta.title,
           subtitle: meta.subtitle,
@@ -1018,6 +1296,10 @@ export function DreamBookView() {
           axiom: meta.axiom,
           dedication: meta.dedication,
           totalPages: meta.totalPages,
+          /* the seal of closing is bound only when the volume truly
+             concluded — a book still being woven never carries a
+             false "The End" */
+          concluded: endedRef.current,
         },
         bound
       );
@@ -1027,7 +1309,7 @@ export function DreamBookView() {
       recordDownload({
         title: meta.title,
         subtitle: meta.subtitle,
-        pages: bound.length,
+        pages: boundPdf.pdfPages,
         meta: {
           title: meta.title,
           subtitle: meta.subtitle,
@@ -1038,7 +1320,12 @@ export function DreamBookView() {
         },
         pageList: bound,
       });
-      toast.success(t("The book is bound — the PDF is yours"));
+      toast.success(
+        t("The book is bound — {n} pages, {w} words", {
+          n: boundPdf.pdfPages,
+          w: boundPdf.words,
+        })
+      );
     } catch {
       toast.error(t("The binding press needs a breath — try again"));
     } finally {
@@ -1503,7 +1790,9 @@ export function DreamBookView() {
         </div>
       </div>
 
-      {/* the one input — speak, send, and the channeling begins */}
+      {/* the one input — speak, draw, and the channeling begins.
+          A THOUSAND WORDS of wishing, counted honestly; a brush for
+          the youngest makers; a zoom for the longest wishes. */}
       <div className="relative z-10 shrink-0 border-t border-border bg-background px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
         <div className="mx-auto w-full max-w-[680px]">
           {/* the one gentle gate — the loom only asks for a single
@@ -1523,30 +1812,271 @@ export function DreamBookView() {
               </motion.p>
             )}
           </AnimatePresence>
+          {/* the draw atelier's own hand — resting on top of the input */}
+          <div className="mb-1.5 flex items-center justify-between gap-2 px-1">
+            <button
+              type="button"
+              onClick={() => setDrawOpen(true)}
+              data-testid="dream-draw-open"
+              aria-label={t("Draw your book")}
+              title={t("Draw your book — the loom reads your drawing into words")}
+              className="focus-glow flex h-7 items-center gap-1.5 rounded-full border border-border px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+            >
+              <PenLine className="size-3.5" aria-hidden="true" />
+              <span>{t("Draw")}</span>
+            </button>
+            <span
+              className={cn(
+                "mono-label text-[9px] tabular-nums tracking-[0.18em]",
+                wordCount > MAX_WORDS ? "text-[#b45309]" : "text-muted-foreground/55"
+              )}
+              data-testid="dream-word-count"
+            >
+              {wordCount} / {MAX_WORDS} {t("words")}
+            </span>
+          </div>
           <form
             onSubmit={channelBook}
-            className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-4 pr-1 transition-all duration-300 focus-within:border-foreground/35"
+            className="flex items-end gap-2 rounded-2xl border border-border bg-card py-1.5 pl-4 pr-1.5 transition-all duration-300 focus-within:border-foreground/35"
           >
-            <input
+            <textarea
               value={topicDraft}
               onChange={(e) => setTopicDraft(e.target.value)}
               placeholder={t("Speak anything — a subject, a wish, a whole world…")}
               aria-label={t("Speak anything — a subject, a wish, a whole world…")}
-              maxLength={600}
-              className="min-w-0 flex-1 bg-transparent py-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 focus:outline-none"
+              rows={topicDraft.length > 90 ? 3 : 1}
+              className="nice-scroll min-w-0 flex-1 resize-none bg-transparent py-1.5 font-[family-name(var(--font-literata))] text-[13.5px] italic leading-relaxed text-foreground placeholder:font-[family-name(var(--font-sans))] placeholder:not-italic placeholder:text-muted-foreground/60 focus:outline-none"
             />
-            <button
-              type="submit"
-              disabled={!topicDraft.trim() || !(age || tale || volume || level)}
-              aria-label={t("Channel the book")}
-              title={t("Channel the book")}
-              className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
-            >
-              <Waves className="size-3.5" aria-hidden="true" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setComposerZoom(true)}
+                aria-label={t("Zoom the wish")}
+                title={t("Zoom the wish — write at ease, then return")}
+                data-testid="dream-composer-zoom"
+                className="focus-glow flex size-8 items-center justify-center rounded-full text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+              >
+                <Maximize2 className="size-3.5" aria-hidden="true" />
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  !topicDraft.trim() ||
+                  wordCount > MAX_WORDS ||
+                  !(age || tale || volume || level)
+                }
+                aria-label={t("Channel the book")}
+                title={t("Channel the book")}
+                data-testid="dream-channel"
+                className="akashic-btn focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:opacity-40"
+              >
+                <Waves className="size-3.5" aria-hidden="true" />
+              </button>
+            </div>
           </form>
         </div>
       </div>
+
+      {/* THE WIDE WISH — the input opened into a great quiet sheet,
+          for whole plots and long, patient wanting; the shell's own
+          close folds it back into the loom's one line */}
+      <ModalShell
+        open={composerZoom}
+        onOpenChange={setComposerZoom}
+        title={t("The wide wish")}
+        description={t(
+          "Speak the whole wish — every turning, every name, everything the book must hold. Up to a thousand words."
+        )}
+        widthClass="sm:max-w-[720px]"
+      >
+        <form
+          onSubmit={channelBook}
+          className="flex h-[62dvh] flex-col px-5 pb-5 sm:px-6 sm:pb-6"
+          data-testid="dream-composer-sheet"
+        >
+          <textarea
+            autoFocus
+            value={topicDraft}
+            onChange={(e) => setTopicDraft(e.target.value)}
+            placeholder={t(
+              "Speak the whole wish — every turning, every name, everything the book must hold…"
+            )}
+            aria-label={t("Speak the whole wish — every turning, every name, everything the book must hold…")}
+            className="nice-scroll min-h-0 w-full flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 font-[family-name(var(--font-literata))] text-[15px] leading-[1.85] text-foreground transition-colors placeholder:font-[family-name(var(--font-sans))] placeholder:text-[14px] placeholder:not-italic placeholder:text-muted-foreground/60 focus:border-foreground/35 focus:outline-none"
+          />
+          <div className="mt-3 flex shrink-0 items-center justify-between gap-3">
+            <span
+              className={cn(
+                "mono-label text-[9px] tabular-nums tracking-[0.18em]",
+                wordCount > MAX_WORDS ? "text-[#b45309]" : "text-muted-foreground/55"
+              )}
+              data-testid="dream-word-count-zoom"
+            >
+              {wordCount} / {MAX_WORDS} {t("words")}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setDrawOpen(true)}
+                className="focus-glow flex h-9 items-center gap-1.5 rounded-full border border-border px-3.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground"
+              >
+                <PenLine className="size-3.5" aria-hidden="true" />
+                {t("Draw")}
+              </button>
+              <button
+                type="submit"
+                disabled={
+                  !topicDraft.trim() ||
+                  wordCount > MAX_WORDS ||
+                  !(age || tale || volume || level)
+                }
+                className="akashic-btn focus-glow flex h-10 items-center justify-center gap-2 rounded-full px-6 text-[13.5px] font-medium disabled:opacity-40"
+              >
+                <Waves className="size-4" aria-hidden="true" />
+                {t("Channel the book")}
+              </button>
+            </div>
+          </div>
+        </form>
+      </ModalShell>
+
+      {/* THE DRAWING ATELIER — the child's own press: crayons, brushes,
+          an eraser and a clean sheet; the loom reads what is drawn and
+          its reading becomes the words of the book */}
+      <ModalShell
+        open={drawOpen}
+        onOpenChange={(o) => {
+          setDrawOpen(o);
+          if (!o) {
+            /* the sheet is cleared when it closes — a fresh press
+               for the next drawing */
+            drawStrokesRef.current = [];
+            drawActiveRef.current = null;
+          }
+        }}
+        title={t("Draw your book")}
+        description={t(
+          "Draw a bird, coins, a dragon, anything — the loom reads your picture and writes your book from it."
+        )}
+        widthClass="sm:max-w-[640px]"
+      >
+        <div className="px-5 pb-5 sm:px-6 sm:pb-6" data-testid="dream-draw-sheet">
+          <div className="h-[42dvh] min-h-[240px] overflow-hidden rounded-2xl border border-border">
+            <canvas
+              ref={drawCanvasRef}
+              data-testid="dream-draw-canvas"
+              className="block h-full w-full touch-none"
+              onPointerDown={drawBegin}
+              onPointerMove={drawMove}
+              onPointerUp={drawEnd}
+              onPointerLeave={drawEnd}
+              onPointerCancel={drawEnd}
+            />
+          </div>
+          {/* the crayons, the brushes, the undo and the clean sheet */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <div className="flex items-center gap-1.5" role="radiogroup" aria-label={t("Crayons")}>
+              {DRAW_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  role="radio"
+                  aria-checked={drawColor === c && !drawErase}
+                  onClick={() => {
+                    setDrawColor(c);
+                    setDrawErase(false);
+                  }}
+                  aria-label={t("Crayon")}
+                  className={cn(
+                    "focus-glow size-6 rounded-full border transition-all duration-200",
+                    drawColor === c && !drawErase
+                      ? "scale-110 border-foreground shadow-[0_0_0_2px_var(--background)]"
+                      : "border-black/10 hover:scale-105"
+                  )}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-1.5" role="radiogroup" aria-label={t("Brushes")}>
+              {DRAW_SIZES.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  role="radio"
+                  aria-checked={drawSize === s && !drawErase}
+                  onClick={() => {
+                    setDrawSize(s);
+                    setDrawErase(false);
+                  }}
+                  aria-label={`${t("Brush")} ${s}`}
+                  className={cn(
+                    "focus-glow flex size-7 items-center justify-center rounded-full border transition-all duration-200",
+                    drawSize === s && !drawErase
+                      ? "border-foreground/60 bg-foreground/10"
+                      : "border-border hover:border-foreground/30"
+                  )}
+                >
+                  <span
+                    className="rounded-full bg-foreground"
+                    style={{ width: Math.min(10, s + 2), height: Math.min(10, s + 2) }}
+                  />
+                </button>
+              ))}
+            </div>
+            <div className="ml-auto flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setDrawErase((v) => !v)}
+                aria-pressed={drawErase}
+                aria-label={t("Eraser")}
+                title={t("Eraser")}
+                className={cn(
+                  "focus-glow flex size-8 items-center justify-center rounded-full border transition-all duration-200",
+                  drawErase
+                    ? "border-transparent bg-foreground text-background"
+                    : "border-border text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Eraser className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={drawUndo}
+                aria-label={t("Undo")}
+                title={t("Undo")}
+                className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:text-foreground"
+              >
+                <Undo2 className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={drawClear}
+                aria-label={t("A clean sheet")}
+                title={t("A clean sheet")}
+                className="focus-glow flex size-8 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-200 hover:text-foreground"
+              >
+                <Trash2 className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => void readTheDrawing()}
+            disabled={readingSketch}
+            data-testid="dream-draw-read"
+            className="akashic-btn focus-glow mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-full text-[14px] font-medium disabled:opacity-60"
+          >
+            {readingSketch ? (
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Sparkles className="size-4" aria-hidden="true" />
+            )}
+            {readingSketch
+              ? t("The loom is reading your drawing…")
+              : t("Read my drawing into words")}
+          </button>
+        </div>
+      </ModalShell>
     </div>
   );
 
@@ -1556,6 +2086,64 @@ export function DreamBookView() {
 
   const weaving = (
     <div className="relative flex h-full flex-col items-center justify-center overflow-hidden bg-background px-6 text-foreground">
+      {/* THE X OF THE CHANNELING — one press asks, a second confirms:
+          the weaving is never ended by a stray touch. Confirmed, the
+          loom rests and the atelier receives the visitor back; the
+          late reply, if any, lands unheard. */}
+      {!weaveError && (
+        <button
+          type="button"
+          onClick={() => setCancelArmed(true)}
+          aria-label={t("Cancel the channeling")}
+          title={t("Cancel the channeling")}
+          data-testid="dream-weaving-cancel"
+          disabled={cancelArmed}
+          className="focus-glow absolute right-4 top-[max(1rem,env(safe-area-inset-top))] z-20 flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-all duration-300 hover:border-foreground/40 hover:text-foreground disabled:opacity-40 sm:right-6"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      )}
+      {/* the confirmation — small, honest, unhurried (portaled so the
+          narrow columns of the house can never clip it) */}
+      <ModalShell
+        open={cancelArmed && !weaveError}
+        onOpenChange={(o) => {
+          if (!o) setCancelArmed(false);
+        }}
+        title={t("Stop the channeling?")}
+        description={t(
+          "The loom will let the threads rest and return you to the atelier — nothing woven is kept."
+        )}
+        widthClass="sm:max-w-[380px]"
+      >
+        <div
+          className="flex items-center justify-end gap-2 px-5 pb-5 sm:px-6 sm:pb-6"
+          data-testid="dream-cancel-confirm"
+        >
+          <button
+            type="button"
+            onClick={() => setCancelArmed(false)}
+            data-testid="dream-cancel-keep"
+            className="focus-glow flex h-9 items-center rounded-full border border-border px-4 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-foreground/40"
+          >
+            {t("Keep weaving")}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              channelTokenRef.current += 1;
+              setCancelArmed(false);
+              setPendingOpen(false);
+              setWeaveError(false);
+              backFromWeaving();
+            }}
+            data-testid="dream-cancel-stop"
+            className="focus-glow flex h-9 items-center rounded-full bg-foreground px-4 text-[12.5px] font-medium text-background transition-all duration-300 hover:opacity-90"
+          >
+            {t("Yes, stop it")}
+          </button>
+        </div>
+      </ModalShell>
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -1933,25 +2521,39 @@ export function DreamBookView() {
                 fontSize={ZOOM_STEPS[zoom]}
               />
             ))}
-            <div className="dream-page dream-page-single mt-7 flex flex-col items-center px-6 py-12 text-center">
-              <span
-                className="font-[family-name(var(--font-literata))] text-4xl text-[var(--dream-ink-soft)]"
-                aria-hidden="true"
-              >
-                ❦
-              </span>
-              <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[24px] text-[var(--dream-ink)]">
-                {t("The End")}
-              </h2>
-              <p className="mt-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-[var(--dream-ink-soft)]">
-                {meta?.title}
-              </p>
-              {!ended && (
-                <p className="mono-label mt-3 text-[9px] uppercase tracking-[0.2em] text-[var(--dream-ink-faint)]">
-                  {t("The loom is still weaving — the book returns whole when the seal lands")}
+            {!ended ? (
+              <div className="dream-page dream-page-single mt-7 flex flex-col items-center px-6 py-12 text-center">
+                <span
+                  className="font-[family-name(var(--font-literata))] text-2xl text-[var(--dream-ink-faint)]"
+                  aria-hidden="true"
+                >
+                  ❧
+                </span>
+                <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[19px] text-[var(--dream-ink)]">
+                  {t("The loom is still weaving")}
+                </h2>
+                <p className="mt-2 max-w-[320px] font-[family-name(var(--font-literata))] text-[12.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                  {t(
+                    "The telling has not truly ended yet — the seal of closing is bound only when the story is whole."
+                  )}
                 </p>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className="dream-page dream-page-single mt-7 flex flex-col items-center px-6 py-12 text-center">
+                <span
+                  className="font-[family-name(var(--font-literata))] text-4xl text-[var(--dream-ink-soft)]"
+                  aria-hidden="true"
+                >
+                  ❦
+                </span>
+                <h2 className="mt-5 font-[family-name(var(--font-literata))] text-[24px] text-[var(--dream-ink)]">
+                  {t("The End")}
+                </h2>
+                <p className="mt-2 font-[family-name(var(--font-literata))] text-[13.5px] italic text-[var(--dream-ink-soft)]">
+                  {meta?.title}
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="mx-auto flex h-full w-full max-w-[760px] items-stretch justify-center px-3 pb-7 pt-3 sm:px-8 sm:pb-9">
@@ -2026,6 +2628,31 @@ export function DreamBookView() {
                         {t("Let the story rest")}
                       </button>
                     </div>
+                    {/* THE EXAMINER'S VERDICT — when the seal was refused,
+                        the reader hears why the book stays open */}
+                    {qc && qc.blocking && (
+                      <div
+                        className="mt-5 w-full rounded-xl border border-[var(--dream-ink-faint)]/30 px-3.5 py-3 text-left"
+                        data-testid="dream-qc-blocking"
+                      >
+                        <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-[var(--dream-ink-soft)]">
+                          {t("The loom's examiner holds the seal")}
+                        </p>
+                        <ul className="mt-2 space-y-1.5">
+                          {qc.issues
+                            .filter((i) => i.severity !== "note")
+                            .slice(0, 4)
+                            .map((i, k) => (
+                              <li
+                                key={`${i.kind}-${k}`}
+                                className="font-[family-name(var(--font-literata))] text-[11.5px] italic leading-relaxed text-[var(--dream-ink-soft)]"
+                              >
+                                {i.message}
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 ) : showEnd ? (
                   /* the last page of the book */
@@ -2092,6 +2719,72 @@ export function DreamBookView() {
                               ) : null
                             )}
                           </ul>
+                        )}
+                      </div>
+                    )}
+                    {/* THE EXAMINER'S REPORT — the manuscript measured
+                        before the seal: its true length, its chapters,
+                        every finding worth carrying forward */}
+                    {qc && (
+                      <div
+                        className="mt-5 w-full max-w-[420px]"
+                        data-testid="dream-qc-report"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setQcOpen((o) => !o)}
+                          aria-expanded={qcOpen}
+                          data-testid="dream-qc-toggle"
+                          className="focus-glow mx-auto flex h-9 items-center gap-2 rounded-full border border-[var(--dream-ink-faint)]/35 px-4 font-[family-name(var(--font-literata))] text-[12px] italic text-[var(--dream-ink-soft)] transition-all duration-300 hover:border-[var(--dream-ink-soft)] hover:text-[var(--dream-ink)]"
+                        >
+                          <BookOpenText className="size-3.5" aria-hidden="true" />
+                          {t("The manuscript, measured")}
+                          <ChevronsUpDown className="size-3 opacity-60" aria-hidden="true" />
+                        </button>
+                        {qcOpen && (
+                          <div className="mt-4 text-left">
+                            <div className="grid grid-cols-4 gap-2">
+                              {[
+                                { k: t("words"), v: qc.stats.words },
+                                { k: t("pages"), v: qc.stats.pages },
+                                { k: t("chapters"), v: qc.stats.chapters },
+                                { k: t("typeset"), v: qc.stats.estTypesetPages },
+                              ].map((s) => (
+                                <div
+                                  key={s.k}
+                                  className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-2 py-2 text-center"
+                                >
+                                  <p className="font-[family-name(var(--font-literata))] text-[15px] tabular-nums text-[var(--dream-ink)]">
+                                    {s.v}
+                                  </p>
+                                  <p className="mono-label mt-0.5 text-[8px] uppercase tracking-[0.14em] text-[var(--dream-ink-soft)]">
+                                    {s.k}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                            {qc.issues.length > 0 ? (
+                              <ul className="nice-scroll mt-3 max-h-[26vh] space-y-1.5 overflow-y-auto">
+                                {qc.issues.map((i, k) => (
+                                  <li
+                                    key={`${i.kind}-${k}`}
+                                    className="rounded-xl border border-[var(--dream-ink-faint)]/25 px-3 py-2"
+                                  >
+                                    <p className="mono-label text-[8.5px] uppercase tracking-[0.16em] text-[var(--dream-ink-soft)]">
+                                      {i.kind} · {i.severity}
+                                    </p>
+                                    <p className="mt-1 font-[family-name(var(--font-literata))] text-[11.5px] italic leading-relaxed text-[var(--dream-ink-soft)]">
+                                      {i.message}
+                                    </p>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="mt-3 text-center font-[family-name(var(--font-literata))] text-[11.5px] italic text-[var(--dream-ink-soft)]">
+                                {t("The examiner found nothing that needs mending.")}
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}

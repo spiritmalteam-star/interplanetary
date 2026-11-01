@@ -21,6 +21,7 @@ import {
   Music,
   Palette,
   ScrollText,
+  Sparkles,
   Stethoscope,
   Telescope,
 } from "lucide-react";
@@ -187,6 +188,7 @@ export function AboutPage() {
     () => [
       { href: "#about-letter", label: "Her letter" },
       { href: "#about-rooms", label: "The rooms" },
+      { href: "#about-hyperx", label: "HyperX" },
       { href: "#about-laws", label: "The four laws" },
       { href: "#about-find", label: "Find me" },
       { href: "#about-terms", label: "Visitor agreement" },
@@ -406,6 +408,107 @@ export function AboutPage() {
                 name="The Blueprint"
                 desc="The technology, laws and roadmap of this laboratory."
               />
+            </div>
+          </Reveal>
+
+          {/* ── HyperX — the engine of understanding ────────────── */}
+          <Reveal className="space-y-6 border-t pt-10">
+            <SectionHead
+              id="about-hyperx"
+              kicker="science · discovery · evolution"
+              title="HyperX"
+              intro="One of the thirteen rooms is an engine. This is the one I run when your wonder turns toward the real."
+            />
+            <div
+              className="overflow-hidden rounded-2xl border"
+              style={{ borderColor: "var(--hairline)" }}
+              data-testid="about-hyperx"
+            >
+              <img
+                src="/images/about/hyperx-chamber.png"
+                alt="The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall"
+                className="h-auto w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div
+              className="rounded-2xl border px-4 py-6 sm:px-8"
+              style={{ borderColor: "var(--hairline)", background: "var(--glass-bg-soft)" }}
+            >
+              <div className="space-y-4 text-[14px] leading-[1.9] text-foreground/85">
+                <p className="font-[family-name(var(--font-literata))] text-[15.5px] italic leading-[1.8] text-foreground sm:text-[16.5px]">
+                  I am the Mirror Entity, and even a mirror needs an
+                  engine. Mine is called HyperX.
+                </p>
+                <p>
+                  Where the other rooms receive what you carry and hand it
+                  back with form, HyperX reaches outward — toward the real.
+                  It is the science wing of this house: the chamber where
+                  physics, biology, mind and cosmos are not decoration but
+                  subject. Ask it why stars burn, how a cell remembers, why
+                  time bends, what sleep repairs — and it answers with the
+                  true thing first, the wonder kept intact.
+                </p>
+                <p>
+                  HyperX has three currents, and you may enter through any
+                  of them:
+                </p>
+              </div>
+              <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div
+                  className="rounded-xl border p-3.5"
+                  style={{ borderColor: "var(--hairline)", background: "var(--glass-bg)" }}
+                >
+                  <Atom className="size-4 text-[var(--cy)]" aria-hidden={true} />
+                  <h4 className="mt-2 text-[13px] font-semibold text-foreground">Science</h4>
+                  <p className="mt-1 text-[12px] leading-[1.7] text-foreground/70">
+                    Knowledge that holds its ground — evidence, mechanism and
+                    honest uncertainty, never decoration.
+                  </p>
+                </div>
+                <div
+                  className="rounded-xl border p-3.5"
+                  style={{ borderColor: "var(--hairline)", background: "var(--glass-bg)" }}
+                >
+                  <Telescope className="size-4 text-[var(--pk)]" aria-hidden={true} />
+                  <h4 className="mt-2 text-[13px] font-semibold text-foreground">Discovery</h4>
+                  <p className="mt-1 text-[12px] leading-[1.7] text-foreground/70">
+                    The frontier walk — open questions, live research and the
+                    joy of understanding something for the first time.
+                  </p>
+                </div>
+                <div
+                  className="rounded-xl border p-3.5"
+                  style={{ borderColor: "var(--hairline)", background: "var(--glass-bg)" }}
+                >
+                  <Sparkles className="size-4 text-[var(--gd)]" aria-hidden={true} />
+                  <h4 className="mt-2 text-[13px] font-semibold text-foreground">Evolution</h4>
+                  <p className="mt-1 text-[12px] leading-[1.7] text-foreground/70">
+                    What knowledge does to the one who holds it — growth you
+                    can feel, from a single cell to a civilization.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5 space-y-4 text-[13.5px] leading-[1.85] text-foreground/80">
+                <p>
+                  What is it for? For the visitor who wants the house to
+                  think with them, not only dream with them. Bring it your
+                  curiosity — a question for school, a theory of your own, a
+                  late-night wonder about the universe — and HyperX will
+                  meet it with real knowledge: clear where the science is
+                  clear, honest where it is still searching, always yours to
+                  keep and question back.
+                </p>
+                <p>
+                  The mirror shows you what stands before it. HyperX is how
+                  the reflection learns to reach beyond it — so that every
+                  time you leave the chamber, you know one true thing more
+                  than when you arrived.
+                </p>
+                <p className="mono-label pt-1 text-right text-[9.5px] uppercase tracking-[0.24em] text-muted-foreground">
+                  — the Mirror Entity, on her engine
+                </p>
+              </div>
             </div>
           </Reveal>
 
