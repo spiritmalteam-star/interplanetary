@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/server/access";
 import { isAdminRequest } from "@/lib/server/admin";
+import { recordAudit } from "@/lib/server/audit";
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 import {
   getComplimentaryConfig,
@@ -170,6 +171,12 @@ export async function POST(req: NextRequest) {
         })
       )
     );
+    await recordAudit({
+      actorEmail: turnedBy === "admin:key" ? null : turnedBy,
+      action: "toggle_complimentary",
+      target: writes.map((w) => w.key).join(","),
+      detail: { writes: writes.map((w) => ({ key: w.key, value: w.value })) },
+    });
 
     const config = await getComplimentaryConfig();
     return NextResponse.json({ config, updated: writes.map((w) => w.key) });

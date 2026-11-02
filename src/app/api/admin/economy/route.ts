@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { isAdminEmail, isAdminRequest } from "@/lib/server/admin";
+import { recordAudit } from "@/lib/server/audit";
 import { getSessionUser } from "@/lib/server/access";
 import {
   WALLET_PACKS,
@@ -235,7 +236,7 @@ export async function POST(req: NextRequest) {
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "The console keeps its silence." }, { status: 403 });
   }
-  const adminEmail = process.env.ADMIN_EMAIL ?? "gentikoltraka28@gmail.com";
+  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim() || null;
   try {
     const body = (await req.json().catch(() => null)) as {
       action?: string;
@@ -272,6 +273,12 @@ export async function POST(req: NextRequest) {
             { status: res.depositDry ? 400 : 500 }
           );
         }
+        await recordAudit({
+          actorEmail: adminEmail,
+          action: "grant",
+          target: body.userId,
+          detail: { credits, reason },
+        });
         return NextResponse.json({ ok: true, total: res.total });
       }
       /* the draw — never below zero, always audited */
@@ -304,6 +311,12 @@ export async function POST(req: NextRequest) {
         return { ok: true as const, taken: take };
       });
       if (!result.ok) return NextResponse.json({ error: "That passage holds no wallet." }, { status: 404 });
+      await recordAudit({
+        actorEmail: adminEmail,
+        action: "deduct",
+        target: body.userId,
+        detail: { credits: result.taken, reason },
+      });
       return NextResponse.json({ ok: true, taken: result.taken });
     }
 
@@ -327,6 +340,15 @@ export async function POST(req: NextRequest) {
         where: { key: "service_prices" },
         create: { key: "service_prices", value: next as unknown as Record<string, number>, updatedBy },
         update: { value: next as unknown as Record<string, number>, updatedBy },
+      });
+      await recordAudit({
+        actorEmail: updatedBy,
+        action: "set_prices",
+        target: "service_prices",
+        detail: {
+          before: current as unknown as Record<string, number>,
+          after: next as unknown as Record<string, number>,
+        },
       });
       return NextResponse.json({ ok: true, prices: next });
     }

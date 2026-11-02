@@ -41,6 +41,7 @@ import { TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import { DnaHelix, TrajectoryEvolution, useJourney } from "./DnaTimeline";
 import { FuelEnginePanel } from "./FuelEnginePanel";
 import { AdminConsole } from "./AdminConsole";
+import { OverviewPanel } from "./admin/OverviewPanel";
 import { ExpansionMirrorPanel } from "./ExpansionMirror";
 import {
   bindAgain,
@@ -2356,10 +2357,16 @@ export function ProfilePage() {
               small
               title={t("Platform Administration")}
               desc={t(
-                "The keeper's own console — the whole economy at a glance, the users' shelf, the standing prices and the music engine's honesty. The server answers only to you."
+                "The keeper's own console — the command center's live glance, the whole economy at hand, the users' shelf, the standing prices and the music engine's honesty. The server answers only to you."
               )}
             />
             <section className={cn(panel, "p-3.5 sm:p-4")}>
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-white/50">
+                {t("The Command Center")}
+              </h2>
+              <OverviewPanel />
+            </section>
+            <section className={cn(panel, "mt-4 p-3.5 sm:p-4")}>
               <AdminConsole />
             </section>
           </div>

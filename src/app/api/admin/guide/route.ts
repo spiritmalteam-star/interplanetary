@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/server/admin";
-import ZAI from "@/lib/zai-client";
+import { executeAgent } from "@/lib/me/agents";
 import { GATES, rateLimit } from "@/lib/server/rate-limit";
+import { logger } from "@/lib/server/logger";
 
 /* ------------------------------------------------------------------ */
 /*  THE GUIDE ENGINE — /api/admin/guide                                */
@@ -72,7 +73,10 @@ export async function POST(req: NextRequest) {
     const convo = raw
       .slice(-20)
       .map((m) => ({
-        role: m?.role === "assistant" ? "assistant" : m?.role === "system" ? "system" : "user",
+        role: (m?.role === "assistant" ? "assistant" : m?.role === "system" ? "system" : "user") as
+          | "assistant"
+          | "system"
+          | "user",
         content: (typeof m?.content === "string" ? m.content : String(m?.content ?? "")).slice(0, 8_000),
       }))
       .filter((m) => m.content.trim().length > 0);
@@ -80,20 +84,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Ask the guide a question." }, { status: 400 });
     }
 
-    const zai = await ZAI.create();
-    const completion = await zai.chat.completions.create({
-      messages: [{ role: "system", content: GUIDE_SYSTEM_PROMPT }, ...convo],
-      thinking: { type: "disabled" },
-      max_tokens: 900,
-    });
+    /* THE M.E. OPERATIONS AGENT — the guide rides the house's own
+       agent registry: named posture, declared permissions, version,
+       ceilings, orchestration and health — the same law every M.E.
+       experience keeps. */
+    const { completion } = await executeAgent(
+      "me-operations",
+      {
+        messages: [{ role: "system", content: GUIDE_SYSTEM_PROMPT }, ...convo],
+        thinking: { type: "disabled" },
+      },
+      { requestId: req.headers.get("x-request-id") ?? undefined, operation: "admin_guide" }
+    );
 
-    const text = completion.choices[0]?.message?.content ?? "";
+    const text = completion.choices?.[0]?.message?.content ?? "";
     if (!text.trim()) {
       return NextResponse.json({ error: "The guide fell quiet — ask once more." }, { status: 502 });
     }
     return NextResponse.json({ reply: text });
   } catch (err) {
-    console.error("[admin/guide] failed:", err);
+    logger.error("admin_guide_failed", {
+      err: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json({ error: "The guide could not reach the sky — rest, then try again." }, { status: 500 });
   }
 }

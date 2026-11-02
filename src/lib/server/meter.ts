@@ -23,6 +23,7 @@ import {
   type WalletActionType,
 } from "@/lib/server/wallet";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
+import { witnessedUse, withOrchestration } from "@/lib/me/orchestrator";
 
 /* ------------------------------------------------------------------ */
 /*  THE METERED DOOR — the usage engine every AI route walks through.  */
@@ -425,7 +426,22 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         }
       }
 
-      const res = await handler(req, ctx);
+      /* THE M.E. WITNESS BOOK — the handler runs inside an orchestration
+         context, so every sky the bridge touches writes its truthful
+         provider/model/tokens here; the usage row below reads them.
+         THE CAPTION LAW — the witnessed use is read INSIDE the context
+         (the book's scope closes when the wrapper returns), then rides
+         out to the after() witness. */
+      let witnessed: ReturnType<typeof witnessedUse> = null;
+      const res = await withOrchestration(
+        operation,
+        async () => {
+          const r = await handler(req, ctx);
+          witnessed = witnessedUse();
+          return r;
+        },
+        { requestId: req.headers.get("x-request-id") ?? undefined }
+      );
 
       /* a stumbling door gives the light back — any 4xx/5xx refunds.
          THE REFUND RIDES AFTER THE ANSWER — `after` keeps the promise
@@ -476,7 +492,9 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
 
       /* THE WITNESS WRITES AFTER THE DOOR — the usage row is laid
          beside the served answer, never in front of it: the visitor
-         waits one breath less on every door. */
+         waits one breath less on every door. The provider, model and
+         token counts come from the witness book the bridge wrote —
+         real skies, not a placeholder. */
       const latencyMs = Date.now() - started;
       after(
         () =>
@@ -484,7 +502,10 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
             userId,
             workspaceId,
             operation,
-            provider: "none",
+            provider: witnessed?.provider ?? "none",
+            model: witnessed?.model ?? null,
+            inputTokens: witnessed?.inputTokens ?? null,
+            outputTokens: witnessed?.outputTokens ?? null,
             success,
             error: success ? null : `http_${res.status}`,
             creditsCharged: charged + walletSpent,

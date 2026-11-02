@@ -144,7 +144,7 @@ export interface FuelStatus {
   }[];
   /** THE DEPOSIT — the keeper's well the distribution pours from. */
   deposit: DepositStatus;
-  adminEmail: string;
+  adminEmail: string | null;
 }
 
 /** The reserves, laid down idempotently — the incubator is always whole. */
@@ -274,7 +274,7 @@ export async function distributeFuel(input: {
 }
 
 /** The whole incubator, read for the keeper's console. */
-export async function fuelStatus(adminEmail: string): Promise<FuelStatus> {
+export async function fuelStatus(adminEmail: string | null): Promise<FuelStatus> {
   await ensureReserves();
   const [reserves, grants, passages, wallets] = await Promise.all([
     db.fuelReserve.findMany({ orderBy: [{ source: "asc" }, { key: "asc" }] }),

@@ -540,3 +540,45 @@ model PlatformConfig {
   updatedBy String? // the admin email that last moved this row
   updatedAt DateTime @updatedAt
 }
+
+// ---------------------------------------------------------------------------
+// THE WORKS IN MOTION — long-running user jobs (the deep research press and
+// its kind), resumable from their own stored input. (Drift repair: this
+// model exists in the SQLite schema and now stands here too.)
+// ---------------------------------------------------------------------------
+model ProcessJob {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String
+  title     String   @default("")
+  subtitle  String?
+  status    String   @default("running")
+  progress  Int      @default(0)
+  stage     String?
+  input     String   @default("{}")
+  result    String?
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// THE AUDIT LEDGER — every privileged hand is remembered. Administrative
+// actions (grants, deductions, price changes, switch flips, deletions) are
+// laid here: who, what, on whom, with what detail. Append-only from the
+// application's side; never exposed to non-admin surfaces.
+// ---------------------------------------------------------------------------
+model AuditEvent {
+  id          String   @id @default(cuid())
+  actorEmail  String?
+  actorUserId String?
+  action      String
+  target      String?
+  detail      Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}

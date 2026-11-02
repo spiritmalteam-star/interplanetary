@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
 
 /* ------------------------------------------------------------------ */
@@ -121,9 +122,10 @@ export async function getComplimentaryConfig(): Promise<ComplimentaryConfig> {
   return {
     openAccessMode: openAccess ?? envBool("OPEN_ACCESS_MODE"),
     complimentaryCheckout:
-      /* the development phase's own state: the FREE door stands open
-         unless the owner's hand (env or the console) closes it */
-      complimentary ?? envBool("COMPLIMENTARY_CHECKOUT", true),
+      /* THE SECURE DEFAULT — the FREE door stands CLOSED unless the
+         owner's own hand (env or the console) opens it. Real plan
+         allocations are never given away by a deployment's silence. */
+      complimentary ?? envBool("COMPLIMENTARY_CHECKOUT", false),
     credinsEnabled: credins ?? envBool("CREDINS_ENABLED"),
     packages: asStringArray(packages, DEFAULT_PACKAGES),
     allocations: asAllocationRecord(allocations),
@@ -160,8 +162,18 @@ export function isOwnerEmail(email: string): boolean {
 }
 
 /** The admin API's own key law — the owner's session email OR the
-    x-admin-key header (a secret from the vault, for scripts). */
+    x-admin-key header (a secret from the vault, for scripts).
+    THE TIMING-SAFE LAW — the comparison never leaks its answer's
+    length through an early exit. */
 export function isAdminKey(key: string | null): boolean {
   const secret = process.env.ADMIN_KEY;
-  return Boolean(secret) && key === secret;
+  if (!secret || !key) return false;
+  const a = Buffer.from(key);
+  const b = Buffer.from(secret);
+  if (a.length !== b.length) {
+    /* burn the same time a match would take, then refuse */
+    timingSafeEqual(b, b);
+    return false;
+  }
+  return timingSafeEqual(a, b);
 }

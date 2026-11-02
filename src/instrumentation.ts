@@ -46,9 +46,19 @@ export async function register(): Promise<void> {
       if (!giftDone) {
         const poor = await bootDb.userWallet.findMany({
           where: { freeCreditsRemaining: { lt: GIFT_FLOOR } },
-          select: { userId: true, freeCreditsRemaining: true },
+          select: {
+            userId: true,
+            freeCreditsRemaining: true,
+            user: { select: { email: true } },
+          },
         });
+        /* THE VERIFIED GIFT LAW — anonymous passages keep their ordinary
+           birthright; the great lift belongs to named accounts only, so
+           a fresh cookie can never mint a fortune (the farming door is
+           shut on every future database). */
+        let lifted = 0;
         for (const w of poor) {
+          if (w.user?.email?.startsWith("anon:")) continue;
           await bootDb.userWallet.update({
             where: { userId: w.userId },
             data: { freeCreditsRemaining: GIFT_FLOOR },
@@ -65,16 +75,17 @@ export async function register(): Promise<void> {
               },
             },
           });
+          lifted += 1;
         }
         await bootDb.platformConfig.create({
           data: {
             key: GIFT_KEY,
-            value: { lifted: poor.length, floor: GIFT_FLOOR },
+            value: { lifted, floor: GIFT_FLOOR },
             updatedBy: "instrumentation:boot",
           },
         });
         console.info(
-          `[instrumentation] the great birth gift: ${poor.length} purse(s) lifted to ${GIFT_FLOOR} lights.`
+          `[instrumentation] the great birth gift: ${lifted} named purse(s) lifted to ${GIFT_FLOOR} lights.`
         );
       }
     } catch (giftError) {

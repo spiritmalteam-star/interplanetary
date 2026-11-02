@@ -238,7 +238,7 @@ export const EM_LAB_PAGES: EmLabPage[] = [
       {
         id: "neural-translator",
         name: "Neural Weight Translator",
-        desc: "Designs the two-way mapping between AI neural weights and living neural fields.",
+        desc: "Designs the two-way mapping between neural network weights and living neural fields.",
         prompt:
           "INSTRUMENT — THE NEURAL WEIGHT TRANSLATOR: the visitor names a mental state, a computation or a link to build. Design the two-way translation — how living neural fields are read into digital weights, how the model's answers are written back as signals the brain accepts, and where the two natures touch. Sovereign prose, then 2–4 mechanism lines.",
       },

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import { RELEVANCE_LAW } from "@/lib/relevance-law";
 
 /* ------------------------------------------------------------------ */

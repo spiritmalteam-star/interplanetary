@@ -379,7 +379,7 @@ const ABOUT_SECTIONS: { title: string; body: string }[] = [
   },
   {
     title: "Privacy — what is processed",
-    body: "Share only what you are comfortable sharing. Account access, payments and generation requests involve necessary data processing: sign-in keeps your account reachable; payments keep their records; credit balances and saved creations are stored so they travel with you; generation requests are sent to the AI services that answer them. This page is the house's own privacy explanation — what is processed, which services receive it, and what controls you hold (sign out any time; your device keeps its own theme and dismissal choices locally).",
+    body: "Share only what you are comfortable sharing. Account access, payments and generation requests involve necessary data processing: sign-in keeps your account reachable; payments keep their records; credit balances and saved creations are stored so they travel with you; generation requests are sent to the model services that answer them. This page is the house's own privacy explanation — what is processed, which services receive it, and what controls you hold (sign out any time; your device keeps its own theme and dismissal choices locally).",
   },
   {
     title: "The archive and its rooms",

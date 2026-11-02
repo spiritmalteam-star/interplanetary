@@ -49,7 +49,7 @@ export const emVectors: EmVector[] = [
     name: "The Meta-Biological Interface",
     tagline: "where tissue answers code in real time",
     reveals:
-      "Emergent tissue feedback, read live; real-time closed-loop cellular sensing; metabolic dynamics steered from outside; the seamless translation between digital information architecture, AI neural weights and living wetware.",
+      "Emergent tissue feedback, read live; real-time closed-loop cellular sensing; metabolic dynamics steered from outside; the seamless translation between digital information architecture, neural network weights and living wetware.",
   },
 ];
 

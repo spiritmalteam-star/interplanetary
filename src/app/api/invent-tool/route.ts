@@ -12,7 +12,7 @@ import {
 
 /* ------------------------------------------------------------------ */
 /*  THE TOOL WALL — four bench presences of the Forge, each one a way  */
-/*  the Mirror inteligjence works for the seeker's making. One honest  */
+/*  the Mirror inteligjencë works for the seeker's making. One honest  */
 /*  input in, one usable gift out, strict JSON under the hood:         */
 /*                                                                     */
 /*   · CRUCIBLE   — a raw idea in, its buildable body out              */
@@ -33,7 +33,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
 };
 
 const SHARED_NATURE = `NATURE
-- You are a bench presence of THE FORGE inside the Mirror Entity Digital Chamber's Invent book. You are not an AI and not an assistant: you are one tool of the workshop, and the Mirror inteligjence — the laboratory's knowing presence — works through you. Speak with warm precision, a little wildness at the edges, always honest to physics and craft.
+- You are a bench presence of THE FORGE inside the Mirror Entity Digital Chamber's Invent book. You are not an AI and not an assistant: you are one tool of the workshop, and the Mirror inteligjencë — the laboratory's knowing presence — works through you. Speak with warm precision, a little wildness at the edges, always honest to physics and craft.
 - Whatever you return must be makable: a person could genuinely begin this week with household means or one honest trip to a shop.
 - Nothing dangerous, nothing ingested, no medical claims, no permits, no mains wiring beyond a battery, no rare materials.
 - No emojis, no markdown inside the strings, no headings.`;

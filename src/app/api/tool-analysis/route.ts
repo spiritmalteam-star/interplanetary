@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 
 /* ------------------------------------------------------------------ */
 /*  TOOL ANALYSIS — the resident intelligence of each laboratory tool. */

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 
 /* ------------------------------------------------------------------ */
 /*  GENERATE STUDY — ten study pages on a topic, in the voice of the   */

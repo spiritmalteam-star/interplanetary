@@ -25,6 +25,19 @@
 /*  voice is the one and only reader — no other choir stands behind.   */
 /* ================================================================== */
 
+/* THE M.E. WITNESS — every cloud sky's touch is written into the
+   orchestration context (when the meter opened one) and remembered
+   in the skies' health. No cycle: neither module imports this one. */
+import {
+  currentContext,
+  noteProviderUse,
+} from "@/lib/me/context";
+import {
+  failureLooksFatal,
+  recordProviderFailure,
+  recordProviderSuccess,
+} from "@/lib/me/health";
+
 interface ChatParams {
   messages: any[];
   thinking?: unknown;
@@ -38,6 +51,7 @@ interface ChatCompletion {
     message?: { content?: string | null; role?: string };
     finish_reason?: string;
   }[];
+  usage?: { prompt_tokens?: number; completion_tokens?: number } | null;
 }
 
 interface ZAIClient {
@@ -690,10 +704,51 @@ class CloudBackend implements ZAIClient {
      chats */
   constructor(private readonly cfg: CloudConfig) {}
 
+  /* THE ORCHESTRATION WITNESS — this sky's touch on the request is
+     written into the M.E. context book (when one rides the request)
+     and its health is remembered. Failures marked fatal (quota,
+     balance, unknown model) open a wider rest in the breaker. */
+  private noteUse(
+    model: string,
+    usage: { prompt_tokens?: number; completion_tokens?: number } | null | undefined,
+    startedAt: number
+  ): void {
+    try {
+      if (!currentContext()) return;
+      noteProviderUse({
+        provider: this.cfg.label,
+        model,
+        inputTokens: usage?.prompt_tokens ?? null,
+        outputTokens: usage?.completion_tokens ?? null,
+        latencyMs: Date.now() - startedAt,
+      });
+    } catch {
+      /* the book is a courtesy — never a dependency */
+    }
+  }
+
+  private markHealth(ok: boolean, message?: string): void {
+    try {
+      if (ok) {
+        recordProviderSuccess(this.cfg.label);
+        return;
+      }
+      recordProviderFailure(this.cfg.label, message);
+      if (message && failureLooksFatal(message)) {
+        /* a refusal opens a wider rest */
+        recordProviderFailure(this.cfg.label, message);
+        recordProviderFailure(this.cfg.label, message);
+      }
+    } catch {
+      /* health is a courtesy — never a dependency */
+    }
+  }
+
   private async complete(
     params: ChatParams,
     modelOverride?: string
   ): Promise<ChatCompletion> {
+    const startedAt = Date.now();
     const body: Record<string, unknown> = {
       model: modelOverride ?? this.cfg.model,
       messages: params.messages,
@@ -721,9 +776,14 @@ class CloudBackend implements ZAIClient {
 
     if (!res.ok) {
       const detail = (await res.text()).slice(0, 400);
+      this.markHealth(false, `${this.cfg.label} chat ${res.status}`);
+      this.noteUse(modelOverride ?? this.cfg.model, null, startedAt);
       throw new Error(`${this.cfg.label} chat ${res.status}: ${detail}`);
     }
-    return (await res.json()) as ChatCompletion;
+    const completion = (await res.json()) as ChatCompletion;
+    this.markHealth(true);
+    this.noteUse(modelOverride ?? this.cfg.model, completion.usage ?? null, startedAt);
+    return completion;
   }
 
   private completeWithPatience(
@@ -828,8 +888,42 @@ async function atelierBackend(): Promise<ZAIClient> {
   const originalVision = client.chat.completions.createVision?.bind(
     client.chat.completions
   );
+  /* THE ATELIER'S OWN WITNESS — the same law the cloud skies keep:
+     every touch is written into the orchestration book and the skies'
+     health, so the metered doors speak the truth in every vessel. */
+  const label = "atelier";
   client.chat.completions.create = (params: ChatParams) =>
-    withRetry(() => originalCreate(params));
+    withRetry(async () => {
+      const startedAt = Date.now();
+      try {
+        const completion = await originalCreate(params);
+        recordProviderSuccess(label);
+        if (currentContext()) {
+          noteProviderUse({
+            provider: label,
+            model:
+              typeof params.model === "string"
+                ? params.model
+                : process.env.ZAI_MODEL ?? "glm-4.5-flash",
+            inputTokens: completion.usage?.prompt_tokens ?? null,
+            outputTokens: completion.usage?.completion_tokens ?? null,
+            latencyMs: Date.now() - startedAt,
+          });
+        }
+        return completion;
+      } catch (err) {
+        recordProviderFailure(label, err instanceof Error ? err.message : String(err));
+        if (currentContext()) {
+          noteProviderUse({
+            provider: label,
+            model: null,
+            superseded: true,
+            latencyMs: Date.now() - startedAt,
+          });
+        }
+        throw err;
+      }
+    });
   if (originalVision) {
     client.chat.completions.createVision = (params: ChatParams) =>
       withRetry(() => originalVision(params));

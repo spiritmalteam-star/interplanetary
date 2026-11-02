@@ -78,3 +78,4 @@ scripts/
 /dev.log.*
 /server.log.*
 agent-ctx/
+backups/

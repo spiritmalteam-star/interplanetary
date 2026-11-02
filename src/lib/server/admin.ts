@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/server/access";
+import { roleAtLeast } from "@/lib/server/roles";
 
 /* ------------------------------------------------------------------ */
 /*  THE KEEPER'S KEY — the admin passage.                              */
@@ -9,13 +10,21 @@ import { hashPassword } from "@/lib/server/access";
 /*  signed session against this key — the browser is never trusted.    */
 /* ------------------------------------------------------------------ */
 
-export const ADMIN_EMAIL = (
-  process.env.ADMIN_EMAIL ?? "gentikoltraka28@gmail.com"
-).toLowerCase();
+/* THERE IS NO DEFAULT KEEPER — the ADMIN_EMAIL must come from the
+   vault. A deployment without it simply has no email-shortcut admin
+   (the role bound in the database still rules). No personal address
+   is ever hardcoded into the house again. */
+export const ADMIN_EMAIL: string | null =
+  process.env.ADMIN_EMAIL?.toLowerCase().trim() || null;
 
 /** True when a session email is the keeper's own. */
 export function isAdminEmail(email: string | null | undefined): boolean {
-  return Boolean(email && !email.startsWith("anon:") && email.toLowerCase() === ADMIN_EMAIL);
+  return Boolean(
+    email &&
+      !email.startsWith("anon:") &&
+      ADMIN_EMAIL &&
+      email.toLowerCase() === ADMIN_EMAIL
+  );
 }
 
 /** The admin truth of a signed session — used by every admin route.
@@ -28,8 +37,7 @@ export async function isAdminRequest(req: Request): Promise<boolean> {
     const { getSessionUser } = await import("@/lib/server/access");
     const user = await getSessionUser(req as Parameters<typeof getSessionUser>[0]);
     if (!user) return false;
-    if (user.role === "ADMIN") return true;
-    return isAdminEmail(user.email);
+    return roleAtLeast(user.role, "ADMIN", user.email);
   } catch {
     return false;
   }
@@ -42,6 +50,10 @@ export async function isAdminRequest(req: Request): Promise<boolean> {
  * fuel status route's first breath.
  */
 export async function ensureAdminAccount(password: string): Promise<{ email: string; created: boolean }> {
+  if (!ADMIN_EMAIL) {
+    /* no keeper named in the vault — the house lays no account */
+    throw new Error("ADMIN_EMAIL is not set — no keeper account can be ensured.");
+  }
   const existing = await db.user.findUnique({ where: { email: ADMIN_EMAIL } });
   if (existing) {
     await db.user.update({
