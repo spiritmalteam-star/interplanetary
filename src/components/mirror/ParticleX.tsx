@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { isPageHidden } from "@/lib/page-lifecycle";
 import {
   ArrowLeft,
   Atom,
@@ -90,7 +91,11 @@ function PxThinking() {
 
   useEffect(() => {
     const id = window.setInterval(
-      () => setPhraseIdx((i) => (i + 1) % pxGatheringPhrases.length),
+      () => {
+        /* the hidden core gathers no phrases — the beat waits for eyes */
+        if (isPageHidden()) return;
+        setPhraseIdx((i) => (i + 1) % pxGatheringPhrases.length);
+      },
       3400
     );
     return () => window.clearInterval(id);

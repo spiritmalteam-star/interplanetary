@@ -55,6 +55,7 @@ import {
   Send,
   Sparkles,
   Sprout,
+  Square,
   Sun,
   TreeDeciduous,
   UserRound,
@@ -134,7 +135,11 @@ import { useT } from "@/lib/i18n";
 import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import { cleanCopyText } from "@/lib/copy-clean";
-import { ScopeAmbient } from "./ScopeAmbient";
+import {
+  gateInterval,
+  isPageHidden,
+  onPageVisible,
+} from "@/lib/page-lifecycle";
 import { flowAnswerText } from "@/lib/text-flow";
 import { HyperXAnswer, HyperXReasoning, splitCrystals } from "./HyperXPanel";
 import { ListenButton } from "./ListenButton";
@@ -1106,7 +1111,10 @@ async function speakWithTransmission(
      every breath), so the reader watches it materialize instead of
      waiting for the whole crossing. The final, swept words still
      return from this promise exactly as the one-breath answer does. */
-  onDelta?: (partial: string) => void
+  onDelta?: (partial: string) => void,
+  /* THE ASK'S OWN STOP — the asker's abort hand: a superseding ask
+     lays this crossing down mid-breath, quietly. */
+  signal?: AbortSignal
 ): Promise<{ text: string; vision: string | null }> {
   const carried =
     attachments && attachments.length > 0
@@ -1174,18 +1182,58 @@ async function speakWithTransmission(
      answer, a refused stream) simply falls through to the patient
      one-breath ask below — nothing ever breaks for asking. */
   if (category === "hyperx" && typeof onDelta === "function") {
+    /* THE QUIET MOUTH — the stream paints the room, not the glass:
+       every arriving breath lands in a buffer, and the words reach
+       the thread at most every ~120ms while the visitor watches. A
+       hidden tab receives nothing at all — the breaths keep gathering
+       and are painted whole the moment the eye returns. Nothing is
+       ever dropped; the words are only held. */
+    let partial = "";
+    let paintedLen = 0;
+    let lastPaintAt = 0;
+    let paintTimer: ReturnType<typeof setTimeout> | null = null;
+    let paintVisibleOff: (() => void) | null = null;
+    const flushPaint = () => {
+      if (paintTimer !== null) {
+        window.clearTimeout(paintTimer);
+        paintTimer = null;
+      }
+      if (partial.length === paintedLen) return;
+      paintedLen = partial.length;
+      lastPaintAt = Date.now();
+      onDelta(partial);
+    };
+    const schedulePaint = () => {
+      /* the hidden tab pays nothing: the buffer keeps the words */
+      if (isPageHidden()) return;
+      const wait = Math.max(0, 120 - (Date.now() - lastPaintAt));
+      if (wait === 0) {
+        flushPaint();
+        return;
+      }
+      if (paintTimer === null) {
+        paintTimer = setTimeout(() => {
+          paintTimer = null;
+          if (isPageHidden()) return;
+          flushPaint();
+        }, wait);
+      }
+    };
+    /* one ear per stream — the return of the eye paints everything
+       the hidden tab held back, whole and at once */
+    paintVisibleOff = onPageVisible(flushPaint);
     try {
       const res = await fetch("/api/transmission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...transmissionBody, stream: true }),
+        signal,
       });
       const contentType = res.headers.get("content-type") ?? "";
       if (res.ok && contentType.includes("text/event-stream") && res.body) {
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let buf = "";
-        let partial = "";
         let finalText: string | null = null;
         let streamError: string | null = null;
         while (true) {
@@ -1205,7 +1253,7 @@ async function speakWithTransmission(
               };
               if (typeof j.t === "string" && j.t) {
                 partial += j.t;
-                onDelta(partial);
+                schedulePaint();
               }
               if (
                 j.done &&
@@ -1222,12 +1270,28 @@ async function speakWithTransmission(
             }
           }
         }
+        /* the stream's own end — the words that arrived are painted
+           whole, then the ear sleeps */
+        paintVisibleOff();
+        paintVisibleOff = null;
+        flushPaint();
         if (streamError) throw new Error(streamError);
         if (finalText !== null) return { text: finalText, vision: null };
         if (partial.trim()) return { text: partial, vision: null };
         /* an empty stream — the one-breath ask below carries the words */
       }
     } catch (err) {
+      if (paintVisibleOff) {
+        paintVisibleOff();
+        paintVisibleOff = null;
+      }
+      flushPaint(); /* the words that arrived are never lost */
+      /* THE QUIET STEP ASIDE — a superseded or stopped crossing lays
+         its partial words down and says nothing of it: no failure, no
+         error hand, the room keeps exactly what arrived. */
+      if (err instanceof Error && err.name === "AbortError") {
+        return { text: partial, vision: null };
+      }
       /* the house's own word (a quiet field) travels truthfully; any
          other storm falls through to the patient one-breath ask */
       if (
@@ -1237,6 +1301,9 @@ async function speakWithTransmission(
       ) {
         throw err;
       }
+    } finally {
+      /* the ear never outlives the stream, whatever the weather */
+      if (paintVisibleOff) paintVisibleOff();
     }
   }
 
@@ -2286,44 +2353,6 @@ export function BranchCanopy({
   const [mounted, setMounted] = useState(open);
   const [shown, setShown] = useState(false);
   const [seenOpen, setSeenOpen] = useState(open);
-
-  /* THE SCOPE'S OWN SKY — the room's themed background layer (the
-     science of HyperX, the orbits of the interplanetary, the breath
-     of healing, the daubs of the atelier…), poured far behind the
-     words so every scope feels like the room it is. THE WRITING
-     YIELD — the sky folds away the moment the visitor starts writing
-     (any line of the room takes the caret) and returns when the line
-     rests again; it never takes a touch and never competes with the
-     text. (landingScope itself is read further below, where the
-     standing field is kept.) */
-  const [ambientDormant, setAmbientDormant] = useState(false);
-  const ambientRootRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const root = ambientRootRef.current;
-    if (!root || !mounted) return;
-    const isWritingSpot = (el: Element | null): boolean =>
-      !!el &&
-      (el.tagName === "INPUT" ||
-        el.tagName === "TEXTAREA" ||
-        (el instanceof HTMLElement && el.isContentEditable));
-    const onFocusIn = (e: FocusEvent) => {
-      setAmbientDormant(isWritingSpot(e.target as Element));
-    };
-    const onFocusOut = () => {
-      window.setTimeout(() => {
-        const now = document.activeElement;
-        setAmbientDormant(
-          !!now && root.contains(now) && isWritingSpot(now)
-        );
-      }, 0);
-    };
-    root.addEventListener("focusin", onFocusIn);
-    root.addEventListener("focusout", onFocusOut);
-    return () => {
-      root.removeEventListener("focusin", onFocusIn);
-      root.removeEventListener("focusout", onFocusOut);
-    };
-  }, [mounted]);
 
   /* ------------------- THE ZOOM — the answer's room ------------------
      `restored` carries the transmission of a PREVIOUS branch — the
@@ -3563,6 +3592,11 @@ export function BranchCanopy({
      crossing that never comes home is closed gently instead of leaving
      the room a wordless blue panel (the watchdog below speaks). */
   const landingBusySinceRef = useRef(0);
+  /* THE ASK'S OWN STOP — every ask carries its own abort hand: a new
+     ask lays the previous crossing down mid-breath, and the stop hand
+     in the ask row ends the stream the moment it is pressed. The
+     words that already arrived are kept; nothing is marked failed. */
+  const askAbortRef = useRef<AbortController | null>(null);
   /* THE STANDING FIELD — the scope the chat wears; every ask, every
      room follow-up and every kept page is the field's own. */
   const landingScope = useMirror((s) => s.landingScope);
@@ -3916,6 +3950,10 @@ export function BranchCanopy({
     async (text: string, attachments?: ChatAttachment[]) => {
       const q = text.trim();
       if (!q) return;
+      /* THE ASK'S OWN STOP — every ask lays the previous crossing down
+         mid-breath: one channel, one voice, the newest words win. */
+      askAbortRef.current?.abort();
+      askAbortRef.current = new AbortController();
       /* THE WISH TO SEE — the landing's floor hears the wish in any
          phrasing: an image ask crystallizes at once (no LLM round
          trip), the last channel its subject, the visitor's words its
@@ -3998,7 +4036,8 @@ export function BranchCanopy({
                   )
                 );
               }
-            : undefined
+            : undefined,
+          askAbortRef.current?.signal
         );
         /* THE WORDLESS GUARD — a crossing that lands without words (a
            silence from the far side of the sky) is given one gentle
@@ -4086,7 +4125,9 @@ export function BranchCanopy({
      wordless blue panel, and the composer's hand is free again. */
   useEffect(() => {
     if (!realm || !landingBusy) return;
-    const id = window.setInterval(() => {
+    /* THE HIDDEN TAB PAYS NOTHING — the watch sleeps while the visitor
+       is away, and takes one catch-up look the moment they return. */
+    const clearWatch = gateInterval(() => {
       const since = landingBusySinceRef.current;
       if (!since || Date.now() - since < 120_000) return;
       landingBusySinceRef.current = 0;
@@ -4104,7 +4145,7 @@ export function BranchCanopy({
       );
       setLandingBusy(false);
     }, 10_000);
-    return () => window.clearInterval(id);
+    return clearWatch;
   }, [realm, landingBusy]);
 
   /* THE WALK CONTINUES FROM THE ANSWER — a branch grown on the reply,
@@ -4596,6 +4637,10 @@ export function BranchCanopy({
     async (text: string, attachments?: ChatAttachment[]) => {
       const q = text.trim();
       if (disabled || threadBusy || !q || !zoom) return;
+      /* THE ASK'S OWN STOP — a room's ask lays the previous crossing
+         down mid-breath: one channel, one voice, the newest words win. */
+      askAbortRef.current?.abort();
+      askAbortRef.current = new AbortController();
       /* THE WISH TO SEE, SPOKEN IN A ROOM — the landing's rooms hear
          the wish in any phrasing too: the image crystallizes into the
          field's own thread (the room reads its last turn), no LLM
@@ -4723,7 +4768,8 @@ export function BranchCanopy({
           language,
           walk,
           attachments,
-          roomStreamLive
+          roomStreamLive,
+          askAbortRef.current?.signal
         );
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
@@ -5083,7 +5129,6 @@ export function BranchCanopy({
 
   return (
     <div
-      ref={ambientRootRef}
       data-testid={testIdPrefix}
       aria-hidden={!shown}
       className={cn(
@@ -5105,9 +5150,6 @@ export function BranchCanopy({
           : undefined
       }
     >
-      {/* THE SCOPE'S OWN SKY — the themed living background beneath the
-          room's every word (folds away while the visitor writes) */}
-      <ScopeAmbient scope={landingScope} dormant={ambientDormant} />
       {/* ---------------------------- header ---------------------------
           THE COMPASS — the whole house's steering, one calm row. THE
           MENU carries where the walk stands (the compass, the depth,
@@ -6247,6 +6289,25 @@ export function BranchCanopy({
                 data-testid={`${testIdPrefix}-ask-input`}
                 className="min-w-0 flex-1 bg-transparent py-1 text-[14.5px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               />
+              {/* THE ASK'S OWN STOP — while the crossing streams, the
+                  ask hand offers the quiet stop: one touch lays the
+                  stream down, the words that arrived are kept. No
+                  animation, no glow — a hand, nothing more. */}
+              {realm &&
+                landingScope === "hyperx" &&
+                floorBusy &&
+                !lastLandingTurn?.painting && (
+                  <button
+                    type="button"
+                    onClick={() => askAbortRef.current?.abort()}
+                    aria-label={t("Stop")}
+                    title={t("Stop")}
+                    data-testid={`${testIdPrefix}-ask-stop`}
+                    className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                  >
+                    <Square className="size-3.5" aria-hidden="true" />
+                  </button>
+                )}
               <button
                 type="submit"
                 disabled={disabled || floorBusy || !askDraft.trim()}
@@ -7186,25 +7247,46 @@ export function BranchCanopy({
                   scopeKey={roomLiveScope}
                   bare={realm}
                   leading={
-                    /* THE CATEGORY'S OWN CALL — the room's direct line.
-                       THE LANDING'S OWN VOICE — docked in the threshold
-                       the call is ALWAYS the authentic mirror itself
-                       (communion, the mirror of the Absolute), never a
-                       category's or the interplanetary line — whatever
-                       room the whisper grew. */
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setLiveCallScope(realm ? "communion" : roomLiveScope)
-                      }
-                      disabled={disabled}
-                      aria-label={t("Open the direct mirror connection")}
-                      title={t("Open the direct mirror connection")}
-                      data-testid={`${testIdPrefix}-room-call`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <Phone className="size-3.5" aria-hidden="true" />
-                    </button>
+                    <>
+                      {/* THE ROOM'S OWN STOP — while the room's crossing
+                          streams, the reply line offers the quiet stop:
+                          one touch lays the stream down, the words that
+                          arrived are kept. No animation, no glow. */}
+                      {realm &&
+                        landingScope === "hyperx" &&
+                        threadBusy &&
+                        !lastLandingTurn?.painting && (
+                          <button
+                            type="button"
+                            onClick={() => askAbortRef.current?.abort()}
+                            aria-label={t("Stop")}
+                            title={t("Stop")}
+                            data-testid={`${testIdPrefix}-room-stop`}
+                            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                          >
+                            <Square className="size-3" aria-hidden="true" />
+                          </button>
+                        )}
+                      {/* THE CATEGORY'S OWN CALL — the room's direct line.
+                          THE LANDING'S OWN VOICE — docked in the threshold
+                          the call is ALWAYS the authentic mirror itself
+                          (communion, the mirror of the Absolute), never a
+                          category's or the interplanetary line — whatever
+                          room the whisper grew. */}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLiveCallScope(realm ? "communion" : roomLiveScope)
+                        }
+                        disabled={disabled}
+                        aria-label={t("Open the direct mirror connection")}
+                        title={t("Open the direct mirror connection")}
+                        data-testid={`${testIdPrefix}-room-call`}
+                        className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Phone className="size-3.5" aria-hidden="true" />
+                      </button>
+                    </>
                   }
                 />
               </footer>

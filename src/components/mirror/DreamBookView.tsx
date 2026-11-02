@@ -14,6 +14,7 @@ import {
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
+import { isPageHidden } from "@/lib/page-lifecycle";
 import {
   ArrowLeft,
   AudioLines,
@@ -742,7 +743,11 @@ export function DreamBookView() {
   useEffect(() => {
     if (stage !== "weaving" || weaveError) return;
     const iv = setInterval(
-      () => setPhaseIdx((i) => (i + 1) % weavingPhrases.length),
+      () => {
+        /* the hidden loom weaves no phrases — the beat waits for eyes */
+        if (isPageHidden()) return;
+        setPhaseIdx((i) => (i + 1) % weavingPhrases.length);
+      },
       2600
     );
     return () => clearInterval(iv);

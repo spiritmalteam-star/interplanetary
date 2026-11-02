@@ -15,6 +15,7 @@
 
 import { drawFilmFrame } from "./SceneCanvas";
 import type { VideoSceneSpec } from "@/lib/capabilities/types";
+import { isPageHidden } from "@/lib/page-lifecycle";
 
 export interface RecordResult {
   blob: Blob;
@@ -226,16 +227,22 @@ export async function recordFilm(opts: RecordOptions): Promise<RecordResult | nu
   };
 
   await new Promise<void>((resolve) => {
+    /* THE WALL-CLOCK TIMER, one tick pending at a time — each tick
+       paints the frame the real clock asks for, then re-chooses its
+       own delay: 33ms (30fps) while the page is seen, 250ms while the
+       tab is hidden. A hidden tab keeps filming — the timeline stays
+       continuous because every paint READS the clock, never counts
+       frames — while the hidden-tab paint CPU drops ~8x. */
+    let timer: number | null = null;
     const paint = () => {
+      timer = null;
       const now = (performance.now() - t0) / 1000;
       if (opts.isCancelled?.()) {
-        window.clearInterval(iv);
         stop();
         resolve();
         return;
       }
       if (now >= total + 0.4) {
-        window.clearInterval(iv);
         stop();
         resolve();
         return;
@@ -310,9 +317,11 @@ export async function recordFilm(opts: RecordOptions): Promise<RecordResult | nu
           `Filming ${idx + 1}/${scenes.length} — ${scene.heading}`
         );
       }
+      /* the next tick — the cadence is re-evaluated every single time */
+      timer = window.setTimeout(paint, isPageHidden() ? 250 : 33);
     };
     let lastReport = 0;
-    const iv = window.setInterval(paint, 33);
+    timer = window.setTimeout(paint, isPageHidden() ? 250 : 33);
   });
 
   const blob = await finished;

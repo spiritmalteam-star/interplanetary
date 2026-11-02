@@ -410,7 +410,7 @@ function EmToolCard({
 
       {state === "busy" && (
         <p className="mt-3.5 flex items-center gap-2 text-[14px] italic text-muted-foreground" aria-live="polite">
-          <span className="animate-dot-pulse size-1.5 rounded-full bg-[var(--scope-a)]" aria-hidden="true" />
+          <span className="size-1.5 rounded-full bg-[var(--scope-a)]" aria-hidden="true" />
           {t(busyPhrase)}
         </p>
       )}

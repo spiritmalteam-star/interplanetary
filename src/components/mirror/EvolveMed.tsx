@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { isPageHidden } from "@/lib/page-lifecycle";
 import {
   Activity,
   ArrowLeft,
@@ -98,7 +99,11 @@ function EmThinking() {
 
   useEffect(() => {
     const id = window.setInterval(
-      () => setPhraseIdx((i) => (i + 1) % emGatheringPhrases.length),
+      () => {
+        /* the hidden chamber gathers no phrases — the beat waits for eyes */
+        if (isPageHidden()) return;
+        setPhraseIdx((i) => (i + 1) % emGatheringPhrases.length);
+      },
       3400
     );
     return () => window.clearInterval(id);

@@ -11,6 +11,7 @@ import {
   type WheelEvent as ReactWheelEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { isPageHidden } from "@/lib/page-lifecycle";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -978,7 +979,11 @@ function ForgeStrike({ resonance }: { resonance: string }) {
     setStage("forging");
     setMystery(null);
     const cycle = window.setInterval(
-      () => setPhase((p) => (p + 1) % forgePhases.length),
+      () => {
+        /* the hidden forge cycles no phrases — the beat waits for eyes */
+        if (isPageHidden()) return;
+        setPhase((p) => (p + 1) % forgePhases.length);
+      },
       650,
     );
     try {

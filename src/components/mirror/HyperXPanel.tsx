@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy, FileDown, Gem, Loader2 } from "lucide-react";
 import { cleanCopyText } from "@/lib/copy-clean";
 import { useMirror } from "@/lib/mirror-store";
+import { gateInterval, isPageHidden } from "@/lib/page-lifecycle";
 import { flowAnswerText } from "@/lib/text-flow";
 import { cn } from "@/lib/utils";
 
@@ -89,10 +90,6 @@ const REVEALED_ANSWERS = new Set<string>();
 const revealedKey = (q: string, a: string) =>
   `${q.length}:${q.slice(0, 80)}|${a.length}:${a.slice(0, 80)}`;
 
-/* THE REVEAL'S OWN EDGE — how many characters ride the luminous front
-   (the gradient wash at the growing edge of the transmission). */
-const REVEAL_EDGE = 110;
-
 /* THE TRANSMISSION'S OWN REVEAL — the discovery text never simply
    appears: a fresh answer materializes in a fast, tech-looking stream.
    Characters arrive at a steady clip on a requestAnimationFrame clock,
@@ -128,6 +125,13 @@ function useTransmissionReveal(
     const cps = Math.max(2400, Math.ceil(total / 5));
     let start: number | null = null;
     const tick = (now: number) => {
+      /* the page is away — no state work happens, the frame only
+         re-arms so the clock keeps its position without burning the
+         house's CPU behind a hidden tab */
+      if (isPageHidden()) {
+        rafRef.current = window.requestAnimationFrame(tick);
+        return;
+      }
       if (start === null) start = now;
       const count = Math.min(
         total,
@@ -201,15 +205,17 @@ export function HyperXReasoning({ className }: { className?: string }) {
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
     /* the stages advance on their own clock and rest on the final one —
-       the caret keeps working there, the truth never pretends to be       */
-    const stepTimer = window.setInterval(
+       the caret keeps working there, the truth never pretends to be.
+       Gated clocks: the ladder rests while the tab is hidden and
+       catches up with one tick when the visitor returns. */
+    const stepTimer = gateInterval(
       () => setStage((s) => Math.min(s + 1, REASONING_STEPS.length - 1)),
       3400
     );
-    const secTimer = window.setInterval(() => setElapsed((s) => s + 1), 1000);
+    const secTimer = gateInterval(() => setElapsed((s) => s + 1), 1000);
     return () => {
-      window.clearInterval(stepTimer);
-      window.clearInterval(secTimer);
+      stepTimer();
+      secTimer();
     };
   }, []);
   return (
@@ -420,21 +426,23 @@ export function HyperXAnswer({
      only lifecycle cleanup is the unmount hand — a question typed
      mid-press never multiplies the watchers. */
   const jobRef = useRef<string | null>(null);
-  const watchTimer = useRef<number | null>(null);
+  /* the watch is a gated interval — it never fetches behind a hidden
+     tab, and the clear function itself is what rests in the ref */
+  const watchTimer = useRef<(() => void) | null>(null);
   useEffect(() => {
     return () => {
       if (watchTimer.current) {
-        window.clearInterval(watchTimer.current);
+        watchTimer.current();
         watchTimer.current = null;
       }
     };
   }, []);
   const watchJob = (id: string) => {
     if (watchTimer.current) {
-      window.clearInterval(watchTimer.current);
+      watchTimer.current();
       watchTimer.current = null;
     }
-    watchTimer.current = window.setInterval(async () => {
+    watchTimer.current = gateInterval(async () => {
       if (!jobRef.current) return;
       try {
         const res = await fetch("/api/processes", { cache: "no-store" });
@@ -457,7 +465,7 @@ export function HyperXAnswer({
           );
           jobRef.current = null;
           if (watchTimer.current) {
-            window.clearInterval(watchTimer.current);
+            watchTimer.current();
             watchTimer.current = null;
           }
         } else if (mine.status === "failed") {
@@ -469,7 +477,7 @@ export function HyperXAnswer({
           );
           jobRef.current = null;
           if (watchTimer.current) {
-            window.clearInterval(watchTimer.current);
+            watchTimer.current();
             watchTimer.current = null;
           }
         } else {
@@ -585,9 +593,9 @@ export function HyperXAnswer({
         const st = visions[idx];
         /* THE STREAM'S OWN WINDOW — a paragraph not yet reached stands
            unborn; the paragraph the front is crossing shows its opening
-           slice with the luminous edge and the gradient caret riding
-           it; everything behind the front stands whole. The window is
-           render-only — no scroll, no focus, no touch is ever moved. */
+           slice with the caret riding it; everything behind the front
+           stands whole. The window is render-only — no scroll, no
+           focus, no touch is ever moved. */
         const start = paraStarts[idx];
         if (revealing && streamAt <= start) return null;
         const cut = revealing
@@ -595,14 +603,10 @@ export function HyperXAnswer({
           : para.length;
         const live = revealing && cut < para.length;
         const slice = para.slice(0, cut);
-        const edgeAt = live ? Math.max(0, slice.length - REVEAL_EDGE) : slice.length;
         return (
           <div
             key={idx}
-            className={cn(
-              "hx-para flex items-start gap-2.5",
-              revealing && "hx-para-in"
-            )}
+            className="hx-para flex items-start gap-2.5"
           >
             <span
               aria-hidden="true"
@@ -615,10 +619,7 @@ export function HyperXAnswer({
               <p className="hx-para-text min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90">
                 {live ? (
                   <>
-                    {slice.slice(0, edgeAt)}
-                    <span className="hx-stream-edge">
-                      {slice.slice(edgeAt)}
-                    </span>
+                    {slice}
                     <span className="hx-stream-caret" aria-hidden="true" />
                   </>
                 ) : (
@@ -660,7 +661,7 @@ export function HyperXAnswer({
                 the paragraph it illuminates. THE SQUARE THAT FILLS (the
                 visitor's law): the moment the button is touched, the
                 space the vision will occupy stands reserved — a square
-                plate that fills with the coming image while it weaves. */}
+                plate with a quiet spinner, no wave, no scan, no pulse. */}
             {st?.loading && (
               <div
                 className="hx-plate-wait mt-1.5 w-full max-w-[340px] overflow-hidden rounded-xl border"
@@ -669,15 +670,9 @@ export function HyperXAnswer({
                 aria-live="polite"
               >
                 <div className="vision-filling relative aspect-square w-full">
-                  <span aria-hidden="true" className="vision-filling-wave" />
-                  <span aria-hidden="true" className="vision-filling-scan" />
-                  <span
-                    aria-hidden="true"
-                    className="vision-filling-grid absolute inset-0"
-                  />
                   <span className="mono-label absolute inset-0 flex flex-col items-center justify-center gap-1.5 px-3 text-center text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/85">
-                    <Gem
-                      className="size-3.5 animate-pulse text-[#e879f9]"
+                    <Loader2
+                      className="size-5 animate-spin text-[#e879f9]"
                       aria-hidden="true"
                     />
                     Crystallizing “{label}”…
@@ -712,7 +707,7 @@ export function HyperXAnswer({
                     src={st.imageUrl}
                     alt={st.imageTitle ?? label}
                     loading="lazy"
-                    className="vision-reveal aspect-square w-full bg-background/40 object-cover"
+                    className="aspect-square w-full bg-background/40 object-cover"
                   />
                 </button>
                 <figcaption className="mono-label flex items-center gap-1.5 px-2.5 py-1.5 text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground/80">

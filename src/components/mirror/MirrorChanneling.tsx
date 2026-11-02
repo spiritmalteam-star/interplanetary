@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import React, { useEffect, useState } from "react";
 import type { LiveScopeKey } from "@/lib/live-scopes";
+import { isPageHidden } from "@/lib/page-lifecycle";
 
 /* ------------------------------------------------------------------ */
 /*  THE CHANNELING LIGHTS — every chat of the house channels in its    */
@@ -237,7 +238,11 @@ function HyperXFactLine() {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     const timer = window.setInterval(
-      () => setIdx((i) => (i + 1) % HYPERX_FACTS.length),
+      () => {
+        /* the hidden channel rotates no facts — the beat waits for eyes */
+        if (isPageHidden()) return;
+        setIdx((i) => (i + 1) % HYPERX_FACTS.length);
+      },
       4600
     );
     return () => window.clearInterval(timer);

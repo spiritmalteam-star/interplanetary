@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
 import {
   Activity,
   ArrowLeft,
@@ -363,16 +364,44 @@ export function ProfilePage() {
     if (!open || section !== "processes") return;
     const controller = new AbortController();
     let timer = 0;
+    let busy = false;
     const tick = async () => {
-      const jobs = await readProcesses(controller.signal);
-      if (jobs) setProcessJobs(jobs);
-      const carrying = jobs?.some((j) => j.status === "running") ?? false;
-      if (carrying) timer = window.setTimeout(tick, 3000);
+      /* the hidden hall asks nothing — the poll keeps its cadence but
+         the fetch waits; the visitor's return re-reads at once (below) */
+      if (isPageHidden()) {
+        timer = window.setTimeout(tick, 3000);
+        return;
+      }
+      /* one read in flight at a time — the returning visitor's own
+         immediate read takes the baton, never doubles the chain */
+      if (busy) return;
+      busy = true;
+      try {
+        const jobs = await readProcesses(controller.signal);
+        if (jobs) setProcessJobs(jobs);
+        const carrying = jobs?.some((j) => j.status === "running") ?? false;
+        if (carrying) {
+          /* at most one live beat — a completing read never stacks a
+             second chain beside the returning visitor's own read */
+          window.clearTimeout(timer);
+          timer = window.setTimeout(tick, 3000);
+        }
+      } finally {
+        busy = false;
+      }
     };
     void tick();
+    /* the returning visitor's own breath — fresh job states the moment
+       the tab comes back, before the next beat of the poll */
+    const offVisible = onPageVisible(() => {
+      window.clearTimeout(timer);
+      timer = 0;
+      void tick();
+    });
     return () => {
       controller.abort();
       window.clearTimeout(timer);
+      offVisible();
     };
   }, [open, section, readProcesses]);
 

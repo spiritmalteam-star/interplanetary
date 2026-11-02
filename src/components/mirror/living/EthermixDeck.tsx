@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { registerWorkspaceCleanup } from "@/lib/mirror/workspace-lifecycle";
+import { isPageHidden } from "@/lib/page-lifecycle";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -774,11 +775,23 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
   }
 
   const scheduleDemo = useCallback(() => {
+    /* THE INVISIBLE GATE — an unseen room holds its breath: while the
+       tab is hidden or the deck rests parked (display:none), no notes
+       are scheduled. The timer itself stays alive — once gated it is
+       cheap — so the pattern resumes cleanly the moment the room is
+       seen. (The canvas is the visibility probe: the deck's own root
+       is position:fixed, whose offsetParent is always null.) */
+    if (isPageHidden() || canvasRef.current?.offsetParent === null) return;
     const eng = engineRef.current;
     if (!eng || eng.demo.owner === null || eng.demo.timer === null) return;
     const ui = uiRef.current[eng.demo.owner];
     const stepDur = 60 / (ui.bpm * ui.rate) / 4;
     const { ctx } = eng;
+    /* a parked breath never bursts on return — re-anchor the clock and
+       keep the pattern's step, dropping the beats missed while unseen */
+    if (ctx.currentTime - eng.demo.nextTime > stepDur) {
+      eng.demo.nextTime = ctx.currentTime + 0.06;
+    }
     while (eng.demo.nextTime < ctx.currentTime + 0.28) {
       const at = eng.demo.nextTime;
       const step = eng.demo.step;
@@ -1200,10 +1213,33 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
       last: performance.now(),
       lastSet: 0,
     };
+    /* THE PILOT'S REST — the fader breathes only while the room is
+       seen: while the tab is hidden or the deck rests parked, the
+       crossfade FREEZES at its shoulder (the clock is refreshed and
+       the position untouched, so it never silently jumps) and the
+       loop polls at 2Hz until the room returns. ONE scheduling hand:
+       each tick takes exactly one branch — frame clock or poll — so
+       visibility flips never double the loop. (The canvas is the
+       visibility probe: the deck's own root is position:fixed, whose
+       offsetParent is always null.) */
     let raf = 0;
-    const step = (now: number) => {
+    let poll: number | null = null;
+    const clearPoll = () => {
+      if (poll !== null) {
+        window.clearTimeout(poll);
+        poll = null;
+      }
+    };
+    const step = () => {
       const st = autoRef.current;
       if (!st) return;
+      const now = performance.now();
+      if (isPageHidden() || canvasRef.current?.offsetParent === null) {
+        st.last = now;
+        clearPoll();
+        poll = window.setTimeout(step, 500);
+        return;
+      }
       const dt = Math.min(200, now - st.last);
       st.last = now;
       st.pos += st.dir * (dt / 26000); // one full breath every ~26s
@@ -1225,6 +1261,7 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
     return () => {
       autoRef.current = null;
       cancelAnimationFrame(raf);
+      clearPoll();
     };
   }, [autoPilot, allTracks, loadTrack, playDeck]);
 
@@ -1428,8 +1465,30 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
   /* ------------------- the draw loop (one RAF) ---------------------- */
   useEffect(() => {
     let alive = true;
+    let pollTimer: number | null = null;
+    const clearPoll = () => {
+      if (pollTimer !== null) {
+        window.clearTimeout(pollTimer);
+        pollTimer = null;
+      }
+    };
     const loop = () => {
       if (!alive) return;
+      /* THE INVISIBLE DECK PAYS NOTHING — before any draw work: while
+         the tab is hidden, or the deck rests parked in a display:none
+         room, nothing is painted, no analyser is read, no clock is
+         written — the loop polls at 2Hz instead of the frame clock and
+         resumes the normal cadence by itself once seen again. (The
+         canvas is the visibility probe: the deck's own root is
+         position:fixed, whose offsetParent is always null.) Exactly
+         ONE callback is ever pending — the rAF and the poll are this
+         loop's only two scheduling branches — so visibility flips can
+         never double the loop. */
+      if (isPageHidden() || canvasRef.current?.offsetParent === null) {
+        clearPoll();
+        pollTimer = window.setTimeout(loop, 500);
+        return;
+      }
       rafRef.current = requestAnimationFrame(loop);
       const eng = engineRef.current;
       const now = performance.now();
@@ -1547,6 +1606,7 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
     return () => {
       alive = false;
       cancelAnimationFrame(rafRef.current);
+      clearPoll();
     };
   }, [setDeck]);
 

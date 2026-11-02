@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { isPageHidden } from "@/lib/page-lifecycle";
 import { Leaf, RotateCcw, X } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import {
@@ -209,7 +210,11 @@ function CraftingPhases({ concern }: { concern: string }) {
 
   useEffect(() => {
     const id = window.setInterval(
-      () => setPhase((p) => (p + 1) % CRAFT_PHASES.length),
+      () => {
+        /* the hidden vessel crafts no phases — the beat waits for eyes */
+        if (isPageHidden()) return;
+        setPhase((p) => (p + 1) % CRAFT_PHASES.length);
+      },
       1900
     );
     return () => window.clearInterval(id);

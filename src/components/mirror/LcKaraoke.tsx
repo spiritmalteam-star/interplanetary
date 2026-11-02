@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { AudioWaveform, Maximize2, Mic, Minimize2, Pause, Play, X } from "lucide-react";
+import { Maximize2, Mic, Minimize2, Pause, Play, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -22,11 +22,10 @@ import { cn } from "@/lib/utils";
 /*  held after the last, and the rests between verses only a breath.  */
 /*  A line touched by the visitor's hand travels the melody there.     */
 /*                                                                     */
-/*  THE WORDLESS ROOM: a transmission woven without words opens the    */
-/*  same room as a beat visual — a hidden twin of the playing sound    */
-/*  feeds a real analyser (WebAudio), and the orb, the spectrum ring   */
-/*  and the beat rings breathe with the ACTUAL music, never a          */
-/*  pretending clock.                                                  */
+/*  THE STABILITY LAW: the room is words-only — the wordless beat
+/*  stage (a hidden twin audio decoder, a WebAudio analyser and a
+/*  60fps style-writing loop) is gone entirely; a transmission woven
+/*  without words has no karaoke hand at all.
 /*                                                                     */
 /*  THE ONE DEVICE LAW: the room fits every screen — the words scale   */
 /*  with the viewport, the hands keep their 44px promise, the safe     */
@@ -148,241 +147,6 @@ function buildLines(
   return { lines, timed: false };
 }
 
-/** the floating notes of the karaoke's own sky — five notes, slow and
-    few, the room breathing music without ever crowding the words */
-const FLOATING_NOTES = [
-  { glyph: "♪", left: "8%", delay: "0s", dur: "17s", size: "1.5rem" },
-  { glyph: "♫", left: "24%", delay: "-6s", dur: "21s", size: "1.1rem" },
-  { glyph: "♩", left: "55%", delay: "-11s", dur: "19s", size: "1.3rem" },
-  { glyph: "♬", left: "74%", delay: "-3s", dur: "23s", size: "1.6rem" },
-  { glyph: "♪", left: "90%", delay: "-14s", dur: "16s", size: "1rem" },
-] as const;
-
-/* ------------------- the beat's own stage -------------------------- */
-/*  THE WORDLESS ROOM'S HEART — a hidden twin of the playing sound
-    (the same URL the browser already holds) is wired into a real
-    analyser through its own AudioContext. The element's voice is
-    re-routed into the graph the moment a MediaElementSource exists,
-    so the twin is silent to the ear (a zero gain on the way to the
-    speakers) yet honest to the eye: the orb swells with the bass,
-    the ring of bars dances with the spectrum, and each true beat
-    opens a ring that expands and fades. When the analyser cannot
-    exist (an old device, a blocked context), the stage falls back
-    to a calm, slow breathing of its own — never a dead screen. */
-
-const BEAT_BARS = 32;
-
-function BeatStage({
-  audioUrl,
-  playing,
-  time,
-}: {
-  audioUrl: string;
-  playing: boolean;
-  time: number;
-}) {
-  const twinRef = useRef<HTMLAudioElement | null>(null);
-  const orbRef = useRef<HTMLDivElement | null>(null);
-  const haloRef = useRef<HTMLDivElement | null>(null);
-  const barRefs = useRef<(HTMLSpanElement | null)[]>([]);
-  const ringHostRef = useRef<HTMLDivElement | null>(null);
-  /* the room's live clock and the playing hand travel by ref, so the
-     analyser is wired ONCE per transmission — never torn down by the
-     clock's own ticking */
-  const timeRef = useRef(time);
-  const playingRef = useRef(playing);
-  /* the live clock and the playing hand reach the analyser's loop by
-     ref — written AFTER render, never during it */
-  useEffect(() => {
-    timeRef.current = time;
-    playingRef.current = playing;
-  }, [time, playing]);
-
-  useEffect(() => {
-    const twin = twinRef.current;
-    if (!twin) return;
-    /* THE TWIN'S OWN SYNC — the twin walks with the room's clock;
-       a drift wider than a third of a second is corrected, quietly */
-    let raf = 0;
-    let ctx: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let data: Uint8Array<ArrayBuffer> | null = null;
-    let stopped = false;
-    let lastRing = 0;
-    let bassSmooth = 0;
-
-    const spawnRing = () => {
-      const host = ringHostRef.current;
-      if (!host) return;
-      const ring = document.createElement("span");
-      ring.className = "beat-ring";
-      host.appendChild(ring);
-      window.setTimeout(() => ring.remove(), 2600);
-    };
-
-    const loop = () => {
-      if (stopped) return;
-      const live = playingRef.current;
-      const now = timeRef.current;
-      /* sync the twin to the room's clock */
-      const t = twin.currentTime;
-      if (live && Math.abs(t - now) > 0.34 && now > 0) {
-        try {
-          twin.currentTime = now;
-        } catch {
-          /* the twin rests where it can */
-        }
-      }
-      let bass = 0;
-      let mid = 0;
-      let high = 0;
-      if (analyser && data) {
-        analyser.getByteFrequencyData(data);
-        const n = data.length;
-        const bassEnd = Math.max(1, Math.floor(n * 0.09));
-        const midEnd = Math.max(bassEnd + 1, Math.floor(n * 0.42));
-        let acc = 0;
-        for (let i = 0; i < bassEnd; i++) acc += data[i];
-        bass = acc / (bassEnd * 255);
-        acc = 0;
-        for (let i = bassEnd; i < midEnd; i++) acc += data[i];
-        mid = acc / ((midEnd - bassEnd) * 255);
-        acc = 0;
-        for (let i = midEnd; i < n; i++) acc += data[i];
-        high = acc / ((n - midEnd) * 255);
-      }
-      bassSmooth = bassSmooth * 0.82 + bass * 0.18;
-      const beat =
-        live && bassSmooth > 0.24 && bass - bassSmooth * 0.85 > 0.055;
-      if (beat && performance.now() - lastRing > 320) {
-        lastRing = performance.now();
-        spawnRing();
-      }
-      /* the orb — the bass's own breath */
-      if (orbRef.current) {
-        const s = 0.86 + bassSmooth * 0.55 + high * 0.1;
-        orbRef.current.style.transform = `scale(${s.toFixed(3)})`;
-        orbRef.current.style.opacity = String(0.72 + mid * 0.28);
-      }
-      if (haloRef.current) {
-        haloRef.current.style.transform = `scale(${(1 + bassSmooth * 0.35).toFixed(3)})`;
-        haloRef.current.style.opacity = String(0.35 + bassSmooth * 0.5);
-      }
-      /* the spectrum ring — every bar its own band of the song */
-      for (let i = 0; i < BEAT_BARS; i++) {
-        const el = barRefs.current[i];
-        if (!el) continue;
-        let v: number;
-        if (analyser && data && live) {
-          const idx = Math.floor((i / BEAT_BARS) * (data.length * 0.62));
-          v = (data[Math.min(idx, data.length - 1)] ?? 0) / 255;
-        } else if (analyser && data) {
-          v = bassSmooth * 0.5; /* the held breath while paused */
-        } else {
-          /* the honest fallback — a slow shared breathing, phase-shifted */
-          v =
-            0.18 +
-            0.14 *
-              Math.sin(performance.now() / 900 + (i / BEAT_BARS) * Math.PI * 2);
-        }
-        el.style.transform = `rotate(${(i * 360) / BEAT_BARS}deg) translateY(calc(-1 * var(--beat-radius))) scaleY(${Math.max(0.12, v).toFixed(3)})`;
-      }
-      raf = requestAnimationFrame(loop);
-    };
-
-    const wire = async () => {
-      try {
-        const AC =
-          window.AudioContext ??
-          (window as unknown as { webkitAudioContext?: typeof AudioContext })
-            .webkitAudioContext;
-        if (!AC) return;
-        ctx = new AC();
-        const src = ctx.createMediaElementSource(twin);
-        analyser = ctx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.72;
-        const gain = ctx.createGain();
-        gain.gain.value = 0; /* the twin is silent to the ear */
-        src.connect(analyser);
-        analyser.connect(gain);
-        gain.connect(ctx.destination);
-        data = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
-        await ctx.resume().catch(() => undefined);
-      } catch {
-        /* no analyser — the fallback breathing carries the stage */
-        analyser = null;
-        data = null;
-      }
-    };
-    void wire();
-    raf = requestAnimationFrame(loop);
-    return () => {
-      stopped = true;
-      cancelAnimationFrame(raf);
-      try {
-        ctx?.close().catch(() => undefined);
-      } catch {
-        /* already closed */
-      }
-    };
-  }, [audioUrl]);
-
-  /* the twin mirrors the room's own play/pause */
-  useEffect(() => {
-    const twin = twinRef.current;
-    if (!twin) return;
-    if (playing) {
-      void twin.play().catch(() => undefined);
-    } else {
-      twin.pause();
-    }
-  }, [playing]);
-
-  return (
-    <div
-      className="relative flex min-h-0 flex-1 items-center justify-center"
-      data-testid="lc-karaoke-beat"
-    >
-      <audio ref={twinRef} src={audioUrl} preload="auto" aria-hidden="true" />
-      {/* the halo the orb breathes into */}
-      <div
-        ref={haloRef}
-        aria-hidden="true"
-        className="beat-halo absolute size-[46vmin] rounded-full"
-      />
-      {/* the spectrum ring */}
-      <div
-        aria-hidden="true"
-        className="absolute size-[62vmin]"
-        style={{ ["--beat-radius" as string]: "31vmin" }}
-      >
-        {Array.from({ length: BEAT_BARS }).map((_, i) => (
-          <span
-            key={i}
-            ref={(el) => {
-              barRefs.current[i] = el;
-            }}
-            className="beat-bar absolute left-1/2 top-1/2 origin-top"
-          />
-        ))}
-      </div>
-      {/* the orb — the bass's own heart */}
-      <div
-        ref={orbRef}
-        aria-hidden="true"
-        className="beat-orb relative size-[26vmin] rounded-full"
-      />
-      {/* the expanding rings of the true beats */}
-      <div
-        ref={ringHostRef}
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
-      />
-    </div>
-  );
-}
-
 export function LcKaraoke({
   open,
   onClose,
@@ -391,7 +155,6 @@ export function LcKaraoke({
   playing,
   time,
   dur,
-  audioUrl,
   onToggle,
   onSeekRatio,
 }: {
@@ -402,8 +165,6 @@ export function LcKaraoke({
   playing: boolean;
   time: number;
   dur: number;
-  /** the transmission's own sound — the wordless room listens to it */
-  audioUrl?: string;
   onToggle: () => void;
   /** the visitor touched a line — the melody travels there (0..1) */
   onSeekRatio: (ratio: number) => void;
@@ -533,7 +294,7 @@ export function LcKaraoke({
     return `${m}:${r.toString().padStart(2, "0")}`;
   };
 
-  if (!host) return null;
+  if (!host || !hasWords) return null;
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -544,7 +305,7 @@ export function LcKaraoke({
           transition={{ duration: 0.4, ease: "easeOut" }}
           role="dialog"
           aria-modal="true"
-          aria-label={`${hasWords ? t("Karaoke") : t("Beat visuals")} — ${title}`}
+          aria-label={`${t("Karaoke")} — ${title}`}
           data-testid="lc-karaoke-room"
           ref={roomRef}
           className="lc-karaoke fixed inset-0 z-[95] flex flex-col overflow-hidden"
@@ -559,48 +320,20 @@ export function LcKaraoke({
           >
             <span className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_-10%,color-mix(in_srgb,var(--scope-a, #a855f7)_42%,transparent),transparent_62%)]" />
             <span className="absolute inset-0 bg-[radial-gradient(90%_60%_at_50%_115%,color-mix(in_srgb,var(--scope-a, #a855f7)_30%,transparent),transparent_58%)]" />
-            <span className="absolute inset-0 bg-[#0d0a14]/82 backdrop-blur-2xl" />
-            {FLOATING_NOTES.map((n, i) => (
-              <span
-                key={i}
-                aria-hidden="true"
-                className="lc-karaoke-note absolute bottom-[-8%] select-none text-[var(--scope-a, #a855f7)]"
-                style={{
-                  left: n.left,
-                  fontSize: n.size,
-                  animationDelay: n.delay,
-                  animationDuration: n.dur,
-                }}
-              >
-                {n.glyph}
-              </span>
-            ))}
+            <span className="absolute inset-0 bg-[#0d0a14]/82" />
           </div>
 
           {/* THE ROOM'S CROWN — the song's own name and the quiet exit */}
           <header className="relative z-10 flex shrink-0 items-center gap-3 px-4 pb-1 sm:px-6">
-            <span className="lc-karaoke-mic flex size-9 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a, #a855f7)_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a, #a855f7)_12%,transparent)]">
-              {hasWords ? (
-                <Mic
-                  className={cn(
-                    "size-4 text-[var(--scope-a, #a855f7)] transition-transform duration-500",
-                    playing && "scale-110"
-                  )}
-                  aria-hidden="true"
-                />
-              ) : (
-                <AudioWaveform
-                  className={cn(
-                    "size-4 text-[var(--scope-a, #a855f7)] transition-transform duration-500",
-                    playing && "scale-110"
-                  )}
-                  aria-hidden="true"
-                />
-              )}
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--scope-a, #a855f7)_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a, #a855f7)_12%,transparent)]">
+              <Mic
+                className="size-4 text-[var(--scope-a, #a855f7)]"
+                aria-hidden="true"
+              />
             </span>
             <div className="min-w-0 flex-1">
               <p className="mono-label truncate text-[9.5px] uppercase tracking-[0.26em] text-[var(--scope-a, #a855f7)]">
-                {hasWords ? t("Karaoke") : t("Beat visuals")}
+                {t("Karaoke")}
               </p>
               <h2 className="truncate font-serif text-[15px] font-semibold text-[#f6f4ef]">
                 {title}
@@ -633,32 +366,24 @@ export function LcKaraoke({
           </header>
 
           {/* THE HONEST CLOCK'S NOTE — the room speaks its own measure:
-              with words, an untimed brief rides the syllables between
-              a lead-in breath and an outro tail; without words, the
-              stage listens to the true sound itself */}
+              an untimed brief rides the syllables between a lead-in
+              breath and an outro tail */}
           <p
             className="mono-label relative z-10 shrink-0 px-4 pb-1 text-center text-[8.5px] uppercase tracking-[0.2em] text-white/35 sm:px-6"
             data-testid="lc-karaoke-timing-note"
           >
-            {hasWords
-              ? timed
-                ? t("The words walk by their own woven timestamps")
-                : t(
-                    "No per-line timing was woven into this song — the words ride the melody's own measure"
-                  )
+            {timed
+              ? t("The words walk by their own woven timestamps")
               : t(
-                  "No words were woven into this transmission — the stage breathes with the true sound itself"
+                  "No per-line timing was woven into this song — the words ride the melody's own measure"
                 )}
           </p>
 
-          {/* THE WORDS — the whole lyric, the sung line lit and leading;
-              THE WORDLESS ROOM — the beat stage, the true sound's own
-              orb, spectrum and rings */}
-          {hasWords ? (
-            <div
-              className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto"
-              data-testid="lc-karaoke-lyrics"
-            >
+          {/* THE WORDS — the whole lyric, the sung line lit and leading */}
+          <div
+            className="nice-scroll relative z-10 min-h-0 flex-1 overflow-y-auto"
+            data-testid="lc-karaoke-lyrics"
+          >
               <div className="mx-auto flex w-full max-w-[720px] flex-col items-stretch gap-1 px-4 py-[16vh] sm:px-6">
                 {lines.map((line, i) => {
                   const sung = i < litIndex;
@@ -686,7 +411,7 @@ export function LcKaraoke({
                       className={cn(
                         "focus-glow group text-left font-serif leading-[1.35] transition-all duration-500",
                         active
-                          ? "lc-karaoke-line-active scale-[1.02] text-[clamp(1.55rem,6vw,2.9rem)]"
+                          ? "scale-[1.02] text-[clamp(1.55rem,6vw,2.9rem)]"
                           : "text-[clamp(1.15rem,4.4vw,2.05rem)] hover:opacity-90",
                         sung
                           ? "text-white/45"
@@ -710,11 +435,6 @@ export function LcKaraoke({
                 })}
               </div>
             </div>
-          ) : (
-            audioUrl && (
-              <BeatStage audioUrl={audioUrl} playing={playing} time={time} />
-            )
-          )}
 
           {/* THE MELODY'S OWN BENCH — the honest line of the song, the
               big play hand, and the clock at both ends */}

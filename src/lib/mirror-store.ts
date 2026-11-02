@@ -76,6 +76,12 @@ import {
   lcAudioSave,
 } from "@/lib/client/lc-audio";
 import { journeyDepth } from "@/lib/learning-branches";
+import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
+import {
+  perfStreamEnd,
+  perfStreamFirstDelta,
+  perfStreamStart,
+} from "@/lib/perf-telemetry";
 
 export type ModalState =
   | { type: "federation" }
@@ -1370,6 +1376,15 @@ const osStream = {
   text: null as string | null,
   timer: null as number | null,
 };
+
+/* THE ASK'S OWN HAND — one live abort per channel surface (the
+   standing channel's modes): a fresh ask on a surface supersedes the
+   one still flying, so a channel turn mid-breath never leaves two
+   fetches racing for the same thread — and no answer lands twice. */
+const askAbort: Record<string, AbortController | null> = {};
+/* THE OS STREAM'S OWN HAND — the Manifest OS keeps one live stream;
+   a new ask cuts the old one the very breath it opens its own. */
+let osAskAbort: AbortController | null = null;
 
 /* ------------------------------------------------------------------ */
 /*  THE ENDLESS JOURNEY — the client's own thread of the six-part      */
@@ -3571,6 +3586,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       return;
     }
 
+    /* THE ASK'S OWN HAND — a fresh ask on this surface supersedes the
+       one still flying (a channel turn opened a new page mid-breath):
+       the old fetch is cut, so the same surface never carries two
+       racing asks and the reply never lands twice. */
+    askAbort[mode]?.abort();
+    const askCtl = new AbortController();
+    askAbort[mode] = askCtl;
+
     set((s) => ({
       view: "transmission",
       mobileNavOpen: false,
@@ -3586,6 +3609,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       },
     }));
 
+    /* the reply's own id — a model-requested vision attaches to it;
+       born before the ask so the stream's own measure carries its name */
+    const replyId = nextMessageId();
     try {
       /* Context memory: the mirror remembers this channel's earlier
          exchanges, so conversations deepen instead of restarting. */
@@ -3594,9 +3620,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         a: m.text,
       }));
       const payload = attachments ? attachmentsToPayload(attachments) : null;
+      perfStreamStart(replyId);
       const res = await speakDoor("/api/transmission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: askCtl.signal,
         body: JSON.stringify({
           query,
           mode: apiMode,
@@ -3630,6 +3658,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
          disable the whole realm forever (the visitor would need
          another input just to breathe again). */
       if (gen !== channelGeneration) {
+        perfStreamEnd(replyId, true);
         set((s) => ({
           sessions: {
             ...s.sessions,
@@ -3638,9 +3667,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         }));
         return;
       }
-
-      /* the reply's own id — a model-requested vision attaches to it */
-      const replyId = nextMessageId();
 
       set((s) => ({
         sessions: {
@@ -3674,10 +3700,36 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         },
       }));
 
+      /* the reply landed whole — its first breath and its end are one */
+      perfStreamFirstDelta(
+        replyId,
+        typeof data?.transmission === "string" ? data.transmission.length : 0
+      );
+      perfStreamEnd(replyId);
+
       /* THE VISION GIFT IS RETIRED — the consent law: the mirror never
          paints on its own initiative. An image needs the visitor's
          press on Crystallize or their own typed ask. */
     } catch (err) {
+      perfStreamEnd(replyId, true);
+      /* THE CUT ASK — this ask was superseded by a fresh one on the
+         same surface: it leaves without a sound. No failed mark, no
+         error word, no toast — the fresh ask owns the channel now. */
+      if ((err as { name?: string } | null)?.name === "AbortError") {
+        if (askAbort[mode] === askCtl) {
+          set((s) => ({
+            sessions: {
+              ...s.sessions,
+              [mode]: {
+                ...s.sessions[mode],
+                status: "ready",
+                activeQuery: "",
+              },
+            },
+          }));
+        }
+        return;
+      }
       /* THE QUIET FIELD LAW — the visitor's words are never lost to a
          failed transmission: the question rests in the channel marked
          "not delivered", and one touch sends it again. No retyping. */
@@ -3719,6 +3771,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           },
         },
       }));
+    } finally {
+      /* the hand returns — the surface's abort record retires, but
+         only while this ask still owns it (a superseding ask's own
+         record is never touched) */
+      if (askAbort[mode] === askCtl) askAbort[mode] = null;
     }
   },
 
@@ -4594,6 +4651,14 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     const query = question.trim();
     if (!query || get().osStatus === "loading") return;
 
+    /* THE STREAM'S OWN HAND — a fresh OS ask cuts the stream still
+       flying (a channel turn opened a new page mid-breath): the old
+       reader stops, so the OS never carries two racing streams and
+       the answer never lands twice. */
+    osAskAbort?.abort();
+    const osCtl = new AbortController();
+    osAskAbort = osCtl;
+
     const visitorId = nextMessageId();
     const osId = nextMessageId();
     set((s) => ({
@@ -4634,6 +4699,21 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           m.id === osId ? { ...m, text } : m
         ),
       }));
+    /* THE HIDDEN ROOM'S OWN HAND — subscribed once per stream and
+       retired with the stream: while the tab is away the words only
+       gather in the buffer (nothing is lost), and the visitor's
+       return lands the whole accumulated breath at once. */
+    let offReturnFlush: (() => void) | null = null;
+    const armReturnFlush = () => {
+      if (offReturnFlush) return;
+      offReturnFlush = onPageVisible(() => {
+        if (osStream.id !== osId || osStream.text == null) return;
+        const text = osStream.text;
+        osStream.id = null;
+        osStream.text = null;
+        writeOs(text);
+      });
+    };
     const appendOs = (full: string, immediate = false) => {
       if (immediate) {
         if (osStream.timer != null) {
@@ -4650,6 +4730,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       if (osStream.timer == null) {
         osStream.timer = window.setTimeout(() => {
           osStream.timer = null;
+          /* THE HIDDEN ROOM — nobody is looking: the beat passes the
+             words by and the buffer keeps every one of them; the
+             visitor's return lands the whole breath at once. */
+          if (isPageHidden()) {
+            armReturnFlush();
+            return;
+          }
           const beatId = osStream.id;
           const text = osStream.text;
           osStream.id = null;
@@ -4660,6 +4747,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               m.id === beatId ? { ...m, text } : m
             ),
           }));
+          /* the first rendered breath — the stream's own measure */
+          perfStreamFirstDelta(osId, text.length);
         }, OS_FLUSH_MS);
       }
     };
@@ -4671,9 +4760,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         .map((m) => ({ role: m.role, text: m.text }));
 
       const payload = attachments ? attachmentsToPayload(attachments) : null;
+      perfStreamStart(osId);
       const res = await speakDoor("/api/mirror-os", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: osCtl.signal,
         body: JSON.stringify({
           query,
           history,
@@ -4697,6 +4788,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         appendOs(String(data.reply ?? ""), true);
         set({ osStatus: "ready" });
         void get().refreshMe();
+        perfStreamFirstDelta(
+          osId,
+          typeof data?.reply === "string" ? data.reply.length : 0
+        );
+        perfStreamEnd(osId);
         return;
       }
 
@@ -4737,6 +4833,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             appendOs(full, true);
             set({ osStatus: "ready" });
             void get().refreshMe();
+            perfStreamEnd(osId);
           } else if (evt.type === "error") {
             throw new Error(
               evt.error ||
@@ -4752,6 +4849,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           appendOs(full, true);
           set({ osStatus: "ready" });
           void get().refreshMe();
+          perfStreamEnd(osId);
         } else {
           throw new Error(
             "The OS is momentarily quiet. Rest, then reach again."
@@ -4759,6 +4857,17 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         }
       }
     } catch (err) {
+      perfStreamEnd(osId, true);
+      /* THE CUT STREAM — this stream was superseded by a fresh ask on
+         the same door: it ends without a sound. No failed mark, no
+         error word — the fresh stream owns the room now. */
+      if ((err as { name?: string } | null)?.name === "AbortError") {
+        if (osAskAbort === osCtl) {
+          osAskAbort = null;
+          set({ osStatus: "ready" });
+        }
+        return;
+      }
       /* the stream's last breath — this line's pending beat flushes
          at once, so the error state never swallows words already
          received; a line that never received a word still leaves */
@@ -4786,6 +4895,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             ? err.message
             : "The OS is momentarily quiet. Rest, then reach again.",
       }));
+    } finally {
+      /* the stream retires — its return-flush subscription and its
+         hand on the abort record go with it (a superseding stream's
+         own records are never touched) */
+      (offReturnFlush as (() => void) | null)?.();
+      if (osAskAbort === osCtl) osAskAbort = null;
     }
   },
 
@@ -5126,6 +5241,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
     // Gentle charging animation while the field works.
     const timer = window.setInterval(() => {
+      /* the hidden chamber spends no frames on a transient bar — the
+         beat simply waits; on return it resumes and self-corrects */
+      if (isPageHidden()) return;
       const p = get().labProgress;
       if (p < 92) set({ labProgress: Math.min(92, p + 2 + Math.random() * 5) });
     }, 140);

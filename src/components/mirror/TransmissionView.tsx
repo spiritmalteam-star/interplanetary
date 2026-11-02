@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { isPageHidden } from "@/lib/page-lifecycle";
 import {
   Check,
   CircleAlert,
@@ -751,7 +752,11 @@ export function TransmissionView() {
   useEffect(() => {
     if (status !== "loading") return;
     const id = window.setInterval(
-      () => setFormingAge((a) => a + 1),
+      () => {
+        /* the hidden clock does not age the forming — it resumes on return */
+        if (isPageHidden()) return;
+        setFormingAge((a) => a + 1);
+      },
       1000
     );
     return () => window.clearInterval(id);
@@ -760,7 +765,11 @@ export function TransmissionView() {
   useEffect(() => {
     if (status !== "loading") return;
     const id = window.setInterval(
-      () => setFormingPhase((p) => (p + 1) % WAITING_PHRASES.length),
+      () => {
+        /* the hidden room cycles no phrases — the beat waits for eyes */
+        if (isPageHidden()) return;
+        setFormingPhase((p) => (p + 1) % WAITING_PHRASES.length);
+      },
       2400
     );
     return () => window.clearInterval(id);

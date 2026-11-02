@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AudioLines,
-  AudioWaveform,
   Check,
   ChevronDown,
   Copy,
@@ -41,6 +40,7 @@ import Image from "next/image";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
+import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
 import { EthermixDeck } from "./living/EthermixDeck";
 import { LcKaraoke } from "./LcKaraoke";
 import {
@@ -73,10 +73,10 @@ import { cn } from "@/lib/utils";
 
 /* ------------------------- the house's dress ------------------------- */
 /*  The musical chamber wears its own accent (--scope-a, the purple of
-    the room's liquid) for everything that IS the sound — chips, wave,
-    the weave breath — over the slow liquid backdrop (.lc-wash and the
-    drifting .lc-blob drops, styled in globals.css). The braided seam
-    and three rarely-sung light-language seals stay the house's own.   */
+    the room's liquid) for everything that IS the sound — chips, wave —
+    over the slow liquid backdrop (.lc-wash, styled in globals.css).
+    The braided seam and three rarely-sung light-language seals stay
+    the house's own.                                                   */
 
 /** The braided seam — a section rule woven of the two kind colors and
  *  the gold, fading at both ends so it never cuts the page. */
@@ -386,7 +386,6 @@ function VoiceRecordButton({
           className="absolute -top-9 right-0 z-10 flex items-center gap-1.5 whitespace-nowrap rounded-full border hairline bg-card px-2.5 py-1 text-[11px] text-foreground/85 shadow-sm"
           data-testid={`${testId}-listening`}
         >
-          <span className="size-1.5 animate-pulse rounded-full bg-[var(--destructive)]" aria-hidden="true" />
           {t("Listening — speak the music you want to hear")}
         </span>
       )}
@@ -406,26 +405,7 @@ function VoiceRecordButton({
    everything: the transmission now playing, the hands that move it
    (back, play, forward, the repeat dial, the volume), and the shelf
    of every sound this device still holds. When a new weave lands,
-   the stage answers with a light — the camera is already here. */
-
-/* THE WEAVING BARS — the channeling's own seven-bar breath, shared by
-   the stage (where the sound will land) and the strip beneath it. */
-function WeavingBars() {
-  return (
-    <div className="flex h-8 shrink-0 items-end gap-[3px]" aria-hidden="true">
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-        <span
-          key={i}
-          className="w-[3px] rounded-full bg-[var(--scope-a)]"
-          style={{
-            height: `${30 + (i % 3) * 26}%`,
-            animation: `lc-wave 1.2s ease-in-out ${i * 0.12}s infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+   the camera is already here. */
 
 function PlayerBar() {
   const track = useMirror((s) => s.lcTrack);
@@ -454,14 +434,15 @@ function PlayerBar() {
   const [shelfOpen, setShelfOpen] = useState(false);
   const [waveFailed, setWaveFailed] = useState(false);
   /* THE KARAOKE DOOR — open only for a transmission woven with words:
-     the room where the lyrics stand tall and the melody carries them */
-  const [karaokeOpen, setKaraokeOpen] = useState(false);
+     the room where the lyrics stand tall and the melody carries them.
+     The door remembers WHICH transmission it was opened for, so a
+     change of transmission closes it by itself — no effect needed,
+     it never re-opens over a wordless or different sound. */
+  const [karaokeOpenId, setKaraokeOpenId] = useState<string | null>(null);
   /* THE QUIET MORE-DOOR — the craft hands (new version, reshape,
      download, translation) rest folded inside one more-hand, so
      the transport stays small, symmetric and uncluttered */
   const [moreOpen, setMoreOpen] = useState(false);
-  /* the stage answers a fresh weave with one slow breath of light */
-  const [glow, setGlow] = useState(false);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const seenTrack = useRef<string | null>(null);
   const live = status === "ready" && track !== null;
@@ -480,11 +461,14 @@ function PlayerBar() {
           ? t("The full song is being woven — verses finding their chorus…")
           : t("The sound is being woven — hold still…");
   const active = track;
+  const karaokeOpen = karaokeOpenId !== null && karaokeOpenId === active?.id;
+  const openKaraoke = () => setKaraokeOpenId(active?.id ?? null);
+  const closeKaraoke = () => setKaraokeOpenId(null);
   const realWaveAllowed = !!active && active.length !== "loop" && !waveFailed;
   const progress = active && dur > 0 ? Math.min(1, time / dur) : 0;
 
   /* THE CAMERA'S LAW — the moment a woven (or chosen) transmission
-     takes the stage, the stage breathes once and holds the focus. */
+     takes the stage, the room glides to it and the focus follows. */
   useEffect(() => {
     if (!active) {
       seenTrack.current = null;
@@ -501,17 +485,24 @@ function PlayerBar() {
       () => el?.focus({ preventScroll: true }),
       reduce ? 0 : 320
     );
-    const glowOn = window.setTimeout(() => setGlow(true), 0);
-    const glowOff = window.setTimeout(
-      () => setGlow(false),
-      reduce ? 600 : 2400
-    );
     return () => {
       window.clearTimeout(focusTimer);
-      window.clearTimeout(glowOn);
-      window.clearTimeout(glowOff);
     };
   }, [active?.id]);
+
+  /* THE ROOM ONLY WHEN WORDS — the karaoke hand exists only for a
+     transmission woven with words (the door above closes itself on
+     a change of transmission — see karaokeOpenId). */
+  /* THE HONEST CLOCK AT REST — while the tab is hidden the room draws
+     nothing (the timeupdate stream is refused), and the moment the
+     visitor returns one read of the audio element's own currentTime
+     re-syncs every hand at once. */
+  useEffect(() => {
+    return onPageVisible(() => {
+      const el = audioRef.current;
+      if (el) setTime(el.currentTime);
+    });
+  }, []);
 
   const toggle = () => {
     const el = audioRef.current;
@@ -556,11 +547,7 @@ function PlayerBar() {
         ref={stageRef}
         tabIndex={-1}
         aria-label={t("The music player")}
-        className={cn(
-          "scope-frame-card relative rounded-2xl p-3.5 outline-none transition-shadow duration-700 sm:p-4",
-          glow &&
-            "shadow-[0_0_0_1px_var(--scope-a),0_14px_52px_-16px_color-mix(in_srgb,var(--scope-a)_80%,transparent)]"
-        )}
+        className="scope-frame-card relative rounded-2xl p-3.5 outline-none sm:p-4"
         data-testid="lc-player"
       >
         {live && active ? (
@@ -584,7 +571,11 @@ function PlayerBar() {
                 }
                 void useMirror.getState().lcAdvance(1);
               }}
-              onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+              onTimeUpdate={(e) => {
+                /* no clock work for a hidden tab — the honest
+                   currentTime re-syncs on the visitor's return */
+                if (!isPageHidden()) setTime(e.currentTarget.currentTime);
+              }}
               onLoadedMetadata={(e) => {
                 const el = e.currentTarget;
                 if (Number.isFinite(el.duration)) {
@@ -595,32 +586,12 @@ function PlayerBar() {
               }}
             />
             <div className="flex items-center gap-3">
-              {/* THE PLATE — the transmission's own disc, breathing while
-                  the sound moves */}
+              {/* THE PLATE — the transmission's own disc, at rest */}
               <div
                 aria-hidden="true"
                 className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_75%,var(--scope-a))] shadow-[0_6px_22px_-10px_color-mix(in_srgb,var(--scope-a)_90%,transparent)]"
               >
-                <Music4
-                  className={cn(
-                    "size-5 text-[#f6f4ef] transition-transform duration-700",
-                    playing && "scale-110"
-                  )}
-                />
-                {playing && (
-                  <span className="absolute inset-x-1.5 bottom-1.5 flex items-end justify-center gap-[3px]">
-                    {[0, 1, 2].map((i) => (
-                      <span
-                        key={i}
-                        className="w-[3px] rounded-full bg-[#f6f4ef]/90"
-                        style={{
-                          height: `${5 + ((i * 5) % 8)}px`,
-                          animation: `lc-wave 1.${4 + i * 3}s ease-in-out ${i * 0.18}s infinite`,
-                        }}
-                      />
-                    ))}
-                  </span>
-                )}
+                <Music4 className="size-5 text-[#f6f4ef]" />
               </div>
               <div className="min-w-0 flex-1">
                 <p
@@ -766,36 +737,23 @@ function PlayerBar() {
                 </span>
               </button>
 
-              {/* THE KARAOKE HAND — every transmission may open the room:
-                  one woven with words grows them tall enough to sing
-                  with the melody; a wordless one opens the beat room,
-                  the true sound's own orb, spectrum and rings */}
-              <button
-                type="button"
-                onClick={() => setKaraokeOpen(true)}
-                aria-label={
-                  active.lyrics
-                    ? t("Karaoke — sing with the melody")
-                    : t("Beat visuals — watch the melody")
-                }
-                title={
-                  active.lyrics
-                    ? t("Karaoke — sing with the melody")
-                    : t("Beat visuals — watch the melody")
-                }
-                aria-pressed={karaokeOpen}
-                data-testid="lc-karaoke-open"
-                className={cn("btn-chip uppercase", karaokeOpen && "btn-chip-active")}
-              >
-                {active.lyrics ? (
+              {/* THE KARAOKE HAND — one hand, and only for a transmission
+                  woven with words: the room where the lyrics stand tall
+                  and the melody carries them */}
+              {active.lyrics && (
+                <button
+                  type="button"
+                  onClick={openKaraoke}
+                  aria-label={t("Karaoke — sing with the melody")}
+                  title={t("Karaoke — sing with the melody")}
+                  aria-pressed={karaokeOpen}
+                  data-testid="lc-karaoke-open"
+                  className={cn("btn-chip uppercase", karaokeOpen && "btn-chip-active")}
+                >
                   <Mic className="size-3" aria-hidden="true" />
-                ) : (
-                  <AudioWaveform className="size-3" aria-hidden="true" />
-                )}
-                <span className="whitespace-nowrap">
-                  {active.lyrics ? t("Karaoke") : t("Visuals")}
-                </span>
-              </button>
+                  <span className="whitespace-nowrap">{t("Karaoke")}</span>
+                </button>
+              )}
 
               {/* THE QUIET MORE-HAND — the craft hands folded inside one
                   small dial, so the transport stays symmetric */}
@@ -935,7 +893,6 @@ function PlayerBar() {
                 aria-live="polite"
                 aria-busy="true"
               >
-                <WeavingBars />
                 <p className="min-w-0 flex-1 text-[12.5px] italic leading-snug text-muted-foreground">
                   {weavePhrase}
                 </p>
@@ -972,24 +929,25 @@ function PlayerBar() {
             </AnimatePresence>
 
             {/* THE KARAOKE ROOM — the words grown big, riding the melody;
-                opened by the transport's own hand, left by its own door */}
-            <LcKaraoke
-              open={karaokeOpen}
-              onClose={() => setKaraokeOpen(false)}
-              lyrics={active.lyrics ?? ""}
-              audioUrl={active.audioUrl}
-              title={active.title}
-              playing={playing}
-              time={time}
-              dur={dur}
-              onToggle={toggle}
-              onSeekRatio={seekTo}
-            />
+                mounted only while the transmission itself carries words */}
+            {active.lyrics && (
+              <LcKaraoke
+                open={karaokeOpen}
+                onClose={closeKaraoke}
+                lyrics={active.lyrics ?? ""}
+                title={active.title}
+                playing={playing}
+                time={time}
+                dur={dur}
+                onToggle={toggle}
+                onSeekRatio={seekTo}
+              />
+            )}
           </>
         ) : weaving ? (
           /* THE CHANNELING ON THE STAGE — the music that is about to be
              channeled is seen forming right here, where it will land:
-             the weaving animation stands where the empty shelf stood. */
+             the honest weaving phrase stands where the empty shelf stood. */
           <div
             className="flex items-center gap-3 py-1"
             data-testid="lc-stage-weaving"
@@ -1001,14 +959,12 @@ function PlayerBar() {
               className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_75%,var(--scope-a))] shadow-[0_6px_22px_-10px_color-mix(in_srgb,var(--scope-a)_90%,transparent)]"
             >
               <AudioLines className="size-5 text-[#f6f4ef]" />
-              <span className="absolute inset-0 animate-pulse rounded-xl border border-[#f6f4ef]/30" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("The music player")}
               </p>
               <div className="mt-1 flex items-center gap-2.5">
-                <WeavingBars />
                 <p className="min-w-0 flex-1 text-[12.5px] italic leading-snug text-muted-foreground">
                   {weavePhrase}
                 </p>
@@ -1529,12 +1485,6 @@ function BriefCard() {
                   busyOp === `lyrics:${hand.op}` && "btn-chip-active"
                 )}
               >
-                {busyOp === `lyrics:${hand.op}` && (
-                  <span
-                    className="inline-block size-1.5 animate-pulse rounded-full bg-[var(--scope-a)]"
-                    aria-hidden="true"
-                  />
-                )}
                 {t(hand.label)}
               </button>
             ))}
@@ -1986,20 +1936,16 @@ export function LightCodesView() {
   return (
     <div className="scope-lightcodes relative flex h-full flex-col">
       {/* THE THICK LIQUID — the room's signature atmosphere: one layered
-          wash of radial and conic purple light over the glass, three
-          enormous blurred drops drifting through it on 36–58 second
-          loops (CSS-only transforms; they rest under the eco tier and
-          for reduced-motion visitors), and three rarely-sung
-          light-language seals in the empty corners. Decoration never
-          takes a touch and never covers a control. */}
+          wash of radial and conic purple light over the glass, and
+          three rarely-sung light-language seals in the empty corners.
+          (The drifting blurred blobs are gone — pure paint cost, no
+          meaning.) Decoration never takes a touch and never covers a
+          control. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
       >
         <div className="lc-wash absolute inset-0" />
-        <div className="lc-blob lc-blob-a" />
-        <div className="lc-blob lc-blob-b" />
-        <div className="lc-blob lc-blob-c" />
         {/* intricate_04 — unsung anywhere else in the realm */}
         <SigilMark
           src="/sigils/intricate_04.png"
@@ -2525,14 +2471,7 @@ export function LightCodesView() {
                           TOUCH_VEIL
                         )}
                       >
-                        {enhancing ? (
-                          <span
-                            className="size-3.5 animate-pulse rounded-full bg-[var(--scope-a)]"
-                            aria-hidden="true"
-                          />
-                        ) : (
-                          <Wand2 className="size-3.5" aria-hidden="true" />
-                        )}
+                        <Wand2 className="size-3.5" aria-hidden="true" />
                       </button>
                     )}
                     <button

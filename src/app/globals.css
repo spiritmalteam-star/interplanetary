@@ -790,18 +790,6 @@ html:not(.dark) .text-hero {
 .animate-rise-in { animation: rise-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .animate-spin-slower { animation: spin-slower 22s linear infinite; }
 
-.shimmer-bar {
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--cy) 5%, transparent) 0%,
-    color-mix(in srgb, var(--cy) 12%, transparent) 50%,
-    color-mix(in srgb, var(--cy) 5%, transparent) 100%
-  );
-  background-size: 220px 100%;
-  background-repeat: no-repeat;
-  animation: shimmer-line 2.1s linear infinite;
-}
-
 /* ------------------------------------------------------------------ */
 /*  Scrollbars                                                        */
 /* ------------------------------------------------------------------ */
@@ -1250,12 +1238,6 @@ html:not(.dark) .scope-lightcodes {
 }
 .fg-gear { transform-box: fill-box; transform-origin: center; animation: fg-gear 9s linear infinite; }
 
-/* LIGHT CODES — the chamber's breath: gentle waveform bars. */
-@keyframes lc-wave {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(0.55); }
-}
-
 /* ------------------------------------------------------------------ */
 /*  The book reader draws no color — even glyphs. Any emoji used as    */
 /*  an ornament is rendered in ink only, and the toast voices (sonner) */
@@ -1396,7 +1378,6 @@ html:not(.dark) .scope-lightcodes {
   .scope-halo-rev,
   .animate-charge-pulse,
   .animate-float-y,
-  .shimmer-bar,
   .dream-btn,
   .dream-btn::before,
   .dream-halo,
@@ -1423,7 +1404,6 @@ html:not(.dark) .scope-lightcodes {
   .hx-step-dot,
   .hx-stream-caret,
   .hx-node-live,
-  .hx-para-in,
   .fg-tap,
   .fg-spark,
   .fg-ember,
@@ -4198,27 +4178,11 @@ html:not(.dark) .lp-sigil-img {
   }
 }
 
-@keyframes conv-rise {
-  from {
-    opacity: 0;
-    transform: translateY(7px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.conv-rise {
-  animation: conv-rise 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
 .nav-conv-failed-dot {
   animation: viz-pulse-soft 1.6s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .conv-rise,
   .nav-conv-failed-dot {
     animation: none;
   }
@@ -4261,9 +4225,6 @@ html:not(.dark) .lp-sigil-img {
 [data-perf="eco"] .nav-conv-failed-dot {
   animation: none;
 }
-[data-perf="eco"] .conv-rise {
-  animation-duration: 1ms;
-}
 [data-perf="eco"] [style*="viz-"] {
   animation: none !important;
 }
@@ -4280,7 +4241,6 @@ html:not(.dark) .lp-sigil-img {
 [data-perf="eco"] .animate-drift-a,
 [data-perf="eco"] .animate-drift-b,
 [data-perf="eco"] .animate-drift-c,
-[data-perf="eco"] .shimmer-bar,
 [data-perf="eco"] .ink-shimmer,
 [data-perf="eco"] .lp-breathe,
 [data-perf="eco"] .lp-pulse,
@@ -4306,6 +4266,33 @@ html:not(.dark) .lp-sigil-img {
 [data-perf="eco"] .mc-spark,
 [data-perf="eco"] .mc-star {
   opacity: 0;
+}
+/* 2-b — THE STABILITY ROOM: on weak devices the expensive paint work
+   stands down. backdrop-filter forces a full blur pass over whatever
+   sits beneath a surface, every frame, on the GPU — the eco room
+   keeps the tint and the hairline, drops the blur. Decorative
+   animated gradients (the drifting door buttons) stand still too. */
+[data-perf="eco"] .glass,
+[data-perf="eco"] .glass-strong,
+[data-perf="eco"] .glass-soft {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+}
+[data-perf="eco"] [class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+[data-perf="eco"] .dream-btn,
+[data-perf="eco"] .dream-btn::before,
+[data-perf="eco"] .star-btn,
+[data-perf="eco"] .star-btn::before,
+[data-perf="eco"] .communion-btn,
+[data-perf="eco"] .communion-btn::before,
+[data-perf="eco"] .communion-halo,
+[data-perf="eco"] .communion-ring,
+[data-perf="eco"] .communion-star {
+  animation: none;
 }
 /* the fullscreen paper-grain overlay forces a blend pass over every
    painted frame — the eco room skips the tooth, keeps the ink */
@@ -4546,98 +4533,6 @@ html:not(.dark) .lp-sigil-img {
     );
 }
 
-.lc-blob {
-  position: absolute;
-  aspect-ratio: 1;
-  border-radius: 9999px;
-  filter: blur(60px);
-  pointer-events: none;
-  will-change: transform;
-  opacity: 0.26;
-}
-.dark .lc-blob {
-  opacity: 0.5;
-}
-.lc-blob-a {
-  top: -12%;
-  left: -10%;
-  width: clamp(280px, 44%, 560px);
-  background: radial-gradient(
-    circle at 38% 38%,
-    color-mix(in srgb, var(--scope-a, #a855f7) 34%, transparent),
-    color-mix(in srgb, var(--scope-a, #a855f7) 12%, transparent) 62%,
-    transparent 78%
-  );
-  animation: lc-drift-a 44s ease-in-out infinite;
-}
-.lc-blob-b {
-  bottom: -18%;
-  right: -12%;
-  width: clamp(240px, 38%, 480px);
-  background: radial-gradient(
-    circle at 60% 40%,
-    color-mix(in srgb, var(--scope-b, #d8c9a8) 26%, transparent),
-    color-mix(in srgb, var(--scope-a, #a855f7) 10%, transparent) 60%,
-    transparent 78%
-  );
-  animation: lc-drift-b 58s ease-in-out infinite;
-}
-.lc-blob-c {
-  top: 34%;
-  left: 30%;
-  width: clamp(200px, 30%, 380px);
-  background: radial-gradient(
-    circle at 50% 50%,
-    color-mix(in srgb, var(--scope-a, #a855f7) 22%, transparent),
-    transparent 72%
-  );
-  animation: lc-drift-c 36s ease-in-out infinite;
-}
-
-@keyframes lc-drift-a {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  33% {
-    transform: translate3d(7%, 9%, 0) scale(1.1);
-  }
-  66% {
-    transform: translate3d(-5%, 6%, 0) scale(0.95);
-  }
-}
-@keyframes lc-drift-b {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  40% {
-    transform: translate3d(-8%, -7%, 0) scale(1.07);
-  }
-  70% {
-    transform: translate3d(4%, -4%, 0) scale(0.97);
-  }
-}
-@keyframes lc-drift-c {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(6%, -8%, 0) scale(1.12);
-  }
-}
-
-/* the liquid rests: the eco tier and reduced-motion visitors keep the
-   washes and the drops as still glass — nothing ever blocks a hand */
-[data-perf="eco"] .lc-blob {
-  animation: none;
-}
-@media (prefers-reduced-motion: reduce) {
-  .lc-blob {
-    animation: none;
-  }
-}
 
 /* ---------------------------------------------------------------- */
 /*  THE CODEX'S OWN CORNERS — small luminous brackets at two corners */
@@ -5090,31 +4985,12 @@ html:not(.dark) .lp-sigil-img {
   50% { opacity: 0.4; transform: scale(0.7); }
 }
 
-/* THE TRANSMISSION'S OWN REVEAL — a fresh HyperX answer materializes
-   in a fast, tech-looking stream: each paragraph fades up as the
-   stream's front reaches it, the front's last characters carry a
-   cyan→fuchsia luminous wash, and a thin gradient caret rides the
-   edge. Render-only — the room's scroll is never moved, the reader
-   keeps their place at the transmission's beginning while the truth
-   grows beneath their eye. */
-.hx-para-in {
-  animation: hx-para-in 0.42s ease-out both;
-}
-@keyframes hx-para-in {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.hx-stream-edge {
-  background: linear-gradient(
-    90deg,
-    var(--foreground) 0%,
-    color-mix(in srgb, #22d3ee 70%, var(--foreground)) 55%,
-    color-mix(in srgb, #e879f9 85%, #ffffff) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
+/* THE TRANSMISSION'S OWN REVEAL — a fresh HyperX answer appears the
+   moment the stream writes it: no entrance transition, no gradient
+   wash — clean typography at the front. The thin caret rides the
+   edge as a simple typing indicator. Render-only — the room's scroll
+   is never moved, the reader keeps their place at the transmission's
+   beginning while the truth grows beneath their eye. */
 .hx-stream-caret {
   display: inline-block;
   width: 8px;
@@ -5123,339 +4999,19 @@ html:not(.dark) .lp-sigil-img {
   transform: translateY(2px);
   border-radius: 1.5px;
   background: linear-gradient(180deg, #e879f9, #22d3ee);
-  box-shadow: 0 0 10px -1px color-mix(in srgb, #22d3ee 70%, transparent);
   animation: hx-caret 0.9s steps(2, start) infinite;
 }
 .hx-node-live {
   animation: hx-step-dot 1.4s ease-in-out infinite;
   border-color: color-mix(in srgb, #22d3ee 45%, transparent) !important;
 }
-.hx-fade-in {
-  animation: hx-para-in 0.6s ease-out both;
-}
+
 
 /* ------------------------------------------------------------------ */
-/*  THE SCOPE'S OWN SKY — the themed living background of every chat   */
-/*  scope (ScopeAmbient.tsx): few elements, low light, the edges of    */
-/*  the room. THE LAWS: it never takes a touch; it folds away while    */
-/*  the visitor writes; a visitor who asked for less motion receives   */
-/*  a still sky.                                                       */
-/* ------------------------------------------------------------------ */
-.scope-ambient {
-  opacity: 1;
-  transition: opacity 0.7s ease;
-}
-.scope-ambient[data-dormant="true"] {
-  opacity: 0;
-}
-
-/* the scientist's own paper — the blueprint grid HyperX stands on */
-.hx-sky-grid {
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, #22d3ee 15%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, #22d3ee 15%, transparent) 1px, transparent 1px);
-  background-size: 46px 46px;
-  -webkit-mask-image: radial-gradient(
-    120% 90% at 50% 0%,
-    black 0%,
-    transparent 72%
-  );
-  mask-image: radial-gradient(
-    120% 90% at 50% 0%,
-    black 0%,
-    transparent 72%
-  );
-  opacity: 0.62;
-}
-
-/* THE VISIBLE SKY — each science figure carries a soft glow of its
-   own color, so the sky is found by the eye without hunting */
-.hx-sky-glow-cyan {
-  filter: drop-shadow(0 0 10px color-mix(in srgb, #22d3ee 40%, transparent));
-}
-.hx-sky-glow-magenta {
-  filter: drop-shadow(0 0 10px color-mix(in srgb, #e879f9 38%, transparent));
-}
-
-/* the drifting handwriting of the machinery */
-.hx-sky-formula {
-  opacity: 0.24;
-  text-shadow: 0 0 12px color-mix(in srgb, #22d3ee 45%, transparent);
-  animation-name: amb-formula;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-.dark .hx-sky-formula {
-  opacity: 0.34;
-}
-
-/* the rising motes of the Mirror's beam and the Healing breath */
-.amb-mote {
-  opacity: 0.4;
-  animation-name: amb-mote;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-}
-
-/* ------------------------------------------------------------------ */
-/*  THE REALISTIC BUBBLE — the small floating particles, reborn:       */
-/*  a translucent sphere with a lit rim, a highlight high on its       */
-/*  shoulder, the room's own color refracted faintly inside, and a     */
-/*  wobbling liquid climb. At rest (reduced motion) it hangs still,    */
-/*  honestly round.                                                    */
-/* ------------------------------------------------------------------ */
-.amb-bubble {
-  position: absolute;
-  bottom: -6%;
-  border-radius: 9999px;
-  opacity: var(--bb-op, 0.5);
-  pointer-events: none;
-  background:
-    radial-gradient(
-      circle at 32% 30%,
-      rgba(255, 255, 255, 0.9) 0%,
-      rgba(255, 255, 255, 0.3) 13%,
-      rgba(255, 255, 255, 0.06) 30%,
-      transparent 47%
-    ),
-    radial-gradient(
-      circle at 68% 78%,
-      color-mix(in srgb, var(--bb-tint, #ffffff) 36%, transparent) 0%,
-      transparent 44%
-    ),
-    radial-gradient(
-      circle at 50% 50%,
-      transparent 56%,
-      color-mix(in srgb, var(--bb-tint, #ffffff) 32%, rgba(255, 255, 255, 0.3)) 67%,
-      rgba(255, 255, 255, 0.55) 75%,
-      transparent 79%
-    );
-  box-shadow:
-    inset -2px -3px 6px color-mix(in srgb, var(--bb-tint, #ffffff) 22%, transparent),
-    inset 2px 3px 5px rgba(255, 255, 255, 0.5),
-    0 0 10px -3px color-mix(in srgb, var(--bb-tint, #ffffff) 40%, transparent);
-  animation-name: amb-bubble-rise;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  will-change: transform;
-}
-.amb-bubble::after {
-  content: "";
-  position: absolute;
-  left: 18%;
-  top: 11%;
-  width: 27%;
-  height: 19%;
-  border-radius: 9999px;
-  background: radial-gradient(
-    closest-side,
-    rgba(255, 255, 255, 0.95),
-    rgba(255, 255, 255, 0) 80%
-  );
-  transform: rotate(-24deg);
-}
-@keyframes amb-bubble-rise {
-  0% {
-    transform: translate3d(0, 0, 0) scale(0.85);
-    opacity: 0;
-  }
-  9% {
-    opacity: var(--bb-op, 0.5);
-  }
-  27% {
-    transform: translate3d(calc(var(--bb-drift, -4vw) * 0.45), -30vh, 0) scale(1);
-  }
-  51% {
-    transform: translate3d(calc(var(--bb-drift, -4vw) * -0.55), -57vh, 0) scale(0.97);
-  }
-  75% {
-    transform: translate3d(calc(var(--bb-drift, -4vw) * 0.6), -83vh, 0) scale(1.05);
-  }
-  93% {
-    opacity: var(--bb-op, 0.5);
-  }
-  100% {
-    transform: translate3d(calc(var(--bb-drift, -4vw) * 0.2), -113vh, 0) scale(1.1);
-    opacity: 0;
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/*  THE BEAT STAGE — the wordless karaoke room's heart: the orb (the   */
-/*  bass's own heart), the halo it breathes into, the spectrum ring    */
-/*  (32 bars, each its own band of the true sound) and the rings a     */
-/*  real beat opens. The transforms are written by the analyser's own  */
-/*  rAF hand; the CSS below only gives each piece its skin.            */
-/* ------------------------------------------------------------------ */
-.beat-orb {
-  background:
-    radial-gradient(
-      circle at 34% 30%,
-      rgba(255, 255, 255, 0.85) 0%,
-      transparent 34%
-    ),
-    radial-gradient(
-      circle at 50% 55%,
-      color-mix(in srgb, var(--scope-a, #a855f7) 72%, #ffffff 6%) 0%,
-      color-mix(in srgb, var(--scope-a, #a855f7) 30%, transparent) 58%,
-      transparent 72%
-    );
-  box-shadow:
-    0 0 60px -6px color-mix(in srgb, var(--scope-a, #a855f7) 80%, transparent),
-    inset 0 0 34px color-mix(in srgb, var(--scope-b, #d8c9a8) 34%, transparent);
-  will-change: transform, opacity;
-}
-.beat-halo {
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--scope-a, #a855f7) 30%, transparent) 0%,
-    transparent 68%
-  );
-  filter: blur(6px);
-  will-change: transform, opacity;
-}
-.beat-bar {
-  width: 3px;
-  height: 5.2vmin;
-  margin-left: -1.5px;
-  border-radius: 3px;
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--scope-b, #d8c9a8) 85%, #ffffff),
-    color-mix(in srgb, var(--scope-a, #a855f7) 80%, transparent)
-  );
-  box-shadow: 0 0 8px -2px
-    color-mix(in srgb, var(--scope-a, #a855f7) 70%, transparent);
-  will-change: transform;
-}
-.beat-ring {
-  position: absolute;
-  width: 30vmin;
-  height: 30vmin;
-  border-radius: 9999px;
-  border: 1.5px solid
-    color-mix(in srgb, var(--scope-a, #a855f7) 65%, transparent);
-  animation: beat-ring-open 2.4s ease-out forwards;
-}
-@keyframes beat-ring-open {
-  0% {
-    transform: scale(0.7);
-    opacity: 0.75;
-  }
-  100% {
-    transform: scale(2.6);
-    opacity: 0;
-  }
-}
-
-@keyframes amb-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-  }
-  50% {
-    transform: translate3d(2.5%, -3.5%, 0);
-  }
-}
-@keyframes amb-sway {
-  0%,
-  100% {
-    transform: rotate(-2.5deg) translateY(0);
-  }
-  50% {
-    transform: rotate(2.5deg) translateY(-2%);
-  }
-}
-@keyframes amb-walk {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0;
-  }
-  8% {
-    opacity: 0.6;
-  }
-  50% {
-    transform: translate(38vw, -22vh) scale(0.85);
-  }
-  92% {
-    opacity: 0.6;
-  }
-  100% {
-    transform: translate(76vw, 4vh) scale(1);
-    opacity: 0;
-  }
-}
-@keyframes amb-twinkle {
-  0%,
-  100% {
-    opacity: 0.12;
-    transform: scale(0.85);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(1.15);
-  }
-}
-@keyframes amb-breathe {
-  0% {
-    transform: scale(0.62);
-    opacity: 0;
-  }
-  30% {
-    opacity: 0.55;
-  }
-  100% {
-    transform: scale(1.55);
-    opacity: 0;
-  }
-}
-@keyframes amb-dash {
-  to {
-    stroke-dashoffset: -240;
-  }
-}
-@keyframes amb-formula {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0);
-    opacity: 0.14;
-  }
-  50% {
-    transform: translate3d(0, -14px, 0);
-    opacity: 0.32;
-  }
-}
-@keyframes amb-mote {
-  0% {
-    transform: translateY(0);
-    opacity: 0;
-  }
-  12% {
-    opacity: 0.45;
-  }
-  85% {
-    opacity: 0.35;
-  }
-  100% {
-    transform: translateY(-108vh);
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scope-ambient *,
-  .scope-ambient {
-    animation: none !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/*  THE SQUARE THAT FILLS — the vision's own developing plate. The     */
-/*  moment a vision is asked for, its space stands reserved and the    */
-/*  square fills with the coming image: a slow developing wave, one    */
-/*  scan line sweeping, and the room's own accent leading the light    */
-/*  (the accent rides in as --vision-accent).                          */
+/*  THE SQUARE THAT FILLS — the vision's own reserved plate. The    */
+/*  moment a vision is asked for, its space stands reserved; a small   */
+/*  spinner and the honest stage text wait inside it (static, no       */
+/*  looping wave, no scan line — the eco law and the stability law).   */
 /* ------------------------------------------------------------------ */
 .vision-filling {
   --vision-accent: var(--scope-a, #a855f7);
@@ -5467,99 +5023,6 @@ html:not(.dark) .lp-sigil-img {
     ),
     linear-gradient(165deg, color-mix(in srgb, var(--vision-accent) 7%, transparent), transparent 70%);
 }
-/* the developing wave — the fill that breathes upward, again and
-   again, until the true image lands */
-.vision-filling-wave {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to top,
-    color-mix(in srgb, var(--vision-accent) 34%, transparent),
-    color-mix(in srgb, var(--vision-accent) 10%, transparent) 46%,
-    transparent 78%
-  );
-  animation: vision-fill 5.2s ease-in-out infinite;
-  transform-origin: bottom;
-}
-@keyframes vision-fill {
-  0% {
-    transform: scaleY(0.06);
-    opacity: 0.55;
-  }
-  55% {
-    transform: scaleY(0.72);
-    opacity: 0.9;
-  }
-  78% {
-    transform: scaleY(0.88);
-    opacity: 0.75;
-  }
-  100% {
-    transform: scaleY(0.94);
-    opacity: 0.4;
-  }
-}
-/* the scan line — one bright edge sweeping down the coming image */
-.vision-filling-scan {
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  height: 2px;
-  top: 0;
-  border-radius: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    color-mix(in srgb, var(--vision-accent) 85%, white 8%),
-    transparent
-  );
-  box-shadow: 0 0 14px -2px color-mix(in srgb, var(--vision-accent) 80%, transparent);
-  animation: vision-scan 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-}
-@keyframes vision-scan {
-  0% {
-    transform: translateY(4px);
-    opacity: 0;
-  }
-  12% {
-    opacity: 0.9;
-  }
-  88% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translateY(calc(100% * 12));
-    opacity: 0;
-  }
-}
-/* the lattice — the coming image's own faint scaffolding */
-.vision-filling-grid {
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--vision-accent) 12%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--vision-accent) 12%, transparent) 1px, transparent 1px);
-  background-size: 34px 34px;
-  -webkit-mask-image: radial-gradient(
-    90% 90% at 50% 50%,
-    black 30%,
-    transparent 85%
-  );
-  mask-image: radial-gradient(
-    90% 90% at 50% 50%,
-    black 30%,
-    transparent 85%
-  );
-  opacity: 0.65;
-}
-@media (prefers-reduced-motion: reduce) {
-  .vision-filling-wave,
-  .vision-filling-scan {
-    animation: none !important;
-  }
-  .vision-filling-wave {
-    transform: scaleY(0.5);
-    opacity: 0.5;
-  }
-}
 
 /* ------------------------------------------------------------------ */
 /*  THE KARAOKE ROOM — the words grown big, riding the melody.         */
@@ -5567,33 +5030,7 @@ html:not(.dark) .lp-sigil-img {
 .lc-karaoke {
   background: #0d0a14;
 }
-.lc-karaoke-note {
-  opacity: 0.35;
-  animation-name: karaoke-float;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  filter: blur(0.2px);
-}
-@keyframes karaoke-float {
-  0% {
-    transform: translate3d(0, 0, 0) rotate(-6deg);
-    opacity: 0;
-  }
-  14% {
-    opacity: 0.4;
-  }
-  50% {
-    transform: translate3d(3vw, -46vh, 0) rotate(7deg);
-  }
-  82% {
-    opacity: 0.32;
-  }
-  100% {
-    transform: translate3d(-2vw, -96vh, 0) rotate(-5deg);
-    opacity: 0;
-  }
-}
-/* the sung line — the room's own light poured through the words */
+/* the sung line — the room's own light through the words (static) */
 .lc-karaoke-gradient {
   background-image: linear-gradient(
     100deg,
@@ -5604,100 +5041,4 @@ html:not(.dark) .lp-sigil-img {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(
-    0 0 18px color-mix(in srgb, var(--scope-a, #a855f7) 55%, transparent)
-  );
-}
-.lc-karaoke-line-active {
-  animation: karaoke-line-breathe 2.6s ease-in-out infinite;
-}
-@keyframes karaoke-line-breathe {
-  0%,
-  100% {
-    transform: scale(1.02);
-  }
-  50% {
-    transform: scale(1.045);
-  }
-}
-.lc-karaoke-mic {
-  animation: karaoke-mic-glow 3.2s ease-in-out infinite;
-}
-@keyframes karaoke-mic-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 10px -4px color-mix(in srgb, var(--scope-a, #a855f7) 60%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 22px -4px color-mix(in srgb, var(--scope-a, #a855f7) 85%, transparent);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .lc-karaoke-note,
-  .lc-karaoke-line-active,
-  .lc-karaoke-mic {
-    animation: none !important;
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/*  THE WORKPLACE'S OWN SKY — the making rooms' themed backgrounds     */
-/*  (WorkspaceAmbient.tsx): the Book's drifting leaves, the Forge's    */
-/*  blueprint paper. Same three laws as the scope sky.                 */
-/* ------------------------------------------------------------------ */
-.ws-page {
-  opacity: 0.5;
-  animation-name: amb-drift;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-.ws-blueprint-grid {
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, #1d4ed8 10%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, #1d4ed8 10%, transparent) 1px, transparent 1px);
-  background-size: 40px 40px;
-  -webkit-mask-image: radial-gradient(
-    110% 85% at 50% 10%,
-    black 0%,
-    transparent 74%
-  );
-  mask-image: radial-gradient(
-    110% 85% at 50% 10%,
-    black 0%,
-    transparent 74%
-  );
-  opacity: 0.4;
-}
-@keyframes amb-spin-rev {
-  to {
-    transform: rotate(-360deg);
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/*  THE VISION'S REVEAL — the moment the woven image lands, it        */
-/*  fades and settles into the very square that waited for it.        */
-/* ------------------------------------------------------------------ */
-.vision-reveal {
-  animation: vision-reveal 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-@keyframes vision-reveal {
-  0% {
-    opacity: 0;
-    transform: scale(1.035);
-    filter: blur(6px) saturate(0.8);
-  }
-  60% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-    filter: blur(0) saturate(1);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .vision-reveal {
-    animation: none !important;
-  }
 }

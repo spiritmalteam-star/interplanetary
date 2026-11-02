@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
+import { gateInterval } from "@/lib/page-lifecycle";
 import { cn } from "@/lib/utils";
 import { ZoomableImageSurface } from "./ZoomableLightbox";
 import type { VisualizationArtifact } from "@/lib/visualization";
@@ -44,7 +45,7 @@ interface CardTheme {
 }
 
 /* ------------------------------------------------------------------ */
-/*  The pending vision — a quiet animation of every process            */
+/*  The pending vision — a quiet reserved square and its stage line    */
 /* ------------------------------------------------------------------ */
 
 const STAGES = [
@@ -67,11 +68,13 @@ export function VisualizationPending({
 
   useEffect(() => {
     if (repaint) return;
-    const id = window.setInterval(
+    /* gated clock — the stage line rests while the tab is hidden and
+       catches up with one tick when the visitor returns */
+    const clearStage = gateInterval(
       () => setStage((s) => (s + 1) % STAGES.length),
       3400
     );
-    return () => window.clearInterval(id);
+    return clearStage;
   }, [repaint]);
 
   return (
@@ -87,79 +90,38 @@ export function VisualizationPending({
     >
       {/* THE SPACE THE CLICK MAKES — the moment the vision is asked for,
           the place it will occupy stands reserved: a SQUARE section that
-          fills with the coming image while the atelier works. The fill
-          breathes upward (the developing plate), a scan line sweeps it,
-          and the room's own accent leads the light. */}
+          fills with the coming image while the atelier works. A quiet
+          spinner holds the plate — no wave, no scan, no pulse. */}
       <div
         className="vision-filling relative mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)]"
         style={{ "--vision-accent": accent } as CSSProperties}
         data-testid={`${testIdPrefix}-pending-plate`}
         aria-hidden="true"
       >
-        <span className="vision-filling-grid absolute inset-0" />
-        <span className="vision-filling-wave" />
-        <span className="vision-filling-scan" />
+        <span className="absolute inset-0 flex items-center justify-center">
+          <LoaderCircle
+            className="size-5 animate-spin"
+            style={{ color: accent }}
+            aria-hidden="true"
+          />
+        </span>
       </div>
       <p className="mono-label mt-3 text-center text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70">
         {repaint ? t("Repainting the vision…") : t("Creating visualization…")}
       </p>
-      <div className="mt-3 flex items-center gap-4">
-        {/* the forming vision */}
-        <span className="relative flex size-14 shrink-0 items-center justify-center">
-          {[0, 1, 2].map((i) => (
-            <motion.span
-              key={i}
-              className="absolute inset-0 rounded-full border"
-              style={{ borderColor: `color-mix(in srgb, ${accent} 45%, transparent)` }}
-              animate={{ scale: [0.5, 1.25], opacity: [0.65, 0] }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                delay: i * 0.7,
-                ease: "easeOut",
-              }}
-            />
-          ))}
-          <motion.span
-            className="flex size-8 items-center justify-center rounded-full"
-            style={{
-              background: `color-mix(in srgb, ${accent} 16%, transparent)`,
-              boxShadow: `0 0 22px -6px color-mix(in srgb, ${accent} 75%, transparent)`,
-            }}
-            animate={{ scale: [1, 1.12, 1] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+      <div className="mt-3 min-w-0">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.p
+            key={repaint ? "repaint" : stage}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="text-[15.5px] italic text-foreground/85"
           >
-            <LoaderCircle
-              className="size-4 animate-[spin-slower_3.2s_linear_infinite]"
-              style={{ color: accent }}
-              aria-hidden="true"
-            />
-          </motion.span>
-        </span>
-        <div className="min-w-0 flex-1">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.p
-              key={repaint ? "repaint" : stage}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="text-[15.5px] italic text-foreground/85"
-            >
-              {repaint ? t("Repainting the vision…") : t(STAGES[stage])}
-            </motion.p>
-          </AnimatePresence>
-          <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--hairline)_60%,transparent)]">
-            <motion.div
-              className="h-full w-1/3 rounded-full"
-              style={{
-                background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
-              }}
-              animate={{ x: ["-110%", "330%"] }}
-              transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </div>
-        </div>
+            {repaint ? t("Repainting the vision…") : t(STAGES[stage])}
+          </motion.p>
+        </AnimatePresence>
       </div>
     </motion.div>
   );
@@ -435,7 +397,7 @@ function PresentationDeck({
                 src={slide.imageUrl}
                 alt={slide.title}
                 loading="lazy"
-                className="vision-reveal aspect-[7/4] w-full object-cover"
+                className="aspect-[7/4] w-full object-cover"
               />
             ) : (
               <div
@@ -535,7 +497,6 @@ export function VisualizationCard({
   regenerating?: boolean;
 }) {
   const t = useT();
-  const [loaded, setLoaded] = useState(false);
   const [ratio, setRatio] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const modeLabel = MODE_LABELS[artifact.mode];
@@ -623,9 +584,6 @@ export function VisualizationCard({
           }
         : undefined}
     >
-      {!loaded && (
-        <div className="shimmer-bar absolute inset-0" aria-hidden="true" />
-      )}
       {artifact.imageUrl && (
         <img
           src={artifact.imageUrl}
@@ -636,12 +594,8 @@ export function VisualizationCard({
             if (img.naturalWidth > 0 && img.naturalHeight > 0) {
               setRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
             }
-            setLoaded(true);
           }}
-          className={cn(
-            "size-full object-cover transition-[opacity,filter,transform] duration-700 ease-out",
-            loaded ? "scale-100 opacity-100 blur-0" : "scale-[1.045] opacity-0 blur-lg"
-          )}
+          className="size-full object-cover"
         />
       )}
       {!large && (
