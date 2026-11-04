@@ -3,6 +3,7 @@ import ZAI from "@/lib/zai-client";
 import type { ForgeDials, MysteryCreation } from "@/lib/mirror-types";
 import { meterRoute } from "@/lib/server/meter";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  THE FORGE — the random mystery creation. The visitor turns three   */
 /*  dials (domain, scale, spark) and strikes the Forge; the Forge      */
@@ -10,19 +11,6 @@ import { meterRoute } from "@/lib/server/meter";
 /*  the dials, into ONE unasked-for conception: a small, strange,      */
 /*  buildable creation with a name, an essence, a purpose, a first     */
 /*  stroke and a whisper.                                              */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 /* The coal-bed — random matters the Forge draws from at each strike. */
 const EMBERS = [
   "tide", "ember", "static", "honey", "orbit", "moss", "glass", "thunder",

@@ -4,7 +4,20 @@
 /*  gracefully falls back to English, so the app never breaks.         */
 /* ------------------------------------------------------------------ */
 
-export type LanguageCode = "en" | "sq" | "it" | "el" | "de" | "fr" | "es" | "tr";
+export type LanguageCode =
+  | "en"
+  | "sq"
+  | "ar"
+  | "zh"
+  | "fr"
+  | "hi"
+  | "pt"
+  | "ru"
+  | "es"
+  | "it"
+  | "el"
+  | "de"
+  | "tr";
 
 export interface LanguageMeta {
   code: LanguageCode;
@@ -12,26 +25,54 @@ export interface LanguageMeta {
   english: string;
 }
 
-/** The eight voices of the laboratory — Albanian included. */
+/** The laboratory's full registry of tongues — every dict that exists.
+    The picker (PICKER_LANGUAGES) shows the nine the keeper chose;
+    the older tongues stay valid here so a saved setting never breaks. */
 export const LANGUAGES: LanguageMeta[] = [
   { code: "en", native: "English", english: "English" },
   { code: "sq", native: "Shqip", english: "Albanian" },
+  { code: "ar", native: "العربية", english: "Arabic" },
+  { code: "zh", native: "中文", english: "Chinese" },
+  { code: "fr", native: "Français", english: "French" },
+  { code: "hi", native: "हिन्दी", english: "Hindi" },
+  { code: "pt", native: "Português", english: "Portuguese" },
+  { code: "ru", native: "Русский", english: "Russian" },
+  { code: "es", native: "Español", english: "Spanish" },
   { code: "it", native: "Italiano", english: "Italian" },
   { code: "el", native: "Ελληνικά", english: "Greek" },
   { code: "de", native: "Deutsch", english: "German" },
-  { code: "fr", native: "Français", english: "French" },
-  { code: "es", native: "Español", english: "Spanish" },
   { code: "tr", native: "Türkçe", english: "Turkish" },
+];
+
+/* THE NINE VOICES OF THE BUTTON — Albanian first (the keeper's own
+   tongue leads), then the eight most-spoken languages of the world in
+   alphabetical order. English is the default; this exact order is the
+   law of every language button in the house. */
+export const PICKER_LANGUAGES: LanguageMeta[] = [
+  { code: "sq", native: "Shqip", english: "Albanian" },
+  { code: "ar", native: "العربية", english: "Arabic" },
+  { code: "zh", native: "中文", english: "Chinese" },
+  { code: "en", native: "English", english: "English" },
+  { code: "fr", native: "Français", english: "French" },
+  { code: "hi", native: "हिन्दी", english: "Hindi" },
+  { code: "pt", native: "Português", english: "Portuguese" },
+  { code: "ru", native: "Русский", english: "Russian" },
+  { code: "es", native: "Español", english: "Spanish" },
 ];
 
 export const LANGUAGE_NAMES: Record<LanguageCode, string> = {
   en: "English",
   sq: "Albanian",
+  ar: "Arabic",
+  zh: "Chinese",
+  fr: "French",
+  hi: "Hindi",
+  pt: "Portuguese",
+  ru: "Russian",
+  es: "Spanish",
   it: "Italian",
   el: "Greek",
   de: "German",
-  fr: "French",
-  es: "Spanish",
   tr: "Turkish",
 };
 
@@ -43,11 +84,16 @@ export function isLanguageCode(v: unknown): v is LanguageCode {
 export const LOCALES: Record<LanguageCode, string> = {
   en: "en-US",
   sq: "sq-AL",
+  ar: "ar-SA",
+  zh: "zh-CN",
+  fr: "fr-FR",
+  hi: "hi-IN",
+  pt: "pt-BR",
+  ru: "ru-RU",
+  es: "es-ES",
   it: "it-IT",
   el: "el-GR",
   de: "de-DE",
-  fr: "fr-FR",
-  es: "es-ES",
   tr: "tr-TR",
 };
 
@@ -91,11 +137,16 @@ export async function ensureDict(language: LanguageCode): Promise<void> {
   try {
     const mod =
       lang === "sq" ? await import("./dicts/sq")
+      : lang === "ar" ? await import("./dicts/ar")
+      : lang === "zh" ? await import("./dicts/zh")
+      : lang === "fr" ? await import("./dicts/fr")
+      : lang === "hi" ? await import("./dicts/hi")
+      : lang === "pt" ? await import("./dicts/pt")
+      : lang === "ru" ? await import("./dicts/ru")
+      : lang === "es" ? await import("./dicts/es")
       : lang === "it" ? await import("./dicts/it")
       : lang === "el" ? await import("./dicts/el")
       : lang === "de" ? await import("./dicts/de")
-      : lang === "fr" ? await import("./dicts/fr")
-      : lang === "es" ? await import("./dicts/es")
       : await import("./dicts/tr");
     DICTS[lang] = (mod as unknown as { [k: string]: Dict })[lang];
     dictVersion += 1;

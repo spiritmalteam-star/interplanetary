@@ -69,11 +69,11 @@ export const RESERVE_DEFS: ReserveDef[] = [
     ready: () => true, // the SDK carries its own sky
   },
   {
-    key: "openai_brush",
-    name: "OpenAI Brush (DALL·E 3 / gpt-image-1)",
+    key: "openai_call_voice",
+    name: "OpenAI Call Voice (TTS)",
     source: "openai",
-    role: "The visitor's chosen painter — the leading brush for every Higher Self visualization when its key rests in the vault.",
-    capacity: 1_200_000,
+    role: "The call's own voice — the live call's replies spoken aloud through OpenAI's speech door. THE OPENAI LAW: OpenAI reads calls and nothing else — never the chat, never the images, never the music.",
+    capacity: 400_000,
     ready: () => Boolean(process.env.OPENAI_API_KEY),
   },
   {

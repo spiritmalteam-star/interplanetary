@@ -121,7 +121,10 @@ export default function LandingSlides() {
                 key={s.src}
                 role="group"
                 aria-roledescription="slide"
-                aria-label={t(`${i + 1} of 10 — ${s.title}`)}
+                aria-label={t("{i} of 10 — {title}", {
+                  i: i + 1,
+                  title: t(s.title),
+                })}
                 aria-hidden={i !== active}
                 className={cn(
                   "absolute inset-0 transition-[opacity,transform] duration-[900ms] ease-out motion-reduce:transition-none",
@@ -179,7 +182,10 @@ export default function LandingSlides() {
             role="tab"
             aria-selected={i === active}
             onClick={() => go(i)}
-            aria-label={t(`Go to slide ${i + 1} — ${s.title}`)}
+            aria-label={t("Go to slide {i} — {title}", {
+              i: i + 1,
+              title: t(s.title),
+            })}
             data-testid="landing-slides-num"
             className={cn(
               "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300 motion-reduce:transition-none",

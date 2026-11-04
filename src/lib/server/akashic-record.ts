@@ -3,14 +3,23 @@
 /*  Library) and /api/akashic/chat (the seeker's own timeline).        */
 /* ------------------------------------------------------------------ */
 
+/* THE ONE TONGUE REGISTRY — the single server-side map of every
+   language the house speaks. Every API route imports THIS map (the
+   scattered local copies were gathered here), so a new tongue needs
+   to be named once. Keep in step with src/lib/i18n/core.ts. */
 export const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
   sq: "Albanian",
+  ar: "Arabic",
+  zh: "Chinese",
+  fr: "French",
+  hi: "Hindi",
+  pt: "Portuguese",
+  ru: "Russian",
+  es: "Spanish",
   it: "Italian",
   el: "Greek",
   de: "German",
-  fr: "French",
-  es: "Spanish",
   tr: "Turkish",
 };
 

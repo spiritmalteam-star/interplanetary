@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { meterRoute } from "@/lib/server/meter";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book/sketch — THE DRAWING'S OWN TRANSCRIPTION.     */
 /*                                                                     */
@@ -16,19 +17,6 @@ import { meterRoute } from "@/lib/server/meter";
 /*  Reply: { text: "..." } — 1–4 short, warm sentences naming every    */
 /*  recognizable thing in the drawing, ready to be spoken into the     */
 /*  loom's one input.                                                  */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  el: "Greek",
-  es: "Spanish",
-  it: "Italian",
-  de: "German",
-  fr: "French",
-  tr: "Turkish",
-};
-
 async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);

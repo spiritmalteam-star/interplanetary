@@ -2,6 +2,7 @@
 
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 /* ------------------------------------------------------------------ */
 /*  THE REALM'S LIGHT HAND — the sun/moon that turned the crown now    */
@@ -23,7 +24,8 @@ export function RealmLightToggle({
   testId?: string;
 }) {
   const { setTheme } = useTheme();
-  const word = label ?? "Toggle the light";
+  const t = useT();
+  const word = t(label ?? "Toggle the light");
   return (
     <button
       type="button"

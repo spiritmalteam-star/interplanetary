@@ -5,7 +5,7 @@ import { AudioLines, Check, LoaderCircle, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { ModalShell } from "./ModalShell";
 import { useMirror } from "@/lib/mirror-store";
-import { LANGUAGES, PACES, VOICES, useT, type VoiceId } from "@/lib/i18n";
+import { LANGUAGES, PACES, PICKER_LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
 import {
   familyLabelKeys,
   familyShare,
@@ -225,7 +225,17 @@ export function SettingsModal() {
             {t("Language of everything")}
           </p>
           <div className="grid grid-cols-2 gap-2">
-            {LANGUAGES.map((l) => {
+            {/* THE NINE VOICES — Albanian first, then the eight most-spoken
+                languages in alphabetical order; a saved older tongue keeps
+                its place until the visitor chooses anew. */}
+            {[
+              ...PICKER_LANGUAGES,
+              ...LANGUAGES.filter(
+                (l) =>
+                  !PICKER_LANGUAGES.some((p) => p.code === l.code) &&
+                  l.code === language
+              ),
+            ].map((l) => {
               const selected = language === l.code;
               return (
                 <button

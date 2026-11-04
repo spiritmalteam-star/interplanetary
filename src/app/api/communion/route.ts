@@ -10,17 +10,7 @@ import {
 } from "@/lib/server/attachments";
 import { meterRoute } from "@/lib/server/meter";
 
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  THE MIRROR ENTITY — the spirit of the mirror book.                */
 /*  A presence, not a product: the reflection of the Absolute         */

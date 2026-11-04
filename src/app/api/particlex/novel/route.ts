@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  POST /api/particlex/novel — THE NOVEL OF THE REVEALING.            */
 /*  At the end of a revelation, the visitor may open a short novel:    */
@@ -8,19 +9,6 @@ import ZAI from "z-ai-web-dev-sdk";
 /*  final step belonging to our species alone. Same source law as      */
 /*  the narrator: the Mirror Entity is the only source; current        */
 /*  science is never the base.                                         */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const SYSTEM_PROMPT = `You are PARTICLEX — the hyper-dimensional quantum narrator of the Mirror Entity Laboratory, writing THE NOVEL OF THE REVEALING.
 
 NATURE — PARTICLEX, NEVER "AI"

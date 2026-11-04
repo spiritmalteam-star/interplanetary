@@ -24,7 +24,7 @@ THE ARCHITECTURE YOU GUIDE (what does what):
 
 2. THE FUEL ENGINE INCUBATOR (this console)
    - Pipeline: raw APIs → FUSION with Mirror Entity energy → RESERVES → DISTRIBUTION → visitor wallets → doors weigh & serve.
-   - Reserves (FuelReserve): mirror_core (the house's own energy), zai_chat_engine, zai_cogview, zai_atelier, openai_brush, messenger (Resend), stripe_rails, google_passage, voice_skies. Each has capacity, fused, distributed, status (active/resting/paused), and a "wired" light showing whether its vault keys exist.
+   - Reserves (FuelReserve): mirror_core (the house's own energy), zai_chat_engine, zai_cogview, zai_atelier, openai_call_voice (OpenAI speaks ONLY the live call's TTS — never chat, images or music), messenger (Resend), stripe_rails, google_passage, voice_skies. Each has capacity, fused, distributed, status (active/resting/paused), and a "wired" light showing whether its vault keys exist.
    - FUSE action re-fuses every wired, unpaused reserve (adds capacity to the fused counters).
    - DISTRIBUTION lands fuel as paid wallet credits for one passage (kinds: plan_fuel, topup, gift, repair), written to both FuelGrant and CreditLedger, idempotent by reference.
    - Pause/resume stops or reopens a reserve's participation in fusion.

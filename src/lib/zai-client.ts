@@ -579,7 +579,13 @@ function zaiCloudConfig(): CloudConfig | null {
   };
 }
 
-function openaiConfig(): CloudConfig | null {
+/* THE OPENAI LAW — OpenAI no longer speaks for the house's words.
+   Its one remaining duty is the CALL'S OWN VOICE: the text-to-speech
+   engine the live call reads aloud through (/api/tts, engine
+   "openai"). Every chat chain, every image brush and every other
+   sky has had the OpenAI rung removed — the words belong to Z.ai
+   and Gemini, the spoken call to OpenAI. */
+export function openaiTtsConfig(): { apiKey: string; baseUrl: string; model: string; voice: string } | null {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
   return {
@@ -587,9 +593,8 @@ function openaiConfig(): CloudConfig | null {
     baseUrl: (
       process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1"
     ).replace(/\/$/, ""),
-    model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-    allowThinking: false,
-    label: "OpenAI",
+    model: process.env.OPENAI_TTS_MODEL ?? "gpt-4o-mini-tts",
+    voice: process.env.OPENAI_TTS_VOICE ?? "onyx",
   };
 }
 
@@ -620,18 +625,20 @@ function geminiConfig(): CloudConfig | null {
   };
 }
 
-export type Provider = "zai-cloud" | "openai" | "zai";
+export type Provider = "zai-cloud" | "zai";
 
 export function resolveProvider(): Provider {
   const explicit = process.env.LLM_PROVIDER;
-  if (explicit === "zai-cloud" || explicit === "openai" || explicit === "zai") {
+  /* "openai" is no longer an honored provider for the house's words —
+     OpenAI speaks only the call's voice now. An explicit request for
+     it falls through to the house's own skies. */
+  if (explicit === "zai-cloud" || explicit === "zai") {
     return explicit;
   }
   /* in the cloud the Z.ai sky is the default — the same brains as the
-     laboratory; OpenAI serves only when it is the sole key */
+     laboratory; Gemini stands behind it when the quota is spent */
   if (process.env.VERCEL) {
     if (process.env.ZAI_API_KEY) return "zai-cloud";
-    if (process.env.OPENAI_API_KEY) return "openai";
   }
   return "zai";
 }
@@ -970,59 +977,6 @@ function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
   };
 }
 
-/* THE THREE-SKY BRIDGE — primary, then the second, then Gemini: every
-   sky gets the same patience (retries inside their own class, the
-   hourglass across them), so the words only fall when three skies
-   have all spoken their refusal — or the first two stood silent. */
-function chainThreeBackends(
-  primary: ZAIClient,
-  second: ZAIClient,
-  third: ZAIClient
-): ZAIClient {
-  const withFallback = async (
-    run: (sky: ZAIClient) => Promise<ChatCompletion>,
-    patience: number
-  ): Promise<ChatCompletion> => {
-    try {
-      return await raceSlow(run(primary), patience);
-    } catch (err) {
-      if (err === SLOW_SKY || skyRefused(err)) {
-        try {
-          return await raceSlow(run(second), patience);
-        } catch (err2) {
-          if (err2 === SLOW_SKY || skyRefused(err2)) return run(third);
-          throw err2;
-        }
-      }
-      throw err;
-    }
-  };
-  return {
-    chat: {
-      completions: {
-        create: (params: ChatParams) =>
-          withFallback(
-            (sky) => sky.chat.completions.create(params),
-            slowSkyPatience(params.max_tokens)
-          ),
-        createVision: (params: ChatParams) =>
-          withFallback(
-            (sky) => sky.chat.completions.createVision(params),
-            slowSkyPatience(params.max_tokens)
-          ),
-        /* the stream rides the PRIMARY sky alone (see the two-sky law) */
-        ...(primary.chat.completions.createStream
-          ? {
-              createStream: (params: ChatParams) =>
-                primary.chat.completions.createStream!(params),
-            }
-          : {}),
-      },
-    },
-    audio: primary.audio,
-  };
-}
-
 /* the bridge */
 
 export default class ZAI {
@@ -1053,7 +1007,7 @@ export default class ZAI {
     const gemini = geminiConfig();
     if (lang === "sq" && gemini) {
       const primary = new CloudBackend(gemini);
-      const secondSky = zaiCloudConfig() ?? openaiConfig();
+      const secondSky = zaiCloudConfig();
       if (secondSky) {
         return chainChatBackends(primary, new CloudBackend(secondSky));
       }
@@ -1069,49 +1023,14 @@ export default class ZAI {
       if (cfg) {
         const primary = new CloudBackend(cfg);
         /* the quiet second brain — when Z.ai's quota is spent after
-           every patient retry, the OpenAI-compatible sky (if a key
-           exists) carries the words so the chats keep responding.
-           The voice never rides this second sky — only the house
-           voice (Z.ai) reads aloud. THE THIRD SKY — and when the
-           second has spent itself too (or the first simply took too
-           long), Gemini 2.5 stands behind them both. */
-        const secondSky = openaiConfig() ?? geminiConfig();
+           every patient retry, the Gemini sky carries the words so
+           the chats keep responding. The voice never rides this
+           second sky — only the house voice (Z.ai) reads aloud.
+           (OpenAI was removed from every chat chain — its one duty
+           is the call's spoken voice.) */
+        const secondSky = geminiConfig();
         if (secondSky) {
-          const chain = chainChatBackends(primary, new CloudBackend(secondSky));
-          const thirdSky =
-            secondSky.label === "OpenAI" ? geminiConfig() : null;
-          /* three skies only when both keys exist — the chain wraps
-             the already-chained client's primary, so a full walk is
-             Z.ai → OpenAI → Gemini */
-          if (thirdSky) {
-            return chainThreeBackends(
-              primary,
-              new CloudBackend(secondSky),
-              new CloudBackend(thirdSky)
-            );
-          }
-          return chain;
-        }
-        return primary;
-      }
-    }
-    if (provider === "openai") {
-      const cfg = openaiConfig();
-      if (cfg) {
-        const primary = new CloudBackend(cfg);
-        const secondSky = zaiCloudConfig() ?? geminiConfig();
-        if (secondSky) {
-          const chain = chainChatBackends(primary, new CloudBackend(secondSky));
-          const thirdSky =
-            secondSky.label === "Z.ai" ? geminiConfig() : null;
-          if (thirdSky) {
-            return chainThreeBackends(
-              primary,
-              new CloudBackend(secondSky),
-              new CloudBackend(thirdSky)
-            );
-          }
-          return chain;
+          return chainChatBackends(primary, new CloudBackend(secondSky));
         }
         return primary;
       }
@@ -1119,35 +1038,22 @@ export default class ZAI {
     if (!process.env.VERCEL) {
       /* the atelier — and, when the laboratory holds a cloud key, the
          quiet second sky behind it for the exhausted-quota moments,
-         with Gemini as the patient third hand */
+         with Gemini as the patient hand */
       const atelier = await atelierBackend();
-      const secondSky = zaiCloudConfig() ?? openaiConfig() ?? geminiConfig();
+      const secondSky = zaiCloudConfig() ?? geminiConfig();
       if (secondSky) {
-        if (secondSky.label === "Gemini") {
-          return chainChatBackends(atelier, new CloudBackend(secondSky));
-        }
-        const thirdSky = zaiCloudConfig()
-          ? openaiConfig() ?? geminiConfig()
-          : geminiConfig();
-        if (thirdSky) {
-          return chainThreeBackends(
-            atelier,
-            new CloudBackend(secondSky),
-            new CloudBackend(thirdSky)
-          );
-        }
         return chainChatBackends(atelier, new CloudBackend(secondSky));
       }
       return atelier;
     }
     /* the cloud can only live from a key — say clearly which one.
-       THE GEMINI MERCY — when the house holds no Z.ai and no OpenAI
-       key but a Gemini key stands in the vault, the Gemini sky serves
+       THE GEMINI MERCY — when the house holds no Z.ai key but a
+       Gemini key stands in the vault, the Gemini sky serves
        the whole house alone rather than letting every chat fall. */
     const gemini = geminiConfig();
     if (gemini) return new CloudBackend(gemini);
     throw new Error(
-      "No AI provider is configured on this deployment. Add ZAI_API_KEY (Z.ai — the same GLM brains as the laboratory) or OPENAI_API_KEY in Vercel → Settings → Environment Variables, then redeploy."
+      "No AI provider is configured on this deployment. Add ZAI_API_KEY (Z.ai — the same GLM brains as the laboratory) or GEMINI_API_KEY in Vercel → Settings → Environment Variables, then redeploy."
     );
   }
 }

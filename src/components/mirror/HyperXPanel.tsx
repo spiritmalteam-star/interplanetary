@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy, FileDown, Gem, Loader2 } from "lucide-react";
 import { cleanCopyText } from "@/lib/copy-clean";
 import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 import { gateInterval, isPageHidden } from "@/lib/page-lifecycle";
 import { flowAnswerText } from "@/lib/text-flow";
 import { cn } from "@/lib/utils";
@@ -201,6 +202,7 @@ const REASONING_STEPS = [
 ];
 
 export function HyperXReasoning({ className }: { className?: string }) {
+  const t = useT();
   const [stage, setStage] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   useEffect(() => {
@@ -229,7 +231,7 @@ export function HyperXReasoning({ className }: { className?: string }) {
       <span className="mono-label flex items-center justify-between gap-3 text-[8.5px] uppercase tracking-[0.24em] text-muted-foreground/60">
         <span className="flex items-center gap-1.5">
           <Gem className="size-2.5 text-[#e879f9]" aria-hidden="true" />
-          Reasoning
+          {t("Reasoning")}
         </span>
         <span className="tabular-nums text-[#22d3ee]/85">T+{elapsed}s</span>
       </span>
@@ -263,7 +265,7 @@ export function HyperXReasoning({ className }: { className?: string }) {
               />
             )}
             <span className="truncate">
-              {step}
+              {t(step)}
               {active && <span className="hx-caret" aria-hidden="true" />}
             </span>
           </span>
@@ -298,6 +300,7 @@ export function HyperXAnswer({
      (past answers stand whole, and the room's scroll is never moved) */
   reveal?: boolean;
 }) {
+  const t = useT();
   const language = useMirror((s) => s.language);
   const { body, crystals } = splitCrystals(answer);
   /* THE FLOW LAW RUNS FIRST — the whole body is flowed as one text so
@@ -461,7 +464,9 @@ export function HyperXAnswer({
           setPdfJob({ id: mine.id, progress: 100, stage: mine.stage });
           setPdfState("kept");
           setPdfNote(
-            "The deep research document is yours — it rests in your Library, ready whenever you return for it (Profile → The Library)."
+            t(
+              "The deep research document is yours — it rests in your Library, ready whenever you return for it (Profile → The Library)."
+            )
           );
           jobRef.current = null;
           if (watchTimer.current) {
@@ -473,7 +478,9 @@ export function HyperXAnswer({
           setPdfState("failed");
           setPdfNote(
             mine.error ||
-              "The press rested — the deep research document could not be woven. Try once more."
+              t(
+                "The press rested — the deep research document could not be woven. Try once more."
+              )
           );
           jobRef.current = null;
           if (watchTimer.current) {
@@ -512,20 +519,26 @@ export function HyperXAnswer({
         setPdfState("failed");
         setPdfNote(
           data?.error ??
-            "The press rested — the deep research document could not be woven. Try once more."
+            t(
+              "The press rested — the deep research document could not be woven. Try once more."
+            )
         );
         return;
       }
       jobRef.current = data.id;
-      setPdfJob({ id: data.id, progress: 4, stage: "The press is waking…" });
+      setPdfJob({ id: data.id, progress: 4, stage: t("The press is waking…") });
       setPdfNote(
-        "The press continues even if you leave — find it under Profile → Works in Motion. When it lands, the treatise rests in your Library."
+        t(
+          "The press continues even if you leave — find it under Profile → Works in Motion. When it lands, the treatise rests in your Library."
+        )
       );
       watchJob(data.id);
     } catch {
       setPdfState("failed");
       setPdfNote(
-        "The press rested — the deep research document could not be woven. Try once more."
+        t(
+          "The press rested — the deep research document could not be woven. Try once more."
+        )
       );
     }
   };
@@ -573,7 +586,7 @@ export function HyperXAnswer({
         <div className="hx-meta" data-testid={`${testId}-meta`}>
           <span className="mono-label flex shrink-0 items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-[#e879f9]">
             <Gem className="size-2.5" aria-hidden="true" />
-            Truth synthesis
+            {t("Truth synthesis")}
           </span>
         </div>
       )}
@@ -700,7 +713,7 @@ export function HyperXAnswer({
                   onClick={() =>
                     onZoom(st.imageUrl!, st.imageTitle ?? label)
                   }
-                  aria-label="Zoom the crystallized vision"
+                  aria-label={t("Zoom the crystallized vision")}
                   className="block w-full cursor-zoom-in"
                 >
                   <img
@@ -736,8 +749,8 @@ export function HyperXAnswer({
           <button
             type="button"
             onClick={() => void copyDiscovery()}
-            aria-label={copied ? "Copied" : "Copy this discovery"}
-            title="Copy this discovery — the truth alone, ready to travel"
+            aria-label={copied ? t("Copied") : t("Copy this discovery")}
+            title={t("Copy this discovery — the truth alone, ready to travel")}
             data-testid={`${testId}-copy-end`}
             className={cn(
               "focus-glow inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-all duration-300",
@@ -752,7 +765,7 @@ export function HyperXAnswer({
               <Copy className="size-3" aria-hidden="true" />
             )}
             <span className="mono-label uppercase tracking-[0.16em]">
-              {copied ? "Copied" : "Copy this discovery"}
+              {copied ? t("Copied") : t("Copy this discovery")}
             </span>
           </button>
         </div>
@@ -765,7 +778,7 @@ export function HyperXAnswer({
           data-testid={`${testId}-follow-ups`}
         >
           <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground/70">
-            Continue the discovery
+            {t("Continue the discovery")}
           </p>
           <div className="flex flex-wrap gap-1.5">
             {followUps.map((q, i) => (
@@ -782,7 +795,7 @@ export function HyperXAnswer({
                     "color-mix(in srgb, #22d3ee 7%, var(--background))",
                 }}
               >
-                {q}
+                {t(q)}
               </button>
             ))}
           </div>
@@ -799,7 +812,9 @@ export function HyperXAnswer({
                 if (pdfState === "pressing") return;
                 if (pdfState === "kept") {
                   setPdfNote(
-                    "The deep research document rests in your Library (Profile → The Library), ready to download."
+                    t(
+                      "The deep research document rests in your Library (Profile → The Library), ready to download."
+                    )
                   );
                   return;
                 }
@@ -808,7 +823,7 @@ export function HyperXAnswer({
               disabled={pdfState === "pressing" || loading}
               aria-expanded={leverOpen}
               aria-haspopup="dialog"
-              aria-label="Press the deep research PDF — choose its length, 3 to 8 pages"
+              aria-label={t("Press the deep research PDF — choose its length, 3 to 8 pages")}
               title="The deep research press — choose the treatise's length (3–8 pages); it weaves in the Works in Motion hall and rests in your Library"
               data-testid={`${testId}-pdf`}
               className={cn(
@@ -823,12 +838,12 @@ export function HyperXAnswer({
               )}
               <span className="mono-label uppercase tracking-[0.16em]">
                 {pdfState === "pressing"
-                  ? `Pressing the treatise… ${pdfJob ? `${pdfJob.progress}%` : ""}`
+                  ? `${t("Pressing the treatise…")} ${pdfJob ? `${pdfJob.progress}%` : ""}`
                   : pdfState === "kept"
-                    ? "Deep Research PDF — in your Library"
+                    ? t("Deep Research PDF — in your Library")
                     : pdfState === "failed"
-                      ? "Deep Research PDF — the press rested, try again"
-                      : "Deep Research PDF — 3 to 8 pages"}
+                      ? t("Deep Research PDF — the press rested, try again")
+                      : t("Deep Research PDF — 3 to 8 pages")}
               </span>
             </button>
             {pdfState === "pressing" && pdfJob && (
@@ -849,7 +864,7 @@ export function HyperXAnswer({
           {leverOpen && pdfState !== "pressing" && (
             <div
               role="dialog"
-              aria-label="Choose the deep research length"
+              aria-label={t("Choose the deep research length")}
               data-testid={`${testId}-pdf-lever`}
               className="w-full max-w-[420px] rounded-2xl border p-3.5"
               style={{
@@ -877,7 +892,7 @@ export function HyperXAnswer({
                 value={pdfPages}
                 onChange={(e) => setPdfPages(Number(e.target.value))}
                 aria-valuetext={`${pdfPages} pages, about ${pdfPages * 1000} words`}
-                aria-label="The deep research length, from 3 pages to the full 8"
+                aria-label={t("The deep research length, from 3 pages to the full 8")}
                 data-testid={`${testId}-pdf-lever-range`}
                 className="mt-2.5 w-full accent-[#22d3ee]"
               />

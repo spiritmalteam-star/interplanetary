@@ -333,7 +333,7 @@ export function AccountModal() {
                 role="status"
                 className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-[13.5px] leading-relaxed text-foreground/85"
               >
-                {notice}
+                {t(notice)}
               </div>
             )}
 
@@ -669,7 +669,7 @@ export function AccountModal() {
                   {busy === "pw" ? "…" : t("Update password")}
                 </button>
               </div>
-              {pwMsg && <p className="mt-2 text-[13px] text-muted-foreground">{pwMsg}</p>}
+              {pwMsg && <p className="mt-2 text-[13px] text-muted-foreground">{t(pwMsg)}</p>}
             </section>
 
             {/* -------- developer keys -------- */}

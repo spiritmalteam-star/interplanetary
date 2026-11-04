@@ -11,6 +11,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   type CSSProperties,
   type ReactNode,
   type RefObject,
@@ -131,7 +132,7 @@ import { SideArtifact } from "./ChatArtifacts";
 import type { ChatMessage, LandingScopeKey, ToolTabKey } from "@/lib/mirror-store";
 import type { LiveScopeKey } from "@/lib/live-scopes";
 import { LANDING_SCOPE_CATEGORY, SCOPE_META } from "@/lib/mirror/workspaces";
-import { useT } from "@/lib/i18n";
+import { useT, subscribeDicts, getDictVersion } from "@/lib/i18n";
 import { LANDING_SCOPES, useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import { cleanCopyText } from "@/lib/copy-clean";
@@ -808,6 +809,16 @@ function BareFloorDoors({
   disabled: boolean;
 }) {
   const t = useT();
+  /* THE TONGUE OF THE DOORS — the floor's whispers are composed in the
+     visitor's own language: stem and topic both, never a mixed door.
+     THE LAZY TONGUE'S WAKE — when the chosen dictionary lands (lazy),
+     the version wakes and the doors recompose in the arrived tongue. */
+  const language = useMirror((s) => s.language);
+  const dictVersion = useSyncExternalStore(
+    subscribeDicts,
+    getDictVersion,
+    getDictVersion
+  );
   const treeMix = useMirror((s) => s.treeMix);
   const me = useMirror((s) => s.me);
   const scopeKey = scope || "general";
@@ -836,10 +847,14 @@ function BareFloorDoors({
     }
     if (anon) {
       /* THE EASY DOORS ONLY — plainly worded, easy to understand */
-      return shuffledEasy(scope === "mirror" || !scope ? null : scope, canopyHour());
+      return shuffledEasy(
+        scope === "mirror" || !scope ? null : scope,
+        canopyHour(),
+        language
+      );
     }
     if (scope === "mirror")
-      return [...LANDING_SUGGESTION_POOL, ...easyWhispersFor(null)];
+      return [...LANDING_SUGGESTION_POOL, ...easyWhispersFor(null, language)];
     if (scope) {
       const family = TREE_FAMILIES.find((f) => f.key === scope);
       if (family)
@@ -847,9 +862,9 @@ function BareFloorDoors({
           ...growCanopy(family.category, null, canopyHour()).map(
             (w) => w.text
           ),
-          ...easyWhispersFor(scope),
+          ...easyWhispersFor(scope, language),
         ];
-      return [...LANDING_SUGGESTION_POOL, ...easyWhispersFor(null)];
+      return [...LANDING_SUGGESTION_POOL, ...easyWhispersFor(null, language)];
     }
     const mixed = growMixedCanopy(
       treeMix.on,
@@ -857,13 +872,19 @@ function BareFloorDoors({
       null,
       canopyHour()
     ).map((w) => w.text);
-    return [...LANDING_SUGGESTION_POOL, ...mixed, ...easyWhispersFor(null)];
-  }, [scope, treeMix, anon]);
+    return [
+      ...LANDING_SUGGESTION_POOL,
+      ...mixed,
+      ...easyWhispersFor(null, language),
+    ];
+  }, [scope, treeMix, anon, language, dictVersion]);
 
   const draw = useCallback(
     (current: string[]) => {
       const seenMap = readLandingSeen();
       let seen = seenMap[scopeKey] ?? [];
+      if (!Array.isArray(seen)) seen = [];
+      const cur = Array.isArray(current) ? current : [];
       /* THE HEART'S QUOTA — the visitor's law, kept this time: at the
          Mirror's own floor (and the main landing that opens as the
          Mirror) EVERY draw carries two of the heart's doors — the
@@ -874,13 +895,13 @@ function BareFloorDoors({
       const take = (source: string[], n: number, taken: string[]) => {
         let from = source.filter(
           (s) =>
-            !seen.includes(s) && !current.includes(s) && !taken.includes(s)
+            !seen.includes(s) && !cur.includes(s) && !taken.includes(s)
         );
         if (from.length < n) {
           /* the source walked dry — its remembering clears and the
              doors return (what is already taken still stands aside) */
           from = source.filter(
-            (s) => !current.includes(s) && !taken.includes(s)
+            (s) => !cur.includes(s) && !taken.includes(s)
           );
         }
         for (let i = from.length - 1; i > 0; i--) {
@@ -905,7 +926,19 @@ function BareFloorDoors({
     [pool, scope, scopeKey]
   );
 
-  const [doors, setDoors] = useState<string[]>(() => draw([]));
+  /* THE DOORS AND THEIR MAKER — the doors' state carries the very draw
+     hand that poured them, so when the pool's own language wakes (the
+     lazy dictionary lands, the draw hand is re-carved) the state
+     adjusts during render: the doors redraw in the arrived tongue,
+     keeping what already stands (never a duplicate set) */
+  const [doorState, setDoorState] = useState(() => ({
+    draw,
+    doors: draw([]),
+  }));
+  if (doorState.draw !== draw) {
+    setDoorState({ draw, doors: draw(doorState.doors) });
+  }
+  const doors = doorState.doors;
 
   return (
     <div className="pointer-events-none flex w-[min(600px,94%)] flex-col items-center gap-2">
@@ -961,7 +994,7 @@ function BareFloorDoors({
         type="button"
         data-testid="suggestions-reload"
         disabled={disabled}
-        onClick={() => setDoors((cur) => draw(cur))}
+        onClick={() => setDoorState({ draw, doors: draw(doorState.doors) })}
         className="focus-glow pointer-events-auto inline-flex h-7 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--background)_60%,transparent)] px-3 text-[11.5px] uppercase tracking-[0.18em] text-[#a08c5c] transition-colors duration-300 hover:border-[rgba(232,217,176,0.75)] hover:text-[#e8d9b0] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#c3ad79]"
       >
         <RefreshCw className="size-3" aria-hidden="true" />
@@ -2606,9 +2639,14 @@ export function BranchCanopy({
   const anonWalk = useMirror((s) =>
     s.meStatus === "ready" ? !s.me : false
   ); // the quiet check never guesses a stranger's voice
+  const dictVersion = useSyncExternalStore(
+    subscribeDicts,
+    getDictVersion,
+    getDictVersion
+  );
   const shownGrove = useMemo(
-    () => (anonWalk ? swapGroveToEasy(grove, hour) : grove),
-    [grove, anonWalk, hour]
+    () => (anonWalk ? swapGroveToEasy(grove, hour, language) : grove),
+    [grove, anonWalk, hour, language, dictVersion]
   );
 
   /* THE FAMILY'S LIGHT — every whisper knows its own family, so every

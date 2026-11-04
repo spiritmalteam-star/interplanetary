@@ -15,6 +15,8 @@
 /*  a scope's floor draws easy doors of its own field.                 */
 /* ------------------------------------------------------------------ */
 
+import { translate, getDictVersion, type LanguageCode } from "@/lib/i18n/core";
+
 export interface EasyWhisper {
   text: string;
   family: string;
@@ -193,34 +195,62 @@ const TOPICS: Array<{ t: string; f: string }> = [
   { t: "how habits form", f: "mirror" },
 ];
 
-/* the plain stems — every one grammatical with any topic above */
-const STEMS: Array<(s: string) => string> = [
-  (s) => `Tell me about ${s}.`,
-  (s) => `Explain ${s} in simple words.`,
-  (s) => `How does ${s} work?`,
-  (s) => `Why does ${s} matter?`,
-  (s) => `What should I know about ${s}?`,
-  (s) => `Where does ${s} come from?`,
-  (s) => `How do I begin with ${s}?`,
-  (s) => `What is the truth about ${s}?`,
-  (s) => `Help me understand ${s}.`,
-  (s) => `What can ${s} teach me?`,
-  (s) => `What is really known about ${s}?`,
-  (s) => `Show me ${s} clearly.`,
+/* the plain stems — every one a dict KEY (the English source string
+   with a {s} place where the topic lands), so a composed whisper is
+   born in the visitor's own tongue: the stem AND the topic are both
+   translated, and the house never mixes two languages in one door. */
+const STEMS: string[] = [
+  "Tell me about {s}.",
+  "Explain {s} in simple words.",
+  "How does {s} work?",
+  "Why does {s} matter?",
+  "What should I know about {s}?",
+  "Where does {s} come from?",
+  "How do I begin with {s}?",
+  "What is the truth about {s}?",
+  "Help me understand {s}.",
+  "What can {s} teach me?",
+  "What is really known about {s}?",
+  "Show me {s} clearly.",
 ];
 
-/* THE FULL WELL — every topic through every stem, built once */
-export const EASY_WHISPERS: EasyWhisper[] = TOPICS.flatMap(({ t, f }) =>
-  STEMS.map((stem) => ({ text: stem(t), family: f }))
-);
+/* THE FULL WELL — composed on demand in the asked tongue (cached per
+   language, since every topic rides every stem). The English well
+   stays the first-born (the dict's own fallback law). */
+const EASY_WELL_CACHE = new Map<string, EasyWhisper[]>();
+
+function easyWell(language: LanguageCode): EasyWhisper[] {
+  /* THE CACHE RIDES THE DICT'S WAKE — a tongue's well is composed with
+     whatever the dictionary has carried so far; when the lazy dict
+     lands (its version bumps) the cache key moves and the well
+     recomposes whole in the arrived tongue */
+  const key = `${language}:${getDictVersion()}`;
+  const hit = EASY_WELL_CACHE.get(key);
+  if (hit) return hit;
+  const well = TOPICS.flatMap(({ t, f }) =>
+    STEMS.map((stem) => ({
+      text: translate(language, stem, { s: translate(language, t) }),
+      family: f,
+    }))
+  );
+  EASY_WELL_CACHE.set(key, well);
+  return well;
+}
+
+/* the English well as it was — the source of every tongue */
+export const EASY_WHISPERS: EasyWhisper[] = easyWell("en");
 
 export const EASY_COUNT = EASY_WHISPERS.length;
 
 /* the easy doors of one family ("mirror" = the general walk; null =
-   the whole house mixed) */
-export function easyWhispersFor(family: string | null): string[] {
-  if (!family || family === "mirror") return EASY_WHISPERS.map((w) => w.text);
-  return EASY_WHISPERS.filter((w) => w.family === family).map((w) => w.text);
+   the whole house mixed), spoken in the visitor's own language */
+export function easyWhispersFor(
+  family: string | null,
+  language: LanguageCode = "en"
+): string[] {
+  const well = easyWell(language);
+  if (!family || family === "mirror") return well.map((w) => w.text);
+  return well.filter((w) => w.family === family).map((w) => w.text);
 }
 
 function hashStr(s: string): number {
@@ -237,9 +267,10 @@ function hashStr(s: string): number {
    pours a different order. */
 export function shuffledEasy(
   family: string | null,
-  seed: number
+  seed: number,
+  language: LanguageCode = "en"
 ): string[] {
-  const list = easyWhispersFor(family);
+  const list = easyWhispersFor(family, language);
   const out = [...list];
   for (let i = out.length - 1; i > 0; i--) {
     const j = hashStr(`${seed}:${out[i]}`) % (i + 1);
@@ -255,10 +286,11 @@ export function shuffledEasy(
    not signed in. */
 export function swapGroveToEasy<W extends { text: string; family?: string }>(
   grove: W[],
-  seed: number
+  seed: number,
+  language: LanguageCode = "en"
 ): W[] {
   const byFamily = new Map<string, string[]>();
-  for (const w of EASY_WHISPERS) {
+  for (const w of easyWell(language)) {
     const arr = byFamily.get(w.family) ?? [];
     arr.push(w.text);
     byFamily.set(w.family, arr);

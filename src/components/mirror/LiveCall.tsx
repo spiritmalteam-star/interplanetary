@@ -267,10 +267,11 @@ export function LiveCall({
     async (text: string) => {
       /* the voice is prepared while the phase still reads "thinking" —
          the visitor never watches a silent "speaking" state.
-         THE CALL'S OWN VOICE — the GOOGLE VOICE first (the sky's own
-         Gemini TTS: a calm, measured, intelligent man, one round trip,
-         spoken the moment the reply lands), the house voice behind it,
-         and the traveler's own browser voice when both skies rest. */
+         THE CALL'S OWN VOICE — the OPENAI VOICE first (the keeper's
+         law: OpenAI reads calls and nothing else — a calm, measured,
+         intelligent man, spoken the moment the reply lands), the
+         sky's own Gemini voice behind it, the house voice behind
+         that, and the traveler's own browser voice when all rest. */
       let url: string | null = null;
       let audio: HTMLAudioElement | null = null;
       try {
@@ -281,13 +282,13 @@ export function LiveCall({
             text,
             voice: cfg.voice,
             pace: Math.min(1.15, cfg.pace + 0.08),
-            /* THE CALM MALE VOICE — the call asks the sky's own calm
-               reader first (engine "google" = the Gemini TTS ladder,
-               Charon); the house voice and the browser stand behind */
-            engine: "google",
+            /* THE CALM MALE VOICE — the call asks the OpenAI speech
+               door first (engine "openai", voice Onyx); the Google
+               voice and the house voice stand behind */
+            engine: "openai",
           }),
         });
-        if (!res.ok) throw new Error("google voice quiet");
+        if (!res.ok) throw new Error("call voice quiet");
         const blob = await res.blob();
         url = URL.createObjectURL(blob);
         audio = new Audio(url);

@@ -699,7 +699,7 @@ export function AuthModal() {
                   <RefreshCw className="size-4" aria-hidden="true" />
                 )}
                 {resendCool > 0
-                  ? t(`A fresh letter may fly in ${resendCool}s`)
+                  ? t("A fresh letter may fly in {n}s", { n: resendCool })
                   : t("Send the letter again")}
               </button>
               {!changeOpen ? (

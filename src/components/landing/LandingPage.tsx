@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
+import { LanguageButton } from "@/components/mirror/LanguageButton";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
@@ -404,6 +405,11 @@ export default function LandingPage({
                 visitor asked them to live; the desk keeps them in the
                 crown's corner as they always stood. */}
             <div className="absolute right-3 top-3 z-20 flex items-center gap-1.5 md:hidden">
+              {/* THE TONGUE BEFORE THE LIGHT — the language hand rests
+                  before the banner's sun/moon, on every surface where
+                  both stand together; at the screen's very top edge the
+                  menu keeps its downward fall (no room to rise above) */}
+              <LanguageButton onImage testId="banner-language-button" dropUp={false} />
               <BannerLightHand />
               <button
                 type="button"

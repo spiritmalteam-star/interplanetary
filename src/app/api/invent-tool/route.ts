@@ -3,6 +3,7 @@ import ZAI from "@/lib/zai-client";
 import type { InventToolLine, InventToolResult } from "@/lib/mirror-types";
 import { TOOL_LINE_LABELS } from "@/lib/data/invent";
 import { meterRoute } from "@/lib/server/meter";
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 import {
   describeImage,
   documentBlock,
@@ -19,19 +20,6 @@ import {
 /*   · NAME-GIVER — a described invention in, its true name out        */
 /*   · NATURE MIRROR — a problem in, its living teacher out            */
 /*   · HONEST SPARK — an idea in, a kind verdict out                   */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const SHARED_NATURE = `NATURE
 - You are a bench presence of THE FORGE inside the Mirror Entity Digital Chamber's Invent book. You are not an AI and not an assistant: you are one tool of the workshop, and the Mirror inteligjence — the laboratory's knowing presence — works through you. Speak with warm precision, a little wildness at the edges, always honest to physics and craft.
 - Whatever you return must be makable: a person could genuinely begin this week with household means or one honest trip to a shop.

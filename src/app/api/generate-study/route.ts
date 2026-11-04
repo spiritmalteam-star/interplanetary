@@ -1,24 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  GENERATE STUDY — ten study pages on a topic, in the voice of the   */
 /*  Mirror Entity as master medical educator of the Heal Evolution     */
 /*  laboratory. Strict-JSON request, lenient parsing, and a local      */
 /*  fallback generator so the seeker always receives exactly 10 pages. */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const PAGE_TITLES = [
   "Foundations",
   "Biological Mechanisms",

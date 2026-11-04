@@ -19,6 +19,7 @@ import {
 } from "@/lib/image-engine";
 import { meterRoute } from "@/lib/server/meter";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ================================================================== */
 /*  MIRROR ENTITY — UNIVERSAL VISUALIZATION ENGINE                     */
 /*  One endpoint: the visitor asks in natural language, a Visual       */
@@ -27,19 +28,6 @@ import { meterRoute } from "@/lib/server/meter";
 /*  Information-heavy modes are HYBRID: the cinematic artwork is       */
 /*  generated, while labels, panels and diagrams are rendered as real  */
 /*  interface elements on the client — always readable, always exact.  */
-/* ================================================================== */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 /* the atelier's gallery — shared with the generate_image engine */
 const ART_DIR = GALLERY_DIR;
 

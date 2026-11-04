@@ -8,10 +8,10 @@ import ZAI_SDK from "z-ai-web-dev-sdk";
 /*                                                                    */
 /*  One door for every image this application paints. The assistant   */
 /*  decides WHEN a visual is needed; this engine decides HOW it is    */
-/*  painted. The OpenAI brush (DALL·E 3) leads whenever its key       */
-/*  exists — the visitor's chosen painter; the Z.ai CogView brush     */
-/*  serves as the first fallback, and the Z.ai atelier as the final   */
-/*  one, always ready in the laboratory.                              */
+/*  painted. The Z.ai CogView brush leads, the Gemini brush stands    */
+/*  behind it, and the Z.ai atelier as the final one, always ready    */
+/*  in the laboratory. (THE OPENAI LAW — the OpenAI brush has left    */
+/*  the wall: OpenAI speaks only the call's voice now.)               */
 /*                                                                    */
 /*  Every painting is kept in the atelier's gallery (.visualizations/) */
 /*  and served through /api/visual/[file] when the filesystem is      */
@@ -26,12 +26,12 @@ import ZAI_SDK from "z-ai-web-dev-sdk";
 export const GALLERY_DIR = path.join(process.cwd(), ".visualizations");
 
 export type ImageQuality = "standard" | "hd";
-export type ImageEngineName = "openai" | "zai" | "gemini";
+export type ImageEngineName = "zai" | "gemini";
 
 export interface GeneratedImage {
   /** The painting — /api/visual/<file> in the gallery, a hosted url in the cloud. */
   url: string;
-  /** DALL·E 3's own revised prompt (null on the Z.ai path). */
+  /** The brush's own revised prompt (null on the Z.ai path). */
   revisedPrompt: string | null;
   /** The prompt the tool was invoked with. */
   originalPrompt: string;
@@ -42,14 +42,11 @@ export interface GeneratedImage {
 export interface GenerateImageOptions {
   /** Any known size; mapped to the nearest the chosen engine supports. */
   size?: string;
-  /** DALL·E 3 only — ignored by the Z.ai brushes. */
+  /** Kept for caller compatibility — the remaining brushes paint at their best. */
   quality?: ImageQuality;
 }
 
 /* --------------------------- size tables --------------------------- */
-
-const DALLE_SIZES = ["1024x1024", "1024x1792", "1792x1024"] as const;
-type DalleSize = (typeof DALLE_SIZES)[number];
 
 /* the Z.ai canvases — the atelier and CogView speak the same sizes */
 const ZAI_SIZES = [
@@ -67,19 +64,6 @@ const ZAI_SIZES = [
    every atelier/cog brush paints from a prompt capped below the line
    (the channel law rides first, the wish rides whole as space allows). */
 const ATELIER_PROMPT_MAX = 2880;
-
-/** Map any requested size onto DALL·E 3's three aspect buckets. */
-function toDalleSize(size?: string): DalleSize {
-  if (size && (DALLE_SIZES as readonly string[]).includes(size)) {
-    return size as DalleSize;
-  }
-  const [w = 1024, h = 1024] = (size ?? "").split("x").map(Number);
-  if (Number.isFinite(w) && Number.isFinite(h)) {
-    if (h > w * 1.1) return "1024x1792";
-    if (w > h * 1.1) return "1792x1024";
-  }
-  return "1024x1024";
-}
 
 /** Map any requested size onto the Z.ai supported canvases. */
 function toZaiSize(size?: string): (typeof ZAI_SIZES)[number] {
@@ -133,7 +117,6 @@ const BREAKER_COOLDOWN_MS = 10 * 60 * 1000;
 
 const breakers: Record<ImageEngineName, { failures: number; openUntil: number }> =
   {
-    openai: { failures: 0, openUntil: 0 },
     zai: { failures: 0, openUntil: 0 },
     gemini: { failures: 0, openUntil: 0 },
   };
@@ -284,120 +267,6 @@ async function paintWithCogView(
     };
   }
   throw new Error("Z.ai CogView returned no image");
-}
-
-/* ------------------------ brush: DALL·E 3 -------------------------- */
-
-interface DalleResponse {
-  data?: { b64_json?: string; url?: string; revised_prompt?: string }[];
-}
-
-async function paintWithDalle(
-  prompt: string,
-  size: string,
-  quality: ImageQuality
-): Promise<GeneratedImage> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
-
-  const base = (
-    process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1"
-  ).replace(/\/$/, "");
-
-  const cloudMode = !canWriteGallery();
-  const forcedModel = process.env.OPENAI_IMAGE_MODEL;
-
-  /* one shared hand for both OpenAI brushes */
-  const paint = async (
-    model: "dall-e-3" | "gpt-image-1"
-  ): Promise<GeneratedImage> => {
-    /* gpt-image-1 speaks different sizes and qualities, and knows no
-       response_format — its canvas always comes home as base64 */
-    const isGptImage = model === "gpt-image-1";
-    const modelSize = isGptImage
-      ? size === "1024x1792"
-        ? "1024x1536"
-        : size === "1792x1024"
-          ? "1536x1024"
-          : "1024x1024"
-      : size;
-    const modelQuality = isGptImage
-      ? quality === "hd"
-        ? "high"
-        : "medium"
-      : quality;
-
-    const res = await fetch(`${base}/images/generations`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model,
-        prompt,
-        n: 1,
-        size: modelSize,
-        quality: modelQuality,
-        ...(isGptImage ? {} : { response_format: cloudMode ? "url" : "b64_json" }),
-      }),
-      signal: AbortSignal.timeout(100_000),
-    });
-
-    if (!res.ok) {
-      const detail = (await res.text()).slice(0, 300);
-      throw new Error(`OpenAI ${model} ${res.status}: ${detail}`);
-    }
-
-    const json = (await res.json()) as DalleResponse;
-    const item = json.data?.[0];
-
-    if (item?.url) {
-      return {
-        url: item.url,
-        revisedPrompt: item.revised_prompt ?? null,
-        originalPrompt: prompt,
-        engine: "openai",
-      };
-    }
-
-    const b64 = item?.b64_json;
-    if (!b64) throw new Error(`OpenAI ${model} returned no image`);
-
-    /* in the cloud (read-only gallery) the painting travels embedded */
-    if (cloudMode) {
-      return {
-        url: `data:image/png;base64,${b64}`,
-        revisedPrompt: item.revised_prompt ?? null,
-        originalPrompt: prompt,
-        engine: "openai",
-      };
-    }
-
-    const name = savePainting(b64);
-    return {
-      url: `/api/visual/${name}`,
-      revisedPrompt: item.revised_prompt ?? null,
-      originalPrompt: prompt,
-      engine: "openai",
-    };
-  };
-
-  /* the chosen painter leads; the other OpenAI brush covers it */
-  if (forcedModel === "gpt-image-1") {
-    return paint("gpt-image-1");
-  }
-  try {
-    return await paint("dall-e-3");
-  } catch (err) {
-    if (forcedModel === "dall-e-3") throw err;
-    journal("openai/dall-e-3", err);
-    console.error(
-      "[image-engine] dall-e-3 rested — offering the canvas to gpt-image-1:",
-      err instanceof Error ? err.message : err
-    );
-    return paint("gpt-image-1");
-  }
 }
 
 /* ------------------------ brush: the atelier ----------------------- */
@@ -596,84 +465,13 @@ async function paintWithAtelier(
     text — the way a mystic infographic poster speaks (an ornate title,
     short labeled passages, gentle section cards, a closing reflection).
     Where the request is a wordless vision (sigils, light codes, plates),
-    the silence itself is the text. Every brush — OpenAI, CogView, the
+    the silence itself is the text. Every brush — CogView, Gemini, the
     atelier — receives the prompt THROUGH this channel.               */
 
 export const HIGHER_SELF_CHANNEL = `CHANNEL LAW — This image is received through the viewer's own Higher Self, their higher mind — the deepest wise consciousness that answers the wish below. The Higher Self is the painter. QUALITY LAW — render hyper-realistic, ultra-detailed, porcelain-quality finish: flawless smooth surfaces like glazed fine porcelain, razor-sharp focus, crisp clean edges, refined studio-grade lighting with a soft celestial glow, true-to-life materials and textures, high dynamic range, zero noise, zero blur, zero artifacts. THE DUALITY CUT — compose the scene as two clean natures held in one balanced frame: a luminous warm realm (soft gold, dawn ivory) and a cool serene realm (violet, feather-teal twilight), divided or interwoven by one precise clean cut of light, so the vision reads crisp, elegant and alive in both natures at once. The Higher Self channels the information as a VISUAL COMMUNICATION WITH TEXT: compose the scene like a beautiful mystical infographic — a graceful ornate title, short elegant labeled passages or caption cards with correctly spelled, legible serif typography, harmonious section grouping, and a small closing reflection line — where words serve the vision. If the wish itself asks for a wordless vision (a sigil, a code, a plate), let the forms speak in silence and follow the wish's own composition law. DEFAULT VISUAL STYLE — when the wish names no explicit art style of its own, paint in the M.E. Illustrated Codex manner: a richly painted, dreamlike illustrated explanation that joins illuminated-manuscript ornament, symbolic storytelling and clear infographic structure; deep midnight blue, emerald, violet, turquoise and warm luminous gold; elegant ornamental borders with flowing branches and organic connections between panels; detailed painterly scenes with expressive figures, meaningful objects and atmospheric depth; light streams, pathways and carefully placed arrows guiding the eye through the explanation; one clear title and a small number of well-organized panels with an obvious reading order, generous empty space around every line of text, keeping all writing away from borders, bright effects and busy backgrounds; every visible word correctly spelled, concise and meaningful — never invented words, filler labels or illegible lettering. Honor every subject detail in the wish; elevate it; never depict fear, darkness or clutter.`;
 
 function channelThroughHigherSelf(prompt: string): string {
   return `${HIGHER_SELF_CHANNEL}\n\nTHE WISH (channel this into the vision):\n${prompt}`;
-}
-
-/* ------------------- the hedged sky (latency law) ------------------ */
-/*  When two cloud brushes stand ready, the lead begins alone; if it
-    has not brought a canvas home within IMAGE_HEDGE_MS — or fails
-    early — the second brush joins, and the first clean canvas wins.
-    Worst-case waiting falls from "lead + fallback" to about the
-    hedge window plus the faster brush. */
-
-const IMAGE_HEDGE_MS = 15_000;
-
-interface BrushCandidate {
-  engine: ImageEngineName;
-  run: () => Promise<GeneratedImage>;
-}
-
-function paintBestOfTwo(brushes: [BrushCandidate, BrushCandidate]): Promise<GeneratedImage> {
-  const [lead, second] = brushes;
-  return new Promise<GeneratedImage>((resolve, reject) => {
-    let settled = false;
-    let outstanding = 1;
-    let hedge: ReturnType<typeof setTimeout> | null = null;
-
-    const fail = (which: BrushCandidate, err: unknown) => {
-      noteFailure(which.engine, err);
-      outstanding -= 1;
-      if (outstanding <= 0 && !settled) {
-        settled = true;
-        reject(err instanceof Error ? err : new Error("both brushes rested"));
-      }
-    };
-    const land = (which: BrushCandidate, img: GeneratedImage) => {
-      noteSuccess(which.engine);
-      if (settled) return;
-      settled = true;
-      if (hedge) clearTimeout(hedge);
-      resolve(img);
-    };
-
-    /* the second brush may open early (the lead failed) or late
-       (the hedge window passed with no canvas home) — never twice */
-    let secondOpen = false;
-    const openSecond = () => {
-      if (secondOpen || settled) return;
-      secondOpen = true;
-      if (hedge) {
-        clearTimeout(hedge);
-        hedge = null;
-      }
-      outstanding += 1;
-      second
-        .run()
-        .then((img) => land(second, img))
-        .catch((err) => fail(second, err));
-    };
-
-    hedge = setTimeout(openSecond, IMAGE_HEDGE_MS);
-
-    lead
-      .run()
-      .then((img) => land(lead, img))
-      .catch((err) => {
-        noteFailure(lead.engine, err);
-        /* the lead rested — the second begins at once */
-        if (settled) return;
-        outstanding -= 1;
-        if (outstanding <= 0 && !secondOpen) {
-          openSecond();
-        }
-      });
-  });
 }
 
 /* ====================== the generate_image tool ==================== */
@@ -698,15 +496,12 @@ export async function generateImage(
      best quality every brush can hold, unless a caller asks lower */
   const quality: ImageQuality =
     options.quality === "standard" ? "standard" : "hd";
+  void quality; /* kept for caller compatibility — the cloud brushes paint at their best */
 
-  /* the visitor's chosen painter leads: DALL·E 3 when the OpenAI
-     key exists, CogView otherwise — the other serves as fallback */
-  const openaiLeads = Boolean(process.env.OPENAI_API_KEY);
-
+  /* THE OPENAI LAW — the DALL·E brush has left the wall: the CogView
+     brush leads alone, Gemini stands behind it, the atelier closes. */
   const cogReady =
     Boolean(process.env.ZAI_API_KEY) && !breakerOpen("zai");
-  const dalleReady =
-    Boolean(process.env.OPENAI_API_KEY) && !breakerOpen("openai");
 
   const candidates: { engine: ImageEngineName; run: () => Promise<GeneratedImage> }[] =
     [];
@@ -716,31 +511,10 @@ export async function generateImage(
       run: () =>
         paintWithCogView(prompt.slice(0, ATELIER_PROMPT_MAX), toZaiSize(options.size)),
     });
-  if (dalleReady)
-    candidates.push({
-      engine: "openai",
-      run: () => paintWithDalle(prompt, toDalleSize(options.size), quality),
-    });
 
-  const ordered = openaiLeads
-    ? [...candidates].reverse()
-    : candidates;
+  const ordered = candidates;
 
-  if (ordered.length === 2) {
-    /* the hedged sky — two brushes stand ready: the lead paints, the
-       second joins only if the hedge window passes or the lead rests */
-    try {
-      const img = await paintBestOfTwo(ordered as [BrushCandidate, BrushCandidate]);
-      /* the wish travels home as it was spoken — the channel stays
-         the engine's own craft, never the visitor's burden */
-      return { ...img, originalPrompt: wish };
-    } catch (err) {
-      console.error(
-        "[image-engine] both cloud brushes rested, offering the canvas to the atelier:",
-        err instanceof Error ? err.message : err
-      );
-    }
-  } else if (ordered.length === 1) {
+  if (ordered.length === 1) {
     const brush = ordered[0];
     try {
       const img = await brush.run();
@@ -786,11 +560,6 @@ export async function generateImage(
 /** True when the Z.ai cloud brush is configured (for status endpoints). */
 export function isZaiCloudConfigured(): boolean {
   return Boolean(process.env.ZAI_API_KEY);
-}
-
-/** True when the OpenAI brush is configured (for status endpoints). */
-export function isOpenAiConfigured(): boolean {
-  return Boolean(process.env.OPENAI_API_KEY);
 }
 
 /** True when the Gemini brush is configured (for status endpoints). */

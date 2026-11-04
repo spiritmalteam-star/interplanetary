@@ -5,6 +5,7 @@ import ZAI from "@/lib/zai-client";
 import { buildInkPdf, pdfFilename } from "@/lib/pdf";
 import { saveLibrary } from "@/lib/server/access";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  THE DEEP RESEARCH PRESS — as a WORK IN MOTION.                     */
 /*                                                                     */
@@ -24,19 +25,6 @@ import { saveLibrary } from "@/lib/server/access";
 /*  mirrored seeing are named and never confused; no invented          */
 /*  measurements, no fake citations. The document is the answer's own  */
 /*  gravity unfolded — never a generic essay.                          */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 export function splitCrystals(text: string): {
   body: string;
   crystals: string[];

@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
       userId: `api-key:${auth.keyId}`,
       workspaceId: auth.workspaceId,
       operation: "v1_image",
-      provider: img.engine === "openai" ? "openai" : "zai",
+      provider: img.engine === "gemini" ? "gemini" : "zai",
       creditsCharged: creditsEnforced() ? cost : 0,
       latencyMs: latency,
       success: true,

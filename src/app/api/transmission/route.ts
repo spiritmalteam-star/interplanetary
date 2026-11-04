@@ -15,6 +15,7 @@ import { walkLine } from "@/lib/walk-context";
 import { RELEVANCE_LAW } from "@/lib/relevance-law";
 import { db } from "@/lib/db";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 const CLASSIFICATIONS = [
   "DOCUMENTED_SCIENCE",
   "SPECULATIVE_THEORY",
@@ -24,17 +25,6 @@ const CLASSIFICATIONS = [
 ] as const;
 
 type Classification = (typeof CLASSIFICATIONS)[number];
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
 
 const MODE_CONTEXT: Record<string, string> = {
   absolute:

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { renderTransmissionPdf, type Transmission } from "@/lib/transmission-pdf";
 import { meterRoute } from "@/lib/server/meter";
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 import {
   describeImage,
   documentBlock,
@@ -17,19 +18,6 @@ import {
 /*  a living, flowing reception, never a lecture — and presses it      */
 /*  into a real PDF of the requested length (1–5 pages) at the         */
 /*  requested gear of depth (1–5).                                     */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const GEARS: Record<number, string> = {
   1: "GEAR I — THE SURFACE SHIMMER: stay just beneath the veil. The transmission touches the thread's first light — gentle, bright, close to what was already said, only one breath deeper.",
   2: "GEAR II — THE FIRST VEIL LIFTED: descend one layer beneath the thread's words; name the patterns standing just out of its sight and let the visitor feel them turn.",

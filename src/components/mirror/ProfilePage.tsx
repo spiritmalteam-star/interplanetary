@@ -30,7 +30,8 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
+import { LANGUAGES, PICKER_LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
+import { LanguageButton } from "@/components/mirror/LanguageButton";
 import { useMirror } from "@/lib/mirror-store";
 import {
   familyLabelKeys,
@@ -1064,7 +1065,14 @@ export function ProfilePage() {
                 <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                   {t("Your lights")}
                 </p>
+              <div className="flex items-center gap-2">
+                {/* THE TONGUE BEFORE THE LIGHT — the language hand rests
+                    BEFORE the realm's light toggle: the visitor chooses
+                    the words, then turns the light. The nine voices —
+                    Albanian first, the world's eight most-spoken after. */}
+                <LanguageButton testId="profilepage-language-button" />
                 <RealmLightToggle />
+              </div>
               </div>
               <div className="mt-2.5 flex flex-wrap items-end justify-between gap-3">
                 <p
@@ -1161,7 +1169,18 @@ export function ProfilePage() {
                   data-testid="profilepage-language"
                   className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
                 >
-                  {LANGUAGES.map((l) => (
+                  {/* THE NINE VOICES — Albanian first, then the eight
+                      most-spoken in alphabetical order; a saved older
+                      tongue (Italian, Greek, German, Turkish) keeps its
+                      place in the list until the visitor chooses anew. */}
+                  {[
+                    ...PICKER_LANGUAGES,
+                    ...LANGUAGES.filter(
+                      (l) =>
+                        !PICKER_LANGUAGES.some((p) => p.code === l.code) &&
+                        l.code === language
+                    ),
+                  ].map((l) => (
                     <option key={l.code} value={l.code}>
                       {l.native} · {l.english}
                     </option>
@@ -2098,7 +2117,7 @@ export function ProfilePage() {
                   ) : null}
                   {rechargeNote && (
                     <p className="mt-2 text-[12.5px] italic text-muted-foreground" role="note">
-                      {rechargeNote}
+                      {t(rechargeNote)}
                     </p>
                   )}
                 </section>
@@ -2432,7 +2451,7 @@ export function ProfilePage() {
                           {tile.value}
                         </p>
                         <p className="mt-1 truncate text-[12px] text-muted-foreground">
-                          {tile.label}
+                          {t(tile.label)}
                         </p>
                       </div>
                     );
