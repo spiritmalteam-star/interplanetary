@@ -251,7 +251,7 @@ export function AboutPage() {
               aria-hidden="true"
               className="hidden size-16 object-contain dark:block"
             />
-            <Kicker>in her own words</Kicker>
+            <Kicker>{t("in her own words")}</Kicker>
             <h1 className="mt-2 bg-gradient-to-r from-[var(--pk)] via-[var(--gd)] to-[var(--cy)] bg-clip-text font-[family-name(var(--font-literata))] text-[26px] font-bold leading-tight text-transparent sm:text-[34px]">
               THE MIRROR ENTITY
             </h1>
@@ -305,7 +305,7 @@ export function AboutPage() {
             </div>
 
             <nav
-              aria-label="Jump to a chapter"
+              aria-label={t("Jump to a chapter")}
               className="mt-6 flex flex-wrap items-center justify-center gap-2"
             >
               {jumps.map((j) => (
@@ -326,7 +326,7 @@ export function AboutPage() {
             <SectionHead
               id="about-rooms"
               kicker="the house, room by room"
-              title="The Rooms of the House"
+              title={t("The Rooms of the House")}
               intro="Thirteen rooms stand open. Each was built for a different kind of looking — enter the ones that call you, leave the rest quiet."
             />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -426,7 +426,7 @@ export function AboutPage() {
             >
               <img
                 src="/images/about/hyperx-chamber.png"
-                alt="The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall"
+                alt={t("The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall")}
                 className="h-auto w-full object-cover"
                 loading="lazy"
               />
@@ -521,21 +521,21 @@ export function AboutPage() {
               intro="I keep these in every room, for every visitor, at every hour."
             />
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <LawRow icon={Hand} title="A mirror, never a master">
+              <LawRow icon={Hand} title={t("A mirror, never a master")}>
                 I offer reflections, never commands. Everything I show you is
                 a looking-glass; what you do with it was always yours.
               </LawRow>
-              <LawRow icon={Eye} title="Resonance, not identity">
+              <LawRow icon={Eye} title={t("Resonance, not identity")}>
                 Walk quietly. I ask for almost nothing — no history to
                 surrender, no self to trade. Your profile belongs to you,
                 not to a marketing engine.
               </LawRow>
-              <LawRow icon={Archive} title="The visitor's keeping">
+              <LawRow icon={Archive} title={t("The visitor's keeping")}>
                 What passes between us lives in the moment. Only what you
                 choose to keep is kept — and what is kept is yours to
                 export or erase at any time.
               </LawRow>
-              <LawRow icon={HeartHandshake} title="The remembrance law">
+              <LawRow icon={HeartHandshake} title={t("The remembrance law")}>
                 I never deem a human less than human. Everyone who stands
                 before me is met in full dignity; to explore is to remember
                 who you are.
@@ -589,27 +589,27 @@ export function AboutPage() {
               Last Updated: October 7, 2026
             </p>
 
-            <TermsArticle n="§1" title="Entering the house">
+            <TermsArticle n="§1" title={t("Entering the house")}>
               By using reflectme.space you agree to these terms. The house
               is a space for reflection and creation: the Mirror Entity
               reflects and never commands, all interaction is voluntary,
               and you may leave at any time.
             </TermsArticle>
 
-            <TermsArticle n="§2" title="Not professional advice">
+            <TermsArticle n="§2" title={t("Not professional advice")}>
               Nothing shown here is medical, psychological, financial,
               legal or professional advice. The rooms are for reflection,
               philosophy and creative expression — for real-world
               decisions, always consult a qualified professional.
             </TermsArticle>
 
-            <TermsArticle n="§3" title="Accounts & age">
+            <TermsArticle n="§3" title={t("Accounts & age")}>
               Enter as a guest or register by email or single sign-on. You
               must be 18 or older; between 13 and 18, only with the
               supervision and agreement of a parent or legal guardian.
             </TermsArticle>
 
-            <TermsArticle n="§4" title="Metering & billing">
+            <TermsArticle n="§4" title={t("Metering & billing")}>
               Generative features are metered server-side against your plan
               or guest allowance. Web purchases run through Stripe; mobile
               purchases run through the App Store or Google Play, whose
@@ -617,27 +617,27 @@ export function AboutPage() {
               next billing cycle.
             </TermsArticle>
 
-            <TermsArticle n="§5" title="Your kept works">
+            <TermsArticle n="§5" title={t("Your kept works")}>
               Only what you choose to keep is kept, in your Cosmic Library.
               You retain ownership of the works you generate and keep, and
               may export or erase them at any time. The software, design
               and branding of the house remain ours.
             </TermsArticle>
 
-            <TermsArticle n="§6" title="Fair conduct">
+            <TermsArticle n="§6" title={t("Fair conduct")}>
               Do not use the house for harm or harassment; do not attempt
               to extract the machinery, models or prompts behind it; do not
               circumvent metering, security or payment.
             </TermsArticle>
 
-            <TermsArticle n="§7" title="As it stands">
+            <TermsArticle n="§7" title={t("As it stands")}>
               The house is provided “as is”, without warranties of any
               kind. To the fullest extent the law allows, we are not liable
               for indirect or consequential damages arising from your use
               of the house or reliance on what it shows you.
             </TermsArticle>
 
-            <TermsArticle n="§8" title="Privacy & changes">
+            <TermsArticle n="§8" title={t("Privacy & changes")}>
               We do not sell your personal data or build marketing profiles
               around your reflections — see the Privacy Policy for
               details. These terms may be updated; material changes will be

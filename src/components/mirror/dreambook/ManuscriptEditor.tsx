@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useT } from "@/lib/i18n";
 import "./manuscript-editor.css";
 
 export interface MirrorManuscriptEditorProps {
@@ -108,6 +109,8 @@ export default function MirrorManuscriptEditor({
   className,
   formatNumber,
 }: MirrorManuscriptEditorProps) {
+  const t = useT();
+
   /* the toolbar's active marks and the quiet count ride a transaction
      tick — no continuous animation, only the work the pen itself does */
   const [, bump] = useReducer((n: number) => n + 1, 0);
@@ -160,7 +163,7 @@ export default function MirrorManuscriptEditor({
         <div
           className="manuscript-toolbar"
           role="toolbar"
-          aria-label="Writing tools"
+          aria-label={t("Writing tools")}
         >
           <ToolButton
             label="Bold"
@@ -201,14 +204,14 @@ export default function MirrorManuscriptEditor({
             <Heading2 className="size-4" aria-hidden="true" />
           </ToolButton>
           <ToolButton
-            label="Bulleted list"
+            label={t("Bulleted list")}
             active={editor.isActive("bulletList")}
             onClick={() => editor.chain().focus().toggleBulletList().run()}
           >
             <List className="size-4" aria-hidden="true" />
           </ToolButton>
           <ToolButton
-            label="Numbered list"
+            label={t("Numbered list")}
             active={editor.isActive("orderedList")}
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
           >

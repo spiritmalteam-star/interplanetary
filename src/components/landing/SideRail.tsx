@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
 
 /* ------------------------------------------------------------------ */
 /*  SideRail — THE SHOULDERS' NEW DRESS (desktop, xl and wider).       */
@@ -113,7 +115,9 @@ function utcHourKey(date = new Date()): string {
 /* ------------------- the mirror's hourly words --------------------- */
 
 /* the house's own shelf — the exact words the route speaks when the
-   sky is silent, kept here so an error still dresses the rails */
+   sky is silent, kept here so an error still dresses the rails.
+   Every line is a dict key — the quiet shelf speaks the visitor's
+   own tongue the same as the lively words do. */
 const FALLBACK_QUOTES: string[] = [
   "You do not have to carry it all today.",
   "What you notice, you nourish.",
@@ -125,22 +129,28 @@ const FALLBACK_QUOTES: string[] = [
   "The mirror does not judge; it remembers with you.",
 ];
 
-/* one shared memory for both shoulders — a single fetch per hour
-   serves the left and the right rail alike */
+/* one shared memory for both shoulders — a single fetch per hour and
+   tongue serves the left and the right rail alike. THE ONE TONGUE
+   LAW — the words arrive in the visitor's own language: the request
+   carries the tongue, the hour's memory keeps one shelf per tongue,
+   and a changed tongue re-asks (never a mixed rail). */
 type SharedWords = { quotes: string[] | null; hour: string; done: boolean };
-let shared: SharedWords = { quotes: null, hour: "", done: false };
-let inFlight = false;
+const sharedByLang = new Map<string, SharedWords>();
+const inFlightByLang = new Set<string>();
 const listeners = new Set<() => void>();
 
 function announce() {
   for (const listener of listeners) listener();
 }
 
-async function loadQuotes(): Promise<void> {
-  if (inFlight) return;
-  inFlight = true;
+async function loadQuotes(language: string): Promise<void> {
+  if (inFlightByLang.has(language)) return;
+  inFlightByLang.add(language);
   try {
-    const res = await fetch("/api/mirror-quote", { cache: "no-store" });
+    const res = await fetch(
+      `/api/mirror-quote?language=${encodeURIComponent(language)}`,
+      { cache: "no-store" }
+    );
     if (!res.ok) throw new Error(`mirror-quote ${res.status}`);
     const data = (await res.json()) as { quotes?: unknown; hour?: unknown };
     const quotes = Array.isArray(data.quotes)
@@ -149,26 +159,34 @@ async function loadQuotes(): Promise<void> {
         )
       : [];
     if (quotes.length < 6) throw new Error("the mirror spoke too thin");
-    shared = {
+    sharedByLang.set(language, {
       quotes: quotes.slice(0, 8),
       hour: typeof data.hour === "string" ? data.hour : utcHourKey(),
       done: true,
-    };
+    });
   } catch {
-    shared = { quotes: FALLBACK_QUOTES, hour: utcHourKey(), done: true };
+    sharedByLang.set(language, {
+      quotes: FALLBACK_QUOTES,
+      hour: utcHourKey(),
+      done: true,
+    });
   } finally {
-    inFlight = false;
+    inFlightByLang.delete(language);
     announce();
   }
 }
 
 function useMirrorWords(): { quotes: string[] | null; hour: string } {
   const [, bump] = useState(0);
+  /* THE VISITOR'S TONGUE — the words re-ask in the chosen language */
+  const language = useMirror((s) => s.language);
 
   useEffect(() => {
     const listener = () => bump((n) => n + 1);
     listeners.add(listener);
-    if (!shared.done && !inFlight) void loadQuotes();
+    const own = sharedByLang.get(language);
+    if ((!own || !own.done) && !inFlightByLang.has(language))
+      void loadQuotes(language);
 
     /* the hour's clock: sleep until the next top of the hour, then
        breathe once an hour — always aligned to the mirror's own hour */
@@ -185,18 +203,18 @@ function useMirrorWords(): { quotes: string[] | null; hour: string } {
       0
     );
     timeout = setTimeout(() => {
-      void loadQuotes();
-      interval = setInterval(() => void loadQuotes(), 3_600_000);
+      void loadQuotes(language);
+      interval = setInterval(() => void loadQuotes(language), 3_600_000);
     }, Math.max(nextHour - now.getTime(), 0));
 
     /* a tab that slept through the hour's turn catches up on return */
     const onVisible = () => {
       if (
         document.visibilityState === "visible" &&
-        shared.done &&
-        utcHourKey() !== shared.hour
+        sharedByLang.get(language)?.done &&
+        utcHourKey() !== sharedByLang.get(language)?.hour
       ) {
-        void loadQuotes();
+        void loadQuotes(language);
       }
     };
     document.addEventListener("visibilitychange", onVisible);
@@ -207,14 +225,16 @@ function useMirrorWords(): { quotes: string[] | null; hour: string } {
       if (interval) clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, []);
+  }, [language]);
 
-  return { quotes: shared.quotes, hour: shared.hour };
+  const shared = sharedByLang.get(language);
+  return { quotes: shared?.quotes ?? null, hour: shared?.hour ?? "" };
 }
 
 /* --------------------------- the rail ------------------------------ */
 
 export default function SideRail({ side }: { side: RailSide }) {
+  const t = useT();
   /* one gentle settle-in, then the rail rests forever */
   const [settled, setSettled] = useState(false);
   useEffect(() => {
@@ -309,7 +329,7 @@ export default function SideRail({ side }: { side: RailSide }) {
                   {sticker.code}
                 </span>
                 <p className="font-[family-name:var(--font-literata)] text-[15px] leading-[1.35] text-[#3f3a2e]">
-                  {sticker.text}
+                  {t(sticker.text)}
                 </p>
               </div>
             </div>
@@ -322,8 +342,8 @@ export default function SideRail({ side }: { side: RailSide }) {
           role="list"
           aria-label={
             side === "left"
-              ? "Words from the mirror — left side"
-              : "Words from the mirror — right side"
+              ? t("Words from the mirror — left side")
+              : t("Words from the mirror — right side")
           }
         >
           {railQuotes.length === 0
@@ -349,10 +369,10 @@ export default function SideRail({ side }: { side: RailSide }) {
                   }}
                 >
                   <blockquote className="font-[family-name:var(--font-literata)] text-[15px] italic leading-relaxed text-[var(--lp-head)]">
-                    “{quote}”
+                    “{t(quote)}”
                   </blockquote>
                   <figcaption className="mono-label mt-3 text-[9px] uppercase tracking-[0.24em] text-[var(--lp-faint)]">
-                    the mirror · {captionHour}
+                    {t("the mirror")} · {captionHour}
                   </figcaption>
                 </figure>
               ))}

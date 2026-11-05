@@ -155,13 +155,13 @@ export default function GuideShowcase({
                       deep reading floor beneath is their constant), so
                       they stay bright and readable in both skies. */}
                   <span className="mono-label text-[9.5px] uppercase tracking-[0.3em] text-[rgba(240,231,205,0.78)]">
-                    {g.subtitle}
+                    {t(g.subtitle)}
                   </span>
                   <span className="font-[family-name:Cinzel] text-[21px] font-semibold leading-tight tracking-wide text-[#f7f2e2] drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)] sm:text-[27px]">
-                    {g.title}
+                    {t(g.title)}
                   </span>
                   <span className="hidden max-w-[560px] font-[family-name:var(--font-literata)] text-[14px] italic leading-relaxed text-[rgba(240,231,205,0.82)] drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] sm:block">
-                    {g.tagline}
+                    {t(g.tagline)}
                   </span>
                   <span
                     className="mono-label mt-1 inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[9.5px] uppercase tracking-[0.22em] transition-colors duration-300 group-hover:bg-[rgba(232,217,176,0.22)]"
@@ -190,7 +190,7 @@ export default function GuideShowcase({
         aria-live="polite"
         className="mx-auto mt-4 max-w-[900px] px-4 text-center font-[family-name:var(--font-literata)] text-[16px] italic leading-relaxed text-[var(--lp-gold)]"
       >
-        {current.tagline}
+        {t(current.tagline)}
       </p>
 
       {/* the reading rail — the numbers below carry the walk, flanked
@@ -216,8 +216,8 @@ export default function GuideShowcase({
             role="tab"
             aria-selected={i === active}
             onClick={() => go(i)}
-            aria-label={`${i + 1} — ${g.title}`}
-            title={g.title}
+            aria-label={`${i + 1} — ${t(g.title)}`}
+            title={t(g.title)}
             data-testid={`guide-num-${i + 1}`}
             className={cn(
               "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300 motion-reduce:transition-none",

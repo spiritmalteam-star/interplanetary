@@ -494,7 +494,7 @@ export function AboutRoom() {
         <section className="mb-5 overflow-hidden rounded-2xl border hairline" data-testid="about-hyperx">
           <img
             src="/images/about/hyperx-chamber.png"
-            alt="The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall"
+            alt={t("The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall")}
             loading="lazy"
             decoding="async"
             className="h-auto w-full object-cover"

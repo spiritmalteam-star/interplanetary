@@ -288,6 +288,7 @@ function PxWindowPills({ centered = false }: { centered?: boolean }) {
   const pxScope = useMirror((s) => s.pxScope);
   const setPxScope = useMirror((s) => s.setPxScope);
   const pinPxNotes = useMirror((s) => s.pinPxNotes);
+  const t = useT();
   return (
     <WindowSelect
       items={pxScopes.map((scope) => ({
@@ -297,7 +298,7 @@ function PxWindowPills({ centered = false }: { centered?: boolean }) {
         icon: PX_SCOPE_ICONS[scope.id] ?? Atom,
       }))}
       activeId={pxScope}
-      placeholder="Choose a window"
+      placeholder={t("Choose a window")}
       onSelect={(id) => {
         /* orient the scope AND pin the window's notes
            into the conversation — both, in one touch */

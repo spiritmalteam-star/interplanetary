@@ -133,14 +133,26 @@ export function LanguageButton({
 
   /* the floating list's own dress — pinned by the measured place:
      it right-aligns to the hand and rises above it (dropUp) or falls
-     below it, always carried on the body so no frame can bury it */
+     below it, always carried on the body so no frame can bury it.
+     THE VIEWPORT'S OWN LAW — the list never crosses the screen's
+     edges: its height is capped to the room it actually has (the
+     space between the hand and the screen's far edge), and when nine
+     tongues need more room than that, the list grows its own quiet
+     scroll — every tongue stays reachable on every screen. */
+  const MENU_ROOM = 16; /* the breath of air at the screen's edge */
   const menuStyle: React.CSSProperties | undefined = anchor
     ? {
         position: "fixed",
-        right: anchor.vw - anchor.right,
+        right: Math.max(anchor.vw - anchor.right, MENU_ROOM),
         ...(dropUp
           ? { bottom: Math.max(anchor.vh - anchor.edge, 0) + 8 }
           : { top: Math.min(anchor.edge + 8, anchor.vh - 60) }),
+        /* the height never outruns the viewport: whatever edge the
+           list grows from, the far edge holds it back */
+        maxHeight: dropUp
+          ? Math.max(anchor.edge - MENU_ROOM, 160)
+          : Math.max(anchor.vh - anchor.edge - MENU_ROOM - 8, 160),
+        overflowY: "auto",
         zIndex: 95,
       }
     : { visibility: "hidden" };
@@ -152,7 +164,7 @@ export function LanguageButton({
       aria-label={t("Language of everything")}
       data-testid={`${testId}-menu`}
       style={menuStyle}
-      className="fixed min-w-[190px] overflow-hidden rounded-2xl border hairline bg-[var(--glass-bg,var(--background))] p-1.5 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+      className="fixed min-w-[190px] overflow-x-hidden overflow-y-auto nice-scroll rounded-2xl border hairline bg-[var(--glass-bg,var(--background))] p-1.5 shadow-[0_18px_50px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl"
     >
       <p className="mono-label px-2.5 pb-1.5 pt-1 text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
         {t("Language of everything")}

@@ -1022,7 +1022,7 @@ export function TransmissionView() {
             )}
           </p>
           <p className="mt-2 text-[15.5px] italic text-muted-foreground">
-            {session.error}
+            {session.error ? t(session.error) : ""}
           </p>
         </motion.div>
       )}

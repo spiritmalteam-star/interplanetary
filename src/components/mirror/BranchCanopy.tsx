@@ -719,7 +719,28 @@ const LANDING_SUGGESTION_POOL = [
    ("general" for the whole house), so the threshold never offers the
    same door twice until its field has been walked dry. Capped deep,
    quiet when the keeping is closed. */
-const LANDING_SEEN_CAP = 400;
+const LANDING_SEEN_CAP = 2400;
+
+/* THE CHARGED BLOCK — how many doors one charged hold pours. The
+   visitor's own level (Depth & exploration in the settings room) sets
+   the round's size: a fresh walker meets thirty, a deep one a hundred
+   and eighty — and the walk's own decision (level -1) keeps the
+   standing hundred. THE SUGGESTION MACHINE — every charged hold
+   pours the next block of its size, never the same doors twice, so
+   the visitor keeps feeding the machine new rounds. */
+function chargedBlockSize(expLevel: number): number {
+  switch (expLevel) {
+    case 0: return 30;
+    case 1: return 60;
+    case 2: return 100;
+    case 3: return 140;
+    case 4: return 180;
+    default: return 100; /* the walk decides — the standing hundred */
+  }
+}
+
+/* the hold's own law — one full second of holding charges the hand */
+const CHARGE_MS = 1000;
 
 function readLandingSeen(): Record<string, string[]> {
   try {
@@ -837,7 +858,13 @@ function BareFloorDoors({
      draw never flickers. Every field speaks its own language: the
      Mirror the house's own reflection doors, the families their own
      groves — and the easy well (a thousand plain doors) rides the
-     pool beside them all, so the little reload hand keeps pouring. */
+     pool beside them all, so the little reload hand keeps pouring.
+     THE ONE TONGUE LAW — when the visitor reads any tongue other than
+     English, the grove's English-woven material stands aside: the pool
+     becomes the landing's first doors (each one a dict key, born again
+     in the chosen tongue) and the easy well composed whole in that
+     tongue — never a mixed handful. */
+  const oneTongue = language !== "en";
   const pool = useMemo(() => {
     if (scope === "hyperx") {
       /* HYPERX'S OWN GROVE — the discovery field draws ONLY its own
@@ -845,8 +872,17 @@ function BareFloorDoors({
          hand pours from the grove itself */
       return [...HYPERX_SUGGESTION_POOL];
     }
-    if (anon) {
-      /* THE EASY DOORS ONLY — plainly worded, easy to understand */
+    if (anon || oneTongue) {
+      /* THE EASY DOORS — plainly worded, wholly in the visitor's own
+         tongue (a keeper reading Albanian walks the same doors a guest
+         walks, and never a mixed word) */
+      if (!anon && (scope === "mirror" || !scope))
+        return [...LANDING_SUGGESTION_POOL, ...shuffledEasy(null, canopyHour(), language)];
+      if (!anon && scope) {
+        const family = TREE_FAMILIES.find((f) => f.key === scope);
+        if (!family)
+          return [...LANDING_SUGGESTION_POOL, ...shuffledEasy(null, canopyHour(), language)];
+      }
       return shuffledEasy(
         scope === "mirror" || !scope ? null : scope,
         canopyHour(),
@@ -877,10 +913,10 @@ function BareFloorDoors({
       ...mixed,
       ...easyWhispersFor(null, language),
     ];
-  }, [scope, treeMix, anon, language, dictVersion]);
+  }, [scope, treeMix, anon, oneTongue, language, dictVersion]);
 
   const draw = useCallback(
-    (current: string[]) => {
+    (current: string[], count = 5) => {
       const seenMap = readLandingSeen();
       let seen = seenMap[scopeKey] ?? [];
       if (!Array.isArray(seen)) seen = [];
@@ -917,8 +953,11 @@ function BareFloorDoors({
         }
         return out;
       };
-      const hearts = heartQuota ? take(MIRROR_HEART_POOL, heartQuota, []) : [];
-      const picked = [...hearts, ...take(pool, 5 - hearts.length, hearts)];
+      const hearts = heartQuota ? take(MIRROR_HEART_POOL, Math.min(heartQuota, count), []) : [];
+      const picked = [
+        ...hearts,
+        ...take(pool, Math.max(0, count - hearts.length), hearts),
+      ];
       seenMap[scopeKey] = [...seen, ...picked].slice(-LANDING_SEEN_CAP);
       writeLandingSeen(seenMap);
       return picked;
@@ -930,15 +969,76 @@ function BareFloorDoors({
      hand that poured them, so when the pool's own language wakes (the
      lazy dictionary lands, the draw hand is re-carved) the state
      adjusts during render: the doors redraw in the arrived tongue,
-     keeping what already stands (never a duplicate set) */
+     keeping what already stands (never a duplicate set). The state
+     also remembers whether what stands is a CHARGED BLOCK (a scroll
+     field of ~a hundred doors) or the classic five — the label of the
+     hand beneath names it honestly. */
   const [doorState, setDoorState] = useState(() => ({
     draw,
     doors: draw([]),
+    block: false,
   }));
   if (doorState.draw !== draw) {
-    setDoorState({ draw, doors: draw(doorState.doors) });
+    setDoorState({ draw, doors: draw(doorState.doors), block: doorState.block });
   }
   const doors = doorState.doors;
+
+  /* THE VISITOR'S OWN LEVEL — the Depth & exploration setting steers
+     the machine: the charged block pours as many doors as the level
+     asks (a fresh walker thirty, a deep one a hundred and eighty). */
+  const expLevel = useMirror((s) => s.expLevel);
+
+  /* THE CHARGING HAND — press and hold the reload for one second and
+     the hand fills with light (the gold fill crossing the button);
+     when the second completes the hand pours a WHOLE BLOCK of doors
+     (the level's own round — about a hundred whispers) instead of the
+     five-door touch, and the field becomes a scrollable garden. Every
+     charged hold feeds the machine the next fresh block — never the
+     same door twice. A short touch keeps the classic five-door pour. */
+  const [charge, setCharge] = useState(0); /* 0..1 — the fill's own width */
+  const chargeStartRef = useRef(0);
+  const chargeRafRef = useRef(0);
+  const chargedFiredRef = useRef(false);
+  const stopChargeLoop = useCallback(() => {
+    if (chargeRafRef.current) {
+      cancelAnimationFrame(chargeRafRef.current);
+      chargeRafRef.current = 0;
+    }
+  }, []);
+  useEffect(() => stopChargeLoop, [stopChargeLoop]);
+  const beginCharge = useCallback(() => {
+    if (disabled) return;
+    chargedFiredRef.current = false;
+    chargeStartRef.current = performance.now();
+    stopChargeLoop();
+    const step = (now: number) => {
+      const p = Math.min(1, (now - chargeStartRef.current) / CHARGE_MS);
+      setCharge(p);
+      if (p >= 1) {
+        /* THE SECOND COMPLETED — the block pours now, and the release
+           that follows stays silent (the pour already happened) */
+        chargedFiredRef.current = true;
+        const n = chargedBlockSize(expLevel);
+        setDoorState({ draw, doors: draw(doorState.doors, n), block: true });
+        setCharge(0);
+        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+          try { navigator.vibrate(18); } catch { /* no haptics here */ }
+        }
+        return;
+      }
+      chargeRafRef.current = requestAnimationFrame(step);
+    };
+    chargeRafRef.current = requestAnimationFrame(step);
+  }, [disabled, draw, doorState.doors, expLevel, stopChargeLoop]);
+  const endCharge = useCallback(() => {
+    stopChargeLoop();
+    if (!chargedFiredRef.current) {
+      /* released before the second — the classic five-door pour */
+      setDoorState({ draw, doors: draw(doorState.doors, 5), block: false });
+    }
+    chargedFiredRef.current = false;
+    setCharge(0);
+  }, [draw, doorState.doors, stopChargeLoop]);
 
   return (
     <div className="pointer-events-none flex w-[min(600px,94%)] flex-col items-center gap-2">
@@ -989,16 +1089,54 @@ function BareFloorDoors({
       </div>
       {/* THE RELOADING HAND — one touch pours five new doors from the
           pool (never the five just shown); the page's own arrival
-          draws its own five, so every visit begins with fresh doors. */}
+          draws its own five, so every visit begins with fresh doors.
+          THE CHARGED HOLD — held one full second the hand fills with
+          light and pours the level's own block (~a hundred doors) as
+          a scrollable garden; every hold feeds the machine a new
+          round, never the same doors twice. */}
       <button
         type="button"
         data-testid="suggestions-reload"
         disabled={disabled}
-        onClick={() => setDoorState({ draw, doors: draw(doorState.doors) })}
-        className="focus-glow pointer-events-auto inline-flex h-7 items-center gap-1.5 rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--background)_60%,transparent)] px-3 text-[11.5px] uppercase tracking-[0.18em] text-[#a08c5c] transition-colors duration-300 hover:border-[rgba(232,217,176,0.75)] hover:text-[#e8d9b0] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#c3ad79]"
+        onPointerDown={beginCharge}
+        onPointerUp={endCharge}
+        onPointerLeave={endCharge}
+        onPointerCancel={endCharge}
+        onKeyDown={(e) => {
+          if ((e.key === "Enter" || e.key === " ") && !e.repeat) {
+            e.preventDefault();
+            setDoorState({ draw, doors: draw(doorState.doors, 5), block: false });
+          }
+        }}
+        aria-label={doorState.block ? t("Pour another block of doors") : t("Five new doors — hold one second for a whole block")}
+        title={doorState.block ? t("Pour another block of doors") : t("Five new doors — hold one second for a whole block")}
+        className="focus-glow pointer-events-auto relative inline-flex h-7 select-none touch-none items-center gap-1.5 overflow-hidden rounded-full border border-[rgba(232,217,176,0.4)] bg-[color-mix(in_srgb,var(--background)_60%,transparent)] px-3 text-[11.5px] uppercase tracking-[0.18em] text-[#a08c5c] transition-colors duration-300 hover:border-[rgba(232,217,176,0.75)] hover:text-[#e8d9b0] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#c3ad79]"
+        onContextMenu={(e) => e.preventDefault()}
+        style={
+          charge > 0
+            ? {
+                borderColor: "rgba(232,217,176,0.9)",
+                color: "#e8d9b0",
+                boxShadow: "0 0 18px -4px rgba(232,217,176,0.55)",
+              }
+            : undefined
+        }
       >
-        <RefreshCw className="size-3" aria-hidden="true" />
-        {t("Five new doors")}
+        {/* THE FILL — the hold's own light, crossing the button as the
+            second completes; a touch never lights it */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 bg-[linear-gradient(90deg,rgba(232,217,176,0.28),rgba(232,217,176,0.5))]"
+          style={{ width: `${Math.round(charge * 100)}%` }}
+        />
+        <RefreshCw className="relative size-3" aria-hidden="true" />
+        <span className="relative">
+          {charge > 0
+            ? t("Charging…")
+            : doorState.block
+              ? t("Pour another block of doors")
+              : t("Five new doors")}
+        </span>
       </button>
     </div>
   );
@@ -1020,6 +1158,8 @@ function LandingPainting({
       only; older failed turns keep the honest word alone) */
   onRetry?: () => void;
 }) {
+  const t = useT();
+
   /* THE HONEST BRUSH — no silent absence: when the crystallization
      could not paint, the turn says so and offers the hand again. */
   if (!turn.imageUrl && turn.paintFailed) {
@@ -1100,7 +1240,7 @@ function LandingPainting({
             turn.imageTitle ?? "The Mirror's painting"
           )
         }
-        aria-label="Zoom the image"
+        aria-label={t("Zoom the image")}
         className="block w-full cursor-zoom-in"
       >
         <img
@@ -2184,6 +2324,7 @@ function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
 
 function CrownLightHand({ testIdPrefix }: { testIdPrefix: string }) {
   const { resolvedTheme, setTheme } = useTheme();
+  const t = useT();
   const toggle = () => {
     const root = document.documentElement;
     root.classList.add("theme-anim");
@@ -2194,8 +2335,8 @@ function CrownLightHand({ testIdPrefix }: { testIdPrefix: string }) {
     <button
       type="button"
       onClick={toggle}
-      aria-label="Toggle between deep space and daylight laboratory"
-      title="Toggle theme"
+      aria-label={t("Toggle between deep space and daylight laboratory")}
+      title={t("Toggle theme")}
       data-testid={`${testIdPrefix}-light-hand`}
       className="focus-glow group flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
     >
@@ -2635,7 +2776,12 @@ export function BranchCanopy({
   );
   /* THE PLAIN TONGUE — the walk of a visitor who has not signed in
      speaks easy, literal doors: same layout, same families, plainly
-     worded. The signed keeper keeps the full grove's own voice. */
+     worded. THE ONE TONGUE LAW — a visitor who reads the house in any
+     tongue other than English walks the same composed doors: the grove's
+     deep material is written in English, and a mixed wall (half woven
+     English, half translated chrome) would break the house's own law —
+     every word in the chosen tongue, or none. The signed keeper who
+     reads English keeps the full grove's own voice. */
   const anonWalk = useMirror((s) =>
     s.meStatus === "ready" ? !s.me : false
   ); // the quiet check never guesses a stranger's voice
@@ -2644,9 +2790,13 @@ export function BranchCanopy({
     getDictVersion,
     getDictVersion
   );
+  const shownLanguage = useMirror((s) => s.language);
   const shownGrove = useMemo(
-    () => (anonWalk ? swapGroveToEasy(grove, hour, language) : grove),
-    [grove, anonWalk, hour, language, dictVersion]
+    () =>
+      anonWalk || shownLanguage !== "en"
+        ? swapGroveToEasy(grove, hour, shownLanguage)
+        : grove,
+    [grove, anonWalk, shownLanguage, hour, dictVersion]
   );
 
   /* THE FAMILY'S LIGHT — every whisper knows its own family, so every

@@ -809,7 +809,7 @@ export function PxToolsTab() {
             icon={Sigma}
             title="The Formula Loom"
             description="Name anything that exists — receive the formula that runs it."
-            placeholder="Name a phenomenon…"
+            placeholder={t("Name a phenomenon…")}
             buttonLabel="Weave the formula"
             testId="px-tool-formula"
             busyPhrase="the loom is reading the seam of the phenomenon…"
@@ -819,7 +819,7 @@ export function PxToolsTab() {
             icon={Eye}
             title="The Perception Glass"
             description="Look through the perception field of any being — pet, tree, whale, moss."
-            placeholder="Name a being…"
+            placeholder={t("Name a being…")}
             buttonLabel="Look through its eyes"
             chips={pxBeings}
             testId="px-tool-perception"
@@ -830,7 +830,7 @@ export function PxToolsTab() {
             icon={Pyramid}
             title="The Frequency Wheel"
             description="Every monument holds a note. Choose one and hear what it was built to do."
-            placeholder="Name a monument or site…"
+            placeholder={t("Name a monument or site…")}
             buttonLabel="Sound the note"
             chips={pxMonuments}
             testId="px-tool-frequency"
@@ -841,7 +841,7 @@ export function PxToolsTab() {
             icon={Layers}
             title="The Parallel Catalog"
             description="Any product of human hands — and the formulas of its parallel twins."
-            placeholder="Name a product…"
+            placeholder={t("Name a product…")}
             buttonLabel="Open the catalog"
             testId="px-tool-catalog"
             busyPhrase="the catalog is leafing across the parallel lines…"
@@ -917,6 +917,8 @@ function CodexCard({
 }
 
 export function PxCodexTab() {
+  const t = useT();
+
   return (
     <div className="space-y-5">
       <CodexCard
@@ -929,7 +931,7 @@ export function PxCodexTab() {
         ]}
       />
       <CodexCard
-        title="The two reasonings"
+        title={t("The two reasonings")}
         icon={FlaskConical}
         testId="px-codex-reasoning"
         paragraphs={[
@@ -939,7 +941,7 @@ export function PxCodexTab() {
         ]}
       />
       <CodexCard
-        title="How to read the formulas"
+        title={t("How to read the formulas")}
         icon={Sigma}
         testId="px-codex-formulas"
         paragraphs={[

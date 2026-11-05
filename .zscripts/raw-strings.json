@@ -1,0 +1,548 @@
+{
+ "components/mirror/AboutPage.tsx": [
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 254,
+   "text": "in her own words",
+   "kind": "jsx-text"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 308,
+   "text": "aria-label=\"Jump to a chapter\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 308,
+   "text": "label=\"Jump to a chapter\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 329,
+   "text": "title=\"The Rooms of the House\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 429,
+   "text": "alt=\"The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 524,
+   "text": "title=\"A mirror, never a master\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 528,
+   "text": "title=\"Resonance, not identity\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 533,
+   "text": "title=\"The visitor's keeping\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 538,
+   "text": "title=\"The remembrance law\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 592,
+   "text": "title=\"Entering the house\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 599,
+   "text": "title=\"Not professional advice\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 606,
+   "text": "title=\"Accounts & age\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 612,
+   "text": "title=\"Metering & billing\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 620,
+   "text": "title=\"Your kept works\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 627,
+   "text": "title=\"Fair conduct\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 633,
+   "text": "title=\"As it stands\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AboutPage.tsx",
+   "line": 640,
+   "text": "title=\"Privacy & changes\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/EvolveMedChambers.tsx": [
+  {
+   "file": "components/mirror/EvolveMedChambers.tsx",
+   "line": 824,
+   "text": "placeholder=\"Name a protein or disease target…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/EvolveMedChambers.tsx",
+   "line": 835,
+   "text": "placeholder=\"Name the fault…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/EvolveMedChambers.tsx",
+   "line": 846,
+   "text": "placeholder=\"Name a tissue or organ…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/EvolveMedChambers.tsx",
+   "line": 857,
+   "text": "placeholder=\"Name a signal…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/EvolveMedChambers.tsx",
+   "line": 868,
+   "text": "placeholder=\"Name a condition or a behavior…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/EvolveMedChambers.tsx",
+   "line": 879,
+   "text": "placeholder=\"Name a design to screen…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/EvolveMedChambers.tsx",
+   "line": 990,
+   "text": "title=\"How to read the mechanisms\"",
+   "kind": "attr"
+  }
+ ],
+ "components/ui/pagination.tsx": [
+  {
+   "file": "components/ui/pagination.tsx",
+   "line": 114,
+   "text": "More pages",
+   "kind": "jsx-text"
+  },
+  {
+   "file": "components/ui/pagination.tsx",
+   "line": 15,
+   "text": "aria-label=\"pagination\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/ui/pagination.tsx",
+   "line": 15,
+   "text": "label=\"pagination\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/ui/pagination.tsx",
+   "line": 74,
+   "text": "aria-label=\"Go to previous page\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/ui/pagination.tsx",
+   "line": 74,
+   "text": "label=\"Go to previous page\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/ui/pagination.tsx",
+   "line": 91,
+   "text": "aria-label=\"Go to next page\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/ui/pagination.tsx",
+   "line": 91,
+   "text": "label=\"Go to next page\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/ParticleXChambers.tsx": [
+  {
+   "file": "components/mirror/ParticleXChambers.tsx",
+   "line": 812,
+   "text": "placeholder=\"Name a phenomenon…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/ParticleXChambers.tsx",
+   "line": 822,
+   "text": "placeholder=\"Name a being…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/ParticleXChambers.tsx",
+   "line": 833,
+   "text": "placeholder=\"Name a monument or site…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/ParticleXChambers.tsx",
+   "line": 844,
+   "text": "placeholder=\"Name a product…\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/ParticleXChambers.tsx",
+   "line": 932,
+   "text": "title=\"The two reasonings\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/ParticleXChambers.tsx",
+   "line": 942,
+   "text": "title=\"How to read the formulas\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/BranchCanopy.tsx": [
+  {
+   "file": "components/mirror/BranchCanopy.tsx",
+   "line": 1103,
+   "text": "aria-label=\"Zoom the image\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/BranchCanopy.tsx",
+   "line": 1103,
+   "text": "label=\"Zoom the image\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/BranchCanopy.tsx",
+   "line": 2197,
+   "text": "aria-label=\"Toggle between deep space and daylight laboratory\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/BranchCanopy.tsx",
+   "line": 2197,
+   "text": "label=\"Toggle between deep space and daylight laboratory\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/BranchCanopy.tsx",
+   "line": 2198,
+   "text": "title=\"Toggle theme\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/LightCodesView.tsx": [
+  {
+   "file": "components/mirror/LightCodesView.tsx",
+   "line": 200,
+   "text": "aria-label=\"Seek within the transmission\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/LightCodesView.tsx",
+   "line": 200,
+   "text": "label=\"Seek within the transmission\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/LightCodesView.tsx",
+   "line": 2333,
+   "text": "label=\"Time feel\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/LightCodesView.tsx",
+   "line": 2345,
+   "text": "label=\"Vocal language\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/LightCodesView.tsx",
+   "line": 2351,
+   "text": "label=\"Lyrics mode\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/PassageModal.tsx": [
+  {
+   "file": "components/mirror/PassageModal.tsx",
+   "line": 131,
+   "text": "= 20 && reset.length",
+   "kind": "jsx-text"
+  },
+  {
+   "file": "components/mirror/PassageModal.tsx",
+   "line": 136,
+   "text": "= 20 && verify.length",
+   "kind": "jsx-text"
+  },
+  {
+   "file": "components/mirror/PassageModal.tsx",
+   "line": 735,
+   "text": "placeholder=\"you@somewhere.earth\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/PassageModal.tsx",
+   "line": 943,
+   "text": "placeholder=\"you@somewhere.earth\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/PassageModal.tsx",
+   "line": 1104,
+   "text": "placeholder=\"you@somewhere.earth\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/dreambook/ManuscriptEditor.tsx": [
+  {
+   "file": "components/mirror/dreambook/ManuscriptEditor.tsx",
+   "line": 163,
+   "text": "aria-label=\"Writing tools\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/dreambook/ManuscriptEditor.tsx",
+   "line": 163,
+   "text": "label=\"Writing tools\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/dreambook/ManuscriptEditor.tsx",
+   "line": 204,
+   "text": "label=\"Bulleted list\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/dreambook/ManuscriptEditor.tsx",
+   "line": 211,
+   "text": "label=\"Numbered list\"",
+   "kind": "attr"
+  }
+ ],
+ "components/landing/LandingPage.tsx": [
+  {
+   "file": "components/landing/LandingPage.tsx",
+   "line": 116,
+   "text": "aria-label=\"Toggle between deep space and daylight laboratory\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/landing/LandingPage.tsx",
+   "line": 116,
+   "text": "label=\"Toggle between deep space and daylight laboratory\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/landing/LandingPage.tsx",
+   "line": 117,
+   "text": "title=\"Toggle theme\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/AccountModal.tsx": [
+  {
+   "file": "components/mirror/AccountModal.tsx",
+   "line": 682,
+   "text": "POST /api/v1/chat",
+   "kind": "jsx-text"
+  },
+  {
+   "file": "components/mirror/AccountModal.tsx",
+   "line": 702,
+   "text": "aria-label=\"Copy API key\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/AccountModal.tsx",
+   "line": 702,
+   "text": "label=\"Copy API key\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/ThemeToggle.tsx": [
+  {
+   "file": "components/mirror/ThemeToggle.tsx",
+   "line": 20,
+   "text": "aria-label=\"Toggle between deep space and daylight laboratory\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/ThemeToggle.tsx",
+   "line": 20,
+   "text": "label=\"Toggle between deep space and daylight laboratory\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/mirror/ThemeToggle.tsx",
+   "line": 21,
+   "text": "title=\"Toggle theme\"",
+   "kind": "attr"
+  }
+ ],
+ "components/landing/GuideShowcase.tsx": [
+  {
+   "file": "components/landing/GuideShowcase.tsx",
+   "line": 96,
+   "text": "aria-roledescription=\"carousel\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/landing/GuideShowcase.tsx",
+   "line": 116,
+   "text": "aria-roledescription=\"slide\"",
+   "kind": "attr"
+  }
+ ],
+ "components/landing/LandingSlides.tsx": [
+  {
+   "file": "components/landing/LandingSlides.tsx",
+   "line": 104,
+   "text": "aria-roledescription=\"carousel\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/landing/LandingSlides.tsx",
+   "line": 123,
+   "text": "aria-roledescription=\"slide\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/DnaTimeline.tsx": [
+  {
+   "file": "components/mirror/DnaTimeline.tsx",
+   "line": 234,
+   "text": "now - s.at",
+   "kind": "jsx-text"
+  },
+  {
+   "file": "components/mirror/DnaTimeline.tsx",
+   "line": 235,
+   "text": "week && now - s.at",
+   "kind": "jsx-text"
+  }
+ ],
+ "components/mirror/HyperXPanel.tsx": [
+  {
+   "file": "components/mirror/HyperXPanel.tsx",
+   "line": 901,
+   "text": "full 8",
+   "kind": "jsx-text"
+  },
+  {
+   "file": "components/mirror/HyperXPanel.tsx",
+   "line": 827,
+   "text": "title=\"The deep research press — choose the treatise's length (3–8 pages); it weaves in the Works in Motion hall and rests in your Library\"",
+   "kind": "attr"
+  }
+ ],
+ "components/ui/breadcrumb.tsx": [
+  {
+   "file": "components/ui/breadcrumb.tsx",
+   "line": 8,
+   "text": "aria-label=\"breadcrumb\"",
+   "kind": "attr"
+  },
+  {
+   "file": "components/ui/breadcrumb.tsx",
+   "line": 8,
+   "text": "label=\"breadcrumb\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/DossierModal.tsx": [
+  {
+   "file": "components/mirror/DossierModal.tsx",
+   "line": 164,
+   "text": "3D – 5D thresholds",
+   "kind": "jsx-text"
+  }
+ ],
+ "components/mirror/EvolveMed.tsx": [
+  {
+   "file": "components/mirror/EvolveMed.tsx",
+   "line": 433,
+   "text": "placeholder=\"Choose a vector window\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/ParticleX.tsx": [
+  {
+   "file": "components/mirror/ParticleX.tsx",
+   "line": 300,
+   "text": "placeholder=\"Choose a window\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/SuggestionTree.tsx": [
+  {
+   "file": "components/mirror/SuggestionTree.tsx",
+   "line": 1407,
+   "text": "= localTop && b.top",
+   "kind": "jsx-text"
+  }
+ ],
+ "components/mirror/VisualizationCard.tsx": [
+  {
+   "file": "components/mirror/VisualizationCard.tsx",
+   "line": 383,
+   "text": "aria-roledescription=\"carousel\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/WelcomeTour.tsx": [
+  {
+   "file": "components/mirror/WelcomeTour.tsx",
+   "line": 497,
+   "text": "alt=\"The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall\"",
+   "kind": "attr"
+  }
+ ],
+ "components/mirror/admin/DepositDesk.tsx": [
+  {
+   "file": "components/mirror/admin/DepositDesk.tsx",
+   "line": 148,
+   "text": "null)) as Record",
+   "kind": "jsx-text"
+  }
+ ],
+ "components/ui/sidebar.tsx": [
+  {
+   "file": "components/ui/sidebar.tsx",
+   "line": 200,
+   "text": "Displays the mobile sidebar.",
+   "kind": "jsx-text"
+  }
+ ]
+}

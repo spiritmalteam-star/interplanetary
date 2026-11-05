@@ -421,6 +421,7 @@ function EmWindowPills({ centered = false }: { centered?: boolean }) {
   const emVector = useMirror((s) => s.emVector);
   const setEmVector = useMirror((s) => s.setEmVector);
   const pinEmNotes = useMirror((s) => s.pinEmNotes);
+  const t = useT();
   return (
     <WindowSelect
       items={emVectors.map((vector) => ({
@@ -430,7 +431,7 @@ function EmWindowPills({ centered = false }: { centered?: boolean }) {
         icon: EM_VECTOR_ICONS[vector.id] ?? Activity,
       }))}
       activeId={emVector}
-      placeholder="Choose a vector window"
+      placeholder={t("Choose a vector window")}
       onSelect={(id) => {
         /* route the directive AND pin the vector's
            notes into the conversation — both, in one touch */

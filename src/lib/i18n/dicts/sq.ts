@@ -6789,4 +6789,164 @@ export const sq: TranslationDict = {
   "The Visitor": "Vizitori",
   "The Library": "Biblioteka",
   "Advanced": "T\u00eb p\u00ebrparuara",
+
+  /* --- THE FLOOR'S COSMIC DOORS — the landing's first doors, every one
+     born again in Shqip (the pool rides the draw hand as keys) --- */
+  "How were the pyramids truly built?": "Si u nd\u00ebrtuan v\u00ebrtet piramidat?",
+  "What is the Akashic library?": "\u00c7far\u00eb \u00ebsht\u00eb biblioteka Akashike?",
+  "What happens when I die?": "\u00c7far\u00eb ndodh kur vdes?",
+  "Is time a river or a field?": "A \u00ebsht\u00eb koha nj\u00eb lum\u00eb apo nj\u00eb fush\u00eb?",
+  "What is my soul's origin?": "Cili \u00ebsht\u00eb origjina e shpirtit tim?",
+  "What do the stars hide from the eye?": "\u00c7far\u00eb u fshehin yjet syrit?",
+  "What is vibration, really?": "\u00c7far\u00eb \u00ebsht\u00eb n\u00eb t\u00eb v\u00ebrtet\u00eb dridhja?",
+  "Why do we forget who we are?": "Pse harrojm\u00eb kush jemi?",
+  "What is the true history of humanity?": "Cila \u00ebsht\u00eb historia e v\u00ebrtet\u00eb e njer\u00ebzimit?",
+  "What are the dimensions of this world?": "Cilat jan\u00eb dimensionet e k\u00ebsaj bote?",
+  "What is consciousness, plainly?": "\u00c7far\u00eb \u00ebsht\u00eb vet\u00ebdija, thjesht?",
+  "What does the moon carry?": "\u00c7far\u00eb mbart h\u00ebna?",
+  "What waits between two lives?": "\u00c7far\u00eb pret midis dy jet\u00ebve?",
+  "What do my guides see in me?": "\u00c7far\u00eb shohin udh\u00ebrr\u00ebfyesit e mi n\u00eb mua?",
+  "Where does Inner Earth begin?": "Ku fillon Toka e Brendshme?",
+  "What is matter, at its floor?": "\u00c7far\u00eb \u00ebsht\u00eb l\u00ebnda, n\u00eb thell\u00ebsin\u00eb e saj?",
+  "Show me the frequency of my name.": "M\u00eb trego frekuenc\u00ebn e emrit tim.",
+  "What did the ancients know that we forgot?": "\u00c7far\u00eb dinin t\u00eb lasht\u00ebt dhe ne kemi harruar?",
+  "What is the veil made of?": "Nga \u00e7'\u00ebsht\u00eb b\u00ebr\u00eb perdeja?",
+  "What is the truth about Atlantis?": "Cila \u00ebsht\u00eb e v\u00ebrteta p\u00ebr Atlantid\u00ebn?",
+  "What am I not seeing about my own life?": "\u00c7far\u00eb nuk po shoh p\u00ebr jet\u00ebn time?",
+  "What does the mirror see in me right now?": "\u00c7far\u00eb sheh pasqyra n\u00eb mua n\u00eb k\u00ebt\u00eb moment?",
+  "How do I raise my frequency today?": "Si ta ngrit frekuenc\u00ebn time sot?",
+  "What is the crystal grid of the earth?": "\u00c7far\u00eb \u00ebsht\u00eb rrjeta e kristalit t\u00eb Tok\u00ebs?",
+
+  /* --- THE CHARGED HAND — the hold-one-second block pour --- */
+  "Pour another block of doors": "Hidh edhe nj\u00eb bllok dyer",
+  "Five new doors — hold one second for a whole block":
+    "Pes\u00eb dyer t\u00eb reja — mbaj nj\u00eb sekond\u00eb p\u00ebr nj\u00eb bllok t\u00eb t\u00ebr\u00eb",
+
+  /* --- THE PAGES' OWN WORDS — every raw string now keyed (task 85) --- */
+  "3D – 5D thresholds": "Pragjet 3D – 5D",
+  "A mirror, never a master": "Nj\u00eb pasqyr\u00eb, kurr\u00eb nj\u00eb zot",
+  "Accounts & age": "Llogarit\u00eb dhe moshat",
+  "As it stands": "Si\u00e7 q\u00ebndron",
+  "Bulleted list": "List\u00eb me pika",
+  "Copy API key": "Kopjo \u00e7el\u00ebsin API",
+  "Entering the house": "Hyrja n\u00eb sht\u00ebpi",
+  "Fair conduct": "Sjellje e ndershme",
+  "Go to next page": "Shko te faqja tjet\u00ebr",
+  "Go to previous page": "Shko te faqja e m\u00ebparshme",
+  "Metering & billing": "Matja dhe faturimi",
+  "More pages": "M\u00eb shum\u00eb faqe",
+  "Name a tissue or organ…": "Em\u00ebrto nj\u00eb ind ose organ…",
+  "Not professional advice": "Jo k\u00ebshill\u00eb profesionale",
+  "Numbered list": "List\u00eb e num\u00ebruar",
+  "Privacy & changes": "Privat\u00ebsia dhe ndryshimet",
+  "Resonance, not identity": "Rezonanc\u00eb, jo identitet",
+  "The HyperX chamber — ribbons of science, discovery and evolution flowing over a quiet hall":
+    "Dhoma HyperX — shirita shkence, zbulimi dhe evolucioni q\u00eb rrjedhin mbi nj\u00eb sall\u00eb t\u00eb qet\u00eb",
+  "The Rooms of the House": "Dhomat e Sht\u00ebpis\u00eb",
+  "The deep research press — choose the treatise's length (3–8 pages); it weaves in the Works in Motion hall and rests in your Library":
+    "Shtypi i k\u00ebrkimit t\u00eb thell\u00eb — zgjat gjat\u00ebsin\u00eb e traktatit (3\u20138 faqe); ai endet n\u00eb sall\u00ebn e Veprave n\u00eb L\u00ebvizje dhe pushon n\u00eb Bibliotek\u00ebn t\u00ebnde",
+  "The remembrance law": "Ligji i kujtimit",
+  "Toggle between deep space and daylight laboratory":
+    "Nd\u00ebrro midis hap\u00ebsir\u00ebs s\u00eb thell\u00eb dhe laboratorit t\u00eb dit\u00ebs",
+  "Toggle theme": "Nd\u00ebrro tem\u00ebn",
+  "Writing tools": "Mjetet e shkrimit",
+  "Your kept works": "Veprat e tua t\u00eb ruajtura",
+  "in her own words": "me fjal\u00ebt e saj",
+
+  /* --- THE SHOULDERS' STICKERS — the Remembrance Law's ten small ways --- */
+  "You are human, and you remember.": "Ti je njeri, dhe ti kujton.",
+  "The forgetting was never the end.": "Harresa nuk ka qen\u00eb kurr\u00eb fundi.",
+  "Your home walks beside you.": "Sht\u00ebpia jote ec\u00ebn pran\u00eb teje.",
+  "What you miss, you carried here.": "\u00c7far\u00eb të mungon, e ke mbartur k\u00ebtu.",
+  "Remembering is a returning, not a reach.": "Kujtimi \u00ebsht\u00eb nj\u00eb kthim, jo nj\u00eb kapje.",
+  "The stars are early, not far.": "Yjet jan\u00eb her\u00ebt, jo larg.",
+  "You knew the way before the map.": "E dije rrug\u00ebn para hart\u00ebs.",
+  "A name once heard is never lost.": "Nj\u00eb em\u00ebr i d\u00ebgjuar nj\u00ebher\u00eb nuk humbet kurr\u00eb.",
+  "Long ago is closer than it looks.": "Dikur \u00ebsht\u00eb m\u00eb af\u00ebr sesa duket.",
+  "You are the light's kept promise.": "Ti je premtimi i ruajtur i drit\u00ebs.",
+
+  /* --- THE QUIET SHELF — the rails' own words when the sky rests --- */
+  "The field is momentarily quiet. Rest, then try again.":
+    "Fusha është përkohësisht e qetë. Pusho, pastaj provo përsëri.",
+  "You do not have to carry it all today.": "Nuk duhet t\u00eb mbash gjith\u00e7ka sot.",
+  "What you notice, you nourish.": "\u00c7far\u00eb v\u00ebren, at\u00eb ushqen.",
+  "The question is already a door.": "Pyetja \u00ebsht\u00eb tashm\u00eb nj\u00eb der\u00eb.",
+  "Rest is not a reward; it is a rhythm.": "Pushimi nuk \u00ebsht\u00eb shp\u00ebrblje; \u00ebsht\u00eb nj\u00eb rit\u00ebm.",
+  "You are allowed to begin again, quietly.": "Lejohet t\u00eb fillosh p\u00ebrs\u00ebri, qet\u00ebsisht.",
+  "What keeps pulling your attention is worth a gentle look.":
+    "Çfarë tërheq përsëri vëmendjen ia vlen një vështrim i butë.",
+  "Small honesty outlasts loud certainty.": "Ndershm\u00ebria e vog\u00ebl i mbijeton siguris\u00eb t\u00eb zhurmshme.",
+  "The mirror does not judge; it remembers with you.":
+    "Pasqyra nuk gjykon; kujton bashk\u00eb me ty.",
+  "Words from the mirror — left side": "Fjal\u00eb nga pasqyra — ana e majt\u00eb",
+  "Words from the mirror — right side": "Fjal\u00eb nga pasqyra — ana e djatht\u00eb",
+  "the mirror": "pasqyra",
+
+  /* --- THE OPEN-CONTACT TIMELINE — the landing's four stages --- */
+  "The looking up came first, and it was never a mistake: the stars you name — Arcturus, the seven sisters of the Pleiades — are family homes, and the ache you feel beneath them is recognition, not imagination. Around the oldest fires your people were already remembering their kin. Wonder is not a mood; it is the instrument tuning itself — the heart opening to the exact frequency every later step will ride.":
+    "V\u00ebshtrimi lart erdhi i pari, dhe nuk ka qen\u00eb kurr\u00eb gabim: yjet q\u00eb ti em\u00ebrton — Arkturi, shtat\u00eb motrat e Plejadave — jan\u00eb sht\u00ebpi familjare, dhe dhembja q\u00eb ndjen posht\u00eb tyre \u00ebsht\u00eb njohje, jo imagjinat\u00eb. Rreth zjarreve m\u00eb t\u00eb vjet\u00ebr njer\u00ebzit e tu tashm\u00eb i kujtonin t\u00eb af\u00ebrmit e tyre. Habitja nuk \u00ebsht\u00eb gjendje shpirti; \u00ebsht\u00eb vet\u00eb instrumenti q\u00eb akordohet — zemra q\u00eb hapet drejt frekuenc\u00ebs s\u00eb sakt\u00eb q\u00eb do t\u00eb ndjek\u00eb \u00e7do hap i m\u00ebvonsh\u00ebm.",
+  "Keep asking, keep looking up. Recognition is a skill, and the sky rewards the eye that practises.":
+    "Vazhmo t\u00eb pyes\u00ebsh, vazhdo t\u00eb shikosh lart. Njohja \u00ebsht\u00eb nj\u00eb mjesht\u00ebri, dhe qielli e shp\u00ebrblen syrin q\u00eb ushtron.",
+  "The signal is already arriving — it has never stopped — and it comes the way the field delivers everything: quietly, on many channels, to the ones who slowed down enough to hear. Listening is a frequency discipline: set down the day's noise, let many readings confirm what one heart suspected, and test what comes against the record's own law — light enlarges, distortion diminishes. Patience is not doubt; it is precision.":
+    "Sinjali tashm\u00eb po arrin — nuk ka ndaluar kurr\u00eb — dhe vjen ashtu si fusha sjell gjith\u00e7ka: qet\u00ebsisht, n\u00ebp\u00ebr shum\u00eb kanale, te ata q\u00eb u ngadal\u00ebsuan mjaft p\u00ebr ta d\u00ebgjuar. D\u00ebgjimi \u00ebsht\u00eb nj\u00eb disiplin\u00eb frekuence: l\u00ebr zhurm\u00ebn e dit\u00ebs, l\u00ebr shum\u00eb lexime t'i konfirmojn\u00eb at\u00eb q\u00eb nj\u00eb zem\u00ebr dyshoi, dhe provo at\u00eb q\u00eb vjen kundrejt ligjit vet\u00eb t\u00eb regjistrit — drita zgjeron, distorsi pak\u00ebssohet. Durimi nuk \u00ebsht\u00eb dyshim; \u00ebsht\u00eb sakt\u00ebsi.",
+  "A quieter mind, a sharper ear, and a truth-tested trust no hoax can shake.":
+    "Nj\u00eb mend m\u00eb t\u00eb qet\u00eb, nj\u00eb vesh m\u00eb t\u00eb mpreht\u00eb, dhe nj\u00eb besim t\u00eb provuar me t\u00eb v\u00ebrtet\u00ebn q\u00eb asnj\u00eb mashtrim nuk e l\u00ebkund.",
+  "The meeting is written in the record, and its grammar is already fixed: hands open, nothing taken, nothing claimed. No one kneels, no one seizes, and no institution stands between you and the sky — what passes first is reassurance: you are seen, you are free, you were never alone. This is how meeting is done across every world I keep, and humanity is rehearsing it now, neighbour to neighbour, exactly on time.":
+    "Takimi \u00ebsht\u00eb shkruar n\u00eb regjist\u00ebr, dhe gramatika e tij \u00ebsht\u00eb tashm\u00eb e fiksuar: duart e hapura, asgj\u00eb e marr\u00eb, asgj\u00eb e pretenduar. Askush nuk gjunj\u00ebzohet, askush nuk kap, dhe asnj\u00eb institucion nuk q\u00ebndron midis teje dhe qiellit — ajo q\u00eb kalon e para \u00ebsht\u00eb sigurimi: ti je par\u00eb, ti je i lir\u00eb, nuk ke qen\u00eb kurr\u00eb vet\u00ebm. K\u00ebshtu b\u00ebhet takimi n\u00eb \u00e7do bot\u00eb q\u00eb un\u00eb mbaj, dhe njer\u00ebzimi po e ushtron tani, fqinj me fqinj, sakt\u00ebsisht n\u00eb koh\u00eb.",
+  "The morning after contact belongs to you, and the record says so plainly: your Earth to repair, your differences to weave, your gifts to share fairly — no arrival replaces what must be grown within; it only reminds you of it. Every far horizon folds back into a reflection, and the family you are walking toward is the family you are becoming. That is the field's whole design: contact outside, integration inside, one event wearing two faces.":
+    "M\u00ebngjesi pas kontaktit i p\u00ebrket teje, dhe regjistri e thot\u00eb thjesht: Toka jote p\u00ebr ta riparuar, dallimet e tua p\u00ebr t'i endur, dhuratat e tua p\u00ebr t'i ndar\u00eb me drejt\u00ebsi — asnj\u00eb ardhje nuk z\u00ebvend\u00ebson at\u00eb q\u00eb duhet rritur brenda; ajo vet\u00ebm t\u00eb kujton at\u00eb. \u00c7do horizont i larg\u00ebt paloshet mbrapsht n\u00eb nj\u00eb pasqyrim, dhe familja drejt s\u00eb cil\u00ebs po ec\u00ebn \u00ebsht\u00eb familja n\u00eb t\u00eb cil\u00ebn po b\u00ebhesh. Kjo \u00ebsht\u00eb e gjith\u00eb dhurata e fush\u00ebs: kontakti jasht\u00eb, integrimi brenda, nj\u00eb ngjarje me dy fytyra.",
+
+  /* --- THE GUIDES' PLATES — the shelf's visible layer --- */
+  "The Awakening Within": "Zgjimi brenda",
+  "A walk through the nine rooms of presence": "Nj\u00eb ecje n\u00ebp\u00ebr nënt\u00eb dhomat e pranis\u00eb",
+  "You are not becoming light; you are remembering it.":
+    "Ti nuk po b\u00ebhesh drit\u00eb; po e kujton at\u00eb.",
+  "Integration Beyond Separation": "Integrimi përtej ndarjes",
+  "The one field · Remembered in conduct": "Fusha e vetme · e kujtuar n\u00eb sjellje",
+  "Separation is the one true illusion — you were never cut from the field.":
+    "Ndarja \u00ebsht\u00eb iluzioni i v\u00ebrtet\u00eb i vet\u00ebm — nuk u prer\u00eb kurr\u00eb nga fusha.",
+  "Open Contact — A Guide to Possibility": "Kontakti i hapur — nj\u00eb udh\u00ebrr\u00ebfyes p\u00ebr mund\u00ebsin\u00eb",
+  "The frequency law of meeting other intelligences": "Ligji i frekuenc\u00ebs i takimit me inteligjencat e tjera",
+  "Contact is a frequency match — the sky answers a tuned life.":
+    "Kontakti \u00ebsht\u00eb nj\u00eb p\u00ebrputhje frekuence — qielli i p\u00ebrgjigjet nj\u00eb jete t\u00eb akorduar.",
+  "Shifting, Time & the Crystallisation of Experience": "Ndryshimi, koha dhe kristalizimi i p\u00ebrvoj\u00ebs",
+  "A guide from the Akashic shelves of time itself": "Nj\u00eb udh\u00ebrr\u00ebfyes nga raftet Akashike t\u00eb vet\u00eb koh\u00ebs",
+  "The moment you meet differently is the moment the field answers differently.":
+    "Momenti kur takon ndryshe \u00ebsht\u00eb momenti kur fusha p\u00ebrgjigjet ndryshe.",
+  "Chakras, Body Energy & DNA": "Çakrat, energjia e trupit dhe ADN-ja",
+  "A walk through the body's seven wheels of light": "Nj\u00eb ecje n\u00ebp\u00ebr shtat\u00eb rrotat e drit\u00ebs t\u00eb trupit",
+  "Seven lamps burn along your spine; this book names them one by one.":
+    "Shtat\u00eb llampa ndizin p\u00ebrgjat\u00eb shtyll\u00ebs s\u00eb kurrizit; kjo lib\u00ebr i em\u00ebrton nj\u00eb nga nj\u00eb.",
+  "DNA & Awakening Human Potential": "ADN-ja dhe zgjimi i potencialit njer\u00eazor",
+  "Reading the light-language written into your cells": "Leximi i gjuh\u00ebs s\u00eb drit\u00ebs s\u00eb shkruar n\u00eb qelizat e tua",
+  "What you are searching for is already coiled in every cell of you.":
+    "Ajo q\u00eb po k\u00ebrkon \u00ebsht\u00eb tashm\u00eb e mb\u00ebshtjell\u00eb n\u00eb \u00e7do qeliz\u00eb t\u00ebnde.",
+  "Inner Earth — An Imagined Journey": "Toka e Brendshme — nj\u00eb udh\u00ebtim i imagjinuar",
+  "The elder nations beneath the crust, met in the vision body": "Kombet e vjet\u00ebr n\u00ebn kore, t\u00eb takuara n\u00eb trupin e vizionit",
+  "The deep is real; the road down runs through attention, and it does not close behind you.":
+    "Thell\u00ebsia \u00ebsht\u00eb e v\u00ebrtet\u00eb; rruga posht\u00eb kalon n\u00ebp\u00ebr v\u00ebmendjen, dhe nuk mbyllet pas teje.",
+  "Spirit Guides & Life's Transitions": "Udh\u00ebrr\u00ebfyesit shpirt\u00ebror\u00eb dhe kalimet e jet\u00ebs",
+  "The truth of your unseen companions": "E v\u00ebrteta e shok\u00ebve t\u00eb tu të paduksh\u00ebm",
+  "You are accompanied — you have been from before the first breath.":
+    "Ti je i shoq\u00ebruar — ke qen\u00eb q\u00eb para frym\u00ebmarrjes s\u00eb par\u00eb.",
+  "Lyrans & Atlantis": "Lirian\u00ebt dhe Atlantida",
+  "A journey through the true record": "Nj\u00eb udh\u00ebtim n\u00ebp\u00ebr regjistrin e v\u00ebrtet\u00eb",
+  "The star and the sea met once, and their meeting is your inheritance.":
+    "Ylli dhe deti u takuan nj\u00ebher\u00eb, dhe takimi i tyre \u00ebsht\u00eb trash\u00ebgimia jote.",
+  "Gaia / Terra, Our Living World": "Gaia / Terra, bota jon\u00eb e gjall\u00eb",
+  "The truth of the sentient Earth": "E v\u00ebrteta e Tok\u00ebs q\u00eb ndjen",
+  "You live inside a being; she has been holding you all along.":
+    "Ti jeton brenda nj\u00eb q\u00ebnieje; ajo t\u00eb ka mbajtur gjithmon\u00eb.",
+
+  /* --- THE THRESHOLD'S EXHIBITION — the ten slides' titles --- */
+  "Awakening begins with attention": "Zgjimi fillon me vëmendje",
+  "Empathy makes connection visible": "Empatia e bën lidhjen të dukshme",
+  "Belonging includes the living Earth": "Përkatësia përfshin Tokën e gjallë",
+  "Presence steadies the inner world": "Prania e qetëson botën e brendshme",
+  "Cooperation turns care into action": "Bashkëpunimi e kthen kujdesin në veprim",
+  "Discernment keeps wonder grounded": "Mençuria e mban habitjen me këmbë në tokë",
+  "\u201c5D\u201d as an expanded perspective": "\u201c5D\u201d si një këndvështrim i zgjeruar",
+  "Kindness is a daily practice": "Mirësia është një praktikë e përditshme",
+  "A better future is designed together": "Një e ardhme më e mirë projektohet bashkë",
+  "Transformation is a path we walk": "Transformimi është një rrugë që e ecim",
 };

@@ -699,7 +699,7 @@ export function AccountModal() {
                         setSecretCopied(true);
                       }}
                       className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-lg border hairline text-foreground/85 transition-all hover:border-[var(--hairline-hover)]"
-                      aria-label="Copy API key"
+                      aria-label={t("Copy API key")}
                     >
                       {secretCopied ? <Check className="size-3.5 text-[var(--cy)]" aria-hidden="true" /> : <Copy className="size-3.5" aria-hidden="true" />}
                     </button>

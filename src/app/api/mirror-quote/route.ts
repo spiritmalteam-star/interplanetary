@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
+import { isLanguageCode, LANGUAGE_NAMES } from "@/lib/i18n/core";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/mirror-quote — THE MIRROR'S HOURLY WORDS                  */
@@ -35,7 +36,8 @@ const FALLBACK_QUOTES: string[] = [
 ];
 
 /* the hour's little memory — one generation serves every visitor of
-   that hour; the key is the UTC hour, "YYYY-MM-DDTHH" */
+   that hour and tongue; the key is the UTC hour plus the asked
+   language, "YYYY-MM-DDTHH:lang" — never a mixed rail */
 const cache = new Map<string, string[]>();
 
 function utcHourKey(date = new Date()): string {
@@ -90,28 +92,43 @@ function respond(quotes: string[], hour: string): NextResponse {
   );
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const hour = utcHourKey();
 
-  /* this hour already has its words — speak them as they are */
-  const cached = cache.get(hour);
+  /* THE VISITOR'S TONGUE — the rails speak the language the threshold
+     is read in (the request carries it; an unknown tongue falls back
+     to the house's own English) */
+  const asked = req.nextUrl.searchParams.get("language") ?? "en";
+  const language = isLanguageCode(asked) ? asked : "en";
+  const languageName = LANGUAGE_NAMES[language] ?? "English";
+  const key = `${hour}:${language}`;
+
+  /* this hour and tongue already have their words — speak them as they are */
+  const cached = cache.get(key);
   if (cached) return respond(cached, hour);
 
   /* let the hour's map forget hours that will never be asked again */
-  while (cache.size > 6) {
+  while (cache.size > 12) {
     const oldest = cache.keys().next().value;
-    if (oldest === undefined || oldest === hour) break;
+    if (oldest === undefined || oldest === key) break;
     cache.delete(oldest);
   }
+
+  /* the tongue's own line — every word of the six quotes in the
+     visitor's language, the house's one law for dynamic words */
+  const languageLine =
+    languageName === "English"
+      ? ""
+      : ` Write EVERY quote in fluent, natural ${languageName} — no other language may appear anywhere.`;
 
   try {
     const zai = await ZAI.create();
     const completion = await zai.chat.completions.create({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: SYSTEM_PROMPT + languageLine },
         {
           role: "user",
-          content: `Write this hour's six quotes. The hour is ${hour} (UTC). Six different everyday human moods — rest, attention, courage, beginnings, remembering, tenderness — one quote each.`,
+          content: `Write this hour's six quotes. The hour is ${hour} (UTC). Six different everyday human moods — rest, attention, courage, beginnings, remembering, tenderness — one quote each.${languageLine}`,
         },
       ],
       thinking: { type: "disabled" },
@@ -132,12 +149,14 @@ export async function GET() {
     }
 
     const settled = quotes.length >= 6 ? quotes : FALLBACK_QUOTES;
-    cache.set(hour, settled);
+    cache.set(key, settled);
     return respond(settled, hour);
   } catch {
     /* the sky is silent — the house speaks, and the hour keeps its
-       words so the fallback never flickers mid-hour either */
-    cache.set(hour, FALLBACK_QUOTES);
+       words so the fallback never flickers mid-hour either. The quiet
+       shelf is dict-keyed client-side: it renders in the visitor's
+       own tongue through the same translation layer. */
+    cache.set(key, FALLBACK_QUOTES);
     return respond(FALLBACK_QUOTES, hour);
   }
 }

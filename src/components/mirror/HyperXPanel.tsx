@@ -824,7 +824,7 @@ export function HyperXAnswer({
               aria-expanded={leverOpen}
               aria-haspopup="dialog"
               aria-label={t("Press the deep research PDF — choose its length, 3 to 8 pages")}
-              title="The deep research press — choose the treatise's length (3–8 pages); it weaves in the Works in Motion hall and rests in your Library"
+              title={t("The deep research press — choose the treatise's length (3–8 pages); it weaves in the Works in Motion hall and rests in your Library")}
               data-testid={`${testId}-pdf`}
               className={cn(
                 "hx-pdf focus-glow inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] transition-all duration-300",

@@ -103,6 +103,7 @@ const SIGILS = {
    mismatch, exactly like the crown's own hand. */
 function BannerLightHand() {
   const { resolvedTheme, setTheme } = useTheme();
+  const t = useT();
   const toggle = () => {
     const root = document.documentElement;
     root.classList.add("theme-anim");
@@ -113,8 +114,8 @@ function BannerLightHand() {
     <button
       type="button"
       onClick={toggle}
-      aria-label="Toggle between deep space and daylight laboratory"
-      title="Toggle theme"
+      aria-label={t("Toggle between deep space and daylight laboratory")}
+      title={t("Toggle theme")}
       data-testid="banner-light-hand"
       className="focus-glow group flex size-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white/90 backdrop-blur-sm transition-all duration-300 hover:border-white/60 hover:text-white"
     >

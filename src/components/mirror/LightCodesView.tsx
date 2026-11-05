@@ -193,11 +193,12 @@ function HonestTimeline({
   progress: number;
   onSeek: (ratio: number) => void;
 }) {
+  const t = useT();
   return (
     <div
       className="flex h-12 items-center"
       role="slider"
-      aria-label="Seek within the transmission"
+      aria-label={t("Seek within the transmission")}
       aria-valuenow={Math.round(progress * 100)}
       aria-valuemin={0}
       aria-valuemax={100}
@@ -2330,7 +2331,7 @@ export function LightCodesView() {
                                         </div>
                                         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                                           <ShapeSelect
-                                            label="Time feel"
+                                            label={t("Time feel")}
                                             options={LC_SHAPE.timeFeel}
                                             value={lcShape.timeFeel}
                                             onChange={(v) => setLcShape({ timeFeel: v })}
@@ -2342,13 +2343,13 @@ export function LightCodesView() {
                                             onChange={(v) => setLcShape({ voice: v })}
                                           />
                                           <ShapeSelect
-                                            label="Vocal language"
+                                            label={t("Vocal language")}
                                             options={LC_SHAPE.vocalLanguage}
                                             value={lcShape.vocalLanguage}
                                             onChange={(v) => setLcShape({ vocalLanguage: v })}
                                           />
                                           <ShapeSelect
-                                            label="Lyrics mode"
+                                            label={t("Lyrics mode")}
                                             options={LC_SHAPE.lyricsMode}
                                             value={lcShape.lyricsMode}
                                             onChange={(v) => setLcShape({ lyricsMode: v })}

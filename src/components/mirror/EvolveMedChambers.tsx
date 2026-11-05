@@ -821,7 +821,7 @@ export function EmInstrumentsTab() {
             icon={Crosshair}
             title="The Target Engine"
             description="Name a target — receive its degradation route."
-            placeholder="Name a protein or disease target…"
+            placeholder={t("Name a protein or disease target…")}
             buttonLabel="Weave the route"
             chips={emTargets}
             testId="em-tool-target"
@@ -832,7 +832,7 @@ export function EmInstrumentsTab() {
             icon={PenLine}
             title="The Editing Loom"
             description="Name a fault in the living code — receive the rewriting strategy."
-            placeholder="Name the fault…"
+            placeholder={t("Name the fault…")}
             buttonLabel="Loom the rewrite"
             chips={emFaults}
             testId="em-tool-edit"
@@ -843,7 +843,7 @@ export function EmInstrumentsTab() {
             icon={Boxes}
             title="The Living Foundry"
             description="Name a tissue or organ — receive its printed architecture and the chip that tests it alive."
-            placeholder="Name a tissue or organ…"
+            placeholder={t("Name a tissue or organ…")}
             buttonLabel="Print the architecture"
             chips={emTissues}
             testId="em-tool-fabric"
@@ -854,7 +854,7 @@ export function EmInstrumentsTab() {
             icon={ArrowLeftRight}
             title="The Bridge"
             description="Name a signal of mind or body — receive its translation between digital and living."
-            placeholder="Name a signal…"
+            placeholder={t("Name a signal…")}
             buttonLabel="Open the bridge"
             chips={emSignals}
             testId="em-tool-bridge"
@@ -865,7 +865,7 @@ export function EmInstrumentsTab() {
             icon={CircuitBoard}
             title="The Circuit Compiler"
             description="Name a condition to compute — receive the genetic circuit that computes it, caged."
-            placeholder="Name a condition or a behavior…"
+            placeholder={t("Name a condition or a behavior…")}
             buttonLabel="Compile the circuit"
             chips={emInputs}
             testId="em-tool-circuit"
@@ -876,7 +876,7 @@ export function EmInstrumentsTab() {
             icon={ShieldCheck}
             title="The Biosecurity Engine"
             description="Name a design — receive it screened, caged and made revocable."
-            placeholder="Name a design to screen…"
+            placeholder={t("Name a design to screen…")}
             buttonLabel="Screen the design"
             chips={emDesigns}
             testId="em-tool-containment"
@@ -966,6 +966,8 @@ function EmCodexCard({
 }
 
 export function EmCodexTab() {
+  const t = useT();
+
   return (
     <div className="space-y-5">
       <EmCodexCard
@@ -987,7 +989,7 @@ export function EmCodexTab() {
         ]}
       />
       <EmCodexCard
-        title="How to read the mechanisms"
+        title={t("How to read the mechanisms")}
         icon={Sigma}
         testId="em-codex-mechanisms"
         paragraphs={[

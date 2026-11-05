@@ -161,7 +161,7 @@ function HyperspaceDossier({ id }: { id: string }) {
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          <Badge tone="cy">3D – 5D thresholds</Badge>
+          <Badge tone="cy">{t("3D – 5D thresholds")}</Badge>
           <Badge tone="pk">Inner Earth</Badge>
         </div>
 
