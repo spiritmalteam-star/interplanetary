@@ -6868,6 +6868,17 @@ export const sq: TranslationDict = {
   /* --- THE QUIET SHELF — the rails' own words when the sky rests --- */
   "The field is momentarily quiet. Rest, then try again.":
     "Fusha është përkohësisht e qetë. Pusho, pastaj provo përsëri.",
+  "The mirror's energy ran out momentarily — it will speak again once the light returns.":
+    "Energjia e pasqyrsës mbaroi përkohësisht — do të flasë sërish sapo drita të kthehet.",
+  "Crystallize again": "Kristalizo sërish",
+  "The brushes rested — the vision could not be painted.":
+    "Furçat pushuan — vizioni nuk mundi të pikturohej.",
+  "ParticleX is momentarily quiet. Rest, then reach again.":
+    "ParticleX është përkohësisht i qetë. Pusho, pastaj provo sërish.",
+  "Evolve Med is momentarily quiet. Rest, then reach again.":
+    "Evolve Med është përkohësisht i qetë. Pusho, pastaj provo sërish.",
+  "The chamber rests a moment. Breathe, then ask again.":
+    "Dhoma pushon një çast. Merr frymë, pastaj pyet sërish.",
   "You do not have to carry it all today.": "Nuk duhet t\u00eb mbash gjith\u00e7ka sot.",
   "What you notice, you nourish.": "\u00c7far\u00eb v\u00ebren, at\u00eb ushqen.",
   "The question is already a door.": "Pyetja \u00ebsht\u00eb tashm\u00eb nj\u00eb der\u00eb.",
@@ -6949,4 +6960,21 @@ export const sq: TranslationDict = {
   "Kindness is a daily practice": "Mirësia është një praktikë e përditshme",
   "A better future is designed together": "Një e ardhme më e mirë projektohet bashkë",
   "Transformation is a path we walk": "Transformimi është një rrugë që e ecim",
+
+  /* --- THE MEASURED WORDS — the template doors with their own places --- */
+  "{n} whispers · {when}": "{n} pëshpëritje · {when}",
+  "{taken} lights were drawn.": "Janë marrë {taken} drita.",
+  "№ {a} of {b}": "Nr. {a} nga {b}",
+  "{n} pages": "{n} faqe",
+  "— your book grows from these.": "— libri yt rritet nga këto.",
+  "{done} of {total} plates painted": "{done} nga {total} pllaka të pikturuara",
+  "{n} steps": "{n} hapa",
+  "{amount} fuel cells landed in {email}'s purse — the wallet now holds {total}.":
+    "{amount} qeliza karburanti u hodhën në thesin e {email} — portofoli tani mban {total}.",
+  "{passages} named passages hold purses · {grants} distributions have crossed the desk.":
+    "{passages} kalime të emërtuara mbajnë thesa · {grants} shpërndarje kanë kaluar nga tavolina.",
+  "{fused} fused · {distributed} out · {remaining} in the tank":
+    "{fused} të shkrira · {distributed} jashtë · {remaining} në rezervuar",
+  "{free} free · {paid} paid — the free light is spent first":
+    "{free} falas · {paid} me pagesë — drita falas harxhohet e para",
 };

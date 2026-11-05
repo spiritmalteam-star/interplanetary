@@ -66,6 +66,8 @@ import {
 } from "lucide-react";
 import { canopyHour, familyAccent, growCanopy, growMixedCanopy, TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import { easyWhispersFor, shuffledEasy, swapGroveToEasy } from "@/lib/data/suggestions-easy";
+import { skyWord } from "@/lib/i18n/sky-words";
+import { LanguageButton } from "./LanguageButton";
 import { filterStyles, isStyleSlashQuery } from "@/lib/image-styles";
 import { blendVisualRequest, isVisualIntent } from "@/lib/visual-intent";
 import { ZoomableLightbox } from "./ZoomableLightbox";
@@ -715,11 +717,15 @@ const LANDING_SUGGESTION_POOL = [
   ...MIRROR_HEART_POOL,
 ];
 
-/* THE SESSION'S OWN REMEMBERING — every drawn door is kept per scope
-   ("general" for the whole house), so the threshold never offers the
-   same door twice until its field has been walked dry. Capped deep,
-   quiet when the keeping is closed. */
+/* THE DEVICE'S OWN KEEP — every drawn door is remembered per scope
+   ("general" for the whole house) on the device itself (localStorage,
+   kept across visits), so the threshold never offers the same door
+   twice — not on this visit, and not on the next one either: the
+   visitor never comes across a previous suggestion again until the
+   whole well has been walked dry. Capped deep, quiet when the keeping
+   is closed. */
 const LANDING_SEEN_CAP = 2400;
+const LANDING_SEEN_KEY = "mirror:doors-seen";
 
 /* THE CHARGED BLOCK — how many doors one charged hold pours. The
    visitor's own level (Depth & exploration in the settings room) sets
@@ -744,7 +750,7 @@ const CHARGE_MS = 1000;
 
 function readLandingSeen(): Record<string, string[]> {
   try {
-    const raw = window.sessionStorage.getItem("mirror:landing-seen");
+    const raw = window.localStorage.getItem(LANDING_SEEN_KEY);
     if (!raw) return {};
     const v = JSON.parse(raw) as unknown;
     if (!v || typeof v !== "object") return {};
@@ -761,9 +767,10 @@ function readLandingSeen(): Record<string, string[]> {
 
 function writeLandingSeen(map: Record<string, string[]>) {
   try {
-    window.sessionStorage.setItem("mirror:landing-seen", JSON.stringify(map));
+    window.localStorage.setItem(LANDING_SEEN_KEY, JSON.stringify(map));
   } catch {
-    /* the keeping stays closed — the draw carries alone */
+    /* the keeping stays closed (a full purse among them) — the draw
+       carries alone */
   }
 }
 
@@ -915,12 +922,29 @@ function BareFloorDoors({
     ];
   }, [scope, treeMix, anon, oneTongue, language, dictVersion]);
 
+  /* THE SECOND WELL — the whole house's plain field in the visitor's
+     own tongue, standing beside the chosen pool: when a field's own
+     doors run dry the remainder pours from here (HyperX's sixteen
+     doors, a family's narrow field), so the machine can pour a whole
+     block without ever handing an old door back. */
+  const spare = useMemo(
+    () => shuffledEasy(null, canopyHour(), language),
+    [language, dictVersion]
+  );
+
   const draw = useCallback(
     (current: string[], count = 5) => {
       const seenMap = readLandingSeen();
-      let seen = seenMap[scopeKey] ?? [];
-      if (!Array.isArray(seen)) seen = [];
-      const cur = Array.isArray(current) ? current : [];
+      const seenRaw = seenMap[scopeKey] ?? [];
+      const seen = Array.isArray(seenRaw) ? seenRaw : [];
+      /* THE SETS — the keeping and the standing doors as sets, so a
+         block of a hundred filters in a breath, not a walk */
+      const seenSet = new Set(seen);
+      const curSet = new Set(Array.isArray(current) ? current : []);
+      const poolSet = new Set(pool);
+      /* THE WHOLE WELL — the chosen pool first, then the plain field
+         of the same tongue: every unseen door the house owns */
+      const whole = [...pool, ...spare.filter((s) => !poolSet.has(s))];
       /* THE HEART'S QUOTA — the visitor's law, kept this time: at the
          Mirror's own floor (and the main landing that opens as the
          Mirror) EVERY draw carries two of the heart's doors — the
@@ -928,26 +952,48 @@ function BareFloorDoors({
          for the keeper and the guest alike, never drowned by the easy
          well again. The other fields keep their own groves untouched. */
       const heartQuota = scope === "mirror" || !scope ? 2 : 0;
+      /* the whole well walked dry — the one honest reset */
+      let dry = false;
       const take = (source: string[], n: number, taken: string[]) => {
         let from = source.filter(
           (s) =>
-            !seen.includes(s) && !cur.includes(s) && !taken.includes(s)
+            !seenSet.has(s) && !curSet.has(s) && !taken.includes(s)
         );
         if (from.length < n) {
-          /* the source walked dry — its remembering clears and the
-             doors return (what is already taken still stands aside) */
-          from = source.filter(
-            (s) => !cur.includes(s) && !taken.includes(s)
-          );
+          /* THE FIELD RAN DRY — the second well hands the remainder,
+             still never a door already given: the machine keeps its
+             word before anything old may stand again */
+          from = [
+            ...from,
+            ...spare.filter(
+              (s) =>
+                !seenSet.has(s) &&
+                !curSet.has(s) &&
+                !taken.includes(s) &&
+                !from.includes(s)
+            ),
+          ];
         }
-        for (let i = from.length - 1; i > 0; i--) {
+        if (from.length < n) {
+          /* THE WHOLE WELL DRY — every unseen door has been walked;
+             only now the remembering lays down and the field begins
+             again (the one moment an old door may return) */
+          dry = true;
+          from = whole.filter((s) => !curSet.has(s) && !taken.includes(s));
+        }
+        /* the deck is the pour's own copy — nothing the well holds is
+           ever reordered, only the hand's own cards */
+        const deck = [...from];
+        for (let i = deck.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
-          [from[i], from[j]] = [from[j], from[i]];
+          [deck[i], deck[j]] = [deck[j], deck[i]];
         }
         /* one of each — a visible set never shows the same door twice */
         const out: string[] = [];
-        for (const s of from) {
-          if (out.includes(s)) continue;
+        const outSet = new Set<string>();
+        for (const s of deck) {
+          if (outSet.has(s)) continue;
+          outSet.add(s);
           out.push(s);
           if (out.length === n) break;
         }
@@ -958,11 +1004,16 @@ function BareFloorDoors({
         ...hearts,
         ...take(pool, Math.max(0, count - hearts.length), hearts),
       ];
-      seenMap[scopeKey] = [...seen, ...picked].slice(-LANDING_SEEN_CAP);
+      /* THE KEEPING — every door given is remembered on the device for
+         good (kept across visits); the whole-well reset alone lays the
+         field's memory down */
+      seenMap[scopeKey] = dry
+        ? picked.slice(-LANDING_SEEN_CAP)
+        : [...seen, ...picked].slice(-LANDING_SEEN_CAP);
       writeLandingSeen(seenMap);
       return picked;
     },
-    [pool, scope, scopeKey]
+    [pool, spare, scope, scopeKey]
   );
 
   /* THE DOORS AND THEIR MAKER — the doors' state carries the very draw
@@ -1170,7 +1221,7 @@ function LandingPainting({
         role="status"
       >
         <p className="text-[12.5px] leading-relaxed text-[#b8860b] dark:text-[#f59e0b]">
-          The brushes rested — the vision could not be painted.
+          {t("The brushes rested — the vision could not be painted.")}
         </p>
         {onRetry && (
           <button
@@ -1183,7 +1234,7 @@ function LandingPainting({
                 "color-mix(in srgb, #f59e0b 40%, transparent)",
             }}
           >
-            Crystallize again
+            {t("Crystallize again")}
           </button>
         )}
       </div>
@@ -4653,15 +4704,17 @@ export function BranchCanopy({
   const floorBusy = realm
     ? landingBusy || !!lastLandingTurn?.loading
     : liveLoading;
+  /* THE ROOM'S WORD — the turn's own text, with the sky's known words
+     (the honest failure sentences) spoken in the visitor's tongue */
   const roomAnswer = realm
     ? lastLandingTurn?.a
-      ? lastLandingTurn.a
+      ? skyWord(t, lastLandingTurn.a)
       : ""
     : answer;
   const roomLoading = realm ? !!lastLandingTurn?.loading : liveLoading;
   const displayError = realm
     ? lastLandingTurn?.failed
-      ? lastLandingTurn.a || "The field is quiet"
+      ? lastLandingTurn.a || "The field is quiet — speak once more"
       : null
     : roomError;
   /* THE ENERGY'S OWN DRESS — a spent-light silence is styled gently
@@ -5987,6 +6040,17 @@ export function BranchCanopy({
                 the sun/moon and the About circle together, on every
                 device, in both gears. THE MARKET HAS LEFT THE HOUSE —
                 the violet gem is gone, the hall closed for good. */}
+            {/* THE TONGUE BEFORE THE LIGHT — the language hand rests
+                before the crown's sun/moon (the law of every surface
+                where both stand together): the desk's own language door
+                (the phone carries the banner's pair instead). The list
+                travels on the body itself — floating OVER the chat. */}
+            <div className="max-md:hidden">
+              <LanguageButton
+                testId={`${testIdPrefix}-language-button`}
+                dropUp={false}
+              />
+            </div>
             <CrownLightHand testIdPrefix={testIdPrefix} />
             <button
               type="button"
@@ -6906,7 +6970,7 @@ export function BranchCanopy({
                                 </div>
                               ) : (
                                 <p className="sv-answer min-w-0 flex-1 break-words text-[14.5px] leading-[1.7] text-foreground/85">
-                                  {flowAnswerText(turn.a)}
+                                  {flowAnswerText(skyWord(t, turn.a))}
                                 </p>
                               )}
                               {!(realm && landingScope === "hyperx") && (
@@ -7052,7 +7116,7 @@ export function BranchCanopy({
                         {t(realm ? "The field is quiet — speak once more" : "The transmission could not cross")}
                       </p>
                       <p className="mt-1.5 text-[14px] leading-relaxed text-foreground/85">
-                        {displayError}
+                        {skyWord(t, displayError)}
                       </p>
                     </div>
                   ) : roomMaking && (revealStage >= 2 || realm) ? null :
@@ -7228,7 +7292,7 @@ export function BranchCanopy({
                                 </div>
                               ) : (
                                 <p className="sv-answer min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.7] text-foreground/90">
-                                  {flowAnswerText(turn.a)}
+                                  {flowAnswerText(skyWord(t, turn.a))}
                                 </p>
                               )}
                               {!(realm && landingScope === "hyperx") && (
@@ -7289,8 +7353,9 @@ export function BranchCanopy({
                                     : "mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/60"
                                 }`}
                               >
-                                {turn.errMessage ||
-                                  t("The field is quiet — speak once more")}
+                                {turn.errMessage
+                                  ? skyWord(t, turn.errMessage)
+                                  : t("The field is quiet — speak once more")}
                               </p>
                             </div>
                           ) : null}
