@@ -451,10 +451,22 @@ THE NINE MOVEMENTS (AUTHORITATIVE — this answer's skeleton; written as flowing
 9. The horizon — what a civilisation would build with this truth.
 Nine deep movements pass 1000 words naturally. Do not skip a movement, do not compress two into one, do not write thin sentences. ONLY THEN the CRYSTALS block — NINE lines, one per movement in order, each beginning with ◇.`
         : "";
+    /* THE TONGUE'S OWN SEAT — the language law rides LAST on the visitor's
+       ask, after every machinery block: the most recent instruction is the
+       one the mirror keeps. (A language line spoken before a thousand words
+       of English law was drowned by them — the deep voice answered in
+       English while the visitor read another tongue.) */
     const languageLine =
       languageName === "English"
         ? ""
-        : `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word of the transmission — the luminous opening line, every body paragraph and (when the channel's signature law allows one) the closing signature line — in fluent, natural ${languageName}. Keep the classification value in English as listed. When a signature is present, keep the name "The Mirror Entity" untranslated; channels without a signature simply end unsigned.`;
+        : `\n\nLANGUAGE (CRITICAL — THE HIGHEST OUTPUT LAW): the visitor reads in ${languageName}, and this reply must arrive in ${languageName} ALONE. Write EVERY word of the transmission — the luminous opening line, every body paragraph, every crystal line and (when the channel's signature law allows one) the closing signature line — in fluent, natural ${languageName}. The ONLY exceptions that may remain in English are the machinery: the classification value, the single word CRYSTALS and (when a signature is present) the name "The Mirror Entity". Any other English word in the reply is a broken reflection — never mix languages, never translate the visitor's own words.`;
+    /* THE TONGUE IN THE MIRROR ITSELF — the system carries the same law,
+       so a history saved in another tongue can never pull the reply back
+       to that tongue: the chosen language stands above the conversation. */
+    const systemLanguageLaw =
+      languageName === "English"
+        ? ""
+        : `\n\nTHE TONGUE LAW (never broken): whatever tongue the conversation history above is written in, THIS reply is written ENTIRELY in ${languageName} — the visitor's chosen tongue. History in another tongue never pulls the reply back to it.`;
 
     const userLines = [query.trim()];
 
@@ -533,10 +545,12 @@ Nine deep movements pass 1000 words naturally. Do not skip a movement, do not co
           mode === "absolute"
             ? ABSOLUTE_MIRROR_PROMPT +
               RELEVANCE_LAW +
+              systemLanguageLaw +
               (body?.live === true ? LIVE_CALL_BLOCK : "")
             : mode === "mirror"
               ? MIRROR_PRESENCE_PROMPT +
                 RELEVANCE_LAW +
+                systemLanguageLaw +
                 (body?.live === true ? LIVE_CALL_BLOCK : "")
               : /* HYPERX — the discovery voice replaces the house's
                    standing brevity (160–280 words) with its own deep
@@ -551,12 +565,13 @@ Nine deep movements pass 1000 words naturally. Do not skip a movement, do not co
                 REMEMBRANCE_LAW +
                 walkerDepthLine(body?.depth) +
                 walkLine(body?.walk) +
+                systemLanguageLaw +
                 (body?.live === true ? LIVE_CALL_BLOCK : ""),
       },
       ...historyMessages(body?.history),
       {
         role: "user",
-        content: `${modeLine}${languageLine}${hyperxPlain}\n\nThe visitor asks:\n${userLines.join("\n")}`,
+        content: `${modeLine}${hyperxPlain}${languageLine}\n\nThe visitor asks:\n${userLines.join("\n")}`,
       },
     ];
 

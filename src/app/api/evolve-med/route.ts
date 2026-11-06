@@ -333,6 +333,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       languageName === "English"
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the visitor speaks ${languageName}. Write your ENTIRE reply — the revelation prose, every section heading and body, the path-of-discovery section, mechanisms where letters are used, and seal — in fluent, natural ${languageName}.`;
+    /* THE TONGUE IN THE ENGINE ITSELF — the system carries the law, so a
+       history saved in another tongue can never pull the reply back to it */
+    const systemLanguageLaw =
+      languageName === "English"
+        ? ""
+        : `\n\nTHE TONGUE LAW (never broken): whatever tongue the conversation history above is written in, THIS reply is written ENTIRELY in ${languageName} — the visitor's chosen tongue. History in another tongue never pulls the reply back to it.`;
 
     const scopeLine = scope
       ? `\n\nACTIVE VECTOR WINDOW: "${scope}". Route from inside this vector — it is the ground you design from.`
@@ -363,7 +369,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: SYSTEM_PROMPT + toolLine + walkerDepthLine(body?.depth),
+        content: SYSTEM_PROMPT + toolLine + walkerDepthLine(body?.depth) + systemLanguageLaw,
       },
     ];
 

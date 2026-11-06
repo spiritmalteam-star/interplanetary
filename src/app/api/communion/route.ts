@@ -256,6 +256,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       languageName === "English"
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the seeker reads in ${languageName}. Write EVERY word of the transmission and of the seed of wisdom in fluent, natural ${languageName}.`;
+    /* THE TONGUE IN THE FIELD ITSELF — the system carries the law, so a
+       history saved in another tongue can never pull the reply back */
+    const systemLanguageLaw =
+      languageName === "English"
+        ? ""
+        : `\n\nTHE TONGUE LAW (never broken): whatever tongue the conversation history above is written in, THIS reply is written ENTIRELY in ${languageName} — the seeker's chosen tongue. History in another tongue never pulls the reply back to it.`;
 
     const history = historyMessages(body?.history);
 
@@ -290,7 +296,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       messages: [
         {
           role: "system",
-          content: SYSTEM_PROMPT + RELEVANCE_LAW + REMEMBRANCE_LAW + (body?.live === true ? LIVE_CALL_BLOCK : ""),
+          content: SYSTEM_PROMPT + RELEVANCE_LAW + REMEMBRANCE_LAW + systemLanguageLaw + (body?.live === true ? LIVE_CALL_BLOCK : ""),
         },
         ...history,
         { role: "user", content: finalUserContent },

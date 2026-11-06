@@ -342,11 +342,14 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
           },
           {
             role: "user",
-            content: `${resonanceLine}${deskLine}\n\nDraw out the one record now, and read it in your hand.${languageLine}`,
+            content: `${resonanceLine}${deskLine}\n\nDraw out the one record now, and read it in your hand.`,
           },
           {
             role: "user",
-            content: `${entranceLine}${recentLine}${openingsLine}`,
+            /* THE TONGUE'S OWN SEAT — the language law rides the LAST
+               message, after the entrance machinery, so it is the final
+               instruction the scribe reads before the hand moves. */
+            content: `${entranceLine}${recentLine}${openingsLine}${languageLine}`,
           },
         ],
         thinking: { type: "disabled" },

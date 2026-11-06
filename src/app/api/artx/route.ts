@@ -124,6 +124,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       languageName === "English"
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the visitor speaks ${languageName}. Write your ENTIRE reply in fluent, natural ${languageName}.`;
+    /* THE TONGUE IN THE ATELIER ITSELF — the system carries the law, so
+       a history saved in another tongue can never pull the reply back */
+    const systemLanguageLaw =
+      languageName === "English"
+        ? ""
+        : `\n\nTHE TONGUE LAW (never broken): whatever tongue the conversation history above is written in, THIS reply is written ENTIRELY in ${languageName} — the visitor's chosen tongue. History in another tongue never pulls the reply back to it.`;
 
     const windowLine = windowId ? `\n\n${WINDOW_LINES[windowId]}` : "";
 
@@ -143,6 +149,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           REMEMBRANCE_LAW +
           walkerDepthLine(body?.depth) +
           walkLine(body?.walk) +
+          systemLanguageLaw +
           (body?.live === true ? LIVE_CALL_BLOCK : ""),
       },
     ];
