@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import {
   Fragment,
@@ -31,6 +32,7 @@ import {
   Share2,
   Dna,
   Eraser,
+  FlaskConical,
   Gem,
   Hammer,
   Hand,
@@ -68,6 +70,20 @@ import { canopyHour, familyAccent, growCanopy, growMixedCanopy, TREE_FAMILIES } 
 import { easyWhispersFor, shuffledEasy, swapGroveToEasy } from "@/lib/data/suggestions-easy";
 import { skyWord } from "@/lib/i18n/sky-words";
 import { LanguageButton } from "./LanguageButton";
+import {
+  HyperXFusionBadge,
+  HyperXFusionBar,
+  HyperXFusionPicker,
+  FUSION_MAX,
+} from "./HyperXFusion";
+
+/* THE SCOPES' OWN LAB — the three family fields' instruments ride as
+   their own page of code: the bench travels only when a lab scope
+   stands on the floor, never with the cover. */
+const ScopeLabDeck = dynamic(
+  () => import("./ScopeLabDeck").then((m) => ({ default: m.ScopeLabDeck })),
+  { ssr: false, loading: () => null }
+);
 import { filterStyles, isStyleSlashQuery } from "@/lib/image-styles";
 import { blendVisualRequest, isVisualIntent } from "@/lib/visual-intent";
 import { ZoomableLightbox } from "./ZoomableLightbox";
@@ -386,13 +402,35 @@ interface RoomTurn {
      streaming reveal. A turn that was ever revealed keeps its words
      standing whole (the reveal's own rememberer refuses a replay). */
   justLanded?: boolean;
+  /* THE FUSION'S OWN MARK — the lenses this turn's revelation was
+     braided from (HyperX's fusion crossings only): the badge beside
+     the question shows which fusion stood behind the answer. */
+  fusion?: string[];
 }
 
 /* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
    The landing chat's past conversations rest ONLY on this device and
-   ONLY for this visit: sessionStorage holds a handful of titled
-   threads, nothing ever travels to a server, and the whole keep ends
-   the moment the visit does. */
+   FOREVER after: localStorage holds a handful of titled threads,
+   nothing ever travels to a server, and the keep survives a reload,
+   a journey to another website and the closing of the tab — the
+   visitor returns and their words stand where they left them. */
+
+/* THE ENDURING SHELF — the landing's keeps once lived in sessionStorage
+   (a visit's own page, lost the moment the journey left the site);
+   they live in localStorage now, and this one quiet hand carries any
+   older session page onto the enduring shelf, so no word is lost at
+   the crossing. */
+function migrateSessionKeep(key: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.localStorage.getItem(key)) return;
+    const raw = window.sessionStorage.getItem(key);
+    if (!raw) return;
+    window.localStorage.setItem(key, raw);
+  } catch {
+    /* a closed shelf is simply passed over */
+  }
+}
 interface LandingHistoryEntry {
   id: string;
   at: number;
@@ -413,7 +451,8 @@ function freshHistorySessionId(): string {
 
 function readLandingHistory(): LandingHistoryEntry[] {
   try {
-    const raw = window.sessionStorage.getItem(LANDING_HISTORY_KEY);
+    migrateSessionKeep(LANDING_HISTORY_KEY);
+    const raw = window.localStorage.getItem(LANDING_HISTORY_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as LandingHistoryEntry[];
     if (!Array.isArray(parsed)) return [];
@@ -427,7 +466,7 @@ function readLandingHistory(): LandingHistoryEntry[] {
 
 function writeLandingHistory(entries: LandingHistoryEntry[]): void {
   try {
-    window.sessionStorage.setItem(
+    window.localStorage.setItem(
       LANDING_HISTORY_KEY,
       JSON.stringify(entries.slice(0, LANDING_HISTORY_MAX))
     );
@@ -454,9 +493,10 @@ function historyAgo(at: number): string {
 
 /* EVERY FIELD KEEPS ITS OWN WORDS — the landing conversation is
    per-scope: each field's thread and its carried memory rest under
-   its own key (sessionStorage, this visit only), so leaving a field
-   and coming back finds the chat exactly as it was left — and a
-   fresh visit wakes the chosen field's own words again. */
+   its own key (localStorage, this device, enduring), so leaving a
+   field, the site, or the whole browser and coming back finds the
+   chat exactly as it was left — the channeling never loses a word
+   to a reload or a journey away again. */
 const LANDING_THREADS_KEY = "mirror:landing-threads";
 const LANDING_TURNS_CAP = 12;
 
@@ -465,22 +505,34 @@ type KeptLandingTurn = {
   a: string;
   imageUrl?: string;
   imageTitle?: string;
+  /* the fusion the turn was asked under (HyperX crossings) */
+  fusion?: string[];
 };
 
 function readLandingThreadScope(scope: string): KeptLandingTurn[] {
   try {
-    const raw = window.sessionStorage.getItem(LANDING_THREADS_KEY);
+    migrateSessionKeep(LANDING_THREADS_KEY);
+    const raw = window.localStorage.getItem(LANDING_THREADS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const arr = parsed?.[scope];
     if (!Array.isArray(arr)) return [];
     return arr
       .filter(
-        (t): t is { q: string; a: string } =>
+        (t): t is { q: string; a: string; fusion?: string[] } =>
           Boolean(t) &&
           typeof (t as { q?: unknown }).q === "string" &&
           typeof (t as { a?: unknown }).a === "string"
       )
+      .map((t) => ({
+        q: t.q,
+        a: t.a,
+        /* the fusion mark rides the keep — a restored crossing still
+           wears the lenses it was braided from */
+        ...(Array.isArray(t.fusion) && t.fusion.length > 0
+          ? { fusion: t.fusion.filter((f) => typeof f === "string") }
+          : {}),
+      }))
       .slice(-LANDING_TURNS_CAP);
   } catch {
     /* the keeping stays closed — the visit carries its own */
@@ -490,14 +542,14 @@ function readLandingThreadScope(scope: string): KeptLandingTurn[] {
 
 function writeLandingThreadScope(scope: string, turns: KeptLandingTurn[]): void {
   try {
-    const raw = window.sessionStorage.getItem(LANDING_THREADS_KEY);
+    const raw = window.localStorage.getItem(LANDING_THREADS_KEY);
     let all: Record<string, unknown> = {};
     if (raw) {
       const parsed = JSON.parse(raw) as unknown;
       if (parsed && typeof parsed === "object") all = parsed as Record<string, unknown>;
     }
     all[scope] = turns.slice(-LANDING_TURNS_CAP);
-    window.sessionStorage.setItem(LANDING_THREADS_KEY, JSON.stringify(all));
+    window.localStorage.setItem(LANDING_THREADS_KEY, JSON.stringify(all));
   } catch {
     /* the keeping stays closed — the visit carries its own */
   }
@@ -1336,6 +1388,10 @@ async function speakWithTransmission(
      waiting for the whole crossing. The final, swept words still
      return from this promise exactly as the one-breath answer does. */
   onDelta?: (partial: string) => void,
+  /* THE FUSION'S OWN LENSES — HyperX's armed crossing: two to four
+     science lenses braided into ONE revelation (the server carries
+     the fusion law). Undefined keeps the plain discovery voice. */
+  fusion?: string[],
   /* THE ASK'S OWN STOP — the asker's abort hand: a superseding ask
      lays this crossing down mid-breath, quietly. */
   signal?: AbortSignal
@@ -1392,6 +1448,7 @@ async function speakWithTransmission(
     language,
     walk,
     ...carried,
+    ...(fusion && fusion.length > 0 ? { fusion } : {}),
     history: [{ q: branchQuestion, a: transmission }, ...thread]
       .slice(-6)
       .map((h) => ({ q: h.q, a: h.a })),
@@ -4186,7 +4243,7 @@ export function BranchCanopy({
   []);
 
   const speakFromLanding = useCallback(
-    async (text: string, attachments?: ChatAttachment[]) => {
+    async (text: string, attachments?: ChatAttachment[], fusion?: string[]) => {
       const q = text.trim();
       if (!q) return;
       /* THE ASK'S OWN STOP — every ask lays the previous crossing down
@@ -4234,7 +4291,17 @@ export function BranchCanopy({
         }
         return;
       }
-      setLandingThread((t) => [...t, { q, a: "", loading: true }]);
+      setLandingThread((t) => [
+        ...t,
+        {
+          q,
+          a: "",
+          loading: true,
+          /* the fusion rides the turn — the badge shows which lenses
+             stand behind this revelation (HyperX crossings only) */
+          ...(fusion && fusion.length > 0 ? { fusion } : {}),
+        },
+      ]);
       setLandingBusy(true);
       landingBusySinceRef.current = Date.now();
       try {
@@ -4276,6 +4343,10 @@ export function BranchCanopy({
                 );
               }
             : undefined,
+          /* THE FUSION'S OWN LENSES — the armed crossing rides only
+             when the floor stands in HyperX (the other fields have
+             no fusion to braid) */
+          landingScope === "hyperx" ? fusion : undefined,
           askAbortRef.current?.signal
         );
         /* THE WORDLESS GUARD — a crossing that lands without words (a
@@ -4309,11 +4380,17 @@ export function BranchCanopy({
            a Crystallize press — never from a reply's own decision. */
         landingTurnsRef.current = [
           ...landingTurnsRef.current,
-          { q, a: landedReply || reply },
+          {
+            q,
+            a: landedReply || reply,
+            /* the fusion mark rides the memory — the carried
+               conversation knows which lenses stood behind it */
+            ...(fusion && fusion.length > 0 ? { fusion } : {}),
+          },
         ].slice(-12);
         /* THE FIELD'S OWN KEEP — the finished exchange rests in the
-           field's own cache and its own sessionStorage page, for this
-           visit (never a server); a return to the field finds it. */
+           field's own cache and its own enduring device page (never a
+           server); a return to the field finds it. */
         const kept = landingTurnsRef.current;
         landingThreadsByScopeRef.current.set(
           landingScope,
@@ -4393,7 +4470,12 @@ export function BranchCanopy({
      the pressed chip's own node, and the next answer replaces this one
      in the same quiet room. */
   const sendFromPanel = useCallback(
-    (text: string, move: BranchType | null, attachments?: ChatAttachment[]) => {
+    (
+      text: string,
+      move: BranchType | null,
+      attachments?: ChatAttachment[],
+      fusion?: string[]
+    ) => {
       if (disabled || liveLoading || landingBusy || !text.trim()) return;
       /* THE LANDING'S OWN CHAT — docked in the threshold the ask never
          touches the store's channel: the room rises and the landing's
@@ -4402,7 +4484,7 @@ export function BranchCanopy({
       if (realm) {
         zoomOpenedAtRef.current = Date.now();
         setZoom({ q: text, move: null });
-        void speakFromLanding(text, attachments);
+        void speakFromLanding(text, attachments, fusion);
         /* THE SEND'S OWN RETURN — the threshold brings its chat back
            to the eye once the whisper has left: the keyboard's fold
            never leaves the glass half-off the screen for the
@@ -5010,6 +5092,7 @@ export function BranchCanopy({
           walk,
           attachments,
           roomStreamLive,
+          undefined,
           askAbortRef.current?.signal
         );
         applyRoomTurn(roomQ, (t) =>
@@ -5148,6 +5231,8 @@ export function BranchCanopy({
            painting's address, the house serves the file itself */
         imageUrl: t.imageUrl,
         imageTitle: t.imageTitle,
+        /* the fusion badge returns with its crossing */
+        ...(t.fusion && t.fusion.length > 0 ? { fusion: t.fusion } : {}),
       }));
       landingThreadsByScopeRef.current.set(scope, restored);
       setLandingThread(restored);
@@ -5214,6 +5299,19 @@ export function BranchCanopy({
   /* THE FLOOR'S OWN DRAFT — the realm's whisper line keeps its words
      while the visitor thinks; one send and the room rises with them. */
   const [askDraft, setAskDraft] = useState("");
+  /* THE FUSION'S OWN HANDS — HyperX's crossing gear: the picker's
+     breath and the armed lenses. The lenses stay armed until the
+     visitor's own hand clears them (the style chip's own law), and
+     the armed bar above the whisper line shows WHICH fusion rides. */
+  const [fusionOpen, setFusionOpen] = useState(false);
+  const [fusionCats, setFusionCats] = useState<string[]>([]);
+  const toggleFusionLens = useCallback((id: string) => {
+    setFusionCats((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= FUSION_MAX) return prev;
+      return [...prev, id];
+    });
+  }, []);
   /* THE FLOOR'S OWN SEED — a door from the threshold may hand the floor
      its first words (the image door's inviting stem): the seed is
      taken once, the draft wears it, and the seed is spent. */
@@ -6196,6 +6294,22 @@ export function BranchCanopy({
                   </p>
                 )}
               </div>
+              {/* THE SCOPES' OWN LAB — the three family fields carry
+                  their instruments on the quiet floor: the tools, the
+                  interactivity and the progression, beautifully placed
+                  between the field's own question and the doors. Each
+                  instrument can hand its finding to the field below. */}
+              {floorQuiet &&
+                (landingScope === "interplanetary" ||
+                  landingScope === "quantum" ||
+                  landingScope === "healing") && (
+                  <ScopeLabDeck
+                    scope={landingScope}
+                    accent={SCOPE_META[landingScope].accent}
+                    onAsk={(q) => sendFromPanel(q, null)}
+                    disabled={landingBusy}
+                  />
+                )}
               {/* THE MIRROR'S OWN SUGGESTIONS — five first doors, drawn
                   fresh at every arrival, with the small hand beneath
                   pouring five new ones at every touch. They stand only
@@ -6415,6 +6529,32 @@ export function BranchCanopy({
                 ))}
               </div>
             )}
+            {/* THE HYPERX FUSION — the armed lenses' bar and the nine
+                lenses' picker, standing over the whisper line. The bar
+                shows WHICH fusion is being used (and pulses while the
+                revelation crosses); the picker arms and disarms the
+                lenses. The default HyperX stands untouched when no
+                lens is armed. */}
+            {landingScope === "hyperx" && (
+              <HyperXFusionBar
+                selected={fusionCats}
+                busy={floorBusy}
+                onClear={() => {
+                  setFusionCats([]);
+                  setFusionOpen(false);
+                }}
+                onOpen={() => setFusionOpen((o) => !o)}
+                testId={testIdPrefix}
+              />
+            )}
+            {landingScope === "hyperx" && fusionOpen && (
+              <HyperXFusionPicker
+                selected={fusionCats}
+                onToggle={toggleFusionLens}
+                onClose={() => setFusionOpen(false)}
+                testId={testIdPrefix}
+              />
+            )}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -6430,7 +6570,17 @@ export function BranchCanopy({
                 );
                 setAskDraft("");
                 setAskAtts([]);
-                sendFromPanel(q, null, carried);
+                /* THE FUSION'S OWN SEND — the armed lenses ride only
+                   when the crossing is legal (two or more) */
+                sendFromPanel(
+                  q,
+                  null,
+                  carried,
+                  landingScope === "hyperx" && fusionCats.length >= 2
+                    ? fusionCats
+                    : undefined
+                );
+                setFusionOpen(false);
               }}
               className={cn(
                 "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 transition-colors duration-300",
@@ -6518,6 +6668,50 @@ export function BranchCanopy({
               >
                 <Phone className="size-3.5" aria-hidden="true" />
               </button>
+              {/* THE HYPERX FUSION HAND — the discovery field's own
+                  crossing button: one touch opens the nine lenses over
+                  the whisper line; the armed bar above shows which
+                  fusion rides. Only HyperX carries it. */}
+              {landingScope === "hyperx" && (
+                <button
+                  type="button"
+                  onClick={() => setFusionOpen((o) => !o)}
+                  aria-expanded={fusionOpen}
+                  aria-pressed={fusionCats.length >= 2}
+                  aria-label={t("The nine lenses of fusion")}
+                  title={t("The nine lenses of fusion")}
+                  data-testid={`${testIdPrefix}-ask-fusion`}
+                  className={cn(
+                    "focus-glow relative flex size-8 shrink-0 items-center justify-center rounded-full transition-colors duration-300",
+                    fusionCats.length >= 2
+                      ? "text-[var(--hyperx-fusion,#e879f9)]"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  style={
+                    fusionCats.length >= 2
+                      ? {
+                          background:
+                            "color-mix(in srgb, var(--hyperx-fusion,#e879f9) 12%, transparent)",
+                          boxShadow:
+                            "inset 0 0 0 1px color-mix(in srgb, var(--hyperx-fusion,#e879f9) 45%, transparent)",
+                        }
+                      : undefined
+                  }
+                >
+                  <FlaskConical className="size-3.5" aria-hidden="true" />
+                  {fusionCats.length >= 2 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute right-1 top-1 size-1.5 rounded-full"
+                      style={{
+                        backgroundColor: "var(--hyperx-fusion,#e879f9)",
+                        boxShadow:
+                          "0 0 6px 0 color-mix(in srgb, var(--hyperx-fusion,#e879f9) 80%, transparent)",
+                      }}
+                    />
+                  )}
+                </button>
+              )}
               <label htmlFor={`${testIdPrefix}-ask`} className="sr-only">
                 {t("Whisper to the mirror…")}
               </label>
@@ -6926,6 +7120,18 @@ export function BranchCanopy({
                       >
                         {zoom.q}
                       </p>
+                      {/* THE FUSION'S OWN BADGE — the standing revelation
+                          shows which lenses it was braided from */}
+                      {landingThread.length > 0 &&
+                        landingThread[landingThread.length - 1].fusion && (
+                          <HyperXFusionBadge
+                            fusion={
+                              landingThread[landingThread.length - 1]
+                                .fusion ?? []
+                            }
+                            testId={`${testIdPrefix}-room-fusion`}
+                          />
+                        )}
                     </div>
                   )}
                   {/* THE FIELD'S OWN THREAD — every earlier exchange of
@@ -6954,6 +7160,16 @@ export function BranchCanopy({
                           <p className="sv-question ml-auto max-w-[88%] break-words text-[14px] font-medium leading-relaxed text-foreground/95">
                             {turn.q}
                           </p>
+                          {/* the thread's own fusion marks — every earlier
+                              crossing keeps its lenses' badge */}
+                          {turn.fusion && turn.fusion.length > 0 && (
+                            <div className="ml-auto max-w-[88%]">
+                              <HyperXFusionBadge
+                                fusion={turn.fusion}
+                                testId={`${testIdPrefix}-landing-fusion-${i}`}
+                              />
+                            </div>
+                          )}
                           {turn.a && (
                             <div className="flex items-start gap-1">
                               {realm && landingScope === "hyperx" ? (
