@@ -70,11 +70,19 @@ export function LandingChatNav() {
     closeScopes();
   }, [setLandingScope, closeScopes]);
 
+  /* THE FITTING LAW — every hand carries a shrinking waist: the label
+     truncates before anything may leave the row (the Albanian
+     "Dritaret" once pushed HyperX beneath the corner's hand on the
+     phone), and the small screens wear a tighter dress (smaller
+     print, narrower walk) so the whole crown fits on every device. */
   const hand =
-    "focus-glow relative flex h-7 items-center gap-1.5 rounded-full border px-2.5 transition-all duration-300 after:absolute after:-inset-2 after:rounded-full after:content-['']";
+    "focus-glow relative flex h-7 min-w-0 items-center gap-1 rounded-full border px-1.5 transition-all duration-300 after:absolute after:-inset-2 after:rounded-full after:content-[''] sm:gap-1.5 sm:px-2.5";
+
+  const handLabel =
+    "mono-label min-w-0 truncate text-[9px] font-semibold uppercase tracking-[0.06em] sm:text-[10px] sm:tracking-[0.14em]";
 
   return (
-    <div className="flex shrink-0 items-center gap-1">
+    <div className="flex min-w-0 items-center gap-1">
       {/* --------------------------- IN DREAM --------------------------- */}
       <button
         type="button"
@@ -86,8 +94,8 @@ export function LandingChatNav() {
         data-testid="landing-nav-indream"
         className={cn(hand, "indream-hand")}
       >
-        <Hammer className="size-3 text-[#b45309] dark:text-[#fcd34d]" aria-hidden="true" />
-        <span className="mono-label whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#b45309] dark:text-[#fcd34d]">
+        <Hammer className="size-3 shrink-0 text-[#b45309] dark:text-[#fcd34d]" aria-hidden="true" />
+        <span className={cn(handLabel, "text-[#b45309] dark:text-[#fcd34d]")}>
           {t("InDream")}
         </span>
       </button>
@@ -103,8 +111,8 @@ export function LandingChatNav() {
         data-testid="landing-nav-scopes"
         className={cn(hand, "scopes-hand")}
       >
-        <Layers className="size-3 text-[#0f766e] dark:text-[#5eead4]" aria-hidden="true" />
-        <span className="mono-label whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#0f766e] dark:text-[#5eead4]">
+        <Layers className="size-3 shrink-0 text-[#0f766e] dark:text-[#5eead4]" aria-hidden="true" />
+        <span className={cn(handLabel, "text-[#0f766e] dark:text-[#5eead4]")}>
           {t("Scopes")}
         </span>
       </button>
@@ -123,8 +131,8 @@ export function LandingChatNav() {
         data-testid="landing-nav-hyperx"
         className={cn(hand, "hyperx-hand text-[#f5d0fe]")}
       >
-        <Sparkles className="size-3" aria-hidden="true" />
-        <span className="mono-label whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] text-[#a21caf] dark:text-[#f5d0fe]">
+        <Sparkles className="size-3 shrink-0" aria-hidden="true" />
+        <span className={cn(handLabel, "text-[#a21caf] dark:text-[#f5d0fe]")}>
           HyperX
         </span>
       </button>

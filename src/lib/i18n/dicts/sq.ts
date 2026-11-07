@@ -5639,6 +5639,27 @@ export const sq: TranslationDict = {
     "Çfarë do të pikturojmë sot?",
   "Speak gently, at your own pace…":
     "Flisni butësisht, me ritmin tënd…",
+  "what truth shall we uncover, HyperX?":
+    "çfarë të vërtete do të zbulojmë, HyperX?",
+  "Ask what has never been heard — HyperX answers precise…":
+    "Pyet çfarë nuk është dëgjuar kurrë — HyperX përgjigjet me saktësi…",
+  /* --- THE FIELDS' OWN PLATES — the scopes' shore speaks the house --- */
+  "The Mirror": "Pasqyra",
+  "The house's own reflection": "Pasqyrimi i vetë shtëpisë",
+  "The star families and worlds": "Familjet yjore dhe botët",
+  "The deep nature of reality": "Natura e thellë e realitetit",
+  "The atelier of visions": "Ateljeja e vizioneve",
+  "The body's quiet evolution": "Evolucioni i qetë i trupit",
+  "Advanced discovery · illumination · underlying truths":
+    "Zbulim i avancuar · ndriçim · të vërteta themelore",
+  "HyperX receiving": "HyperX po merr",
+  "Truth discovered": "E vërteta u zbulua",
+  "ArtX": "ArtX",
+  "HealX": "HealX",
+  "Lab bench inside": "Laborator brenda",
+  "Atlas · Signal · Transit": "Atlas · Sinjali · Tranziti",
+  "State · Entanglement": "Gjendja · Ndërthurja",
+  "Breath · Body · Care log": "Fryma · Trupi · Ditar kujdesi",
   "Uplink": "Transmetim lart",
   "Transmission received": "Transmetim i marrë",
   "State prepared": "Gjendja u përgatit",

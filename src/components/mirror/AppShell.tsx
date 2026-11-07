@@ -320,7 +320,7 @@ function AppShellViews({
              LAW — the crossing wears no coin: the whole realm stands
              open to every visitor, no passage demanded, nothing
              acquired. */
-          <div className="flex items-center gap-1.5">
+          <div className="flex min-w-0 items-center gap-1.5">
             <LandingChatNav />
           </div>
         }

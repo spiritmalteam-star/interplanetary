@@ -5521,7 +5521,7 @@ export function BranchCanopy({
         }
       >
         <div
-          className="mx-auto flex w-full max-w-[760px] items-center gap-1.5"
+          className="mx-auto flex w-full max-w-[760px] items-center gap-1 sm:gap-1.5"
         >
           {/* THE CROWN'S OWN ROW — the theme pages' and the threshold's
               quiet crown. THE REALM ITSELF no longer wears this row:
@@ -6083,7 +6083,11 @@ export function BranchCanopy({
               the landing hand while it fills the screen. One place,
               one law: the crown always carries the way across. */}
           {realm && realmControls && (
-            <div className="flex shrink-0 items-center gap-1">{realmControls}</div>
+            /* THE SHRINKING CROWN — the realm's own hands may slim down
+               (their labels truncate) before anything ever leaves the
+               row: the Albanian "Dritaret" and its sisters once pushed
+               HyperX beneath the corner's hand on the small screens. */
+            <div className="flex min-w-0 items-center gap-1">{realmControls}</div>
           )}
 
           {/* THE WORLDS ARE GONE — their spirit lives inside the
@@ -6093,8 +6097,10 @@ export function BranchCanopy({
           <div className={cn(
             "flex min-w-0 flex-1 items-center justify-end gap-1.5",
             /* the vertical arm owns the corner — the row yields its
-               width so no crown button ever slides beneath it */
-            realm && "pr-14 sm:pr-14"
+               width so no crown button ever slides beneath it (the
+               phone keeps a slimmer reserve: the same corner, a
+               smaller walk) */
+            realm && "pr-7 sm:pr-14"
           )}>
             {headerExtra && (
               <div className="hidden items-center gap-1.5 sm:flex">{headerExtra}</div>

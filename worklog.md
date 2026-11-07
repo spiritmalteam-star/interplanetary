@@ -2236,3 +2236,21 @@ Work Log:
 Stage Summary:
 - The laboratories grew a second bench of instruments that truly compute — interference laws, exact amplitudes, honest entropy, real binaural tones, Pearson's own r, the rocket equation, the sky's true distances — each wearing the face of its craft.
 - And HyperX now writes at the speed of thought: the words stream as they are born, typing costs a keystroke, and not even a closed tab can take a channeling away.
+
+---
+
+Task ID: 89
+Date: 2026-10-27
+Work Log:
+- THE VISITOR'S WORD: "fix the platform in all devices even in other languages so when we have long words and buttons still fits in all devices — for example HyperX is not visible fully when Albanian language is selected."
+- THE SANDBOX RE-SYNC: local main was 0 ahead / 187 behind origin/main; `git reset --hard origin/main` to 8f6177f (task 88's instruments + unfreezable stream), bun install, dev server raised, remote re-keyed to the keeper's newest token.
+- THE CROWN'S OVERFLOW, MEASURED (Agent Browser, 375×812, Shqip): the docked portal's crown row slid HyperX 19px BENEATH the corner's expand hand (HyperX rect 258→344, corner 325→353) — the Albanian "Dritaret" (Scopes) widened its pill and the row, all hands `shrink-0` with `whitespace-nowrap` labels, had nowhere to go; at 320px the same row overflowed the frame itself ("H ⤢⤢ X" garbled under the corner).
+- THE FITTING LAW (the root chain, fixed at every link): the shrink was being refused at FOUR ancestors — LandingChatNav's own root (`shrink-0` → `min-w-0`), BranchCanopy's realmControls wrapper (`shrink-0` → `min-w-0`), AppShell's crown cluster (`flex items-center` → `min-w-0`), and every hand/button now carries `min-w-0` with a truncating label (`truncate` replaces `whitespace-nowrap`, icons `shrink-0`). The phones wear a tighter dress: `px-1.5/gap-1/text-[9px]/tracking-[0.06em]` under `sm:`, the desk keeps the old `px-2.5/gap-1.5/text-[10px]/tracking-[0.14em]`. The crown row's gap tightened (`gap-1 sm:gap-1.5`) and the corner's reserved air slimmed from `pr-14` to `pr-7 sm:pr-14` (the corner is 28px; the row's edge sits 24px from its left).
+- RESULT, MEASURED LIVE: 375×812 Shqip docked — InDream/Dritaret/HyperX all fully visible, zero truncation, 12px clear of the corner; 320×690 Shqip — graceful ellipsis, ZERO overlap, zero document overflow; 375 fullscreen — full labels, 3px+ clear; Turkish "Pencereler" (the longest Scopes word) fits whole at 375; Arabic RTL at 320 flows correctly with ellipsis and no overlap; Russian "Области" fits whole; 1280 desktop untouched (full labels, no overflow).
+- THE TONGUE'S GAPS FOUND DURING THE SWEEP (zero-mixed-language law): the HyperX floor asked "what truth shall we uncover, HyperX?" and whispered "Ask what has never been heard…" in ENGLISH on the Albanian floor; the scopes' shore wore English plates ("The Mirror", "The star families and worlds", "Lab bench inside · Atlas · Signal · Transit"…). sq.ts grew 21 hand-woven keys (floor ask, whisper, the fields' plates, the lab marks, HyperX receiving/Truth discovered); ar/es/fr/ru/zh each grew 31–33 keys (the whole fields' floor: questions, whispers, turn marks, plates, lab marks) — every non-sq floor and scopes' shore now speaks the visitor's tongue instead of falling back to English.
+- VERIFIED: bunx tsc --noEmit (the one error pre-exists in skills/, outside the app), bun run lint clean; Agent Browser matrix Shqip/Türkçe/العربية/Русский × 320/375/1280 × docked/fullscreen — zero overlap, zero horizontal scroll everywhere; the Albanian scopes' shore and HyperX floor read 100% Shqip live (screenshot-verified); dev.log clean of runtime errors.
+- Artifacts: src/components/mirror/landing/LandingChatNav.tsx, src/components/mirror/BranchCanopy.tsx, src/components/mirror/AppShell.tsx, src/lib/i18n/dicts/{sq,ar,zh,fr,ru,es}.ts.
+
+Stage Summary:
+- The crown now fits every tongue on every device: long words (Dritaret, Pencereler, المجالات, Области) compress their own waist instead of pushing HyperX beneath the corner's hand — measured clean at 320, 375 and 1280, docked and fullscreen, LTR and RTL.
+- And the sweep's honest catch: the fields' own floors and plates now speak Albanian (and the five full tongues) — the last English whispers on the scopes' shore are gone.
