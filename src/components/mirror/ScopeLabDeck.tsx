@@ -31,6 +31,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import {
+  HealxInstruments,
+  InterplanetaryInstruments,
+  QuantumInstruments,
+} from "./ScopeLabInstruments";
 
 export type LabScope = "interplanetary" | "quantum" | "healing";
 
@@ -545,12 +550,16 @@ function QuantumLab({ accent, disabled, addXp, onAsk }: {
   const t = useT();
   return (
     <>
-      <LabCard icon={Atom} accent={accent} title={t("State Bench")} note={t("one qubit, prepared honestly")}>
+      <LabCard icon={Atom} accent={accent} title={t("State Bench")} note={t("one qubit, prepared honestly")} className="min-[540px]:col-span-2">
         <StateBench accent={accent} disabled={disabled} addXp={addXp} onAsk={onAsk} />
       </LabCard>
       <LabCard icon={GitMerge} accent={accent} title={t("Entanglement Bench")} note={t("a Bell pair Φ⁺, counted")}>
         <EntanglementBench accent={accent} disabled={disabled} addXp={addXp} onAsk={onAsk} />
       </LabCard>
+      {/* THE MEASUREMENT BENCH — the deeper instruments: a true
+          interferometer, a true Bloch bench, a true random source;
+          each with its own plate showing the tool and its domain. */}
+      <QuantumInstruments accent={accent} disabled={disabled} addXp={addXp} onAsk={onAsk} />
     </>
   );
 }
@@ -910,6 +919,10 @@ function HealxLab({ accent, disabled, addXp, onAsk, tier }: {
       <LabCard icon={HeartPulse} accent={accent} title={t("Care Log")} note={t("the session, written down")}>
         <CareLog accent={accent} disabled={disabled} addXp={addXp} cycles={cycles} compassAsks={compassAsks} tier={tier} />
       </LabCard>
+      {/* THE CARE INSTRUMENTS — a true binaural oscillator, a true
+          day-log correlator, a true body heatmap; the plates above
+          them show each tool and its world. */}
+      <HealxInstruments accent={accent} disabled={disabled} addXp={addXp} onAsk={onAsk} />
     </>
   );
 }
@@ -1385,6 +1398,10 @@ function InterplanetaryLab({ accent, disabled, addXp, onAsk }: {
         note={t("real distances, real years")} className="min-[540px]:col-span-2">
         <TransitComputer accent={accent} disabled={disabled} addXp={addXp} onAsk={onAsk} />
       </LabCard>
+      {/* THE MISSION INSTRUMENTS — the rocket equation, the light-time
+          gauge, the transfer windows: the navigator's own bench, each
+          plate showing its tool and its sky. */}
+      <InterplanetaryInstruments accent={accent} disabled={disabled} addXp={addXp} onAsk={onAsk} />
     </>
   );
 }

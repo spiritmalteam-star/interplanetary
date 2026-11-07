@@ -49,9 +49,11 @@ interface ZAIClient {
       createVision(params: ChatParams): Promise<ChatCompletion>;
       /* THE STREAMING GIFT — the raw token stream (SSE) of one
          completion, returned as the live fetch Response. Optional:
-         only the cloud skies can stream today; the atelier SDK keeps
-         its own silence and the routes fall back to the one-breath
-         answer when the gift is absent. */
+         every sky that can stream offers it — the cloud skies
+         natively, and the atelier sky through its own stream body
+         (the SDK forwards stream:true and answers with the raw SSE
+         stream). A sky without the gift keeps its silence and the
+         routes fall back to the one-breath answer. */
       createStream?(params: ChatParams): Promise<Response>;
     };
   };
@@ -841,6 +843,35 @@ async function atelierBackend(): Promise<ZAIClient> {
     client.chat.completions.createVision = (params: ChatParams) =>
       withRetry(() => originalVision(params));
   }
+  /* THE STREAMING GIFT, ATELIER EDITION — the SDK's own door forwards
+     stream:true untouched: the shared sky answers with the raw SSE
+     body (an OpenAI-shaped token stream), and the routes read it with
+     the very same reader the cloud skies feed. One patient retry on
+     the opening (the wrapped create carries the house's patience);
+     once the stream runs it is never retried — a mid-flight storm is
+     the route's own weather. A sky that answers one-breath despite
+     the stream ask is refused politely: the route falls through to
+     its own one-breath lane and the words still come home. */
+  client.chat.completions.createStream = async (
+    params: ChatParams
+  ): Promise<Response> => {
+    /* the typed door says ChatCompletion; with stream:true the raw
+       body stream comes home — the cast names the runtime truth */
+    const carried = (await client.chat.completions.create({
+      ...params,
+      stream: true,
+    } as ChatParams)) as unknown;
+    if (
+      typeof ReadableStream !== "undefined" &&
+      carried instanceof ReadableStream
+    ) {
+      return new Response(carried, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      });
+    }
+    throw new Error("atelier stream door refused, one breath follows");
+  };
   /* the voice gets the same patience — the shared atelier sky 429s on
      bursts of long narrations; two short retries (never on validation
      errors) keep a 14-chunk transmission from dying on one breath */

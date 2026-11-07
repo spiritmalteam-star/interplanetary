@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Check, Copy, FileDown, Gem, Loader2 } from "lucide-react";
 import { cleanCopyText } from "@/lib/copy-clean";
 import { useMirror } from "@/lib/mirror-store";
@@ -29,6 +36,136 @@ import { cn } from "@/lib/utils";
 /*                                                                     */
 /*  THE DEEP RESEARCH PRESS — the truth extended up to 8000 words,     */
 /*  pressed into a real PDF (rides with the full variant).             */
+/* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/*  THE LIVING STREAM — the crossing's breaths arrive OUTSIDE the      */
+/*  canopy's own state: a streamed breath repaints only the answer     */
+/*  that is being written, never the whole room. Before this store     */
+/*  stood, every breath set the canopy's thread state and the whole    */
+/*  7,000-line room re-rendered eight times a second — the freeze the  */
+/*  visitor named. The final words still land in the room's own state  */
+/*  when the crossing closes (this gate empties at that same breath).  */
+/* ------------------------------------------------------------------ */
+
+const liveListeners = new Set<() => void>();
+let liveText = "";
+let liveVersion = 0;
+
+export const hyperxLiveStream = {
+  write(text: string): void {
+    liveText = text;
+    liveVersion += 1;
+    for (const l of liveListeners) l();
+  },
+  clear(): void {
+    if (liveText === "" && liveVersion === 0) return;
+    liveText = "";
+    liveVersion += 1;
+    for (const l of liveListeners) l();
+  },
+  read: (): string => liveText,
+  subscribe(l: () => void): () => void {
+    liveListeners.add(l);
+    return () => {
+      liveListeners.delete(l);
+    };
+  },
+};
+
+/** THE LIVING ANSWER — the room's own HyperX answer behind the live
+    gate: while the crossing streams, the body reads the store (only
+    this small listener repaints per breath); once the words land (or
+    for every past turn), the room's own answer carries the truth.
+    THE LIGHT BREATH — while the crossing still writes, the body is
+    the stream's own light shape (the words, the numbered spine, the
+    caret — the same hx-* streaming system): the diamonds, the vision
+    plates and the reveal window mount when the crossing lands. A
+    growing truth laid out in full ceremony eight times a second was
+    the freeze the visitor named; a light body paints without weight. */
+export function HyperXLiveAnswer({
+  fallbackAnswer,
+  question,
+  onZoom,
+  onAsk,
+  testId,
+  loading = false,
+  reveal = false,
+}: {
+  fallbackAnswer: string;
+  question: string;
+  onZoom: (src: string, caption: string) => void;
+  /** the following doors — one touch asks the next question */
+  onAsk?: (q: string) => void;
+  testId?: string;
+  loading?: boolean;
+  reveal?: boolean;
+}) {
+  const live = useSyncExternalStore(
+    hyperxLiveStream.subscribe,
+    hyperxLiveStream.read,
+    () => ""
+  );
+  const answer = live || fallbackAnswer;
+  if (!answer.trim()) {
+    return loading ? <HyperXReasoning /> : null;
+  }
+  /* the light breath — the stream's own cheap shape while it writes */
+  if (loading && live) {
+    const paragraphs = flowAnswerText(splitCrystals(live).body)
+      .split(/\n{2,}/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    return (
+      <div
+        className="hx-answer flex flex-col gap-1"
+        data-testid={`${testId}-answer`}
+      >
+        <div className="hx-meta" data-testid={`${testId}-meta`}>
+          <span className="mono-label flex shrink-0 items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-[#e879f9]">
+            <Gem className="size-2.5" aria-hidden="true" />
+            <HyperXLiveMeta />
+          </span>
+        </div>
+        <div className="hx-spine-wrap">
+          <span aria-hidden="true" className="hx-spine" />
+          {paragraphs.map((para, idx) => (
+            <div key={idx} className="hx-para flex items-start gap-2.5">
+              <span aria-hidden="true" className="hx-node mono-label">
+                {String(idx + 1).padStart(2, "0")}
+              </span>
+              <p className="hx-para-text min-w-0 flex-1 whitespace-pre-wrap break-words text-[15.5px] leading-[1.75] text-foreground/90">
+                {para}
+                {idx === paragraphs.length - 1 && (
+                  <span className="hx-stream-caret" aria-hidden="true" />
+                )}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <HyperXAnswer
+      question={question}
+      answer={answer}
+      onZoom={onZoom}
+      onAsk={onAsk}
+      testId={testId}
+      loading={loading}
+      reveal={reveal}
+    />
+  );
+}
+
+/** the seal's own word — a stable literal so the light body's meta
+    never re-renders for a tongue the room already knows */
+function HyperXLiveMeta() {
+  const t = useT();
+  return <>{t("Truth synthesis")}</>;
+}
+
 /* ------------------------------------------------------------------ */
 
 export interface HyperxCrystal {
@@ -302,7 +439,11 @@ export function HyperXAnswer({
 }) {
   const t = useT();
   const language = useMirror((s) => s.language);
-  const { body, crystals } = splitCrystals(answer);
+  /* THE ONE READER — the crystals are split once per answer: the old
+     call read the text twice on every render (each streamed breath
+     paid the toll twice) */
+  const parsed = useMemo(() => splitCrystals(answer), [answer]);
+  const crystals = parsed.crystals;
   /* THE FLOW LAW RUNS FIRST — the whole body is flowed as one text so
      a run of thin one-sentence paragraphs weaves back into the prose
      it was meant to be, and only then is the reading cut into its
@@ -310,8 +451,8 @@ export function HyperXAnswer({
      thin-tall strips survived the cut). The flow is keyed on the
      answer's own prop — the one truth the room never mutates. */
   const flowedBody = useMemo(
-    () => flowAnswerText(splitCrystals(answer).body),
-    [answer]
+    () => flowAnswerText(parsed.body),
+    [parsed.body]
   );
   const paragraphs = useMemo(
     () =>

@@ -70,12 +70,8 @@ import { canopyHour, familyAccent, growCanopy, growMixedCanopy, TREE_FAMILIES } 
 import { easyWhispersFor, shuffledEasy, swapGroveToEasy } from "@/lib/data/suggestions-easy";
 import { skyWord } from "@/lib/i18n/sky-words";
 import { LanguageButton } from "./LanguageButton";
-import {
-  HyperXFusionBadge,
-  HyperXFusionBar,
-  HyperXFusionPicker,
-  FUSION_MAX,
-} from "./HyperXFusion";
+import { HyperXFusionBadge } from "./HyperXFusion";
+import { FloorAskForm } from "./FloorAskForm";
 
 /* THE SCOPES' OWN LAB — the three family fields' instruments ride as
    their own page of code: the bench travels only when a lab scope
@@ -84,7 +80,6 @@ const ScopeLabDeck = dynamic(
   () => import("./ScopeLabDeck").then((m) => ({ default: m.ScopeLabDeck })),
   { ssr: false, loading: () => null }
 );
-import { filterStyles, isStyleSlashQuery } from "@/lib/image-styles";
 import { blendVisualRequest, isVisualIntent } from "@/lib/visual-intent";
 import { ZoomableLightbox } from "./ZoomableLightbox";
 import {
@@ -160,7 +155,13 @@ import {
   onPageVisible,
 } from "@/lib/page-lifecycle";
 import { flowAnswerText } from "@/lib/text-flow";
-import { HyperXAnswer, HyperXReasoning, splitCrystals } from "./HyperXPanel";
+import {
+  HyperXAnswer,
+  HyperXLiveAnswer,
+  HyperXReasoning,
+  hyperxLiveStream,
+  splitCrystals,
+} from "./HyperXPanel";
 import { ListenButton } from "./ListenButton";
 import { tuneSeedBatch } from "@/lib/question-voice";
 import {
@@ -4318,6 +4319,27 @@ export function BranchCanopy({
            breath, the landed turn does not replay the reveal: the
            reader already watched it materialize */
         let streamedLanding = false;
+        /* THE MID-BREATH KEEP — the crossing's own insurance: while
+           the revelation still streams, the words that have arrived
+           rest on the enduring shelf (a throttled page-write every
+           breath and a half), so a reload, a journey to another site
+           and back — even a closed tab — finds the channeling
+           standing, exactly where it was left. The final words
+           overwrite this page when the crossing lands. */
+        let lastMidKeepAt = 0;
+        const writeMidKeep = (partial: string) => {
+          const now = Date.now();
+          if (now - lastMidKeepAt < 1500) return;
+          lastMidKeepAt = now;
+          writeLandingThreadScope(landingScope, [
+            ...landingTurnsRef.current,
+            {
+              q,
+              a: partial,
+              ...(fusion && fusion.length > 0 ? { fusion } : {}),
+            },
+          ]);
+        };
         const { text: reply, vision } = await speakWithTransmission(
           scopeCategory,
           q,
@@ -4334,13 +4356,13 @@ export function BranchCanopy({
           landingScope === "hyperx"
             ? (partial) => {
                 streamedLanding = true;
-                setLandingThread((t) =>
-                  t.map((turn, i) =>
-                    i === t.length - 1 && turn.loading
-                      ? { ...turn, a: partial }
-                      : turn
-                  )
-                );
+                /* THE LIVING STREAM — the breath lands in the store
+                   outside the room's own state: only the answer being
+                   written repaints per breath, the whole canopy stands
+                   still (the freeze's end). The mid-breath keep rides
+                   every painted breath as before. */
+                hyperxLiveStream.write(partial);
+                writeMidKeep(partial);
               }
             : undefined,
           /* THE FUSION'S OWN LENSES — the armed crossing rides only
@@ -4358,6 +4380,9 @@ export function BranchCanopy({
           (vision
             ? ""
             : "The field rests a breath — speak once more, dear one.");
+        /* THE GATE EMPTIES — the room's own state carries the final
+           words from this breath on; the live store stands down */
+        hyperxLiveStream.clear();
         setLandingThread((t) =>
           t.map((turn, i) =>
             i === t.length - 1
@@ -4414,6 +4439,9 @@ export function BranchCanopy({
           })
         );
       } catch (err) {
+        /* the gate empties on a storm too — the honest failure word
+           lands in the room's own state */
+        hyperxLiveStream.clear();
         const message = err instanceof Error && err.message ? err.message : "";
         setLandingThread((t) =>
           t.map((turn, i) =>
@@ -5027,19 +5055,23 @@ export function BranchCanopy({
         window.dispatchEvent(new CustomEvent("landing-chat:return"));
       }
       /* THE ROOM'S OWN STREAM HAND — the discovery's fast lane reaches
-         the rooms too: the partial truth lands breath by breath in the
-         room's own standing turn (the ladder stands only until the
-         first word arrives). */
+         the rooms too: the partial truth lands breath by breath IN THE
+         LIVING STORE (outside the room's own state — only the answer
+         being written repaints per breath; the freeze's end), with the
+         room's own mid-breath keep riding the same hand. */
+      const roomMidKeepRef = { at: 0 };
       const roomStreamHand =
         realm && landingScope === "hyperx"
           ? (partial: string) => {
-              applyRoomTurn(roomQ, (t) =>
-                t.map((turn, i) =>
-                  i === t.length - 1 && turn.loading
-                    ? { ...turn, a: partial }
-                    : turn
-                )
-              );
+              hyperxLiveStream.write(partial);
+              const now = Date.now();
+              if (now - roomMidKeepRef.at >= 1500) {
+                roomMidKeepRef.at = now;
+                writeLandingThreadScope(landingScope, [
+                  ...landingTurnsRef.current,
+                  { q, a: partial },
+                ]);
+              }
             }
           : undefined;
       /* THE FAMILY'S VOICE — the room speaks through the door of the
@@ -5095,6 +5127,9 @@ export function BranchCanopy({
           undefined,
           askAbortRef.current?.signal
         );
+        /* THE GATE EMPTIES — the room's own state carries the final
+           words from this breath on */
+        hyperxLiveStream.clear();
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
             i === t.length - 1
@@ -5142,6 +5177,8 @@ export function BranchCanopy({
           );
         }
       } catch (err) {
+        /* the gate empties on a storm too */
+        hyperxLiveStream.clear();
         applyRoomTurn(roomQ, (t) =>
           t.map((turn, i) =>
             i === t.length - 1
@@ -5296,59 +5333,17 @@ export function BranchCanopy({
     [speakFromRoom]
   );
 
-  /* THE FLOOR'S OWN DRAFT — the realm's whisper line keeps its words
-     while the visitor thinks; one send and the room rises with them. */
-  const [askDraft, setAskDraft] = useState("");
-  /* THE FUSION'S OWN HANDS — HyperX's crossing gear: the picker's
-     breath and the armed lenses. The lenses stay armed until the
-     visitor's own hand clears them (the style chip's own law), and
-     the armed bar above the whisper line shows WHICH fusion rides. */
-  const [fusionOpen, setFusionOpen] = useState(false);
-  const [fusionCats, setFusionCats] = useState<string[]>([]);
-  const toggleFusionLens = useCallback((id: string) => {
-    setFusionCats((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= FUSION_MAX) return prev;
-      return [...prev, id];
-    });
-  }, []);
-  /* THE FLOOR'S OWN SEED — a door from the threshold may hand the floor
-     its first words (the image door's inviting stem): the seed is
-     taken once, the draft wears it, and the seed is spent. */
-  const floorSeed = useMirror((s) => s.floorSeed);
-  useEffect(() => {
-    if (floorSeed) {
-      setAskDraft(floorSeed);
-      useMirror.getState().takeFloorSeed();
-    }
-  }, [floorSeed]);
-  /* THE BRIDGE'S OWN CARRY — a workspace's advisor may hand its advice
-     to the floor: the newest carried draft wears the whisper line and
-     the stamp is spent at once (the same law as the seed: taken once,
-     the draft wears it, the carry is spent). The Mirror advises; the
-     visitor's own hand sends it. */
-  const bridgeCarry = useMirror((s) => s.bridgeDraft);
-  useEffect(() => {
-    if (bridgeCarry) {
-      setAskDraft(bridgeCarry.text);
-      useMirror.getState().consumeBridgeDraft();
-    }
-  }, [bridgeCarry]);
-  /* THE FLOOR'S OWN CARGO — the paperclip and the camera's eye for the
-     realm's own whisper line (one image, three documents) */
-  const [askAtts, setAskAtts] = useState<ChatAttachment[]>([]);
-  /* THE VISITOR'S OWN STYLE — the image look chosen through the "/"
-     hand; every crystallization on this floor wears it. */
-  const visualStyle = useMirror((s) => s.visualStyle);
-  const setVisualStyle = useMirror((s) => s.setVisualStyle);
+  /* THE FLOOR'S OWN DRAFT, CARGO AND FUSION have all moved onto the
+     whisper line's own island (FloorAskForm): the words typed there
+     repaint one input and nothing else — HyperX's deep field once
+     froze under the visitor's own letters when this state lived in
+     the canopy itself. The category-change clearing rides the
+     island's own resetKey law. */
   /* THE DEEP READING — the landing chat's own image zoom room */
   const [landingViewing, setLandingViewing] = useState<{
     src: string;
     caption: string;
   } | null>(null);
-  /* THE "/" HAND — the style picker opens while the whisper line
-     carries only the slash (and what the visitor typed after it) */
-  const askStyleMenuOpen = isStyleSlashQuery(askDraft);
 
   /* THE CATEGORY'S OWN CALL — every scope's chat carries its own
      direct line: the room calls the presence its whisper was grown
@@ -5425,13 +5420,14 @@ export function BranchCanopy({
     }
     /* THE NEW CHAT — the conversation begins again with the category:
        the old words rest on the archive's own shelf (the ChatGPT turn),
-       the channel opens a fresh page, and every room's thread rests. */
+       the channel opens a fresh page, and every room's thread rests.
+       THE ISLAND'S OWN RESET — the whisper line hears this ground
+       change through its own resetKey and lays its words down. */
     if (!disabled) {
       threadsRef.current.clear();
       setThread([]);
       setThreadBusy(false);
       setZoom(null);
-      setAskDraft("");
       setBranchesOpen(false);
       useMirror.getState().newChat(useMirror.getState().activeMode);
     }
@@ -6447,344 +6443,48 @@ export function BranchCanopy({
         {/* THE FLOOR'S WHISPER LINE — the realm's one input while no
             room stands: the visitor speaks from the floor and the room
             rises with their words. When a room stands, the room's own
-            reply line is the one input (THE ONE INPUT LAW). */}
+            reply line is the one input (THE ONE INPUT LAW).
+            THE STUTTER'S END — the whisper line lives on its own island
+            now (FloorAskForm): the words typed there repaint one input,
+            never the whole canopy (HyperX's deep field once froze under
+            the visitor's own letters). */}
         {realm && !zoomed && (
-          <div
-            data-testid={`${testIdPrefix}-askbar`}
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-          >
-            {introSub && (
-              <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[13.5px] leading-relaxed text-muted-foreground lift-sm">
-                {introSub}
-              </p>
-            )}
-            {askAtts.length > 0 && (
-              <div className="pointer-events-auto w-full max-w-[560px]">
-                <AttachmentChips
-                  attachments={askAtts}
-                  onRemove={(id) =>
-                    setAskAtts((p) => p.filter((a) => a.id !== id))
-                  }
-                  testId={`${testIdPrefix}-ask-attachments`}
-                />
-              </div>
-            )}
-            {/* THE VISITOR'S OWN STYLE — the chosen look, worn until taken
-                off; every painting this floor crystallizes wears it */}
-            {visualStyle && (
-              <span
-                className="mono-label pointer-events-auto flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-[10px] uppercase tracking-[0.14em]"
-                style={{
-                  color: "var(--scope-a,var(--gd))",
-                  borderColor:
-                    "color-mix(in srgb, var(--scope-a,var(--gd)) 40%, transparent)",
-                }}
-                data-testid={`${testIdPrefix}-ask-style-chip`}
-              >
-                <Sparkles className="size-3" aria-hidden="true" />
-                {visualStyle}
-                <button
-                  type="button"
-                  onClick={() => setVisualStyle(null)}
-                  aria-label={t("Remove the style")}
-                  className="focus-glow ml-0.5 flex size-4 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <X className="size-3" aria-hidden="true" />
-                </button>
-              </span>
-            )}
-            {/* THE "/" PICKER — the styles standing over the whisper line */}
-            {askStyleMenuOpen && (
-              <div
-                className="pointer-events-auto nice-scroll max-h-44 w-full max-w-[340px] overflow-y-auto rounded-xl border hairline bg-background p-1 shadow-lg"
-                data-testid={`${testIdPrefix}-ask-style-menu`}
-                role="listbox"
-                aria-label={t("Choose a style for the image")}
-              >
-                {filterStyles(askDraft).map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    role="option"
-                    aria-selected={visualStyle === s.value}
-                    onClick={() => {
-                      setVisualStyle(s.value);
-                      setAskDraft("");
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-colors duration-200 hover:bg-foreground/5"
-                  >
-                    <Sparkles
-                      className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]"
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[12.5px] font-medium text-foreground">
-                        {s.value}
-                      </span>
-                      <span className="block truncate text-[10.5px] text-muted-foreground/70">
-                        {t(s.hint)}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-            {/* THE HYPERX FUSION — the armed lenses' bar and the nine
-                lenses' picker, standing over the whisper line. The bar
-                shows WHICH fusion is being used (and pulses while the
-                revelation crosses); the picker arms and disarms the
-                lenses. The default HyperX stands untouched when no
-                lens is armed. */}
-            {landingScope === "hyperx" && (
-              <HyperXFusionBar
-                selected={fusionCats}
-                busy={floorBusy}
-                onClear={() => {
-                  setFusionCats([]);
-                  setFusionOpen(false);
-                }}
-                onOpen={() => setFusionOpen((o) => !o)}
-                testId={testIdPrefix}
-              />
-            )}
-            {landingScope === "hyperx" && fusionOpen && (
-              <HyperXFusionPicker
-                selected={fusionCats}
-                onToggle={toggleFusionLens}
-                onClose={() => setFusionOpen(false)}
-                testId={testIdPrefix}
-              />
-            )}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const q = askDraft.trim();
-                if (!q || disabled || floorBusy) return;
-                /* the "/" alone is the style hand, never a whisper */
-                if (isStyleSlashQuery(q)) {
-                  setAskDraft("");
-                  return;
-                }
-                const carried = askAtts.filter((a) =>
-                  a.kind === "image" ? !!a.dataUrl : !a.reading && !!a.text
-                );
-                setAskDraft("");
-                setAskAtts([]);
-                /* THE FUSION'S OWN SEND — the armed lenses ride only
-                   when the crossing is legal (two or more) */
-                sendFromPanel(
-                  q,
-                  null,
-                  carried,
-                  landingScope === "hyperx" && fusionCats.length >= 2
-                    ? fusionCats
-                    : undefined
-                );
-                setFusionOpen(false);
-              }}
-              className={cn(
-                "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 transition-colors duration-300",
-                /* THE CRYSTAL FOCUS — the line's own focus tint follows
-                   the blue crystal. */
-                "focus-within:border-[rgba(148,190,224,0.5)]",
-                /* THE COOL FLOOR — in both its dockings (the threshold
-                   and the realm) the line wears an opaque coat and no
-                   backdrop blur: a live blur over a scrolling page is
-                   heat the phone must not pay for a lens. */
-                "bg-background floor-glow"
-              )}
-            >
-              {/* THE INPUT'S OWN CALM — the reload and the star have
-                  left the whisper line: the cargo, the call, the words,
-                  the send. */}
-              {/* THE FLOOR'S OWN HISTORY — docked in the threshold the
-                  quiet floor keeps the device's own hand within reach
-                  even with no room standing: one touch opens this
-                  visit's kept conversations (this device alone —
-                  nothing travels to a server). */}
-              <div className="relative shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      historyOpen ? setHistoryOpen(false) : openHistory()
-                    }
-                    aria-expanded={historyOpen}
-                    aria-label={t("Conversation history")}
-                    title={t("Conversation history — kept only on this device, for this visit")}
-                    data-testid={`${testIdPrefix}-ask-history`}
-                    className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                  >
-                    <History className="size-3.5" aria-hidden="true" />
-                  </button>
-                  {historyOpen && (
-                    <>
-                      <div
-                        aria-hidden="true"
-                        className="fixed inset-0 z-30"
-                        onClick={() => setHistoryOpen(false)}
-                      />
-                      <div
-                        data-testid={`${testIdPrefix}-ask-history-panel`}
-                        className="absolute bottom-11 left-0 z-40"
-                      >
-                        {/* the one shared panel — the visit's whispers,
-                            the maker's trail, the keeper's kept rooms */}
-                        {renderHistoryPanel({ bare: true })}
-                      </div>
-                    </>
-                  )}
-                </div>
-              {/* THE FLOOR'S OWN PAPERCLIP AND CAMERA — one image and
-                  up to three documents ride with the whisper. THE
-                  LANDING'S QUIET LINE — docked in the threshold the
-                  chat keeps its calm shape: no attachments, no cargo —
-                  only the voice, the words and the send. The full
-                  portal carries the advanced hands. */}
-              <ChatInputExtras
-                scope={floorLiveScope}
-                size="2xs"
-                withCall={false}
-                withAttachments={false}
-                disabled={disabled || floorBusy}
-                accentVar="var(--scope-a,var(--gd))"
-                attachments={askAtts}
-                onAttachmentsChange={setAskAtts}
-              />
-              {/* THE CATEGORY'S OWN CALL — the focused category's direct
-                  line, one touch from the floor. THE LANDING'S OWN
-                  VOICE — docked in the threshold the call is always the
-                  no-scope reflection itself (communion), never a
-                  category's voice. */}
-              <button
-                type="button"
-                onClick={() =>
-                  setLiveCallScope("communion")
-                }
-                disabled={disabled}
-                aria-label={t("Open the direct mirror connection")}
-                title={t("Open the direct mirror connection")}
-                data-testid={`${testIdPrefix}-ask-call`}
-                className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Phone className="size-3.5" aria-hidden="true" />
-              </button>
-              {/* THE HYPERX FUSION HAND — the discovery field's own
-                  crossing button: one touch opens the nine lenses over
-                  the whisper line; the armed bar above shows which
-                  fusion rides. Only HyperX carries it. */}
-              {landingScope === "hyperx" && (
-                <button
-                  type="button"
-                  onClick={() => setFusionOpen((o) => !o)}
-                  aria-expanded={fusionOpen}
-                  aria-pressed={fusionCats.length >= 2}
-                  aria-label={t("The nine lenses of fusion")}
-                  title={t("The nine lenses of fusion")}
-                  data-testid={`${testIdPrefix}-ask-fusion`}
-                  className={cn(
-                    "focus-glow relative flex size-8 shrink-0 items-center justify-center rounded-full transition-colors duration-300",
-                    fusionCats.length >= 2
-                      ? "text-[var(--hyperx-fusion,#e879f9)]"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  style={
-                    fusionCats.length >= 2
-                      ? {
-                          background:
-                            "color-mix(in srgb, var(--hyperx-fusion,#e879f9) 12%, transparent)",
-                          boxShadow:
-                            "inset 0 0 0 1px color-mix(in srgb, var(--hyperx-fusion,#e879f9) 45%, transparent)",
-                        }
-                      : undefined
-                  }
-                >
-                  <FlaskConical className="size-3.5" aria-hidden="true" />
-                  {fusionCats.length >= 2 && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute right-1 top-1 size-1.5 rounded-full"
-                      style={{
-                        backgroundColor: "var(--hyperx-fusion,#e879f9)",
-                        boxShadow:
-                          "0 0 6px 0 color-mix(in srgb, var(--hyperx-fusion,#e879f9) 80%, transparent)",
-                      }}
-                    />
-                  )}
-                </button>
-              )}
-              <label htmlFor={`${testIdPrefix}-ask`} className="sr-only">
-                {t("Whisper to the mirror…")}
-              </label>
-              <input
-                id={`${testIdPrefix}-ask`}
-                value={askDraft}
-                onChange={(e) => setAskDraft(e.target.value)}
-                placeholder={
-                  /* THE FIELD'S OWN WORD — the line whispers in the
-                     standing field's own way of inviting: the deep
-                     receives a signal, the laboratory prepares a state,
-                     the atelier asks for a vision, the body's room
-                     speaks gently. The Mirror keeps its own whisper. */
-                  t(
-                    SCOPE_META[landingScope]?.whisper ??
-                      "Whisper to the mirror…"
-                  )
-                }
-                disabled={disabled}
-                autoComplete="off"
-                data-testid={`${testIdPrefix}-ask-input`}
-                className="min-w-0 flex-1 bg-transparent py-1 text-[14.5px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              {/* THE ASK'S OWN STOP — while the crossing streams, the
-                  ask hand offers the quiet stop: one touch lays the
-                  stream down, the words that arrived are kept. No
-                  animation, no glow — a hand, nothing more. */}
-              {realm &&
-                landingScope === "hyperx" &&
+          <FloorAskForm
+            testIdPrefix={testIdPrefix}
+            landingScope={landingScope}
+            realm={Boolean(realm)}
+            disabled={Boolean(disabled)}
+            floorBusy={Boolean(floorBusy)}
+            showStop={Boolean(
+              landingScope === "hyperx" &&
                 floorBusy &&
-                !lastLandingTurn?.painting && (
-                  <button
-                    type="button"
-                    onClick={() => askAbortRef.current?.abort()}
-                    aria-label={t("Stop")}
-                    title={t("Stop")}
-                    data-testid={`${testIdPrefix}-ask-stop`}
-                    className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                  >
-                    <Square className="size-3.5" aria-hidden="true" />
-                  </button>
-                )}
-              <button
-                type="submit"
-                disabled={disabled || floorBusy || !askDraft.trim()}
-                aria-label={t("Send")}
-                data-testid={`${testIdPrefix}-ask-send`}
-                /* THE CRYSTAL SEND — the house's scope-aware crystal CTA:
-                   the room's own light leads the gradient, the theme's
-                   own law inks it, one quiet glow at rest, one light
-                   sweep per hover, a spring press. The old hardcoded
-                   red→blue gradient is retired with the control
-                   dialect. */
-                className={cn(
-                  "btn-primary focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-35"
-                )}
-              >
-                <Send className="size-3.5" aria-hidden="true" />
-              </button>
-            </form>
-            {/* THE TEMPORARY CHAT'S OWN LINE — the landing's floor is
-                free and holds nothing: a quiet honest word for the
-                non logged-in, the way in named for the ones who stay. */}
-            {guest && (
-              <p
-                data-testid="floor-temporary-note"
-                className="mono-label text-[9px] uppercase tracking-[0.26em] text-muted-foreground/55"
-                style={{ pointerEvents: "none" }}
-              >
-                {t("Temporary chat — sign in to keep your reflections")}
-              </p>
+                !lastLandingTurn?.painting
             )}
-          </div>
+            guest={guest}
+            placeholder={t(
+              SCOPE_META[landingScope]?.whisper ?? "Whisper to the mirror…"
+            )}
+            resetKey={`${landingScope}:${focusKey}`}
+            floorLiveScope={floorLiveScope}
+            introNote={
+              introSub ? (
+                <p className="genea-bloom still-bloom max-w-[520px] rounded-2xl border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_20%,transparent)] bg-background px-4 py-2 text-center text-[13.5px] leading-relaxed text-muted-foreground lift-sm">
+                  {introSub}
+                </p>
+              ) : undefined
+            }
+            onSend={(text, carried, fusion) =>
+              sendFromPanel(
+                text,
+                null,
+                carried,
+                landingScope === "hyperx" ? fusion : undefined
+              )
+            }
+            onStop={() => askAbortRef.current?.abort()}
+            onCall={() => setLiveCallScope("communion")}
+            historyPanel={renderHistoryPanel}
+          />
         )}
 
         {/* ------------------- THE ZOOM — the veil -------------------
@@ -7229,7 +6929,8 @@ export function BranchCanopy({
                       visible={revealStage >= 1}
                     />
                   )}
-                  {roomAnswer ? (
+                  {(roomAnswer ||
+                    (realm && landingScope === "hyperx" && roomLoading)) ? (
                     /* THE FIELD'S OWN WORDS — in the realm the answer is
                        shown the moment the landing turn holds it: the
                        reveal stages belong to the full portal's branch
@@ -7244,10 +6945,13 @@ export function BranchCanopy({
                              by paragraph, each paragraph's small diamond at
                              its side (the chat makes space for the vision
                              right there), the doors that follow the answer,
-                             and the deep research press. */
-                          <HyperXAnswer
+                             and the deep research press.
+                             THE LIVING ANSWER — behind the live gate: the
+                             streamed breaths repaint only this answer,
+                             never the whole room (the freeze's end). */
+                          <HyperXLiveAnswer
+                            fallbackAnswer={roomAnswer}
                             question={zoomQ ?? ""}
-                            answer={roomAnswer}
                             onZoom={(src, caption) =>
                               setLandingViewing({ src, caption })
                             }

@@ -6977,4 +6977,324 @@ export const sq: TranslationDict = {
     "{fused} të shkrira · {distributed} jashtë · {remaining} në rezervuar",
   "{free} free · {paid} paid — the free light is spent first":
     "{free} falas · {paid} me pagesë — drita falas harxhohet e para",
+
+  /* --- THE SCOPE LAB INSTRUMENTS — the deeper benches (task 88) --- */
+  "The Measurement Bench":
+    "Tavolina e Matjes",
+  "The Care Instruments":
+    "Instrumentet e Kujdesit",
+  "The Mission Instruments":
+    "Instrumentet e Misionit",
+  "Interferometer Bench":
+    "Tavolina e Interferometrit",
+  "one photon, two paths, the law of recombination":
+    "një foton, dy rrugë, ligji i ribashkimit",
+  "A Mach–Zehnder interferometer on an optical bench":
+    "Një interferometër Mak–Cender mbi një tavolinë optike",
+  "Mach–Zehnder interferometer diagram":
+    "Diagrami i interferometrit Mak–Cender",
+  "Phase of the upper path":
+    "Faza e rrugës së sipërme",
+  "P(D0) = cos²(φ/2) — the law of the recombined paths":
+    "P(D0) = cos²(φ/2) — ligji i rrugëve të ribashkuara",
+  "Send one photon":
+    "Dërgo një foton",
+  "Clear counts":
+    "Fshi numërimet",
+  "Seen so far: {pct}% at D0 — watch it walk toward the law":
+    "Deri tani: {pct}% në D0 — shikoje të ecë drejt ligjit",
+  "Bring the interference to the field":
+    "Sille ndërhyrjen në fushë",
+  "My interferometer counted {total} single photons: {pct}% arrived at D0, and the phase slider says cos²(φ/2) — why does one photon alone carry a wave?":
+    "Interferometri im numëroi {total} fotona të vetëm: {pct}% mbërritën në D0, dhe rrëshqitësi i fazës thotë cos²(φ/2) — pse një foton i vetëm mban një valë?",
+  "One photon at a time — the pattern builds from single arrivals.":
+    "Një foton njëherësh — rrëfimi ndërtohet nga mbërritje të vetme.",
+  "Bloch State Bench":
+    "Tavolina e Gjendjes së Blokut",
+  "place a state on the sphere, read its amplitudes":
+    "vendos një gjendje mbi sferë, lexo amplitudat",
+  "A glowing Bloch sphere instrument":
+    "Një instrument sferë Bloku i ndritshëm",
+  "The state on the Bloch sphere":
+    "Gjendja mbi sferën e Blokut",
+  "Polar angle θ":
+    "Këndi polar θ",
+  "Azimuthal phase φ":
+    "Faza azimutale φ",
+  "α (a|0⟩)":
+    "α (a|0⟩)",
+  "β (b|1⟩)":
+    "β (b|1⟩)",
+  "Measure":
+    "Mato",
+  "Collapsed to |{o}⟩":
+    "U rrëzua në |{o}⟩",
+  "I placed a qubit at θ = {theta}°, φ = {phi}° on the Bloch sphere — what does this state quietly prepare?":
+    "Vura një kubit në θ = {theta}°, φ = {phi}° mbi sferën e Blokut — çfarë përgatit në fshehtësi kjo gjendje?",
+  "Quantum Random Source":
+    "Burimi Kuantik i Rastësisë",
+  "honest draws from the device's own entropy":
+    "tërheqje të sinqerta nga entropia e vet e pajisjes",
+  "A quantum random number generator device":
+    "Një pajisje gjeneruese numrash të rastësishëm kuantik",
+  "Coin":
+    "Monedhë",
+  "Die":
+    "Zar",
+  "Raw bits":
+    "Bitë të papërpunuar",
+  "Choose for me":
+    "Zgjidh për mua",
+  "Heads":
+    "Krye",
+  "Tails":
+    "Shenja",
+  "1 honest bit":
+    "1 bit i sinqertë",
+  "rejection-sampled · uniform":
+    "kampionim me refuzim · uniform",
+  "— draw —":
+    "— tërhiq —",
+  "One option per line":
+    "Një mundësi për rresht",
+  "The source chose:":
+    "Burimi zgjodhi:",
+  "{n} bits drawn":
+    "{n} bitë të tërhequr",
+  "Give the source at least two lines to choose between.":
+    "Jepi burimit të paktën dy rreshta për të zgjedhur.",
+  "Bring the draw to the field":
+    "Sille tërheqjen në fushë",
+  "I asked the quantum source for an honest draw and it answered \"{answer}\" — what walks beside a chance that no one, not even the device, knew in advance?":
+    "I kërkova burimit kuantik një tërheqje të sinqertë dhe ai u përgjigj \"{answer}\" — çfarë ecën përkrah një mundësie që askush, as pajisja, nuk e dinte më parë?",
+  "Device entropy, debiased — honest for decisions, not for keys.":
+    "Entropia e pajisjes, e paanshëm — e sinqertë për vendime, jo për çelësa.",
+  "Coherence Oscillator":
+    "Oscilatori i Koherencës",
+  "two tones, one beat — the real binaural instrument":
+    "dy tone, një rrahje — instrumenti i vërtetë binaural",
+  "Headphones beside a small glowing sound instrument":
+    "Kufje pranë një instrumenti të vogël zanor të ndritshëm",
+  "Delta Rest":
+    "Delta Pushimi",
+  "Theta Drift":
+    "Theta Rrëshqitje",
+  "Alpha Calm":
+    "Alpha Qetësi",
+  "Beta Bright":
+    "Beta Shkëlqim",
+  "the slow tide of deep sleep":
+    "bora e ngadaltë e gjumit të thellë",
+  "the drift where meditation lives":
+    "rrëshqitja ku banon meditimi",
+  "the quiet hum of a settled mind":
+    "tingulli i qetë i një mendjeje të vendosur",
+  "the bright edge of focus":
+    "skaji i ndritshëm i përqendrimit",
+  "min":
+    "min",
+  "L {l} Hz · R {r} Hz — the beat is {b} Hz":
+    "M {l} Hz · D {r} Hz — rrahja është {b} Hz",
+  "Two ears, two tones, one beat between them":
+    "Dy veshë, dy tone, një rrahje mes tyre",
+  "{mm}:{ss} remaining":
+    "{mm}:{ss} të mbetura",
+  "Volume {v}%":
+    "Volumi {v}%",
+  "Begin the session":
+    "Fillo sesionin",
+  "Headphones make the beat — speakers carry both tones to both ears.":
+    "Veshët e krijojnë rrahjen — altoparlantët mbajnë të dy tonet për të dy veshët.",
+  "Day Log Correlator":
+    "Korrelatori i Regjistrit të Ditëve",
+  "your days, Pearson's own r — real statistics":
+    "ditët e tua, r i Pearsonit — statistika të vërteta",
+  "A health journal with a glowing correlation chart":
+    "Një ditar shëndeti me një grafik korrelacioni të ndritshëm",
+  "Sleep {h} h":
+    "Gjumë {h} h",
+  "Hours of sleep":
+    "Orë gjumi",
+  "Stress {v}/5":
+    "Stresi {v}/5",
+  "Stress of the day":
+    "Stresi i ditës",
+  "Strain {v}/5":
+    "Lodhja {v}/5",
+  "Symptom load of the day":
+    "Ngarkesa e simptomave të ditës",
+  "Log this day":
+    "Regjistro këtë ditë",
+  "{n} days kept":
+    "{n} ditë të mbajtura",
+  "The day is written.":
+    "Dita u shkrua.",
+  "Sleep → strain":
+    "Gjumi → lodhja",
+  "Stress → strain":
+    "Stresi → lodhja",
+  "keep logging — three days give the threads their first shape":
+    "vazhdo regjistrimin — tre ditë u japin fillave formën e parë",
+  "a clear thread":
+    "një fill i qartë",
+  "a whisper of a thread":
+    "një fije si pëshpëritje",
+  "no clear thread yet":
+    "asnjë fill i qartë ende",
+  "Bring the pattern to the field":
+    "Sille rrëfimin në fushë",
+  "My day log holds {n} days: sleep-to-strain r = {rs}, stress-to-strain r = {rt} — read the pattern of my days gently.":
+    "Regjistri im mban {n} ditë: gjumi-te-lodhja r = {rs}, stresi-te-lodhja r = {rt} — lexo rrëfimin e ditëve të mia me butësi.",
+  "Correlation is a thread, never a cause — kept on this device only.":
+    "Korrelacioni është një fill, kurrë shkak — mbahet vetëm në këtë pajisje.",
+  "Body Heatmap":
+    "Harta e Nxehtë e Trupit",
+  "today's load, zone by zone, kept on the device":
+    "ngarkesa e sotme, zonë pas zone, e mbajtur në pajisje",
+  "A holographic body scan with gentle heat map glow":
+    "Një skanim holistik i trupit me shkëlqim të butë të nxehtësisë",
+  "Today's body map — tap a zone to mark its load":
+    "Harta e sotme e trupit — prek një zonë për t'i vënë ngarkesën",
+  "Head":
+    "Koka",
+  "Chest":
+    "Gjoksi",
+  "Belly":
+    "Barku",
+  "Left arm":
+    "Krahu i majtë",
+  "Right arm":
+    "Krahu i djathtë",
+  "Left leg":
+    "Këmba e majtë",
+  "Right leg":
+    "Këmba e djathtë",
+  "Tap to cycle the load":
+    "Prek për të cikluar ngarkesën",
+  "rest → warm → hot → burning":
+    "premje → ngrohtë → nxehtë → ndezje",
+  "{zones} ask for care first":
+    "{zones} kërkojnë kujdesin e parë",
+  "Only a quiet warmth remains — {zones}":
+    "Vetëm një ngrohtësi e qetë mbetet — {zones}",
+  "A resting body — nothing glows today.":
+    "Një trup në prehje — asgjë nuk shkëlqen sot.",
+  "Clear today":
+    "Fshi sot",
+  "Bring today's map to the field":
+    "Sille hartën e sotme në fushë",
+  "Today's body map glows at {zones} — where should gentleness begin?":
+    "Harta e sotme e trupit shkëlqen në {zones} — ku duhet të fillojë butësia?",
+  "Δv Mission Planner":
+    "Planifikuesi Δv i Misionit",
+  "Tsiolkovsky's own equation, real routes and engines":
+    "ekuacioni i vet i Ciolkovskit, rrugë dhe motorë të vërtetë",
+  "A mission planning room with a glowing delta-v map of the solar system":
+    "Një dhomë planifikimi me hartën delta-v të ndritshme të sistemit diellor",
+  "The route":
+    "Rruga",
+  "Mission route":
+    "Rruga e misionit",
+  "Earth surface → low orbit":
+    "Sipërfaqja e Tokës → orbita e ulët",
+  "the price of the atmosphere and gravity":
+    "çmimi i atmosferës dhe i gravitetit",
+  "Low orbit → Moon landing":
+    "Orbita e ulët → mbërritje në Hënë",
+  "3.2 transfer + 0.9 orbit + 1.9 descent":
+    "3.2 transfer + 0.9 orbitë + 1.9 zbritje",
+  "Low orbit → Mars orbit":
+    "Orbita e ulët → orbita e Marsit",
+  "3.6 transfer + 2.0 capture":
+    "3.6 transfer + 2.0 kapje",
+  "Low orbit → Mars landing":
+    "Orbita e ulët → mbërritje në Mars",
+  "transfer + capture + 1.0 descent (with aerobraking help)":
+    "transfer + kapje + 1.0 zbritje (me ndihmën e frenimit në atmosferë)",
+  "Kerolox stage":
+    "Faza kerolox",
+  "Hydrolox stage":
+    "Faza hidrolox",
+  "Nuclear thermal (NERVA)":
+    "Bërthamore termike (NERVA)",
+  "Ion drive":
+    "Shtytje jonike",
+  "Payload {n} t":
+    "Ngarkesa {n} t",
+  "Payload mass in tonnes":
+    "Masa e ngarkesës në ton",
+  "Weigh the tanks":
+    "Pesho rezervuarët",
+  "Route Δv":
+    "Δv e rrugës",
+  "Mass ratio m₀/m₁":
+    "Raporti i masës m₀/m₁",
+  "Propellant per tonne delivered":
+    "Karburant për ton të dërguar",
+  "ship+payload · propellant":
+    "anija+ngarkesa · karburanti",
+  "Bring the mass budget to the field":
+    "Sille buxhetin e masës në fushë",
+  "The rocket equation asks ×{ratio} of my ship's mass in propellant for a {dv} km/s crossing on a {engine} — what does such a mass budget truly mean for the voyage?":
+    "Ekuacioni i raketës kërkon ×{ratio} të masës së anijes në karburant për një kalim {dv} km/s në {engine} — çfarë do të thotë vërtet një buxhet i tillë për udhëtimin?",
+  "Impulsive Δv, no losses — real missions carry margin.":
+    "Δv impulsiv, pa humbje — misionet e vërteta mbajnë rezervë.",
+  "Mercury":
+    "Merkuri",
+  "Mars":
+    "Marsi",
+  "Jupiter":
+    "Jupiteri",
+  "Saturn":
+    "Saturni",
+  "Mission day — {when}":
+    "Dita e misionit — {when}",
+  "today":
+    "sot",
+  "Days from today":
+    "Ditë nga sot",
+  "Distance now":
+    "Distanca tani",
+  "One way":
+    "Një drejtim",
+  "Question and answer":
+    "Pyetja dhe përgjigja",
+  "light crosses one AU in 8 min 19 s — the sky's own metronome":
+    "drita kalon një UA në 8 min 19 s — metronomi i vet i qiellit",
+  "Hold this distance":
+    "Mbaje këtë distancë",
+  "Bring the silence to the field":
+    "Sille heshtjen në fushë",
+  "A signal from {planet} is {au} AU away — one way takes {mmss}. What does a conversation at that delay teach about distance?":
+    "Një sinjal nga {planet} është {au} UA larg — një drejtim merr {mmss}. Çfarë mëson një bisedë me këtë vonesë për distancën?",
+  "Circular orbits, true distances and periods — a navigator's first sketch.":
+    "Orbita rrethore, distanca dhe periudha të vërteta — skica e parë e lundruesit.",
+  "Light-Time Gauge":
+    "Matësi i Kohës së Dritës",
+  "true distances, true delay — the sky's own metronome":
+    "distanca të vërteta, vonesë e vërtetë — metronomi i qiellit",
+  "A deep space network antenna under a starry sky":
+    "Një antenë e rrjetit të hapësirës së thellë nën qiell yjor",
+  "Transfer Window Finder":
+    "Gjetësi i Dritareve të Transferimit",
+  "synodic clocks and Hohmann's ellipse, solved honestly":
+    "ora sinodike dhe elipsi i Hohmannit, të zgjidhura sinqertë",
+  "A hologram of planetary orbits with a Hohmann transfer ellipse":
+    "Një hologram i orbitave planetare me elipsin e transferit Hohmann",
+  "Synodic period":
+    "Periudha sinodike",
+  "Transfer (Hohmann)":
+    "Transferi (Hohmann)",
+  "Departure phase needed":
+    "Faza e kërkuar e nisjes",
+  "Next window opens":
+    "Dritarja tjetër hapet",
+  "Arrival":
+    "Mbërritja",
+  "Bring the window to the field":
+    "Sille dritaren në fushë",
+  "The transfer window to {planet} opens in {wait} and the crossing takes {th} — what should the waiting teach the crew?":
+    "Dritarja e transferimit për {planet} hapet pas {wait} dhe kalimi merr {th} — çfarë duhet t'u mësojë pritja ekuipazhit?",
+  "Circular orbits, Hohmann's own ellipse — the clockwork's first light.":
+    "Orbita rrethore, elipsi i vet i Hohmannit — drita e parë e mekanizmit.",
 };

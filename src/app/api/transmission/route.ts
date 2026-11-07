@@ -673,6 +673,17 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
                 let buf = "";
                 let raw = "";
                 let emitted = 0;
+                /* THE STREAM'S OWN LANE — named once, from the first
+                   breaths' shape. The HyperX output law speaks PLAIN
+                   PROSE (no JSON envelope); an older habit of the
+                   model may still wrap the words in the JSON object.
+                   Plain prose travels as it is written; the JSON
+                   envelope's "transmission" value is decoded breath
+                   by breath. The first breaths are held while the
+                   shape is unreadable (a leading brace or fence with
+                   no key yet), then the lane is named and the held
+                   words travel whole. */
+                let lane: "plain" | "json" | null = null;
                 /* the transmission's own decoder — reads the streaming
                    JSON's "transmission" string value and returns its
                    DECODED text so far (escapes folded, an incomplete
@@ -735,10 +746,38 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
                       const delta = j.choices?.[0]?.delta?.content ?? "";
                       if (delta) {
                         raw += delta;
-                        const decoded = decodedSoFar();
-                        if (decoded.length > emitted) {
-                          send({ t: decoded.slice(emitted) });
-                          emitted = decoded.length;
+                        /* THE LANE'S OWN NAMING — held breaths decide
+                           once: a JSON envelope (a leading brace or
+                           fence) waits for its "transmission" key;
+                           plain prose travels at once. A fence or
+                           brace that runs long without the key is
+                           plain prose wearing a costume — the lane
+                           opens and the words travel. */
+                        if (lane === null) {
+                          const head = raw.trimStart();
+                          if (head.startsWith("{") || head.startsWith("```")) {
+                            if (raw.includes('"transmission"')) {
+                              lane = "json";
+                            } else if (head.length > 800) {
+                              lane = "plain";
+                            } else {
+                              /* hold — the shape is still unreadable */
+                            }
+                          } else {
+                            lane = "plain";
+                          }
+                        }
+                        if (lane === "json") {
+                          const decoded = decodedSoFar();
+                          if (decoded.length > emitted) {
+                            send({ t: decoded.slice(emitted) });
+                            emitted = decoded.length;
+                          }
+                        } else if (lane === "plain") {
+                          if (raw.length > emitted) {
+                            send({ t: raw.slice(emitted) });
+                            emitted = raw.length;
+                          }
                         }
                       }
                     } catch {
