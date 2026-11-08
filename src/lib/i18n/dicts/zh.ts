@@ -832,4 +832,20 @@ export const zh: TranslationDict = {
   "Atlas · Signal · Transit": "星图 · 信号 · 过境",
   "State · Entanglement": "态 · 纠缠",
   "Breath · Body · Care log": "呼吸 · 身体 · 照护记录",
+
+  /* 行星际桥梁 — 行星际领域跨入它自己的法典：已绘制世界的航路、
+     档案馆的站台，以及双击即可展开的背景 */
+  "The Interplanetary Bridge": "行星际桥梁",
+  "charted worlds on the lane": "个已绘制的世界在航路上",
+  "Close the bridge": "关闭桥梁",
+  "Double-touch a context to unfold its full story.":
+    "双击一个背景，展开它完整的故事。",
+  "The being": "生灵",
+  "The homeworld": "母星",
+  "The technology": "技术",
+  "The life": "生命",
+  "Unfold": "展开",
+  "Back to the bridge": "回到桥上",
+  "The lane breathes — a featured world rises every five heartbeats.":
+    "航路在呼吸 — 每五次心跳升起一座精选世界。",
 };

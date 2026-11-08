@@ -7318,4 +7318,21 @@ export const sq: TranslationDict = {
     "Dritarja e transferimit për {planet} hapet pas {wait} dhe kalimi merr {th} — çfarë duhet t'u mësojë pritja ekuipazhit?",
   "Circular orbits, Hohmann's own ellipse — the clockwork's first light.":
     "Orbita rrethore, elipsi i vet i Hohmannit — drita e parë e mekanizmit.",
+
+  /* URA NDËRPLANETARE — kalimi i fushës ndërplanetare në kodiksin e
+     vet: rrugica e botëve të hartografuara, stacionet e profilit, dhe
+     kontekstet që hapen me një prekje të dyfishtë */
+  "The Interplanetary Bridge": "Ura Ndërplanetare",
+  "charted worlds on the lane": "botë të hartografuara në rrugë",
+  "Close the bridge": "Mbyll urën",
+  "Double-touch a context to unfold its full story.":
+    "Prek dy herë një kontekst për të zbuluar historinë e tij të plotë.",
+  "The being": "Qenia",
+  "The homeworld": "Bota e origjinës",
+  "The technology": "Teknologjia",
+  "The life": "Jeta",
+  "Unfold": "Hape",
+  "Back to the bridge": "Kthehu te ura",
+  "The lane breathes — a featured world rises every five heartbeats.":
+    "Rruga merr frymë — çdo pesë rrahje ngrihet një botë e veçuar.",
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { Atom, FlaskConical, Layers, Radar, Wind } from "lucide-react";
+import { Atom, FlaskConical, Layers, Wind } from "lucide-react";
 import { useMirror, type LandingScopeKey } from "@/lib/mirror-store";
 import { SCOPE_META, SCOPE_ORDER } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
@@ -13,11 +13,13 @@ import { useT } from "@/lib/i18n";
 /*  whole chat in its light and the back hand (the window header's     */
 /*  arrow) returns to the main landing chat.                           */
 /*                                                                     */
-/*  THE LAB FIELDS (the visitor named the wish): the Interplanetary,   */
-/*  Quantum and HealX fields carry their own laboratory benches —      */
-/*  instruments, interactivity and progression standing inside the     */
-/*  field's floor — so each wears its honest lab mark here, beside     */
-/*  the fields that stay pure conversation.                            */
+/*  THE LAB FIELDS (the visitor named the wish): the Quantum and       */
+/*  HealX fields carry their own laboratory benches — instruments,     */
+/*  interactivity and progression standing inside the field's floor —  */
+/*  so each wears its honest lab mark here, beside the fields that     */
+/*  stay pure conversation. THE INTERPLANETARY FIELD no longer stands  */
+/*  among the scopes — its crossing lives in the codex now, as the     */
+/*  Interplanetary Bridge above the chronoscope's archive.             */
 /* ------------------------------------------------------------------ */
 
 /* the fields that open with a laboratory bench on their floor */
@@ -25,12 +27,6 @@ const LAB_FIELDS: Record<
   string,
   { mark: string; tools: { icon: typeof Atom; label: string }[] }
 > = {
-  interplanetary: {
-    mark: "Lab bench inside",
-    tools: [
-      { icon: Radar, label: "Atlas · Signal · Transit" },
-    ],
-  },
   quantum: {
     mark: "Lab bench inside",
     tools: [

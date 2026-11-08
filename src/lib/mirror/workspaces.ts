@@ -424,10 +424,15 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     first — it is the default page of the book). THE ATELIER DOES NOT
     STAND HERE — ArtX lives among the InDream makers (its own room in
     the workplace); the scopes' shore wears the fields alone (the
-    visitor named this: one home per room, never two). */
+    visitor named this: one home per room, never two). THE
+    INTERPLANETARY FIELD STEPPED OUT OF THE SCOPES at the owner's word
+    — its light now crosses the codex as the Interplanetary Bridge (a
+    lane between the charted worlds, bound to the archive's own
+    profiles). The field's meta stays above: a visitor whose walk still
+    wears its light is never left in the dark, and the chat's voice
+    remembers it. */
 export const SCOPE_ORDER: LandingScopeKey[] = [
   "mirror",
-  "interplanetary",
   "quantum",
   "healing",
 ];

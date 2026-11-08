@@ -13,6 +13,7 @@ import {
   Bookmark,
   ChevronLeft,
   ChevronRight,
+  Orbit,
   Search,
   Sparkles,
   Telescope,
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import InterplanetaryBridge from "./InterplanetaryBridge";
 
 /* ------------------------------------------------------------------ */
 /*  THE CHRONOSCOPE — a time machine for discovery.                    */
@@ -65,7 +67,7 @@ type ChronoRow = {
   x: number;
 };
 
-type CivRecord = {
+export type CivRecord = {
   i: string;
   n: string;
   e: string;
@@ -210,6 +212,7 @@ export default function Chronoscope() {
   const [searchPage, setSearchPage] = useState(0);
   const [savedOpen, setSavedOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [bridgeOpen, setBridgeOpen] = useState(false);
   const detailsScroll = useRef(0);
   const [zoomOpen, setZoomOpen] = useState(false);
 
@@ -353,8 +356,15 @@ export default function Chronoscope() {
     return filtered.map((r) => r.i);
   }, [wing, idm, filtered]);
 
+  /* the lane's own breath — the featured worlds turn themselves; the
+     still-hand and the hover-sense live beside the console's own
+     state so no hand ever reads a variable before it stands */
+  const [rotationHalted, setRotationHalted] = useState(false);
+  const moduleHoverRef = useRef(false);
+
   const step = useCallback(
     (dir: 1 | -1) => {
+      setRotationHalted(true);
       if (navList.length === 0) return;
       const at = navList.indexOf(currentId);
       const next =
@@ -367,6 +377,7 @@ export default function Chronoscope() {
   /* Discover — an unseen record within the active wing */
   const visitedRef = useRef<Set<string>>(new Set());
   const discover = useCallback(() => {
+    setRotationHalted(true);
     if (navList.length === 0) return;
     const unseen = navList.filter((id) => !visitedRef.current.has(id));
     const pool = unseen.length > 0 ? unseen : navList;
@@ -381,6 +392,99 @@ export default function Chronoscope() {
       }, 260);
     });
   }, [navList]);
+
+  /* ---------------- the lane's own breath ---------------- */
+  /* THE FEATURED WORLDS TURN THEMSELVES — every five heartbeats the
+     collapsed module rises a new fully-illustrated record (the
+     owner's wish: the archive shows its filled profiles on their
+     own). The rotation respects the visitor: it pauses while the
+     instrument stands open, while any drawer is open, while the tab
+     sleeps, while the pointer rests on the module — and one
+     deliberate navigation (the console, the search, the walk) stills
+     the lane for the whole visit. */
+  const readyIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const a of assets?.ready ?? []) {
+      if (!a.entityId.startsWith("IDM-")) ids.add(a.entityId);
+    }
+    return [...ids].sort();
+  }, [assets]);
+  useEffect(() => {
+    if (!index || expanded || rotationHalted) return;
+    if (searchOpen || savedOpen || detailsOpen || zoomOpen) return;
+    if (wing !== "civ" || readyIds.length === 0) return;
+    const timer = window.setInterval(() => {
+      if (document.hidden || moduleHoverRef.current) return;
+      if (instrumentRef.current?.contains(document.activeElement)) return;
+      const pick = readyIds[Math.floor(Math.random() * readyIds.length)];
+      if (pick && pick !== currentId) setCurrentId(pick);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [
+    index,
+    expanded,
+    rotationHalted,
+    searchOpen,
+    savedOpen,
+    detailsOpen,
+    zoomOpen,
+    wing,
+    readyIds,
+    currentId,
+  ]);
+
+  /* one record by id — the bridge's own key: it reuses the walk's
+     chunk cache so the archive is fetched once, never twice, and the
+     cache stays a pool, not a lake (the oldest chunks step aside).
+     The lane's stations are the charted worlds alone — the
+     hyperspace wing keeps its own road. */
+  const fetchRecordById = useCallback(
+    async (id: string): Promise<CivRecord | null> => {
+      if (id.startsWith("IDM-")) return null;
+      const row = rowMap.current.get(id);
+      if (!row) return null;
+      const key = `chunk-${String(row.c).padStart(3, "0")}.json`;
+      const cached = chunkCache.current.get(key);
+      if (cached) return (cached as CivRecord[])[row.x] ?? null;
+      try {
+        const records = (await fetch(`/chronoscope/details/${key}`).then(
+          (r) => r.json()
+        )) as CivRecord[];
+        chunkCache.current.set(key, records);
+        while (chunkCache.current.size > 24) {
+          const oldest = chunkCache.current.keys().next().value;
+          if (oldest === undefined) break;
+          chunkCache.current.delete(oldest);
+        }
+        return records[row.x] ?? null;
+      } catch {
+        return null;
+      }
+    },
+    []
+  );
+
+  /* the station's own artwork — the first role the record keeps */
+  const firstArtOf = useCallback(
+    (id: string) => {
+      for (const k of ROLE_KEYS) {
+        const f = readyMap.get(`${id}/${k}`);
+        if (f) return f;
+      }
+      return undefined;
+    },
+    [readyMap]
+  );
+
+  /* the bridge's stations — every charted world with its own art */
+  const bridgeStations = useMemo(
+    () =>
+      readyIds.map((id) => {
+        const row = rows.find((r) => r.i === id);
+        return { id, name: row?.n ?? id, hue: row?.hue ?? null };
+      }),
+    [readyIds, rows]
+  );
 
   /* ------------------------------ search ------------------------------ */
   const searchResults = useMemo(() => {
@@ -513,19 +617,56 @@ export default function Chronoscope() {
         className="overflow-hidden rounded-2xl border border-[var(--lp-edge)] bg-[var(--lp-veil)]"
       >
         <div className="flex items-center justify-between gap-3 border-b border-[var(--lp-edge)] px-4 py-2.5">
-          <p className="mono-label text-[9px] uppercase tracking-[0.26em] text-[var(--lp-faint)]">
-            {t("The Chronoscope · a time machine for discovery")}
-          </p>
+          {/* THE INTERPLANETARY BRIDGE — the module's own top-left corner
+              keeps the crossing hand: one touch opens the lane above
+              the archive (the scopes' interplanetary field crossed
+              into the codex at the owner's word) */}
+          <div className="flex min-w-0 items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setBridgeOpen(true)}
+              data-testid="codex-bridge-open"
+              aria-haspopup="dialog"
+              aria-expanded={bridgeOpen}
+              className="focus-glow inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-wide transition-all duration-200"
+              style={{
+                borderColor: "color-mix(in srgb, #22d3ee 46%, transparent)",
+                color: "#67e8f9",
+                background: "color-mix(in srgb, #22d3ee 9%, transparent)",
+              }}
+            >
+              <Orbit className="size-3.5" aria-hidden="true" />
+              <span className="hidden sm:inline">{t("The Interplanetary Bridge")}</span>
+              <span className="sm:hidden">{t("The bridge")}</span>
+            </button>
+            <p className="mono-label hidden min-w-0 truncate text-[9px] uppercase tracking-[0.26em] text-[var(--lp-faint)] lg:block">
+              {t("The Chronoscope · a time machine for discovery")}
+            </p>
+          </div>
           <p className="mono-label hidden text-[9px] tracking-[0.16em] text-[var(--lp-faint)] sm:block">
             {fmt(index.manifest.civilian)} {t("civilisations")} · {index.manifest.idm}{" "}
             {t("hyperspace")} · {index.manifest.readyProfiles} {t("fully illustrated")}
           </p>
         </div>
 
-        <div className="grid gap-4 p-4 sm:grid-cols-[300px_1fr] sm:items-center sm:p-5">
-          {/* the card's face */}
+        {/* the card's own breath — each new world arrives with one
+            quiet fade; the rotation stills the moment a hand or a
+            pointer touches the module (the calm law) */}
+        <div
+          key={currentId}
+          className="chrono-swap grid gap-4 p-4 sm:grid-cols-[360px_1fr] sm:items-center sm:p-5 lg:grid-cols-[460px_1fr] lg:gap-6 lg:p-6"
+          onPointerEnter={() => {
+            moduleHoverRef.current = true;
+          }}
+          onPointerLeave={() => {
+            moduleHoverRef.current = false;
+          }}
+        >
+          {/* the card's face — the featured artwork, grown large at the
+              owner's word: it fills its whole column on the desk (up to
+              460px) and carries the record's own light */}
           <div
-            className="relative mx-auto aspect-[3/2] w-full max-w-[340px] overflow-hidden rounded-xl border sm:mx-0"
+            className="relative mx-auto aspect-[3/2] w-full max-w-[460px] overflow-hidden rounded-xl border sm:mx-0 lg:max-w-none"
             style={{ borderColor: `color-mix(in srgb, ${accent} 36%, transparent)` }}
           >
             {readyFile ? (
@@ -536,7 +677,7 @@ export default function Chronoscope() {
                   alt={`${currentId} — ${displayName}`}
                   fill
                   unoptimized
-                  sizes="340px"
+                  sizes="(max-width: 640px) 92vw, (max-width: 1024px) 360px, 460px"
                   className="object-cover"
                 />
                 <button
@@ -566,7 +707,7 @@ export default function Chronoscope() {
             <h3
               id="chrono-card-title"
               tabIndex={-1}
-              className="mt-1 truncate font-[family-name:Cinzel] text-[19px] font-semibold tracking-wide text-[var(--lp-head)] outline-none sm:text-[22px]"
+              className="mt-1 line-clamp-2 break-words font-[family-name:Cinzel] text-[20px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none sm:text-[24px]"
             >
               {displayName}
             </h3>
@@ -602,7 +743,10 @@ export default function Chronoscope() {
               </button>
               <button
                 type="button"
-                onClick={() => setExpanded(true)}
+                onClick={() => {
+                  setRotationHalted(true);
+                  setExpanded(true);
+                }}
                 data-testid="chronoscope-expand"
                 className="focus-glow inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--lp-edge)] px-5 py-2 text-[13px] font-medium text-[var(--lp-head)] transition-colors hover:border-[color-mix(in_srgb,var(--lp-violet)_55%,transparent)]"
               >
@@ -612,6 +756,15 @@ export default function Chronoscope() {
             </div>
           </div>
         </div>
+
+        {/* the lane's own breath — the quiet line beneath the card that
+            tells the truth of the turning archive */}
+        <p
+          className="mono-label border-t border-[var(--lp-edge)] px-4 py-2 text-center text-[8.5px] uppercase tracking-[0.2em] text-[var(--lp-faint)]"
+          data-testid="chronoscope-breath"
+        >
+          {t("The lane breathes — a featured world rises every five heartbeats.")}
+        </p>
       </div>
 
       {/* ==================== the expanded instrument ==================== */}
@@ -633,6 +786,7 @@ export default function Chronoscope() {
                 <button
                   type="button"
                   onClick={() => {
+                    setRotationHalted(true);
                     setWing("civ");
                     if (isIdm) setCurrentId("CIV-0001");
                   }}
@@ -650,6 +804,7 @@ export default function Chronoscope() {
                 <button
                   type="button"
                   onClick={() => {
+                    setRotationHalted(true);
                     setWing("idw");
                     if (!isIdm) setCurrentId("IDM-0001");
                   }}
@@ -753,6 +908,7 @@ export default function Chronoscope() {
                           <button
                             type="button"
                             onClick={() => {
+                              setRotationHalted(true);
                               setCurrentId(r.id);
                               setSearchOpen(false);
                             }}
@@ -814,6 +970,7 @@ export default function Chronoscope() {
                         <button
                           type="button"
                           onClick={() => {
+                            setRotationHalted(true);
                             setCurrentId(id);
                             setSavedOpen(false);
                           }}
@@ -1232,6 +1389,21 @@ export default function Chronoscope() {
         </div>,
           document.body
         )}
+
+      {/* ------------- the interplanetary bridge ------------- */}
+      {/* the scopes' interplanetary field, crossed into the codex: the
+          lane hangs above the archive, bound to the same profiles the
+          chronoscope walks — closed it is nothing (it is not even
+          mounted), open it never moves the featured card one hair */}
+      {bridgeOpen && !expanded && (
+        <InterplanetaryBridge
+          onClose={() => setBridgeOpen(false)}
+          t={t}
+          stations={bridgeStations}
+          getRecord={fetchRecordById}
+          getArt={firstArtOf}
+        />
+      )}
 
       {/* ------------- the zoom plate — the artwork at full size ------------- */}
       <ZoomOverlay
@@ -1690,7 +1862,7 @@ function DetailsSheet({
   );
 }
 
-function Prose({ title, body }: { title: string; body?: string | null }) {
+export function Prose({ title, body }: { title: string; body?: string | null }) {
   if (!body) return null;
   return (
     <section>
@@ -1702,7 +1874,7 @@ function Prose({ title, body }: { title: string; body?: string | null }) {
   );
 }
 
-function FieldGrid({ rows }: { rows: [string, string | undefined][] }) {
+export function FieldGrid({ rows }: { rows: [string, string | undefined][] }) {
   const clean = rows.filter(([, v]) => v && String(v).trim());
   if (clean.length === 0) return null;
   return (
@@ -1719,7 +1891,7 @@ function FieldGrid({ rows }: { rows: [string, string | undefined][] }) {
   );
 }
 
-function TechPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string }) {
+export function TechPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string }) {
   const tech = (civ.tech ?? {}) as Record<string, string>;
   const metrics = (civ.tech?.metrics ?? {}) as Record<string, number>;
   if (!tech.name) return null;
@@ -1776,7 +1948,7 @@ function TechPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string }) {
   );
 }
 
-function BiotaPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string }) {
+export function BiotaPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string }) {
   const b = (civ.biota ?? {}) as Record<string, string>;
   if (!b.name) return null;
   return (
@@ -1806,7 +1978,7 @@ function BiotaPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string }) {
   );
 }
 
-function VistaPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string }) {
+export function VistaPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string }) {
   const v = (civ.vista ?? {}) as Record<string, string>;
   if (!v.title) return null;
   return (

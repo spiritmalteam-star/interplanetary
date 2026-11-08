@@ -5042,3 +5042,126 @@ html:not(.dark) .lp-sigil-img {
   background-clip: text;
   color: transparent;
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE MIRROR'S FUSION — every word the visitor writes is fused       */
+/*  with the mirror's energy the moment it is written: one quiet       */
+/*  breath of silver-gold light passes through the words, and a small  */
+/*  mirror sigil comes to rest beside them. Still afterwards — the     */
+/*  calm law. Reduced motion keeps the sigil and skips the breath.     */
+/* ------------------------------------------------------------------ */
+.mirror-fused {
+  position: relative;
+}
+.mirror-fused::after {
+  content: "\25C8";
+  margin-left: 0.4em;
+  font-size: 0.78em;
+  vertical-align: 0.08em;
+  color: color-mix(in srgb, var(--gd, #d8b571) 78%, #ffffff);
+  opacity: 0;
+  animation: mirror-fuse-glyph 900ms ease-out 700ms forwards;
+}
+.mirror-fused::before {
+  content: "";
+  position: absolute;
+  inset: -3px -8px;
+  border-radius: 10px;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 26%,
+    rgba(255, 255, 255, 0.14) 42%,
+    color-mix(in srgb, var(--gd, #d8b571) 20%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-70%);
+  opacity: 0;
+  animation: mirror-fuse-sweep 1200ms ease-out 150ms forwards;
+}
+@keyframes mirror-fuse-sweep {
+  0% {
+    transform: translateX(-70%);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(70%);
+    opacity: 0;
+  }
+}
+@keyframes mirror-fuse-glyph {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 0.85;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mirror-fused::before {
+    animation: none;
+    opacity: 0;
+  }
+  .mirror-fused::after {
+    animation: none;
+    opacity: 0.85;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE CHRONOSCOPE'S OWN BREATH — each featured world arrives with    */
+/*  one quiet fade (the lane turns every five heartbeats); a           */
+/*  transform-and-opacity entrance, still afterwards, and nothing at   */
+/*  all when the visitor prefers stillness.                            */
+/* ------------------------------------------------------------------ */
+.chrono-swap {
+  animation: chrono-swap-in 520ms ease-out both;
+}
+@keyframes chrono-swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chrono-swap {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  THE CODEX'S WIDER STAGE — the chronoscope breaks out of the        */
+/*  magazine's 900px column, piecewise by the page's own rails:        */
+/*  below xl there are no side rails (near-whole viewport); from xl    */
+/*  to 1700 the remembrance rails leave exactly the column's 900;      */
+/*  past 1700 the rails cap at 360 each and the stage grows toward     */
+/*  its 1180 crown. Media queries cascade by source order — the        */
+/*  wider rule always wins when it applies.                            */
+/* ------------------------------------------------------------------ */
+.codex-stage {
+  max-width: min(1180px, calc(100vw - 32px));
+}
+@media (min-width: 1280px) {
+  .codex-stage {
+    max-width: 900px;
+  }
+}
+@media (min-width: 1700px) {
+  .codex-stage {
+    max-width: calc(100vw - 800px);
+  }
+}
+@media (min-width: 1980px) {
+  .codex-stage {
+    max-width: 1180px;
+  }
+}

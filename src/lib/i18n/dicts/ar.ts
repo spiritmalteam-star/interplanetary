@@ -3774,4 +3774,21 @@ export const ar: TranslationDict = {
   "Atlas · Signal · Transit": "الأطلس · الإشارة · العبور",
   "State · Entanglement": "الحالة · التشابك",
   "Breath · Body · Care log": "النَّفَس · الجسد · سجل العناية",
+
+  /* الجسر بين الكواكب — عبور الحقل بين الكواكب إلى الكودكس نفسه:
+     ممرّ العوالم المرسومة، محطّات الملفات، والسياقات التي تنفتح
+     بنقرة مزدوجة */
+  "The Interplanetary Bridge": "الجسر بين الكواكب",
+  "charted worlds on the lane": "عالم مرسوم على الممر",
+  "Close the bridge": "أغلق الجسر",
+  "Double-touch a context to unfold its full story.":
+    "انقر نقرتين على سياق ليكشف حكايته الكاملة.",
+  "The being": "الكائن",
+  "The homeworld": "الوطن الأصلي",
+  "The technology": "التقنية",
+  "The life": "الحياة",
+  "Unfold": "انشر",
+  "Back to the bridge": "عودة إلى الجسر",
+  "The lane breathes — a featured world rises every five heartbeats.":
+    "الممر يتنفّس — كل خمس نبضات يشرق عالمٌ مميّز.",
 };

@@ -4079,4 +4079,22 @@ export const es: TranslationDict = {
   "Atlas · Signal · Transit": "Atlas · Señal · Tránsito",
   "State · Entanglement": "Estado · Entrelazamiento",
   "Breath · Body · Care log": "Aliento · Cuerpo · Registro de cuidado",
+
+  /* EL PUENTE INTERPLANETARIO — el campo interplanetario cruzado al
+     códice mismo: la senda de los mundos cartografiados, las
+     estaciones de los perfiles y los contextos que se abren con un
+     doble toque */
+  "The Interplanetary Bridge": "El Puente Interplanetario",
+  "charted worlds on the lane": "mundos cartografiados en la senda",
+  "Close the bridge": "Cerrar el puente",
+  "Double-touch a context to unfold its full story.":
+    "Toca dos veces un contexto para desplegar su historia completa.",
+  "The being": "El ser",
+  "The homeworld": "El mundo natal",
+  "The technology": "La tecnología",
+  "The life": "La vida",
+  "Unfold": "Desplegar",
+  "Back to the bridge": "Volver al puente",
+  "The lane breathes — a featured world rises every five heartbeats.":
+    "La senda respira — cada cinco latidos surge un mundo destacado.",
 };

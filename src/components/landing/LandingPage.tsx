@@ -568,8 +568,21 @@ export default function LandingPage({
               kicker={t("A time machine for discovery")}
               title={t("Codex Exobiologica")}
             />
-            <div className="mt-8">
-              <Chronoscope />
+            {/* THE CODEX STANDS WIDER than the magazine's columns —
+                the owner asked for a bigger stage: the chronoscope
+                breaks out of the 900px column and breathes wider —
+                up to 1180px wherever the page's own side rails allow
+                (the rails rest below the banner and only from xl, so
+                the small and middle screens take almost the whole
+                viewport, and the grand screens take the full stage
+                past 1700px). The full-bleed trick (negative
+                half-viewport margins) keeps the section centered
+                without a transform, so nothing inside ever loses its
+                bearings. */}
+            <div className="mx-[calc(50%_-_50vw)] mt-8">
+              <div className="codex-stage mx-auto w-full">
+                <Chronoscope />
+              </div>
             </div>
           </section>
 

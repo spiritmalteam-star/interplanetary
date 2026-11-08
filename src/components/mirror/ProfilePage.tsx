@@ -33,12 +33,6 @@ import {
 import { LANGUAGES, PICKER_LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
 import { LanguageButton } from "@/components/mirror/LanguageButton";
 import { useMirror } from "@/lib/mirror-store";
-import {
-  familyLabelKeys,
-  familyShare,
-  setFamilyWeightInMix,
-} from "@/lib/tree-mix";
-import { TREE_FAMILIES } from "@/lib/data/suggestion-banks";
 import { DnaHelix, TrajectoryEvolution, useJourney } from "./DnaTimeline";
 import { FuelEnginePanel } from "./FuelEnginePanel";
 import { AdminConsole } from "./AdminConsole";
@@ -185,10 +179,10 @@ export function ProfilePage() {
   const setPace = useMirror((s) => s.setPace);
   const seeds = useMirror((s) => s.expansionSeeds);
   const setSeeds = useMirror((s) => s.setExpansionSeeds);
-  /* THE MIX OF WORLDS — how much of each family the living tree
-     carries; the same proportions the Laboratory's settings speak */
-  const treeMix = useMirror((s) => s.treeMix);
-  const setTreeMix = useMirror((s) => s.setTreeMix);
+  /* THE MIX OF WORLDS RESTED — the branches are gone from the walk,
+     and the tree's proportions went with them (the owner's word):
+     the settings panel no longer carries the sliders; the store's
+     own mix keeps its shape for whatever still reads it */
 
   /* the walk's helix — the DNA evolutionary timeline */
   const journey = useJourney();
@@ -1258,89 +1252,6 @@ export function ProfilePage() {
                   <option value={3}>{t("The canopy — very experienced")}</option>
                   <option value={4}>{t("The deep roots — the furthest")}</option>
                 </select>
-              </div>
-              {/* THE MIX OF WORLDS — the living tree's own proportions */}
-              <div
-                className="flex flex-col gap-3 p-3.5 sm:p-4"
-                data-testid="profilepage-mix"
-              >
-                <div>
-                  <p className="text-[14px] font-medium text-foreground/90">
-                    {t("The mix of worlds")}
-                  </p>
-                  <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground/80">
-                    {t(
-                      "How much of each family the living tree carries — the percentages decide which suggestions visit more often."
-                    )}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                  {TREE_FAMILIES.map((f) => {
-                    const share = familyShare(treeMix, f.key);
-                    const w = treeMix.weights[f.key] ?? 0;
-                    return (
-                      <div key={f.key} className="flex items-center gap-2.5">
-                        <span
-                          aria-hidden="true"
-                          className="size-2 shrink-0 rounded-full"
-                          style={{
-                            backgroundColor: f.accent,
-                            opacity: share.on ? 1 : 0.3,
-                          }}
-                        />
-                        <span className="w-[92px] shrink-0 truncate text-[13.5px] text-foreground/85">
-                          {t(familyLabelKeys[f.key] ?? f.key)}
-                        </span>
-                        <input
-                          type="range"
-                          min={0}
-                          max={100}
-                          step={5}
-                          value={share.on ? w : 0}
-                          onChange={(e) =>
-                            setTreeMix(
-                              setFamilyWeightInMix(
-                                treeMix,
-                                f.key,
-                                Number(e.target.value)
-                              )
-                            )
-                          }
-                          aria-label={t(familyLabelKeys[f.key] ?? f.key)}
-                          data-testid={`profilepage-mix-${f.key}`}
-                          className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-[color-mix(in_srgb,var(--hairline)_90%,transparent)]
-                          [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full"
-                          style={{ accentColor: f.accent }}
-                        />
-                        <span
-                          className="w-8 shrink-0 text-right text-[11.5px] tabular-nums"
-                          style={{ color: share.on ? f.accent : undefined }}
-                        >
-                          {share.pct}%
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTreeMix({
-                      on: TREE_FAMILIES.map((f) => f.key),
-                      weights: Object.fromEntries(
-                        TREE_FAMILIES.map((f) => [f.key, 1])
-                      ),
-                    })
-                  }
-                  data-testid="profilepage-mix-even"
-                  className="focus-glow w-full rounded-full border px-3 py-1.5 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground sm:w-[280px] sm:self-end"
-                  style={{
-                    borderColor:
-                      "color-mix(in srgb, var(--hairline) 80%, transparent)",
-                  }}
-                >
-                  {t("Even voices")}
-                </button>
               </div>
             </section>
             {!signedIn && (
@@ -2543,10 +2454,13 @@ export function ProfilePage() {
   /* WITHIN THE FRAME — the profile room no longer escapes to the body:
      it renders exactly where AppShell mounts it (inside the realm's
      own frame div), so it fills THE CHAT'S OWN frame — docked lens or
-     fullscreen alike — and the lens's rounded corners clip it. The
-     backdrop is the app's own glass: a translucent wash over the
+     fullscreen alike — and the lens's rounded corners clip it. THE
+     DESKTOP'S OWN WALL — on the desktop the room stands solid (the
+     owner's word: the profile page must not be transparent there) —
+     a full wall of the house, the chat fully behind it. The small
+     screens keep the app's own glass: a translucent wash over the
      chat, blurred, so the room reads as one of the house's own
-     surfaces and never a page of its own. The inner columns scroll
+     surfaces on the hand. The inner columns scroll
      (the rail and the panel body each carry their own
      overflow-y-auto), so nothing ever overflows the frame — even at
      the chat's smallest size. */
@@ -2558,7 +2472,7 @@ export function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
           transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute inset-0 z-[85] flex flex-col overflow-hidden bg-background/85 backdrop-blur-xl"
+          className="absolute inset-0 z-[85] flex flex-col overflow-hidden bg-background/85 backdrop-blur-xl lg:bg-background lg:backdrop-blur-none"
           data-testid="profile-page"
           role="dialog"
           aria-modal="true"

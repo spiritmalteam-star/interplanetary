@@ -3394,4 +3394,21 @@ export const ru: TranslationDict = {
   "Atlas · Signal · Transit": "Атлас · Сигнал · Транзит",
   "State · Entanglement": "Состояние · Запутанность",
   "Breath · Body · Care log": "Дыхание · Тело · Дневник заботы",
+
+  /* МЕЖПЛАНЕТНЫЙ МОСТ — межпланетное поле перешло в сам кодекс:
+     тропа нанесённых на карту миров, станции профилей и контексты,
+     раскрывающиеся двойным касанием */
+  "The Interplanetary Bridge": "Межпланетный мост",
+  "charted worlds on the lane": "нанесённых на карту миров на тропе",
+  "Close the bridge": "Закрыть мост",
+  "Double-touch a context to unfold its full story.":
+    "Дважды коснитесь контекста, чтобы развернуть его полную историю.",
+  "The being": "Существо",
+  "The homeworld": "Родной мир",
+  "The technology": "Технология",
+  "The life": "Жизнь",
+  "Unfold": "Развернуть",
+  "Back to the bridge": "Назад к мосту",
+  "The lane breathes — a featured world rises every five heartbeats.":
+    "Тропа дышит — каждые пять ударов сердца восходит новый мир.",
 };

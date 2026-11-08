@@ -6612,9 +6612,13 @@ export function BranchCanopy({
                         and the bar stays one slim hand-row. The full
                         portal keeps the room's title, held to two lines
                         so a long question can never crowd the crown. */}
+                    {/* THE MIRROR'S FUSION — the visitor's own words
+                        carry the mirror's energy the moment they are
+                        written: one quiet breath of light passes
+                        through, and the small sigil comes to rest */}
                     {!realm && (
                       <p
-                        className="line-clamp-2 break-words text-[15px] font-medium leading-snug text-foreground"
+                        className="mirror-fused line-clamp-2 break-words text-[15px] font-medium leading-snug text-foreground"
                         title={zoom.q}
                       >
                         {zoom.q}
@@ -6821,7 +6825,7 @@ export function BranchCanopy({
                         <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
                       )}
                       <p
-                        className="sv-question break-words text-[14.5px] font-medium leading-relaxed text-foreground"
+                        className="mirror-fused sv-question break-words text-[14.5px] font-medium leading-relaxed text-foreground"
                         title={zoom.q}
                       >
                         {zoom.q}
@@ -6863,7 +6867,7 @@ export function BranchCanopy({
                           {SCOPE_META[landingScope]?.qMark && (
                             <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
                           )}
-                          <p className="sv-question ml-auto max-w-[88%] break-words text-[14px] font-medium leading-relaxed text-foreground/95">
+                          <p className="mirror-fused sv-question ml-auto max-w-[88%] break-words text-[14px] font-medium leading-relaxed text-foreground/95">
                             {turn.q}
                           </p>
                           {/* the thread's own fusion marks — every earlier
@@ -7179,7 +7183,7 @@ export function BranchCanopy({
                           {realm && SCOPE_META[landingScope]?.qMark && (
                             <p className="sv-mark">{t(SCOPE_META[landingScope].qMark!)}</p>
                           )}
-                          <p className="ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[14px] font-medium leading-relaxed text-foreground">
+                          <p className="mirror-fused ml-auto max-w-[88%] whitespace-pre-wrap break-words text-[14px] font-medium leading-relaxed text-foreground">
                             {turn.q}
                           </p>
                           {turn.a ? (
