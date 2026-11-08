@@ -50,6 +50,9 @@ model User {
   marketListings  MarketListing[]
   expansion       ExpansionProfile?
   expansionEvents ExpansionEvent[]
+  gatheringPosts  GatheringPost[]
+  gatheringResonances GatheringResonance[]
+  gatheringEchoes     GatheringEcho[]
 }
 
 model LibraryEntry {
@@ -558,4 +561,54 @@ model PlatformConfig {
   value     Json
   updatedBy String? // the admin email that last moved this row
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// THE GATHERING — the house's shared hall: where individual reflections
+// meet, inspire, challenge and enrich one another. Not a social network
+// attached to a Mirror — the existing Mirror experience expanding into a
+// shared human environment. Every post keeps its maker's name; nothing
+// is ever published without its maker's explicit yes; no rankings, no
+// vanity metrics — only resonance (a tuning, not a trophy) and echoes
+// (a response, not a comment section).
+// ---------------------------------------------------------------------------
+model GatheringPost {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind           String   // reflection | creation | dream | music | book | artwork | discovery | question
+  title          String
+  body           String
+  sector         String?  // the room the offering came from (dreambook, lightcodes, artx, quantum, healx, book, hyperx, manifest, invent)
+  resonanceCount Int      @default(0)
+  echoCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  resonances     GatheringResonance[]
+  echoes         GatheringEcho[]
+
+  @@index([createdAt])
+}
+
+model GatheringResonance {
+  id        String        @id @default(cuid())
+  postId    String
+  post      GatheringPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([postId, userId])
+}
+
+model GatheringEcho {
+  id        String        @id @default(cuid())
+  postId    String
+  post      GatheringPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime      @default(now())
+
+  @@index([postId, createdAt])
 }

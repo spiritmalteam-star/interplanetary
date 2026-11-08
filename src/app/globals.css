@@ -5207,3 +5207,20 @@ html:not(.dark) .lp-sigil-img {
     animation: none !important;
   }
 }
+
+/* THE GATHERING — the hall's own gold glass (the threshold's light) */
+.gathering-hand {
+  border-color: color-mix(in srgb, #d9c99a 55%, transparent);
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, #d9c99a 16%, transparent),
+    color-mix(in srgb, #c9a227 13%, transparent)
+  );
+  box-shadow:
+    0 0 12px -4px color-mix(in srgb, #d9c99a 50%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, #d9c99a 20%, transparent);
+}
+.gathering-hand:hover {
+  border-color: color-mix(in srgb, #d9c99a 80%, transparent);
+  box-shadow: 0 0 18px -4px color-mix(in srgb, #d9c99a 70%, transparent);
+}

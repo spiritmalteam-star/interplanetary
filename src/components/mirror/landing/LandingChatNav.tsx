@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Hammer, Layers, Sparkles } from "lucide-react";
+import { Hammer, Layers, Sparkles, Waypoints } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -70,6 +70,12 @@ export function LandingChatNav() {
     closeScopes();
   }, [setLandingScope, closeScopes]);
 
+  /* THE GATHERING — the shared hall rises as its own room: the house's
+     living exhibition, where individual reflections meet. */
+  const openGathering = useCallback(() => {
+    openToolTab("gathering");
+  }, [openToolTab]);
+
   /* THE FITTING LAW — every hand carries a shrinking waist: the label
      truncates before anything may leave the row (the Albanian
      "Dritaret" once pushed HyperX beneath the corner's hand on the
@@ -134,6 +140,23 @@ export function LandingChatNav() {
         <Sparkles className="size-3 shrink-0" aria-hidden="true" />
         <span className={cn(handLabel, "text-[#a21caf] dark:text-[#f5d0fe]")}>
           HyperX
+        </span>
+      </button>
+
+      {/* ------------------------- THE GATHERING ------------------------ */}
+      <button
+        type="button"
+        onClick={openGathering}
+        aria-haspopup="dialog"
+        aria-expanded={activeToolTab === "gathering"}
+        aria-label={t("The Gathering — the shared hall")}
+        title={t("The Gathering — the shared hall")}
+        data-testid="landing-nav-gathering"
+        className={cn(hand, "gathering-hand")}
+      >
+        <Waypoints className="size-3 shrink-0 text-[#d9c99a]" aria-hidden="true" />
+        <span className={cn(handLabel, "text-[#8a7a4d] dark:text-[#d9c99a]")}>
+          {t("Gathering")}
         </span>
       </button>
 

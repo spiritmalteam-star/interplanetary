@@ -30,6 +30,7 @@ const TAB_ROOMS: Record<ToolTabKey, string> = {
   video: "studio",
   library: "library",
   mirroros: "mirroros",
+  gathering: "gathering",
   scopes: "scopes",
 };
 

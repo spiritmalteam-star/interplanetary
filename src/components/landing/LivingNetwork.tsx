@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { Waypoints, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -152,7 +153,13 @@ const CENTER = { x: 49, y: 49 };
 /*  A real component (not a bare portal element) so AnimatePresence    */
 /*  can hold it through its exit breath.                               */
 /* ------------------------------------------------------------------ */
-function Veil({ onClose }: { onClose: () => void }) {
+function Veil({
+  onClose,
+  onEnterGathering,
+}: {
+  onClose: () => void;
+  onEnterGathering: () => void;
+}) {
   const t = useT();
   const [active, setActive] = useState<string | null>(null);
 
@@ -221,6 +228,23 @@ function Veil({ onClose }: { onClose: () => void }) {
             "The Mirror remains the heart. The human remains the explorer. The community becomes a shared reflection — a space where individual reflections can meet, inspire, challenge and enrich one another."
           )}
         </p>
+
+        {/* ------------------- the working hand ------------------- */}
+        {/* The Gathering is no longer only a promise: the hall itself
+            stands. One touch folds the vision and walks the visitor
+            into the shared exhibition it speaks of. */}
+        <div className="mt-8 flex justify-center">
+          <button
+            type="button"
+            onClick={onEnterGathering}
+            aria-label={t("Enter the Gathering — the hall itself")}
+            data-testid="living-network-enter-gathering"
+            className="focus-glow flex h-10 items-center gap-2 rounded-full border border-[#d9c99a]/55 bg-[#d9c99a]/10 px-5 text-[13px] font-medium text-[#d9c99a] transition-all duration-300 hover:border-[#d9c99a]/85 hover:bg-[#d9c99a]/16"
+          >
+            <Waypoints className="size-4" aria-hidden="true" />
+            {t("The hall is open — enter the Gathering")}
+          </button>
+        </div>
 
         {/* ------------------- the three laws ------------------- */}
         <div className="mt-12">
@@ -492,7 +516,15 @@ export default function LivingNetwork() {
 
       {/* ================== THE VEIL — the vision ================== */}
       <AnimatePresence>
-        {open && <Veil onClose={() => setOpen(false)} />}
+        {open && (
+          <Veil
+            onClose={() => setOpen(false)}
+            onEnterGathering={() => {
+              setOpen(false);
+              useMirror.getState().openToolTab("gathering");
+            }}
+          />
+        )}
       </AnimatePresence>
     </>
   );

@@ -33,6 +33,7 @@ import {
   Palette,
   ScrollText,
   Sparkles,
+  Waypoints,
   type LucideIcon,
 } from "lucide-react";
 import type { LandingScopeKey, ToolTabKey } from "@/lib/mirror-store";
@@ -98,6 +99,7 @@ export const WORKSPACE_ORDER: ToolTabKey[] = [
   "video",
   "register",
   "library",
+  "gathering",
   "scopes",
 ];
 
@@ -263,6 +265,21 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
         default: m.LibraryView as ComponentType,
       })),
     capabilities: ["creations-room", "sector-filtering", "in-place-reader"],
+    preserveState: true,
+    resourceProfile: "low",
+    bridgeMode: "mirror",
+  },
+  gathering: {
+    id: "gathering",
+    title: "The Gathering",
+    category: "conversation",
+    icon: Waypoints,
+    theme: { accent: "#d9c99a" },
+    loader: () =>
+      import("@/components/mirror/GatheringView").then((m) => ({
+        default: m.GatheringView as ComponentType,
+      })),
+    capabilities: ["shared-hall", "offerings", "resonance", "echoes", "living-exhibition"],
     preserveState: true,
     resourceProfile: "low",
     bridgeMode: "mirror",
