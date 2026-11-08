@@ -3381,7 +3381,6 @@ export const ru: TranslationDict = {
   "Breathing out": "Выдох",
   "HyperX receiving": "HyperX принимает",
   "Truth discovered": "Истина открыта",
-  "The Mirror": "Зеркало",
   "The house's own reflection": "Собственное отражение дома",
   "The star families and worlds": "Звёздные семьи и миры",
   "The deep nature of reality": "Глубокая природа реальности",
@@ -3411,4 +3410,10 @@ export const ru: TranslationDict = {
   "Back to the bridge": "Назад к мосту",
   "The lane breathes — a featured world rises every five heartbeats.":
     "Тропа дышит — каждые пять ударов сердца восходит новый мир.",
+
+  /* ——— THE GATHERING'S PORTAL — the independent hall ——— */
+  "Return to the house": "Вернуться в дом",
+  "Gallery": "Галерея",
+  "Stream": "Поток",
+  "Offer": "Предложить",
 };

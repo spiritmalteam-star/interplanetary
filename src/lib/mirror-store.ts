@@ -218,8 +218,12 @@ export type ToolTabKey =
   | "quantum"
   | "healx"
   | "artx"
-  | "gathering"
   | "scopes";
+
+/* THE GATHERING LIVES OUTSIDE THE CHAT — it is no longer a tool tab
+   of the house's one chat. It is its own portal: the threshold's
+   top-left sigil opens a fully independent hall (its own structure,
+   its own weather, its own address ?room=gathering). */
 
 /* THE LANDING'S OWN SCOPE — the field the threshold's docked chat
    walks in (the crown's Scopes hand chooses it). THE MIRROR is the
@@ -827,6 +831,14 @@ interface MirrorState {
   profilePageOpen: boolean;
   openProfilePage: () => void;
   closeProfilePage: () => void;
+
+  /* THE GATHERING'S PORTAL — the independent hall. Not a chat tab, not
+     a workspace room: a separate social space with its own address
+     (?room=gathering), raised by the threshold's top-left sigil and
+     folded only by its own return hand or the browser's Back. */
+  gatheringPortalOpen: boolean;
+  openGatheringPortal: () => void;
+  closeGatheringPortal: () => void;
 
   setMode: (mode: Mode) => void;
   setSidebarTab: (tab: SidebarTab) => void;
@@ -1843,6 +1855,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   workspaceZoomed: false,
   authMode: "signin" as const,
   profilePageOpen: false,
+  gatheringPortalOpen: false,
   wallet: null,
   walletPrices: null,
   walletPacks: null,
@@ -4042,6 +4055,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openProfilePage: () =>
     set({ profilePageOpen: true, authOpen: false, mobileNavOpen: false }),
   closeProfilePage: () => set({ profilePageOpen: false }),
+
+  /* THE GATHERING'S PORTAL — the independent hall rises over everything
+     (the house keeps breathing beneath it); folded only by its own
+     return hand, the Escape key or the browser's Back. */
+  openGatheringPortal: () =>
+    set({ gatheringPortalOpen: true, mobileNavOpen: false }),
+  closeGatheringPortal: () => set({ gatheringPortalOpen: false }),
 
   openAccount: () => set({ accountOpen: true, mobileNavOpen: false }),
   closeAccount: () => set({ accountOpen: false }),

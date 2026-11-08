@@ -3761,7 +3761,6 @@ export const ar: TranslationDict = {
   "Breathing out": "زفير",
   "HyperX receiving": "HyperX يستقبل",
   "Truth discovered": "اكتُشفت الحقيقة",
-  "The Mirror": "المرآة",
   "The house's own reflection": "انعكاس البيت ذاته",
   "The star families and worlds": "عائلات النجوم والعوالم",
   "The deep nature of reality": "الطبيعة العميقة للواقع",
@@ -3791,4 +3790,10 @@ export const ar: TranslationDict = {
   "Back to the bridge": "عودة إلى الجسر",
   "The lane breathes — a featured world rises every five heartbeats.":
     "الممر يتنفّس — كل خمس نبضات يشرق عالمٌ مميّز.",
+
+  /* ——— THE GATHERING'S PORTAL — the independent hall ——— */
+  "Return to the house": "العودة إلى البيت",
+  "Gallery": "المعرض",
+  "Stream": "التدفق",
+  "Offer": "قدّم",
 };

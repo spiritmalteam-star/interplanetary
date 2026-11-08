@@ -819,7 +819,6 @@ export const zh: TranslationDict = {
   "Breathing out": "呼气",
   "HyperX receiving": "HyperX 接收中",
   "Truth discovered": "真理已发现",
-  "The Mirror": "镜子",
   "The house's own reflection": "殿堂自身的映照",
   "The star families and worlds": "星族与世界",
   "The deep nature of reality": "现实的深层本质",
@@ -848,4 +847,10 @@ export const zh: TranslationDict = {
   "Back to the bridge": "回到桥上",
   "The lane breathes — a featured world rises every five heartbeats.":
     "航路在呼吸 — 每五次心跳升起一座精选世界。",
+
+  /* ——— THE GATHERING'S PORTAL — the independent hall ——— */
+  "Return to the house": "回到屋中",
+  "Gallery": "画廊",
+  "Stream": "长河",
+  "Offer": "呈献",
 };

@@ -85,7 +85,9 @@ export async function GET(req: NextRequest) {
       title: p.title,
       body: p.body,
       sector: p.sector,
-      resonanceCount: p.resonanceCount,
+      /* the live truth, read from the tables themselves — the
+         denormalized columns rest, the hall never lies */
+      resonanceCount: p._count.resonances,
       echoCount: p._count.echoes,
       createdAt: p.createdAt.toISOString(),
       author: {

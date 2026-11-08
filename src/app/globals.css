@@ -5208,19 +5208,154 @@ html:not(.dark) .lp-sigil-img {
   }
 }
 
-/* THE GATHERING — the hall's own gold glass (the threshold's light) */
-.gathering-hand {
-  border-color: color-mix(in srgb, #d9c99a 55%, transparent);
-  background: linear-gradient(
-    120deg,
-    color-mix(in srgb, #d9c99a 16%, transparent),
-    color-mix(in srgb, #c9a227 13%, transparent)
-  );
-  box-shadow:
-    0 0 12px -4px color-mix(in srgb, #d9c99a 50%, transparent),
-    inset 0 0 0 1px color-mix(in srgb, #d9c99a 20%, transparent);
+/* ==================================================================== */
+/*  THE GATHERING'S PORTAL — the independent hall.                      */
+/*  Porcelain clean, milky creamy, three-dimensional: the hall wears    */
+/*  its own weather — milk-white porcelain, cream light, soft           */
+/*  extruded cards — completely apart from the house's cosmic dark.     */
+/* ==================================================================== */
+
+/* --- the sky: layered milk and cream, alive only while it is seen --- */
+.gp-sky {
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgba(253, 250, 242, 0.95) 0%, rgba(253, 250, 242, 0) 55%),
+    radial-gradient(90% 70% at 88% 12%, rgba(244, 233, 210, 0.8) 0%, rgba(244, 233, 210, 0) 60%),
+    radial-gradient(110% 80% at 50% 108%, rgba(238, 226, 200, 0.9) 0%, rgba(238, 226, 200, 0) 62%),
+    linear-gradient(168deg, #faf6ec 0%, #f6efe1 46%, #f1e8d5 100%);
 }
-.gathering-hand:hover {
-  border-color: color-mix(in srgb, #d9c99a 80%, transparent);
-  box-shadow: 0 0 18px -4px color-mix(in srgb, #d9c99a 70%, transparent);
+.gp-drift {
+  animation: gp-drift 26s ease-in-out infinite;
+  will-change: transform;
+}
+.gp-drift-slow {
+  animation: gp-drift 38s ease-in-out infinite reverse;
+  will-change: transform;
+}
+@keyframes gp-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2.5%, -3%, 0) scale(1.06);
+  }
+}
+
+/* --- the porcelain card: extruded, milky, cool to the touch --- */
+.gp-card {
+  background:
+    linear-gradient(158deg, rgba(255, 255, 255, 0.92) 0%, rgba(252, 248, 239, 0.86) 52%, rgba(247, 240, 226, 0.88) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(214, 197, 164, 0.28),
+    0 1px 2px rgba(122, 103, 70, 0.06),
+    0 12px 28px -14px rgba(122, 103, 70, 0.22),
+    0 30px 60px -30px rgba(122, 103, 70, 0.28);
+}
+.gp-card-hover {
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gp-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(214, 197, 164, 0.28),
+    0 2px 4px rgba(122, 103, 70, 0.07),
+    0 18px 36px -16px rgba(122, 103, 70, 0.3),
+    0 44px 80px -36px rgba(122, 103, 70, 0.36);
+}
+.gp-card-hover:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* --- porcelain glass for the bars and sheets --- */
+.gp-glass {
+  background: linear-gradient(165deg, rgba(253, 250, 243, 0.88) 0%, rgba(248, 242, 230, 0.8) 100%);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 10px 30px -18px rgba(122, 103, 70, 0.28);
+}
+
+/* --- the segmented porcelain pill (gallery · stream · mine) --- */
+.gp-seg {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(214, 197, 164, 0.24),
+    0 8px 20px -12px rgba(122, 103, 70, 0.25);
+}
+.gp-seg-thumb {
+  background: linear-gradient(160deg, #fffdf8 0%, #f8f1e2 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 2px 6px -2px rgba(122, 103, 70, 0.3);
+}
+
+/* --- the stream's snap dress (the tiktok hand, porcelain-made) --- */
+.gp-stream {
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.gp-stream::-webkit-scrollbar {
+  display: none;
+}
+.gp-slide {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+/* --- quiet scrollbars inside the hall's own rooms --- */
+.gp-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(178, 158, 122, 0.45) transparent;
+}
+.gp-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.gp-scroll::-webkit-scrollbar-thumb {
+  background: rgba(178, 158, 122, 0.4);
+  border-radius: 999px;
+}
+.gp-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* --- the resonate strike: one ripple, transform and opacity only --- */
+.gp-strike {
+  animation: gp-strike 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes gp-strike {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  60% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* --- the stillness law reaches the hall too --- */
+@media (prefers-reduced-motion: reduce) {
+  .gp-drift,
+  .gp-drift-slow,
+  .gp-strike {
+    animation: none !important;
+  }
+  .gp-card-hover,
+  .gp-card-hover:hover,
+  .gp-card-hover:active {
+    transform: none;
+    transition: none;
+  }
 }

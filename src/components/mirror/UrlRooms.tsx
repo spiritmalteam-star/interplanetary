@@ -30,7 +30,6 @@ const TAB_ROOMS: Record<ToolTabKey, string> = {
   video: "studio",
   library: "library",
   mirroros: "mirroros",
-  gathering: "gathering",
   scopes: "scopes",
 };
 
@@ -40,6 +39,10 @@ const OVERLAY_ROOMS = {
   tour: "tour",
   signin: "signin",
   billing: "billing",
+  /* THE GATHERING'S OWN ADDRESS — the independent portal keeps its
+     room name: an old ?room=gathering link now lands at the portal
+     itself, exactly where the hall lives now. */
+  gathering: "gathering",
 } as const;
 
 const ROOM_TITLES: Record<string, string> = {
@@ -56,6 +59,7 @@ const ROOM_TITLES: Record<string, string> = {
   library: "Library",
   mirroros: "Mirror OS",
   scopes: "Scopes",
+  gathering: "The Gathering",
   profile: "Profile",
   billing: "Credits & plans",
   signin: "Sign in",
@@ -67,6 +71,7 @@ type RoomName = string;
 
 function roomFromState(s: ReturnType<typeof useMirror.getState>): RoomName | null {
   if (s.profilePageOpen) return OVERLAY_ROOMS.profile;
+  if (s.gatheringPortalOpen) return OVERLAY_ROOMS.gathering;
   if (s.aboutOpen) return OVERLAY_ROOMS.about;
   if (s.tourOpen) return OVERLAY_ROOMS.tour;
   if (s.authOpen) return OVERLAY_ROOMS.signin;
@@ -94,6 +99,9 @@ function openRoom(room: RoomName | null) {
       return;
     case OVERLAY_ROOMS.profile:
       s.openProfilePage();
+      return;
+    case OVERLAY_ROOMS.gathering:
+      s.openGatheringPortal();
       return;
     case OVERLAY_ROOMS.about:
       s.openAbout();
@@ -123,6 +131,7 @@ function openRoom(room: RoomName | null) {
 export function UrlRooms() {
   const activeToolTab = useMirror((s) => s.activeToolTab);
   const profilePageOpen = useMirror((s) => s.profilePageOpen);
+  const gatheringPortalOpen = useMirror((s) => s.gatheringPortalOpen);
   const aboutOpen = useMirror((s) => s.aboutOpen);
   const tourOpen = useMirror((s) => s.tourOpen);
   const authOpen = useMirror((s) => s.authOpen);
@@ -161,7 +170,7 @@ export function UrlRooms() {
     } catch {
       /* an address that cannot be written never blocks the room */
     }
-  }, [activeToolTab, profilePageOpen, aboutOpen, tourOpen, authOpen, walletModalOpen]);
+  }, [activeToolTab, profilePageOpen, gatheringPortalOpen, aboutOpen, tourOpen, authOpen, walletModalOpen]);
 
   /* THE VISITOR'S OWN STEPS — Back and Forward re-enter the room the
      history carries, without pushing a new address for it. */

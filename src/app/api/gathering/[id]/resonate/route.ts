@@ -40,6 +40,14 @@ export async function POST(
 
     const count = await db.gatheringResonance.count({ where: { postId: id } });
 
+    /* the column carries the truth forward — the hall's reads never
+       drift from the resonance table (a strike is written, not just
+       counted) */
+    await db.gatheringPost.update({
+      where: { id },
+      data: { resonanceCount: count },
+    });
+
     return withAnonCookie(
       NextResponse.json({ resonated: !existing, resonanceCount: count }),
       visitor

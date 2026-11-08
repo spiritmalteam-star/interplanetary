@@ -246,4 +246,10 @@ export const pt: TranslationDict = {
   "Your words — the only style": "Suas palavras — o único estilo",
   "Your words alone — no chamber, shape or voice rides with the ask.": "Apenas suas palavras — nenhuma câmara, forma ou voz acompanha o pedido.",
   "Your woven tracks": "Suas faixas tecidas",
+
+  /* ——— THE GATHERING'S PORTAL — the independent hall ——— */
+  "Return to the house": "Voltar à casa",
+  "Gallery": "Galeria",
+  "Stream": "O fluxo",
+  "Offer": "Oferecer",
 };

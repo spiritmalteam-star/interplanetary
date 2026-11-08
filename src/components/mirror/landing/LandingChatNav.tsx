@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Hammer, Layers, Sparkles, Waypoints } from "lucide-react";
+import { Hammer, Layers, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -70,11 +70,10 @@ export function LandingChatNav() {
     closeScopes();
   }, [setLandingScope, closeScopes]);
 
-  /* THE GATHERING — the shared hall rises as its own room: the house's
-     living exhibition, where individual reflections meet. */
-  const openGathering = useCallback(() => {
-    openToolTab("gathering");
-  }, [openToolTab]);
+  /* THE GATHERING HAS LEFT THE CHAT — the shared hall is no longer a
+     tab of the one chat: it stands as its own independent portal, and
+     the threshold's top-left sigil (the living network's door) is the
+     only hand that raises it. */
 
   /* THE FITTING LAW — every hand carries a shrinking waist: the label
      truncates before anything may leave the row (the Albanian
@@ -143,22 +142,10 @@ export function LandingChatNav() {
         </span>
       </button>
 
-      {/* ------------------------- THE GATHERING ------------------------ */}
-      <button
-        type="button"
-        onClick={openGathering}
-        aria-haspopup="dialog"
-        aria-expanded={activeToolTab === "gathering"}
-        aria-label={t("The Gathering — the shared hall")}
-        title={t("The Gathering — the shared hall")}
-        data-testid="landing-nav-gathering"
-        className={cn(hand, "gathering-hand")}
-      >
-        <Waypoints className="size-3 shrink-0 text-[#d9c99a]" aria-hidden="true" />
-        <span className={cn(handLabel, "text-[#8a7a4d] dark:text-[#d9c99a]")}>
-          {t("Gathering")}
-        </span>
-      </button>
+      {/* ------------------ THE GATHERING HAS LEFT ------------------- */}
+      {/* The shared hall is no longer a tab of the chat: it lives as its
+          own independent portal, opened only by the threshold's
+          top-left sigil — the living network's door. */}
 
       {/* ------------------------- ABOUT US HAS MOVED HOME ------------- */}
       {/* The About hand left the chat tab: it now lives at the very top

@@ -154,4 +154,10 @@ export const hi: TranslationDict = {
   "The senses vote first": "इंद्रियें पहले मतदान करती हैं",
   "The foundry under the heart": "दिल के नीचे की ढलाई",
   "Assembly, not accident": "इकट्ठा होना, दुर्घटना नहीं",
+
+  /* ——— THE GATHERING'S PORTAL — the independent hall ——— */
+  "Return to the house": "घर लौटें",
+  "Gallery": "गैलरी",
+  "Stream": "प्रवाह",
+  "Offer": "अर्पित करें",
 };

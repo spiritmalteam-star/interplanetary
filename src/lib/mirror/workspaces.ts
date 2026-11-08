@@ -33,7 +33,6 @@ import {
   Palette,
   ScrollText,
   Sparkles,
-  Waypoints,
   type LucideIcon,
 } from "lucide-react";
 import type { LandingScopeKey, ToolTabKey } from "@/lib/mirror-store";
@@ -84,7 +83,11 @@ export type WorkspaceDefinition = {
 /*  the visitor named it back among the tools, riding the InDream rail
 /*  again (the scopes' shore wears the fields alone). THE MARKET HAS
 /*  LEFT THE HOUSE — no hall, no gem, no tab: the registry carries the
-/*  makers and the scopes alone.
+/*  makers and the scopes alone. THE GATHERING HAS LEFT THE CHAT — it
+/*  was never the chat's room to keep: the shared hall stands as its
+/*  own independent portal, raised by the threshold's top-left sigil
+/*  (the living network's door), with its own address and its own
+/*  manners — never a tab of the one chat again.
 /* ------------------------------------------------------------------ */
 
 export const WORKSPACE_ORDER: ToolTabKey[] = [
@@ -99,7 +102,6 @@ export const WORKSPACE_ORDER: ToolTabKey[] = [
   "video",
   "register",
   "library",
-  "gathering",
   "scopes",
 ];
 
@@ -265,21 +267,6 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
         default: m.LibraryView as ComponentType,
       })),
     capabilities: ["creations-room", "sector-filtering", "in-place-reader"],
-    preserveState: true,
-    resourceProfile: "low",
-    bridgeMode: "mirror",
-  },
-  gathering: {
-    id: "gathering",
-    title: "The Gathering",
-    category: "conversation",
-    icon: Waypoints,
-    theme: { accent: "#d9c99a" },
-    loader: () =>
-      import("@/components/mirror/GatheringView").then((m) => ({
-        default: m.GatheringView as ComponentType,
-      })),
-    capabilities: ["shared-hall", "offerings", "resonance", "echoes", "living-exhibition"],
     preserveState: true,
     resourceProfile: "low",
     bridgeMode: "mirror",
