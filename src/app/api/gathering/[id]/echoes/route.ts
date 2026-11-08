@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
 import { gatheringName } from "../../route";
+import { networkName, wallIdsFor, notify } from "@/lib/server/network";
 
 /* ------------------------------------------------------------------ */
 /*  THE ECHOES — an offering's responses: GET reads them, POST adds    */
@@ -79,16 +80,33 @@ export async function POST(
 
     const post = await db.gatheringPost.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, userId: true, title: true },
     });
     if (!post) {
       return NextResponse.json({ error: "That offering no longer hangs in the hall." }, { status: 404 });
+    }
+
+    /* the quiet walls hold here too — a closed door never echoes */
+    const walls = await wallIdsFor(visitor.user.id);
+    if (post.userId !== visitor.user.id && walls.has(post.userId)) {
+      return NextResponse.json({ error: "This door rests closed." }, { status: 403 });
     }
 
     const created = await db.gatheringEcho.create({
       data: { postId: id, userId: visitor.user.id, body },
     });
     const echoCount = await db.gatheringEcho.count({ where: { postId: id } });
+
+    /* the maker's bell rings softly — a real response arrived */
+    await notify({
+      userId: post.userId,
+      actorId: visitor.user.id,
+      actorName: networkName(visitor.user),
+      type: "echo",
+      body: `${post.title}: ${body.slice(0, 120)}`,
+      refType: "post",
+      refId: post.id,
+    });
 
     return withAnonCookie(
       NextResponse.json({

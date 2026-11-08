@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
+import { networkName, notify, wallIdsFor } from "@/lib/server/network";
 
 /* ------------------------------------------------------------------ */
 /*  THE GATHERING'S DOORS — the shared hall's own API.                 */
@@ -58,26 +59,44 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const kind = url.searchParams.get("kind");
     const mine = url.searchParams.get("mine") === "1";
+    const circleId = url.searchParams.get("circle");
+    const q = (url.searchParams.get("q") ?? "").trim().toLowerCase().slice(0, 60);
     const cursor = url.searchParams.get("cursor");
     const take = Math.min(30, Math.max(5, Number(url.searchParams.get("take") ?? 15)));
+
+    /* the quiet walls — a closed door's words never reach the hall */
+    const walls = await wallIdsFor(visitor.user.id);
 
     const rows = await db.gatheringPost.findMany({
       where: {
         ...(mine ? { userId: visitor.user.id } : {}),
         ...(isGatheringKind(kind) ? { kind } : {}),
+        ...(circleId ? { circleId } : { circleId: mine ? undefined : null }),
+        ...(q
+          ? {
+              OR: [
+                { title: { contains: q } },
+                { body: { contains: q } },
+                { tags: { contains: q } },
+              ],
+            }
+          : {}),
       },
       orderBy: { createdAt: "desc" },
-      take: take + 1,
+      take: take + 40,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: {
         user: { select: { name: true, email: true, provider: true, image: true } },
+        circle: { select: { id: true, name: true } },
         resonances: { where: { userId: visitor.user.id }, select: { id: true } },
         _count: { select: { resonances: true, echoes: true } },
       },
     });
 
-    const hasMore = rows.length > take;
-    const page = rows.slice(0, take);
+    const safe = rows.filter((p) => !walls.has(p.userId)).slice(0, take + 1);
+
+    const hasMore = safe.length > take;
+    const page = safe.slice(0, take);
 
     const posts = page.map((p) => ({
       id: p.id,
@@ -85,6 +104,11 @@ export async function GET(req: NextRequest) {
       title: p.title,
       body: p.body,
       sector: p.sector,
+      tags: (p.tags ?? "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      circle: p.circle ? { id: p.circle.id, name: p.circle.name } : null,
       /* the live truth, read from the tables themselves — the
          denormalized columns rest, the hall never lies */
       resonanceCount: p._count.resonances,
@@ -133,6 +157,8 @@ export async function POST(req: NextRequest) {
       title?: unknown;
       body?: unknown;
       sector?: unknown;
+      tags?: unknown;
+      circleId?: unknown;
     } | null;
     if (!raw) {
       return NextResponse.json({ error: "The offering arrived unreadable." }, { status: 400 });
@@ -160,6 +186,31 @@ export async function POST(req: NextRequest) {
       typeof raw.sector === "string" && raw.sector.trim().length >= 2 && raw.sector.length <= 24
         ? raw.sector.trim()
         : null;
+    const tags =
+      typeof raw.tags === "string" && raw.tags.trim().length >= 2
+        ? raw.tags
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length >= 2)
+            .slice(0, 6)
+            .join(",")
+        : null;
+
+    /* a circle's wall — only a member hangs inside it */
+    let circleId: string | null = null;
+    if (typeof raw.circleId === "string" && raw.circleId.length > 0) {
+      const membership = await db.networkCircleMember.findUnique({
+        where: { circleId_userId: { circleId: raw.circleId, userId: visitor.user.id } },
+        select: { id: true },
+      });
+      if (!membership) {
+        return NextResponse.json(
+          { error: "Only a circle's own members hang inside it." },
+          { status: 403 }
+        );
+      }
+      circleId = raw.circleId;
+    }
 
     const created = await db.gatheringPost.create({
       data: {
@@ -168,8 +219,30 @@ export async function POST(req: NextRequest) {
         title,
         body,
         sector,
+        tags,
+        circleId,
       },
     });
+
+    /* the circle's bells ring softly — a new offering arrived */
+    if (circleId) {
+      const others = await db.networkCircleMember.findMany({
+        where: { circleId, userId: { not: visitor.user.id } },
+        select: { userId: true },
+        take: 40,
+      });
+      for (const o of others) {
+        await notify({
+          userId: o.userId,
+          actorId: visitor.user.id,
+          actorName: networkName(visitor.user),
+          type: "circle_join",
+          body: `${title.slice(0, 120)}`,
+          refType: "post",
+          refId: created.id,
+        });
+      }
+    }
 
     return withAnonCookie(
       NextResponse.json({
@@ -179,6 +252,11 @@ export async function POST(req: NextRequest) {
           title: created.title,
           body: created.body,
           sector: created.sector,
+          tags: (created.tags ?? "")
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+          circle: circleId ? { id: circleId, name: "" } : null,
           resonanceCount: 0,
           echoCount: 0,
           createdAt: created.createdAt.toISOString(),

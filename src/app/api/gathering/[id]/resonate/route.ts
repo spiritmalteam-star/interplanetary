@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
+import { networkName, notify, wallIdsFor } from "@/lib/server/network";
 
 /* ------------------------------------------------------------------ */
 /*  THE RESONANCE HAND — POST /api/gathering/[id]/resonate             */
@@ -19,10 +20,18 @@ export async function POST(
 
     const post = await db.gatheringPost.findUnique({
       where: { id },
-      select: { id: true },
+      select: { id: true, userId: true, title: true },
     });
     if (!post) {
       return NextResponse.json({ error: "That offering no longer hangs in the hall." }, { status: 404 });
+    }
+
+    /* the quiet walls hold — a closed door never resonates */
+    if (post.userId !== visitor.user.id) {
+      const walls = await wallIdsFor(visitor.user.id);
+      if (walls.has(post.userId)) {
+        return NextResponse.json({ error: "This door rests closed." }, { status: 403 });
+      }
     }
 
     const existing = await db.gatheringResonance.findUnique({
@@ -35,6 +44,16 @@ export async function POST(
     } else {
       await db.gatheringResonance.create({
         data: { postId: id, userId: visitor.user.id },
+      });
+      /* the maker's bell rings once for the new tuning */
+      await notify({
+        userId: post.userId,
+        actorId: visitor.user.id,
+        actorName: networkName(visitor.user),
+        type: "resonance",
+        body: post.title,
+        refType: "post",
+        refId: post.id,
       });
     }
 
