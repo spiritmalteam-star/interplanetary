@@ -20,6 +20,7 @@ import { LanguageButton } from "@/components/mirror/LanguageButton";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
+import LivingNetwork from "./LivingNetwork";
 import SideRail from "./SideRail";
 import GuideShowcase from "./GuideShowcase";
 import dynamic from "next/dynamic";
@@ -367,6 +368,11 @@ export default function LandingPage({
           never move on their own) */}
       <SideRail side="left" />
       <SideRail side="right" />
+
+      {/* THE LIVING NETWORK — the constellation gate resting at the
+          threshold's top-left corner: the vision this house is growing
+          into, one touch away, never in the way. */}
+      <LivingNetwork />
 
       <div className="relative z-10 flex min-h-full flex-col">
         {/* THE OPEN BANNER — the artwork stands nearly bare (the veil

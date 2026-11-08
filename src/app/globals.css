@@ -5165,3 +5165,45 @@ html:not(.dark) .lp-sigil-img {
     max-width: 1180px;
   }
 }
+
+/* ============ THE LIVING NETWORK — the constellation gate ============ */
+/* the threads breathe between the stars — opacity only, never layout */
+.ln-thread {
+  animation: ln-breathe-line 3.6s ease-in-out infinite;
+}
+@keyframes ln-breathe-line {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+/* the gate's own north star and the mirror's halo */
+.ln-star-core {
+  animation: lp-breathe 2.6s ease-in-out infinite;
+}
+.ln-core-ring {
+  animation: ln-core-ring 3.8s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes ln-core-ring {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.1;
+  }
+}
+/* the stillness law reaches the constellation too */
+@media (prefers-reduced-motion: reduce) {
+  .ln-thread,
+  .ln-star-core,
+  .ln-core-ring {
+    animation: none !important;
+  }
+}

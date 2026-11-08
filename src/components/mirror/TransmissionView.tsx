@@ -166,7 +166,7 @@ export function LoadingTransmission({
               in the frame at once; the page never reads as blank while
               the mirror listens. The full words stay in the DOM for
               every screen reader. */}
-          <div className="relative max-h-[136px] overflow-hidden [mask-image:linear-gradient(180deg,black_62%,transparent_100%)]">
+          <div className="relative max-h-[136px] overflow-hidden [m[mask-image:linear-gradient(180deg,black_62%,transparent_100%)]">
             <p className="ink-hand ink-soft line-clamp-5 px-6 text-[16.5px] italic leading-[1.85]">
               {query}
             </p>
