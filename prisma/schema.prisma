@@ -70,6 +70,7 @@ model User {
   networkBlocking             NetworkBlock[] @relation("NetworkBlocking")
   networkBlockedBy            NetworkBlock[] @relation("NetworkBlockedBy")
   networkReports              NetworkReport[] @relation("NetworkReports")
+  memoryItems                 MemoryItem[]
   networkMirrorSuggested      NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggested")
   agentTasks                  AgentTask[]
 }
@@ -990,4 +991,25 @@ model AuditRecord {
   createdAt    DateTime @default(now())
 
   @@index([action, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+//  THE M.E. MEMORY — the five domains, additive (the runtime's gentle shelf).
+//  domain: personal | conversation | project | community | public
+//  Every row belongs to ONE owner; personal/conversation/project are the
+//  writable shelves, community/public are the future knowledge graph's.
+// ---------------------------------------------------------------------------
+model MemoryItem {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain    String
+  scopeKey  String?
+  content   String
+  sourceRef String?
+  weight    Int       @default(1)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, domain, scopeKey])
 }

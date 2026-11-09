@@ -218,7 +218,8 @@ export type ToolTabKey =
   | "quantum"
   | "healx"
   | "artx"
-  | "scopes";
+  | "scopes"
+  | "spatial";
 
 /* THE GATHERING LIVES OUTSIDE THE CHAT — it is no longer a tool tab
    of the house's one chat. It is its own portal: the threshold's

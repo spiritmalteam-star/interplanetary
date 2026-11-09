@@ -23,6 +23,7 @@ import type { ComponentType } from "react";
 import {
   Atom,
   BookOpen,
+  Box,
   Clapperboard,
   Hammer,
   HeartPulse,
@@ -103,6 +104,7 @@ export const WORKSPACE_ORDER: ToolTabKey[] = [
   "register",
   "library",
   "scopes",
+  "spatial",
 ];
 
 export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
@@ -285,6 +287,25 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
     preserveState: false,
     resourceProfile: "low",
     bridgeMode: "absolute",
+  },
+  /* THE SPATIAL MIRROR — the device-independent spatial model made
+     visible: the same presence presented by the room the device
+     deserves, over the real thread. WebXR is asked once and honored
+     with the truth; no headset is ever required. */
+  spatial: {
+    id: "spatial",
+    title: "Spatial",
+    category: "atlas",
+    icon: Box,
+    theme: { accent: "#7dd3fc" },
+    loader: () =>
+      import("@/components/mirror/SpatialMirror").then((m) => ({
+        default: m.SpatialMirror as ComponentType,
+      })),
+    capabilities: ["spatial-presence", "depth-arrangement", "webxr-detection"],
+    preserveState: false,
+    resourceProfile: "low",
+    bridgeMode: "mirror",
   },
 };
 

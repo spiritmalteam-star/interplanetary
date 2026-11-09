@@ -72,6 +72,7 @@ import { skyWord } from "@/lib/i18n/sky-words";
 import { LanguageButton } from "./LanguageButton";
 import { HyperXFusionBadge } from "./HyperXFusion";
 import { FloorAskForm } from "./FloorAskForm";
+import { useLandingThreadBridge } from "@/lib/spatial/thread-bridge";
 
 /* THE SCOPES' OWN LAB — the three family fields' instruments ride as
    their own page of code: the bench travels only when a lab scope
@@ -3901,6 +3902,9 @@ export function BranchCanopy({
   /* the thread's own mirror — the scope-switch keeps read it */
   const landingThreadRef = useRef<RoomTurn[]>([]);
   landingThreadRef.current = landingThread;
+  /* THE SPATIAL BRIDGE — the settled words cross to the spatial room
+     (one quiet hand; the canopy's state never moves). */
+  useLandingThreadBridge(landingThread);
   /* EVERY FIELD'S OWN KEEP — the thread, the carried memory and the
      history page of the field the visitor just left, shelved until
      they come back (in memory; the words also rest per scope in

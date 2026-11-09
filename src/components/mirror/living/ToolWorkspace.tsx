@@ -178,6 +178,7 @@ const STANDING_RAIL: ToolTabKey[] = [
   "artx",
   "invent",
   "mirroros",
+  "spatial",
 ];
 
 /* ------------------------------------------------------------------ */
