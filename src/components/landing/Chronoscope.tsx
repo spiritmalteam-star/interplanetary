@@ -374,6 +374,27 @@ export default function Chronoscope() {
     [navList, currentId]
   );
 
+  /* the swipe hand — a horizontal drag across the collapsed card
+     walks the profiles without any button; vertical scrolling is
+     never touched (pan-y keeps the page's own motion) */
+  const swipeOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const onCardPointerDown = useCallback((e: React.PointerEvent) => {
+    swipeOriginRef.current = { x: e.clientX, y: e.clientY };
+  }, []);
+  const onCardPointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      const origin = swipeOriginRef.current;
+      swipeOriginRef.current = null;
+      if (!origin) return;
+      const dx = e.clientX - origin.x;
+      const dy = e.clientY - origin.y;
+      if (Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        step(dx < 0 ? 1 : -1);
+      }
+    },
+    [step]
+  );
+
   /* Discover — an unseen record within the active wing */
   const visitedRef = useRef<Set<string>>(new Set());
   const discover = useCallback(() => {
@@ -654,19 +675,23 @@ export default function Chronoscope() {
             pointer touches the module (the calm law) */}
         <div
           key={currentId}
-          className="chrono-swap grid gap-4 p-4 sm:grid-cols-[360px_1fr] sm:items-center sm:p-5 lg:grid-cols-[460px_1fr] lg:gap-6 lg:p-6"
+          className="chrono-swap grid gap-5 p-4 sm:grid-cols-[420px_1fr] sm:items-center sm:p-6 lg:grid-cols-[560px_1fr] lg:gap-8 lg:p-8"
+          style={{ touchAction: "pan-y" }}
           onPointerEnter={() => {
             moduleHoverRef.current = true;
           }}
           onPointerLeave={() => {
             moduleHoverRef.current = false;
           }}
+          onPointerDown={onCardPointerDown}
+          onPointerUp={onCardPointerUp}
+          data-testid="chronoscope-card"
         >
           {/* the card's face — the featured artwork, grown large at the
               owner's word: it fills its whole column on the desk (up to
-              460px) and carries the record's own light */}
+              560px) and carries the record's own light */}
           <div
-            className="relative mx-auto aspect-[3/2] w-full max-w-[460px] overflow-hidden rounded-xl border sm:mx-0 lg:max-w-none"
+            className="relative mx-auto aspect-[3/2] w-full max-w-[560px] overflow-hidden rounded-xl border sm:mx-0 lg:max-w-none"
             style={{ borderColor: `color-mix(in srgb, ${accent} 36%, transparent)` }}
           >
             {readyFile ? (
@@ -677,7 +702,7 @@ export default function Chronoscope() {
                   alt={`${currentId} — ${displayName}`}
                   fill
                   unoptimized
-                  sizes="(max-width: 640px) 92vw, (max-width: 1024px) 360px, 460px"
+                  sizes="(max-width: 640px) 92vw, (max-width: 1024px) 420px, 560px"
                   className="object-cover"
                 />
                 <button
@@ -707,7 +732,7 @@ export default function Chronoscope() {
             <h3
               id="chrono-card-title"
               tabIndex={-1}
-              className="mt-1 line-clamp-2 break-words font-[family-name:Cinzel] text-[20px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none sm:text-[24px]"
+              className="mt-1 line-clamp-2 break-words font-[family-name:Cinzel] text-[22px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none sm:text-[28px]"
             >
               {displayName}
             </h3>
@@ -727,6 +752,29 @@ export default function Chronoscope() {
               ))}
             </div>
             <div className="mt-3.5 flex flex-wrap items-center gap-2">
+              {/* the walk hands — the console's Previous / Next standing
+                  in the collapsed module too, so a visitor may move
+                  through the profiles without opening the instrument */}
+              <button
+                type="button"
+                onClick={() => step(-1)}
+                data-testid="chronoscope-module-prev"
+                aria-label={t("Previous profile")}
+                className="focus-glow inline-flex size-11 items-center justify-center rounded-full border text-[var(--lp-head)] transition-colors"
+                style={{ borderColor: `color-mix(in srgb, ${accent} 36%, var(--lp-edge))` }}
+              >
+                <ChevronLeft className="size-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => step(1)}
+                data-testid="chronoscope-module-next"
+                aria-label={t("Next profile")}
+                className="focus-glow inline-flex size-11 items-center justify-center rounded-full border text-[var(--lp-head)] transition-colors"
+                style={{ borderColor: `color-mix(in srgb, ${accent} 36%, var(--lp-edge))` }}
+              >
+                <ChevronRight className="size-4" aria-hidden="true" />
+              </button>
               <button
                 type="button"
                 onClick={discover}

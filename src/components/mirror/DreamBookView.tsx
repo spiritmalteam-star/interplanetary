@@ -15,6 +15,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { isPageHidden } from "@/lib/page-lifecycle";
+import PublishToGathering from "@/components/gathering/PublishToGathering";
 import {
   ArrowLeft,
   AudioLines,
@@ -37,6 +38,7 @@ import {
   Play,
   Sparkles,
   Square,
+  Send,
   Volume2,
   VolumeX,
   Waves,
@@ -421,6 +423,8 @@ export function DreamBookView() {
 
   /* ---- the book ---- */
   const [meta, setMeta] = useState<BookMeta | null>(null);
+  /* THE PUBLICATION HAND — the finished volume carried to the hall */
+  const [publishOpen, setPublishOpen] = useState(false);
   /* THE TRUTHFUL MEASUREMENTS — carried beside the book, spoken in
      the reader, the reveal and the binding (never a false COMPLETE) */
   const [measures, setMeasures] = useState<BookMeasures>({});
@@ -3484,6 +3488,23 @@ export function DreamBookView() {
               <Download className="size-4" aria-hidden="true" />
             )}
           </button>
+          {/* THE PUBLICATION HAND — the finished volume carried to the
+              hall: the whole book, its maker's name on it, the Dream
+              Book room remembered as its birthplace */}
+          <button
+            type="button"
+            onClick={() => setPublishOpen(true)}
+            disabled={!bookIdRef.current}
+            aria-label={t("Publish to the hall")}
+            title={t("Publish to the hall")}
+            data-testid="dream-publish"
+            className={cn(
+              inkIconBtn,
+              "shrink-0 text-[#a1844a] disabled:opacity-35"
+            )}
+          >
+            <Send className="size-4" aria-hidden="true" />
+          </button>
           {/* THE FOCUS READING — the column widens, the frame quiets */}
           <button
             type="button"
@@ -4806,11 +4827,39 @@ export function DreamBookView() {
     </ModalShell>
   );
 
+  /* THE PUBLICATION HAND — the whole volume carried to the hall:
+     its title, its cover, its first page's own words, the Dream
+     Book room remembered as its birthplace. The private manuscript
+     itself never leaves the maker's shelf. */
+  const publishPanel = (
+    <PublishToGathering
+      open={publishOpen}
+      onClose={() => setPublishOpen(false)}
+      payload={
+        bookIdRef.current
+          ? {
+              sourcePortal: "book",
+              sourceId: bookIdRef.current,
+              refKind: "library",
+              suggestedTitle: meta?.title || "An untitled volume",
+              preview:
+                (pages[0]?.paragraphs ?? []).join("\n\n").slice(0, 4000) ||
+                "A written work born in the Dream Book room.",
+              cover: cover,
+              generic: false,
+              contentTypeLabel: "Book / Story",
+            }
+          : null
+      }
+    />
+  );
+
   if (stage === "weaving")
     return (
       <>
         {weaving}
         {shelfPanel}
+        {publishPanel}
       </>
     );
   if (stage === "reading")
@@ -4818,12 +4867,14 @@ export function DreamBookView() {
       <>
         {reader}
         {shelfPanel}
+        {publishPanel}
       </>
     );
   return (
     <>
       {atelier}
       {shelfPanel}
+      {publishPanel}
     </>
   );
 }

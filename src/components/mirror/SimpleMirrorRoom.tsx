@@ -20,6 +20,7 @@ import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { MirrorChanneling } from "./MirrorChanneling";
 import { ZoomableLightbox } from "./ZoomableLightbox";
+import PublishToGathering from "@/components/gathering/PublishToGathering";
 import {
   chatSuggestionPools,
   type PoolId,
@@ -104,6 +105,11 @@ type SimpleRoomConfig = {
   /** THE CRYSTALLIZE HAND — a button at the end of every transmission;
       the image is born only when the visitor presses it. */
   crystallize?: boolean;
+  /* THE PUBLICATION HAND — the room's own door into the hall: the
+     finished reply may be carried to the Gathering as an offering,
+     with its birthplace remembered. Creation stays here; publishing
+     is only the carrying. */
+  publish?: { portal: string; sector: string; generic: boolean; typeLabel: string };
 };
 
 /* THE MANIFEST — the making room: speak the world you wish to make,
@@ -140,6 +146,7 @@ const MANIFEST_CONFIG: SimpleRoomConfig = {
     ),
   autoPaint: true,
   singleImage: true,
+  publish: { portal: "manifest", sector: "manifest", generic: true, typeLabel: "Intention / Reflection" },
 };
 
 /* THE INVENT — the forge room: bring a spark, and the Mirror forges
@@ -156,6 +163,7 @@ const INVENT_CONFIG: SimpleRoomConfig = {
     "How would I test whether my idea truly works?",
   ],
   proceed: ["Go deeper", "What would I build first?"],
+  publish: { portal: "invent", sector: "invent", generic: false, typeLabel: "Invention" },
   ask: (q, thread, language, image) =>
     speakReplyGift(
       "/api/transmission",
@@ -200,6 +208,7 @@ const QUANTUM_CONFIG: SimpleRoomConfig = {
       "The field is quiet"
     ),
   crystallize: true,
+  publish: { portal: "channeling", sector: "observatory", generic: true, typeLabel: "Reflection / Transmission" },
 };
 
 /* THE HEALX — the evolved medical field: an advanced mirror intelligence
@@ -231,6 +240,7 @@ const HEALX_CONFIG: SimpleRoomConfig = {
       "The field is quiet"
     ),
   crystallize: true,
+  publish: { portal: "channeling", sector: "observatory", generic: true, typeLabel: "Reflection / Transmission" },
 };
 
 /* THE ARTX — the atelier of visions (the artx voice): speak the
@@ -263,11 +273,14 @@ const ARTX_CONFIG: SimpleRoomConfig = {
       "The field is quiet"
     ),
   crystallize: true,
+  publish: { portal: "artx", sector: "observatory", generic: true, typeLabel: "Artwork" },
 };
 
 function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
   const t = useT();
   const language = useMirror((s) => s.language);
+  /* the publication hand — the last reply may be carried to the hall */
+  const [publishTurn, setPublishTurn] = useState<RoomTurn | null>(null);
   /* the room's own keep — restored from the device on the first
      breath, kept on every change (the turn's loading never rests) */
   const [thread, setThread] = useState<RoomTurn[]>(() => {
@@ -840,7 +853,9 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                         </div>
                       )}
                       {/* THE PROCEEDING HANDS — the last reply leaves
-                          three small ways the conversation continues */}
+                          three small ways the conversation continues —
+                          and one quiet hand that carries the finished
+                          words into the hall as an offering */}
                       {isLast && !busy && turn.a.trim() && (
                         <div
                           className="mt-0.5 flex flex-wrap items-center gap-1.5"
@@ -863,6 +878,24 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                               {t(chip)}
                             </button>
                           ))}
+                          {config.publish && (
+                            <button
+                              type="button"
+                              onClick={() => setPublishTurn(turn)}
+                              data-testid="simple-room-publish"
+                              className="focus-glow flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-colors duration-300 hover:brightness-110"
+                              style={{
+                                borderColor:
+                                  "color-mix(in srgb, #c9a75c 42%, transparent)",
+                                color: "#a1844a",
+                                background:
+                                  "color-mix(in srgb, #c9a75c 8%, transparent)",
+                              }}
+                            >
+                              <Send className="size-3" aria-hidden="true" />
+                              {t("Publish to the hall")}
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1011,6 +1044,27 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
           testId="simple-room-lightbox"
         />
       )}
+
+      {/* THE PUBLICATION HAND — the finished reply, carried to the hall */}
+      <PublishToGathering
+        open={publishTurn !== null}
+        onClose={() => setPublishTurn(null)}
+        payload={
+          publishTurn && config.publish
+            ? {
+                sourcePortal: config.publish.portal,
+                recentSector: config.publish.sector,
+                titleHint: publishTurn.q.slice(0, 120),
+                suggestedTitle: publishTurn.q.slice(0, 140),
+                preview: publishTurn.a.slice(0, 4000),
+                cover: publishTurn.imageUrl ?? null,
+                refUrl: publishTurn.imageUrl ?? null,
+                generic: config.publish.generic,
+                contentTypeLabel: config.publish.typeLabel,
+              }
+            : null
+        }
+      />
     </div>
   );
 }

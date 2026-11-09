@@ -654,12 +654,14 @@ export default function FeedSection({
   active,
   circles,
   onMeetSomeone,
+  onPublishWork,
   onWeaveFrom,
   onLibraryFrom,
 }: {
   active: boolean;
   circles: CircleCard[];
   onMeetSomeone: () => void;
+  onPublishWork: () => void;
   onWeaveFrom: (post: GatheringPost) => void;
   onLibraryFrom: (post: GatheringPost) => void;
 }) {
@@ -793,10 +795,13 @@ export default function FeedSection({
       []
     );
 
-  /* THE THREE HANDS — the first screen's natural doors */
+  /* THE THREE HANDS — the first screen's natural doors.
+     The second hand publishes: creation itself stays in the house's
+     rooms (ArtX, Music, Book, HyperX, a transmission's line) — the
+     hall carries finished works, it does not make them. */
   const threeHands: Array<{ key: string; label: string; icon: LucideIcon; run: () => void }> = [
     { key: "reflection", label: "Share a reflection", icon: Feather, run: () => openComposer("reflection") },
-    { key: "creation", label: "Share a creation", icon: Sparkles, run: () => openComposer("creation") },
+    { key: "creation", label: "Publish a work", icon: Sparkles, run: onPublishWork },
     { key: "meet", label: "Meet someone", icon: Users, run: onMeetSomeone },
   ];
 

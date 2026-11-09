@@ -43,12 +43,14 @@ import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
 import { EthermixDeck } from "./living/EthermixDeck";
 import { LcKaraoke } from "./LcKaraoke";
+import PublishToGathering from "@/components/gathering/PublishToGathering";
 import {
   LC_MODES,
   LC_SHAPE,
   type LcBrief,
   type LcLyricOp,
   type LcMode,
+  type LcTrack,
 } from "@/lib/data/light-codes";
 import { cn } from "@/lib/utils";
 
@@ -444,6 +446,8 @@ function PlayerBar() {
      download, translation) rest folded inside one more-hand, so
      the transport stays small, symmetric and uncluttered */
   const [moreOpen, setMoreOpen] = useState(false);
+  /* THE PUBLICATION HAND — the finished composition carried to the hall */
+  const [publishTrack, setPublishTrack] = useState<LcTrack | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const seenTrack = useRef<string | null>(null);
   const live = status === "ready" && track !== null;
@@ -831,6 +835,19 @@ function PlayerBar() {
                         <Download className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
                         {t("Download")}
                       </a>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setMoreOpen(false);
+                          setPublishTrack(active);
+                        }}
+                        data-testid="lc-publish"
+                        className="focus-glow flex items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] text-[#a1844a] transition-colors duration-300 hover:bg-[color-mix(in_srgb,#c9a75c_10%,transparent)]"
+                      >
+                        <Send className="size-3.5 text-[#a1844a]" aria-hidden="true" />
+                        {t("Publish to the hall")}
+                      </button>
                       {(active.style || active.lyrics) && (
                         <button
                           type="button"
@@ -2497,6 +2514,32 @@ export function LightCodesView() {
           </div>
         </div>
       )}
+
+      {/* THE PUBLICATION HAND — the composition, carried to the hall with
+          its maker's name and the music room remembered as its birthplace */}
+      <PublishToGathering
+        open={publishTrack !== null}
+        onClose={() => setPublishTrack(null)}
+        payload={
+          publishTrack
+            ? {
+                sourcePortal: "music",
+                sourceId: publishTrack.libraryId ?? null,
+                refKind: publishTrack.libraryId ? "music" : null,
+                recentSector: publishTrack.libraryId ? null : "lightcodes",
+                titleHint: publishTrack.title.slice(0, 120),
+                suggestedTitle: publishTrack.title,
+                preview:
+                  publishTrack.notes ||
+                  publishTrack.intention ||
+                  "A composition born in the music room.",
+                refUrl: publishTrack.audioUrl,
+                generic: false,
+                contentTypeLabel: "Music",
+              }
+            : null
+        }
+      />
     </div>
   );
 }

@@ -40,9 +40,12 @@ export const KIND_META: Record<GatheringKind, { icon: LucideIcon; accent: string
   question: { icon: CircleQuestionMark, accent: "#9a6b8a" },
 };
 
+/* The composer's own kinds — conversations only. "creation" stays in
+   the meta for the older offerings already hanging on the walls, but
+   it is no longer offered to a new hand: creations are published from
+   the rooms where they were born, never composed here. */
 export const KIND_ORDER: GatheringKind[] = [
   "reflection",
-  "creation",
   "dream",
   "music",
   "book",

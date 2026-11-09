@@ -23,12 +23,14 @@ import { networkName, notify, wallIdsFor } from "@/lib/server/network";
 
 export const GATHERING_KINDS = [
   "reflection",
-  "creation",
+  "creation", // kept for the older offerings already on the walls
   "dream",
   "music",
   "book",
   "discovery",
   "question",
+  // publication kinds — hung by the publication house, not by a composer
+  "artwork",
 ] as const;
 
 export type GatheringKind = (typeof GATHERING_KINDS)[number];

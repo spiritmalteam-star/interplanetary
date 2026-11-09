@@ -10,7 +10,9 @@ import {
   FileText,
   Leaf,
   RotateCcw,
+  Send,
 } from "lucide-react";
+import PublishToGathering from "@/components/gathering/PublishToGathering";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
 import { cleanCopyText } from "@/lib/copy-clean";
 import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
@@ -418,6 +420,8 @@ export const Exchange = memo(function Exchange({
 }) {
   const scopeMeta = SCOPE_META[scope];
   const [copied, setCopied] = useState(false);
+  /* THE PUBLICATION HAND — this very transmission carried to the hall */
+  const [publishOpen, setPublishOpen] = useState(false);
   const t = useT();
   /* Each card draws its own light — quietly, never spoken of. */
   const aura = useAura(message.id);
@@ -615,7 +619,7 @@ export const Exchange = memo(function Exchange({
         />
 
         <div className="relative px-6 py-6 sm:px-10 sm:py-8">
-          {/* listen + copy — the only actions, one quiet row (words only;
+          {/* listen + copy + publish — the only actions, one quiet row (words only;
               a direct-generation artifact carries no words of its own) */}
           {!hasVisual && message.text.trim() && (
             <div className="mb-4 flex items-center justify-end gap-2">
@@ -640,6 +644,18 @@ export const Exchange = memo(function Exchange({
                 variant="bare"
                 className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
               />
+              {/* THE PUBLICATION HAND — the transmission carried to the
+                  hall as a reflection, its birthplace remembered */}
+              <button
+                type="button"
+                onClick={() => setPublishOpen(true)}
+                aria-label={t("Publish to the hall")}
+                title={t("Publish to the hall")}
+                data-testid="transmission-publish"
+                className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-[#a1844a] transition-all duration-300 hover:border-[color-mix(in_srgb,#c9a75c_45%,transparent)]"
+              >
+                <Send className="size-3.5" aria-hidden="true" />
+              </button>
             </div>
           )}
           {hasVisual ? (
@@ -670,6 +686,24 @@ export const Exchange = memo(function Exchange({
           )}
         </div>
       </div>
+
+      {/* THE PUBLICATION HAND — this transmission carried to the hall:
+          its own words, the channel remembered as its birthplace, the
+          private record on the shelf never exposed by the offering */}
+      <PublishToGathering
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        payload={{
+          sourcePortal: scope === "forge" ? "invent" : scope === "hyperx" ? "hyperx" : "channeling",
+          recentSector: scope === "forge" ? "invent" : "observatory",
+          titleHint: (message.query ?? "").slice(0, 120) || undefined,
+          suggestedTitle:
+            (message.query ?? "").slice(0, 140) || "A transmission of the mirror",
+          preview: message.text.slice(0, 4000),
+          generic: true,
+          contentTypeLabel: scope === "forge" ? "Invention" : scope === "hyperx" ? "Research / Exploration" : "Reflection / Transmission",
+        }}
+      />
     </motion.article>
   );
 });

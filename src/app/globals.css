@@ -5148,21 +5148,21 @@ html:not(.dark) .lp-sigil-img {
 /*  wider rule always wins when it applies.                            */
 /* ------------------------------------------------------------------ */
 .codex-stage {
-  max-width: min(1180px, calc(100vw - 32px));
+  max-width: min(1360px, calc(100vw - 32px));
 }
 @media (min-width: 1280px) {
   .codex-stage {
-    max-width: 900px;
+    max-width: 1200px;
   }
 }
 @media (min-width: 1700px) {
   .codex-stage {
-    max-width: calc(100vw - 800px);
+    max-width: calc(100vw - 560px);
   }
 }
 @media (min-width: 1980px) {
   .codex-stage {
-    max-width: 1180px;
+    max-width: 1440px;
   }
 }
 

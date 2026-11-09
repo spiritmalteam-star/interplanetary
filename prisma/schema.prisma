@@ -71,6 +71,7 @@ model User {
   networkBlockedBy            NetworkBlock[] @relation("NetworkBlockedBy")
   networkReports              NetworkReport[] @relation("NetworkReports")
   networkMirrorSuggested      NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggested")
+  agentTasks                  AgentTask[]
 }
 
 model LibraryEntry {
@@ -610,8 +611,25 @@ model GatheringPost {
   resonances     GatheringResonance[]
   echoes         GatheringEcho[]
 
+  /* CONTEXTUAL PUBLISHING — every offering remembers where it was born.
+     sourceId + sourcePortal identify the original creation (LibraryEntry
+     or MusicTrack); the publication carries its own snapshot fields so a
+     private source record is never exposed by reading the hall. */
+  sourcePortal String? // artx | music | book | dreambook | hyperx | channeling | invent | manifest
+  sourceType   String? // artwork | music | book | story | dream | research | exploration | transmission | intention | invention
+  sourceId     String? // LibraryEntry.id or MusicTrack.id — provenance only, never fetched for display
+  refKind      String? // library | music — which table holds the source
+  refUrl       String? // playable / viewable media reference owned by the source
+  cover        String? // publication cover image (data URL or asset path)
+  visibility   String  @default("public") // public | circle | connections | draft
+  epistemic    String? // established | hypothesis | interpretation | creative — the Knowledge distinction
+  status       String  @default("published") // published | removed (moderation)
+
+  @@unique([userId, sourcePortal, sourceId]) // publication idempotency — one source, one offering per maker
   @@index([createdAt])
   @@index([circleId])
+  @@index([visibility])
+  @@index([sourceId])
 }
 
 model GatheringResonance {
@@ -765,6 +783,8 @@ model NetworkProject {
   seedPost    GatheringPost? @relation("NetworkProjectSeeds", fields: [seedPostId], references: [id], onDelete: SetNull)
   ownerId     String
   owner       User     @relation("NetworkProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+  seeking     Boolean  @default(false) // the maker openly welcomes collaborators
+  requiredSkills String? // comma-separated threads a collaborator might carry
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   members     NetworkProjectMember[]
@@ -875,4 +895,99 @@ model NetworkMirrorSuggestion {
 
   @@unique([postId, userId])
   @@index([postId])
+}
+
+/* ==================== AGENT INFRASTRUCTURE ====================
+   Registered capability, never inherited authority. An agent acts
+   only through audited tools, only inside its granted permissions,
+   and only on behalf of a human whose own rights bound every step. */
+model AgentRecord {
+  id            String   @id @default(cuid())
+  agentKey      String   @unique
+  name          String
+  description   String
+  version       String
+  capabilities  String   @default("[]") // JSON array of capability names
+  supportedTasks String  @default("[]") // JSON array of task kinds
+  toolDependencies String @default("[]") // JSON array of tool names
+  permissions   String   @default("[]") // JSON array of granted permission keys
+  modelConfig   String?  // JSON model configuration
+  status        String   @default("inactive") // active | inactive | suspended
+  ownerType     String   @default("system") // system | service
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tasks         AgentTask[]
+  grants        AgentGrant[]
+}
+
+model AgentGrant {
+  id         String   @id @default(cuid())
+  agentId    String
+  agent      AgentRecord @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  permission String   // tool-level permission key, least privilege
+  scope      String?  // optional resource scope qualifier
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@unique([agentId, permission])
+}
+
+model AgentTask {
+  id               String   @id @default(cuid())
+  agentId          String?
+  agent            AgentRecord? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind             String   // workflow | tool
+  name             String
+  input            String   @default("{}") // JSON task input
+  steps            String?  // JSON plan: [{key, name, tool, status, output?, error?}]
+  status           String   @default("queued") // queued | running | awaiting_approval | completed | failed | cancelled
+  progress         Int      @default(0)
+  result           String?  // JSON structured result
+  error            String?
+  idempotencyKey   String?  @unique // retries never double side effects
+  correlationId    String?
+  attempts         Int      @default(0)
+  maxAttempts      Int      @default(3)
+  approvalRequired Boolean  @default(false)
+  approvedAt       DateTime?
+  timeoutSec       Int      @default(120)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  startedAt        DateTime?
+  finishedAt       DateTime?
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model SystemEvent {
+  id            String   @id @default(cuid())
+  eventId       String   @unique // deduplication — delivery stays exactly-once
+  type          String   // transmission.completed | publication.published | ...
+  actorType     String   // user | agent | system
+  actorId       String?
+  source        String   // emitting subsystem
+  correlationId String?
+  schemaVersion String   @default("1")
+  payload       String   @default("{}") // JSON
+  deadLetter    Boolean  @default(false)
+  deliveredAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([type, createdAt])
+}
+
+model AuditRecord {
+  id           String   @id @default(cuid())
+  actorType    String   // user | agent | system
+  actorId      String?
+  action       String   // publication.publish | tool.invoke | task.run ...
+  resourceType String?
+  resourceId   String?
+  meta         String?  // JSON — never private content, only references
+  createdAt    DateTime @default(now())
+
+  @@index([action, createdAt])
 }

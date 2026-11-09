@@ -1,478 +1,957 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Atom,
+  BookOpen,
+  Compass,
+  Feather,
+  Globe2,
+  Handshake,
+  Library,
   Loader2,
+  Music,
   Search,
+  SlidersHorizontal,
   Sparkles,
   UserPlus,
   Users,
+  UserCheck,
+  X,
+  type LucideIcon,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
-  FOCUS_LABELS,
-  KIND_META,
-  type CircleCard,
-  type GatheringPost,
-  type LibraryCard,
-  type PersonCard,
+  EmptyRoom,
+  GP_CARD,
   GP_HAND,
   GP_GHOST,
   GP_INPUT,
-  EmptyRoom,
-  RoomLabel,
   MakerMark,
   netFetch,
 } from "./shared";
 
 /* ------------------------------------------------------------------ */
-/*  DISCOVER — find people and creations.                              */
+/*  THE DISCOVER CURRENT — an exploration environment beside the       */
+/*  hall, never a second feed. Six mouths, one current:                */
 /*                                                                     */
-/*  One search field, four honest shelves: the hall's offerings, the   */
-/*  makers, the circles, the Library.                                  */
+/*    FOR YOU     a personal blend — interest threads first, recency   */
+/*                second; never a leaderboard, never a score           */
+/*    PEOPLE      the makers' directory                                */
+/*    CREATIONS   the unified gallery of published works               */
+/*    CIRCLES     the communities                                      */
+/*    PROJECTS    the collaborative works seeking hands                */
+/*    KNOWLEDGE   public contributions, each wearing its own label:    */
+/*                established · hypothesis · interpretation · creative */
 /*                                                                     */
-/*  MIRROR CONNECTIONS — M.E. listens from one of the visitor's own    */
-/*  offerings and names the kindred voices it senses among the         */
-/*  public words. A suggestion is a door offered, never a door         */
-/*  opened: only the visitor's own hand introduces anyone.             */
+/*  Private things never enter the current — the server enforces       */
+/*  visibility at retrieval time, not the visitor's politeness.        */
 /* ------------------------------------------------------------------ */
 
-interface MirrorSuggestion {
-  userId: string;
-  name: string;
-  reason: string;
-  themes: string;
-  postId: string;
-  postTitle: string;
-  postKind: string;
+interface DiscoverCreation {
+  id: string;
+  title: string;
+  preview: string;
+  kind: string;
+  contentType: string;
+  sourcePortal: string | null;
+  cover: string | null;
+  refUrl: string | null;
+  tags: string | null;
+  resonanceCount: number;
+  echoCount?: number;
+  createdAt: string;
+  author: { id: string; name: string; image: string | null };
 }
+
+interface DiscoverMaker {
+  id: string;
+  name: string;
+  image: string | null;
+  bio: string | null;
+  disciplines: string | null;
+  interests: string | null;
+  publicCreations?: number;
+  sharedProjects?: number;
+  following?: boolean;
+  connectionState?: string | null;
+}
+
+interface DiscoverCircle {
+  id: string;
+  name: string;
+  focus: string;
+  description: string | null;
+  members: number;
+  posts: number;
+  joined: boolean;
+  owner: { id: string; name: string };
+}
+
+interface DiscoverProject {
+  id: string;
+  title: string;
+  description: string | null;
+  focus: string;
+  status: string;
+  seeking: boolean;
+  requiredSkills: string | null;
+  owner: { id: string; name: string; image: string | null };
+  members: number;
+  entries: number;
+  joined: boolean;
+  isOwner: boolean;
+}
+
+interface DiscoverKnowledge {
+  id: string;
+  title: string;
+  preview: string;
+  epistemicLabel: string | null;
+  contentType: string;
+  sourcePortal: string | null;
+  tags: string | null;
+  resonanceCount: number;
+  createdAt: string;
+  author: { id: string; name: string };
+}
+
+interface ForYouPayload {
+  interests: string[];
+  creations: DiscoverCreation[];
+  makers: DiscoverMaker[];
+  circles: DiscoverCircle[];
+  projects: DiscoverProject[];
+  knowledge: DiscoverKnowledge[];
+  themes: Array<{ tag: string; count: number }>;
+}
+
+type Dest = "for-you" | "people" | "creations" | "circles" | "projects" | "knowledge";
+
+const DESTS: Array<{ key: Dest; label: string; icon: LucideIcon }> = [
+  { key: "for-you", label: "For You", icon: Sparkles },
+  { key: "people", label: "People", icon: Users },
+  { key: "creations", label: "Creations", icon: Library },
+  { key: "circles", label: "Circles", icon: Globe2 },
+  { key: "projects", label: "Projects", icon: Handshake },
+  { key: "knowledge", label: "Knowledge", icon: BookOpen },
+];
+
+const TYPE_META: Record<string, { icon: LucideIcon; accent: string }> = {
+  artwork: { icon: Feather, accent: "#8a6f46" },
+  music: { icon: Music, accent: "#0f766e" },
+  book: { icon: BookOpen, accent: "#8a6d3b" },
+  story: { icon: BookOpen, accent: "#8a6d3b" },
+  dream: { icon: Sparkles, accent: "#7c5cad" },
+  research: { icon: Atom, accent: "#0d9488" },
+  exploration: { icon: Atom, accent: "#0d9488" },
+  transmission: { icon: Sparkles, accent: "#7c5cad" },
+  reflection: { icon: Feather, accent: "#8a6f46" },
+  intention: { icon: Sparkles, accent: "#a16207" },
+  invention: { icon: Compass, accent: "#a16207" },
+};
+
+const EPISTEMIC_DRESS: Record<string, { label: string; color: string; bg: string; edge: string }> = {
+  established: { label: "Established", color: "#0f766e", bg: "#eef7f4", edge: "#bcdcd6" },
+  hypothesis: { label: "Hypothesis", color: "#9a5b21", bg: "#faf1e4", edge: "#e5d2b4" },
+  interpretation: { label: "Interpretation", color: "#7c5cad", bg: "#f3eef9", edge: "#d6c8e8" },
+  creative: { label: "Creative", color: "#a16207", bg: "#faf5e6", edge: "#e3d4ae" },
+};
+
+const CONTENT_TYPES = ["", "artwork", "music", "book", "research", "transmission", "invention"];
 
 export default function DiscoverSection({
   active,
-  onOpenMessages,
+  onOpenMessages: _onOpenMessages,
 }: {
   active: boolean;
   onOpenMessages: () => void;
 }) {
   const t = useT();
+  const [dest, setDest] = useState<Dest>("for-you");
   const [q, setQ] = useState("");
-  const [shelf, setShelf] = useState<"offerings" | "makers" | "circles" | "library">("offerings");
-  const [posts, setPosts] = useState<GatheringPost[] | null>(null);
-  const [people, setPeople] = useState<PersonCard[] | null>(null);
-  const [circles, setCircles] = useState<CircleCard[] | null>(null);
-  const [items, setItems] = useState<LibraryCard[] | null>(null);
-  const [error, setError] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [epistemicFilter, setEpistemicFilter] = useState("");
+  const [seekingOnly, setSeekingOnly] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [forYou, setForYou] = useState<ForYouPayload | null>(null);
+  const [people, setPeople] = useState<DiscoverMaker[] | null>(null);
+  const [sort, setSort] = useState<"recent" | "name">("recent");
+  const [creations, setCreations] = useState<DiscoverCreation[] | null>(null);
+  const [circles, setCircles] = useState<DiscoverCircle[] | null>(null);
+  const [projects, setProjects] = useState<DiscoverProject[] | null>(null);
+  const [knowledge, setKnowledge] = useState<DiscoverKnowledge[] | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
-  /* the mirror's own listening */
-  const [myPosts, setMyPosts] = useState<GatheringPost[]>([]);
-  const [mirrorPostId, setMirrorPostId] = useState<string>("");
-  const [mirror, setMirror] = useState<MirrorSuggestion[] | null>(null);
-  const [listening, setListening] = useState(false);
-  const [mirrorNote, setMirrorNote] = useState<string | null>(null);
+  /* the preferences' quiet drawer — explicit interests tune the current */
+  const [prefsOpen, setPrefsOpen] = useState(false);
+  const [interestDraft, setInterestDraft] = useState<string>("");
+  const [interests, setInterests] = useState<string[]>([]);
+  const [savingPrefs, setSavingPrefs] = useState(false);
 
-  const search = useCallback(async () => {
-    setError(false);
-    const term = q.trim();
-    try {
-      if (shelf === "offerings") {
-        setPosts(null);
-        const params = new URLSearchParams();
-        if (term) params.set("q", term);
-        const data = await netFetch<{ posts: GatheringPost[] }>(`/api/gathering?${params.toString()}`);
-        setPosts(data.posts);
-      } else if (shelf === "makers") {
-        setPeople(null);
-        const params = new URLSearchParams();
-        if (term) params.set("q", term);
-        const data = await netFetch<{ people: PersonCard[] }>(`/api/network/people?${params.toString()}`);
-        setPeople(data.people);
-      } else if (shelf === "circles") {
-        setCircles(null);
-        const params = new URLSearchParams();
-        if (term) params.set("q", term);
-        const data = await netFetch<{ circles: CircleCard[] }>(`/api/network/circles?${params.toString()}`);
-        setCircles(data.circles);
-      } else {
-        setItems(null);
-        const params = new URLSearchParams();
-        if (term) params.set("q", term);
-        const data = await netFetch<{ items: LibraryCard[] }>(`/api/network/library?${params.toString()}`);
-        setItems(data.items);
-      }
-    } catch {
-      setError(true);
-    }
-  }, [q, shelf]);
-
-  useEffect(() => {
-    if (!active) return;
-    void search();
-  }, [active, search]);
-
-  /* M.E.'s reading material: the visitor's own offerings */
-  useEffect(() => {
-    if (!active) return;
-    void (async () => {
+  const read = useCallback(
+    async (which: Dest, term: string) => {
+      setLoading(true);
+      setError(null);
       try {
-        const data = await netFetch<{ posts: GatheringPost[] }>("/api/gathering?mine=1&take=20");
-        setMyPosts(data.posts);
-        if (data.posts.length > 0 && !mirrorPostId) setMirrorPostId(data.posts[0].id);
-      } catch {
-        setMyPosts([]);
-      }
-    })();
-    /* the mirror's material is read once per visit */
-  }, [active]);
-
-  const listen = useCallback(async () => {
-    if (!mirrorPostId || listening) return;
-    setListening(true);
-    setMirror(null);
-    setMirrorNote(null);
-    try {
-      const data = await netFetch<{ suggestions: MirrorSuggestion[] }>("/api/network/mirror", {
-        method: "POST",
-        body: { postId: mirrorPostId },
-      });
-      setMirror(data.suggestions);
-      if (data.suggestions.length === 0) {
-        setMirrorNote(t("M.E. hears no kindred voices yet — as more makers share, the mirror listens again."));
-      }
-    } catch (err) {
-      setMirrorNote(err instanceof Error ? err.message : t("M.E. could not finish listening."));
-    } finally {
-      setListening(false);
-    }
-  }, [mirrorPostId, listening, t]);
-
-  const openDoor = useCallback(
-    async (s: MirrorSuggestion) => {
-      try {
-        await netFetch("/api/network/connections", {
-          method: "POST",
-          body: { userId: s.userId, viaMirror: true },
-        });
-        setNote(t("The door was offered. When the other hand opens it, you will meet in Messages."));
-        void loadPeople();
-      } catch {
-        /* the door stays where it was */
+        const params = new URLSearchParams({ dest: which });
+        if (term) params.set("q", term);
+        if (which === "creations" && typeFilter) params.set("type", typeFilter);
+        if (which === "knowledge" && epistemicFilter) params.set("epistemic", epistemicFilter);
+        if (which === "projects" && seekingOnly) params.set("seeking", "1");
+        if (which === "people" && sort) params.set("sort", sort);
+        const data = await netFetch<Record<string, unknown>>(`/api/discover?${params.toString()}`);
+        if (which === "for-you") {
+          const p = data as unknown as ForYouPayload;
+          setForYou(p);
+          setInterests(p.interests ?? []);
+        } else if (which === "people") setPeople((data as { people: DiscoverMaker[] }).people);
+        else if (which === "creations") setCreations((data as { creations: DiscoverCreation[] }).creations);
+        else if (which === "circles") setCircles((data as { circles: DiscoverCircle[] }).circles);
+        else if (which === "projects") setProjects((data as { projects: DiscoverProject[] }).projects);
+        else if (which === "knowledge") setKnowledge((data as { knowledge: DiscoverKnowledge[] }).knowledge);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "The current could not be reached.");
+      } finally {
+        setLoading(false);
       }
     },
-    []
+    [typeFilter, epistemicFilter, seekingOnly, sort]
   );
 
-  const loadPeople = useCallback(() => {
-    void search();
-  }, [search]);
+  /* the section's first breath */
+  useEffect(() => {
+    if (!active) return;
+    if (dest === "for-you" && !forYou) void read("for-you", searchTerm);
+    if (dest === "people" && people === null) void read("people", searchTerm);
+    if (dest === "creations" && creations === null) void read("creations", searchTerm);
+    if (dest === "circles" && circles === null) void read("circles", searchTerm);
+    if (dest === "projects" && projects === null) void read("projects", searchTerm);
+    if (dest === "knowledge" && knowledge === null) void read("knowledge", searchTerm);
+    /* each mouth reads when it first opens — the shared hand re-reads on demand */
+     
+  }, [active, dest]);
 
-  const shelves: Array<{ key: typeof shelf; label: string }> = [
-    { key: "offerings", label: "Offerings" },
-    { key: "makers", label: "Makers" },
-    { key: "circles", label: "Circles" },
-    { key: "library", label: "Library" },
-  ];
+  const runSearch = () => {
+    const term = q.trim();
+    setSearchTerm(term);
+    void read(dest, term);
+  };
 
-  return (
-    <div className="gp-scroll h-full overflow-y-auto overscroll-y-contain px-3 pb-28 pt-4 sm:px-6 sm:pt-5">
-      <div className="mx-auto max-w-[900px]">
-        <RoomLabel>{t("Discover")}</RoomLabel>
+  useEffect(() => {
+    if (!note) return;
+    const id = window.setTimeout(() => setNote(null), 3200);
+    return () => window.clearTimeout(id);
+  }, [note]);
 
-        {/* the search line */}
-        <div className="relative mt-3">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[#b3a68d]" aria-hidden="true" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void search();
-            }}
-            maxLength={60}
-            placeholder={t("Search the whole network…")}
-            aria-label={t("Search the whole network…")}
-            data-testid="discover-search"
-            className={cn(GP_INPUT, "pl-9")}
-          />
-        </div>
+  /* ---------------- hands: follow, connect, join ---------------- */
 
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          {shelves.map((s) => (
-            <button
-              key={s.key}
-              type="button"
-              onClick={() => setShelf(s.key)}
-              aria-pressed={shelf === s.key}
-              className={cn(
-                "focus-glow rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-all duration-300",
-                shelf === s.key
-                  ? "border-[#cbb98d] bg-white text-[#5c5344]"
-                  : "border-[#e8dfc9] bg-white/55 text-[#a2947c] hover:border-[#d3c39c]"
-              )}
+  const follow = useCallback(async (makerId: string) => {
+    try {
+      await netFetch(`/api/network/people/${makerId}`, { method: "POST", body: {} });
+      setPeople((prev) => prev?.map((p) => (p.id === makerId ? { ...p, following: !p.following } : p)) ?? prev);
+      setNote("The follow has changed hands.");
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : "The door would not open.");
+    }
+  }, []);
+
+  const connect = useCallback(async (makerId: string) => {
+    try {
+      await netFetch("/api/network/connections", { method: "POST", body: { userId: makerId } });
+      setPeople((prev) => prev?.map((p) => (p.id === makerId ? { ...p, connectionState: "pending" } : p)) ?? prev);
+      setNote("A connection request was carried — their yes is theirs alone.");
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : "The door would not open.");
+    }
+  }, []);
+
+  const joinCircle = useCallback(async (circleId: string) => {
+    try {
+      const data = await netFetch<{ joined?: boolean }>(`/api/network/circles/${circleId}`, { method: "POST", body: { action: "join" } });
+      setCircles((prev) => prev?.map((c) => (c.id === circleId ? { ...c, joined: data.joined ?? !c.joined } : c)) ?? prev);
+      setForYou((prev) => (prev ? { ...prev, circles: prev.circles.map((c) => (c.id === circleId ? { ...c, joined: !c.joined } : c)) } : prev));
+      setNote("The circle knows your name now.");
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : "The circle did not open.");
+    }
+  }, []);
+
+  const joinProject = useCallback(async (projectId: string) => {
+    try {
+      await netFetch(`/api/network/projects/${projectId}`, { method: "POST", body: { action: "join" } });
+      setProjects((prev) => prev?.map((p) => (p.id === projectId ? { ...p, joined: true } : p)) ?? prev);
+      setForYou((prev) => (prev ? { ...prev, projects: prev.projects.map((p) => (p.id === projectId ? { ...p, joined: true } : p)) } : prev));
+      setNote("You stand among the weavers now.");
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : "The workshop did not open.");
+    }
+  }, []);
+
+  /* ---------------- preferences: explicit interests ---------------- */
+
+  const savePrefs = useCallback(async () => {
+    setSavingPrefs(true);
+    try {
+      await netFetch("/api/network/me", { method: "PATCH", body: { interests: interestDraft } });
+      setInterests(interestDraft.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean));
+      setPrefsOpen(false);
+      setNote("The current remembers your threads.");
+      void read("for-you", searchTerm);
+    } catch (err) {
+      setNote(err instanceof Error ? err.message : "The current did not listen.");
+    } finally {
+      setSavingPrefs(false);
+    }
+  }, [interestDraft, read, searchTerm]);
+
+  const creationCard = (p: DiscoverCreation) => {
+    const meta = TYPE_META[p.contentType] ?? TYPE_META.reflection;
+    const Icon = meta.icon;
+    return (
+      <article key={p.id} className="gp-card overflow-hidden rounded-[20px]" data-testid="discover-creation-card">
+        {p.cover ? (
+           
+          <img src={p.cover} alt="" className="h-36 w-full object-cover" loading="lazy" />
+        ) : (
+          <div
+            aria-hidden="true"
+            className="flex h-24 items-center justify-center border-b border-[#eadfc4]"
+            style={{ background: `linear-gradient(150deg, color-mix(in srgb, ${meta.accent} 7%, #fffdf8) 0%, #f6efdd 100%)` }}
+          >
+            <Icon className="size-7" style={{ color: meta.accent }} />
+          </div>
+        )}
+        <div className="p-4">
+          <div className="flex items-center gap-2">
+            <span
+              className="rounded-full border px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.12em]"
+              style={{ color: meta.accent, borderColor: `color-mix(in srgb, ${meta.accent} 34%, transparent)`, background: `color-mix(in srgb, ${meta.accent} 7%, transparent)` }}
             >
-              {t(s.label)}
-            </button>
-          ))}
-          <div className="flex-1" />
-          {q.trim() !== "" && (
-            <button type="button" onClick={() => { setQ(""); }} className="focus-glow text-[11px] font-semibold text-[#b45309] underline">
-              {t("let the words rest")}
-            </button>
+              {p.contentType}
+            </span>
+            {p.sourcePortal && <span className="text-[10px] text-[#b3a68d]">from {p.sourcePortal}</span>}
+          </div>
+          <h3 className="mt-2 line-clamp-1 font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">{p.title}</h3>
+          <p className="mt-1 line-clamp-2 text-[12px] leading-[1.6] text-[#7c715f] [overflow-wrap:anywhere]">{p.preview}</p>
+          <div className="mt-2.5 flex items-center gap-2">
+            <MakerMark name={p.author.name} size={22} />
+            <span className="truncate text-[11px] font-semibold text-[#5c5344]">{p.author.name}</span>
+            <span className="ml-auto shrink-0 text-[10.5px] text-[#a2947c]">
+              {p.resonanceCount} ✦ {p.echoCount !== undefined ? `· ${p.echoCount} ✒` : ""}
+            </span>
+          </div>
+          {p.tags && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {p.tags.split(",").slice(0, 4).map((tag) => (
+                <span key={tag} className="rounded-full border border-[#e4d9bd] px-2 py-0.5 text-[10px] text-[#8a7c64]">
+                  {tag.trim()}
+                </span>
+              ))}
+            </div>
           )}
         </div>
+      </article>
+    );
+  };
 
-        {/* ---------- the shelves ---------- */}
-        {error && (
-          <p className="py-16 text-center text-[13.5px] text-[#b45309]">
-            {t("The network could not be read.")}
-          </p>
-        )}
+  const body = useMemo(() => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center gap-2 py-14 text-[#8a6f46]">
+          <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+          <span className="text-[12.5px]">The current gathers itself…</span>
+        </div>
+      );
+    }
+    if (error) {
+      return <EmptyRoom icon={Search} line={error} />;
+    }
 
-        {shelf === "offerings" && (
-          <div className="mt-4">
-            {posts === null && !error ? (
-              <p className="flex items-center justify-center gap-2 py-16 text-[13.5px] text-[#a2947c]">
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                {t("The exhibition arrives…")}
-              </p>
-            ) : (posts ?? []).length === 0 ? (
-              <EmptyRoom icon={Search} line={t("Nothing answers that word yet — other shelves may know more.")} />
-            ) : (
-              <div className="space-y-3">
-                {(posts ?? []).map((p) => {
-                  const meta = KIND_META[(p.kind as keyof typeof KIND_META) in KIND_META ? (p.kind as keyof typeof KIND_META) : "reflection"];
-                  const Icon = meta.icon;
-                  return (
-                    <div key={p.id} className="gp-card rounded-[20px] p-4">
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          aria-hidden="true"
-                          className="flex size-8 items-center justify-center rounded-[12px] border border-white/90"
-                          style={{ background: "linear-gradient(150deg,#fffdf8 0%,#f6efdd 100%)" }}
-                        >
-                          <Icon className="size-4" style={{ color: meta.accent }} />
-                        </span>
-                        <MakerMark name={p.author.name} size={26} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12px] font-semibold text-[#5c5344]">{p.author.name}</p>
-                          <p className="text-[10px] text-[#a2947c]">
-                            {p.circle ? p.circle.name : p.sector ? p.sector : t("The open hall")}
-                          </p>
-                        </div>
-                      </div>
-                      <h3 className="mt-2 font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428] [overflow-wrap:anywhere]">
-                        {p.title}
-                      </h3>
-                      <p className="mt-1 line-clamp-2 text-[12.5px] leading-[1.65] text-[#7c715f] [overflow-wrap:anywhere]">
-                        {p.body}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+    /* ----------------------------- FOR YOU ----------------------------- */
+    if (dest === "for-you" && forYou) {
+      return (
+        <div className="space-y-8" data-testid="discover-for-you">
+          {/* the tuning hand */}
+          <div className="gp-card flex flex-wrap items-center gap-2 rounded-[18px] p-3.5">
+            <SlidersHorizontal className="size-4 shrink-0 text-[#8a6f46]" aria-hidden="true" />
+            <p className="min-w-0 flex-1 text-[11.5px] leading-snug text-[#7c715f]">
+              {interests.length > 0 ? (
+                <>
+                  The current bends toward:{" "}
+                  <span className="font-semibold text-[#5c5344]">{interests.join(" · ")}</span>
+                </>
+              ) : (
+                "Name a few threads of interest and the current bends toward them — no popularity, only relevance."
+              )}
+            </p>
+            <button type="button" onClick={() => { setInterestDraft(interests.join(", ")); setPrefsOpen(true); }} className={cn(GP_GHOST, "min-h-[38px] px-3.5 py-1.5 text-[11.5px]")} data-testid="discover-preferences">
+              Tune
+            </button>
           </div>
-        )}
 
-        {shelf === "makers" && (
-          <div className="mt-4">
-            {people === null && !error ? (
-              <p className="flex items-center justify-center gap-2 py-16 text-[13.5px] text-[#a2947c]">
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                {t("The encounters arrive…")}
-              </p>
-            ) : (people ?? []).length === 0 ? (
-              <EmptyRoom icon={Users} line={t("No makers answer that word yet.")} />
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {(people ?? []).map((p) => (
-                  <div key={p.id} className="gp-card rounded-[20px] p-4">
-                    <div className="flex items-center gap-3">
-                      <MakerMark name={p.name} size={34} />
+          {forYou.creations.length > 0 && (
+            <section aria-label="Public creations">
+              <SectionHead label="Works moving through the current" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{forYou.creations.map(creationCard)}</div>
+            </section>
+          )}
+
+          {forYou.makers.length > 0 && (
+            <section aria-label="Makers who may resonate">
+              <SectionHead label="Makers who may resonate" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {forYou.makers.map((m) => (
+                  <div key={m.id} className="gp-card rounded-[20px] p-4">
+                    <div className="flex items-center gap-2.5">
+                      <MakerMark name={m.name} size={30} />
                       <div className="min-w-0">
-                        <p className="truncate text-[13px] font-semibold text-[#3d3428]">{p.name}</p>
-                        <p className="text-[10.5px] text-[#a2947c]">
-                          {p.postCount} {t("offerings")} · {p.projectCount} {t("works together")}
-                        </p>
+                        <p className="truncate text-[12.5px] font-semibold text-[#3d3428]">{m.name}</p>
+                        {m.disciplines && <p className="truncate text-[10.5px] text-[#a2947c]">{m.disciplines}</p>}
                       </div>
                     </div>
-                    {p.bio && (
-                      <p className="mt-2 line-clamp-2 text-[12px] leading-[1.6] text-[#5c5344] [overflow-wrap:anywhere]">
-                        {p.bio}
-                      </p>
-                    )}
+                    {m.bio && <p className="mt-2 line-clamp-2 text-[11.5px] leading-[1.6] text-[#7c715f]">{m.bio}</p>}
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        )}
+            </section>
+          )}
 
-        {shelf === "circles" && (
-          <div className="mt-4">
-            {circles === null && !error ? (
-              <p className="flex items-center justify-center gap-2 py-16 text-[13.5px] text-[#a2947c]">
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                {t("The circles arrive…")}
-              </p>
-            ) : (circles ?? []).length === 0 ? (
-              <EmptyRoom icon={Users} line={t("No circles answer that word yet.")} />
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {(circles ?? []).map((c) => (
+          {forYou.circles.length > 0 && (
+            <section aria-label="Circles at work">
+              <SectionHead label="Circles at work" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {forYou.circles.map((c) => (
                   <div key={c.id} className="gp-card rounded-[20px] p-4">
-                    <h3 className="font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">
-                      {c.name}
-                    </h3>
-                    <p className="mt-1 text-[11px] text-[#a2947c]">
-                      {t(FOCUS_LABELS[c.focus] ?? c.focus)} · {c.memberCount} {t("members")}
-                    </p>
-                    {c.description && (
-                      <p className="mt-1.5 line-clamp-2 text-[12px] leading-[1.6] text-[#7c715f] [overflow-wrap:anywhere]">
-                        {c.description}
+                    <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#a2947c]">{c.focus}</p>
+                    <h3 className="mt-1 font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">{c.name}</h3>
+                    {c.description && <p className="mt-1 line-clamp-2 text-[11.5px] leading-[1.6] text-[#7c715f]">{c.description}</p>}
+                    <div className="mt-2.5 flex items-center justify-between">
+                      <span className="text-[10.5px] text-[#a2947c]">{c.members} members · {c.posts} offerings</span>
+                      <button type="button" onClick={() => void joinCircle(c.id)} disabled={c.joined} className={cn(c.joined ? GP_GHOST : GP_HAND, "min-h-[36px] px-3 py-1 text-[11px]")}>
+                        {c.joined ? "Joined" : "Join"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {forYou.projects.length > 0 && (
+            <section aria-label="Open doors for collaborators">
+              <SectionHead label="Doors open for collaborators" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {forYou.projects.map((p) => (
+                  <div key={p.id} className="gp-card rounded-[20px] p-4">
+                    <div className="flex items-center gap-2">
+                      {p.seeking && (
+                        <span className="rounded-full border border-[#c7d8c0] bg-[#eef5ea] px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-[#5f7a52]">
+                          seeking hands
+                        </span>
+                      )}
+                      <span className="text-[10px] text-[#b3a68d]">{p.status}</span>
+                    </div>
+                    <h3 className="mt-1.5 font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">{p.title}</h3>
+                    {p.description && <p className="mt-1 line-clamp-2 text-[11.5px] leading-[1.6] text-[#7c715f]">{p.description}</p>}
+                    {p.requiredSkills && <p className="mt-1.5 text-[10.5px] text-[#a2947c]">threads sought: {p.requiredSkills}</p>}
+                    <div className="mt-2.5 flex items-center justify-between">
+                      <span className="truncate text-[10.5px] text-[#a2947c]">kept by {p.owner.name}</span>
+                      <button type="button" onClick={() => void joinProject(p.id)} disabled={p.joined || p.isOwner} className={cn(p.joined || p.isOwner ? GP_GHOST : GP_HAND, "min-h-[36px] px-3 py-1 text-[11px]")}>
+                        {p.isOwner ? "Yours" : p.joined ? "Joined" : "Join"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {forYou.knowledge.length > 0 && (
+            <section aria-label="Recent knowledge">
+              <SectionHead label="Recent knowledge, labeled" />
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{forYou.knowledge.map(knowledgeCard)}</div>
+            </section>
+          )}
+
+          {forYou.themes.length > 0 && (
+            <section aria-label="Threads the community is pulling">
+              <SectionHead label="Threads the community is pulling" />
+              <div className="flex flex-wrap gap-2">
+                {forYou.themes.map(({ tag, count }) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => { setQ(tag); setSearchTerm(tag); void read("creations", tag); setDest("creations"); }}
+                    className="focus-glow rounded-full border border-[#e4d9bd] bg-white/60 px-3 py-1.5 text-[11px] text-[#7c715f] transition-colors hover:border-[#cbb98d] hover:text-[#3d3428]"
+                  >
+                    #{tag} <span className="text-[#b3a68d]">· {count}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <MirrorConnections onNote={setNote} />
+        </div>
+      );
+    }
+
+    /* ----------------------------- PEOPLE ------------------------------ */
+    if (dest === "people") {
+      return (
+        <div data-testid="discover-people" className="space-y-3">
+          <div className="flex items-center gap-2">
+            <select value={sort} onChange={(e) => { setSort(e.target.value as "recent" | "name"); void read("people", searchTerm); }} aria-label="Sort" className="rounded-[14px] border border-[#e4d9bd] bg-white/80 px-3 py-2 text-[12px] text-[#5c5344] outline-none focus:border-[#cbb98d]">
+              <option value="recent">Recently active</option>
+              <option value="name">By name</option>
+            </select>
+            <p className="text-[11px] text-[#a2947c]">Only public introductions stand here.</p>
+          </div>
+          {(people ?? []).length === 0 ? (
+            <EmptyRoom icon={Users} line={t("No makers answer that word yet — the directory waits.")} />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {(people ?? []).map((m) => (
+                <article key={m.id} className="gp-card rounded-[20px] p-4" data-testid="discover-person-card">
+                  <div className="flex items-start gap-3">
+                    <MakerMark name={m.name} size={38} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13.5px] font-semibold text-[#3d3428]">{m.name}</p>
+                      {m.disciplines && <p className="mt-0.5 truncate text-[10.5px] uppercase tracking-[0.1em] text-[#a2947c]">{m.disciplines}</p>}
+                      {m.bio && <p className="mt-1.5 line-clamp-2 text-[12px] leading-[1.6] text-[#7c715f]">{m.bio}</p>}
+                      {m.interests && (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {m.interests.split(",").slice(0, 3).map((i) => (
+                            <span key={i} className="rounded-full border border-[#e4d9bd] px-2 py-0.5 text-[9.5px] text-[#8a7c64]">{i.trim()}</span>
+                          ))}
+                        </div>
+                      )}
+                      <p className="mt-1.5 text-[10.5px] text-[#b3a68d]">
+                        {m.publicCreations ?? 0} works · {m.sharedProjects ?? 0} shared works
                       </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <button type="button" onClick={() => void follow(m.id)} className={cn(GP_GHOST, "min-h-[38px] flex-1 py-1.5 text-[11.5px]")} data-testid={`discover-follow-${m.id}`}>
+                      <UserCheck className="size-3.5" aria-hidden="true" />
+                      {m.following ? "Following" : "Follow"}
+                    </button>
+                    {m.connectionState === "accepted" ? (
+                      <span className="min-h-[38px] flex-1 rounded-full border border-[#d8e5d0] bg-[#f2f7ee] px-3 py-2 text-center text-[11.5px] font-semibold text-[#5f7a52]">Connected</span>
+                    ) : m.connectionState === "pending" ? (
+                      <span className="min-h-[38px] flex-1 rounded-full border border-[#e4d9bd] bg-white/60 px-3 py-2 text-center text-[11.5px] text-[#a2947c]">Asked</span>
+                    ) : (
+                      <button type="button" onClick={() => void connect(m.id)} className={cn(GP_HAND, "min-h-[38px] flex-1 py-1.5 text-[11.5px]")} data-testid={`discover-connect-${m.id}`}>
+                        <UserPlus className="size-3.5" aria-hidden="true" />
+                        Connect
+                      </button>
                     )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
 
-        {shelf === "library" && (
-          <div className="mt-4">
-            {items === null && !error ? (
-              <p className="flex items-center justify-center gap-2 py-16 text-[13.5px] text-[#a2947c]">
-                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                {t("The library is gathering your stars…")}
-              </p>
-            ) : (items ?? []).length === 0 ? (
-              <EmptyRoom icon={Search} line={t("The shelves rest quiet — nothing answers that word yet.")} />
-            ) : (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {(items ?? []).map((item) => (
-                  <div key={item.id} className="gp-card rounded-[20px] p-4">
-                    <h3 className="font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1 line-clamp-2 text-[12px] leading-[1.6] text-[#7c715f] [overflow-wrap:anywhere]">
-                      {item.summary}
+    /* --------------------------- CREATIONS ----------------------------- */
+    if (dest === "creations") {
+      return (
+        <div data-testid="discover-creations" className="space-y-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {CONTENT_TYPES.map((ct) => (
+              <button
+                key={ct || "all"}
+                type="button"
+                onClick={() => { setTypeFilter(ct); void read("creations", searchTerm); }}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors",
+                  typeFilter === ct ? "border-[#cbb98d] bg-white text-[#4c4436] shadow-[0_2px_8px_-4px_rgba(122,103,70,0.4)]" : "border-[#e4d9bd] bg-white/50 text-[#a2947c] hover:text-[#7c715f]"
+                )}
+              >
+                {ct === "" ? "All" : ct}
+              </button>
+            ))}
+          </div>
+          {(creations ?? []).length === 0 ? (
+            <EmptyRoom icon={Library} line={t("The gallery rests quiet. Works published from the rooms will hang here.")} />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{(creations ?? []).map(creationCard)}</div>
+          )}
+        </div>
+      );
+    }
+
+    /* ---------------------------- CIRCLES ------------------------------ */
+    if (dest === "circles") {
+      return (
+        <div data-testid="discover-circles" className="space-y-3">
+          {(circles ?? []).length === 0 ? (
+            <EmptyRoom icon={Globe2} line={t("No circle answers that word yet — perhaps yours will be the first.")} />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {(circles ?? []).map((c) => (
+                <div key={c.id} className="gp-card rounded-[20px] p-4" data-testid="discover-circle-card">
+                  <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#a2947c]">{c.focus}</p>
+                  <h3 className="mt-1 font-[family-name:var(--font-literata)] text-[14.5px] font-semibold text-[#3d3428]">{c.name}</h3>
+                  {c.description && <p className="mt-1 line-clamp-3 text-[11.5px] leading-[1.6] text-[#7c715f]">{c.description}</p>}
+                  <p className="mt-2 text-[10.5px] text-[#b3a68d]">kept by {c.owner.name}</p>
+                  <div className="mt-2.5 flex items-center justify-between">
+                    <span className="text-[10.5px] text-[#a2947c]">{c.members} members · {c.posts} offerings</span>
+                    <button type="button" onClick={() => void joinCircle(c.id)} disabled={c.joined} className={cn(c.joined ? GP_GHOST : GP_HAND, "min-h-[36px] px-3.5 py-1 text-[11px]")} data-testid={`discover-join-circle-${c.id}`}>
+                      {c.joined ? "Joined" : "Join"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* ---------------------------- PROJECTS ----------------------------- */
+    if (dest === "projects") {
+      return (
+        <div data-testid="discover-projects" className="space-y-3">
+          <label className="flex w-fit cursor-pointer items-center gap-2 rounded-full border border-[#e4d9bd] bg-white/60 px-3.5 py-2">
+            <input type="checkbox" checked={seekingOnly} onChange={(e) => { setSeekingOnly(e.target.checked); void read("projects", searchTerm); }} className="size-4 accent-[#a16207]" />
+            <span className="text-[12px] font-medium text-[#5c5344]">Only works seeking collaborators</span>
+          </label>
+          {(projects ?? []).length === 0 ? (
+            <EmptyRoom icon={Handshake} line={t("No workshop answers yet — the doors open when the first weavers arrive.")} />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {(projects ?? []).map((p) => (
+                <article key={p.id} className="gp-card rounded-[20px] p-4" data-testid="discover-project-card">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {p.seeking && (
+                      <span className="rounded-full border border-[#c7d8c0] bg-[#eef5ea] px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.12em] text-[#5f7a52]">
+                        seeking hands
+                      </span>
+                    )}
+                    <span className="rounded-full border border-[#e4d9bd] px-2 py-0.5 text-[9.5px] uppercase tracking-[0.1em] text-[#a2947c]">{p.status}</span>
+                    <span className="text-[10px] text-[#b3a68d]">{p.focus}</span>
+                  </div>
+                  <h3 className="mt-1.5 font-[family-name:var(--font-literata)] text-[14.5px] font-semibold text-[#3d3428]">{p.title}</h3>
+                  {p.description && <p className="mt-1 line-clamp-3 text-[12px] leading-[1.6] text-[#7c715f]">{p.description}</p>}
+                  {p.requiredSkills && (
+                    <p className="mt-2 text-[10.5px] text-[#8a7c64]">
+                      <span className="font-semibold text-[#a2947c]">threads sought:</span> {p.requiredSkills}
                     </p>
-                    <p className="mt-2 text-[10.5px] text-[#a2947c]">{item.authorName}</p>
+                  )}
+                  <div className="mt-3 flex items-center gap-2.5">
+                    <MakerMark name={p.owner.name} size={24} />
+                    <span className="truncate text-[11px] text-[#7c715f]">{p.owner.name}</span>
+                    <span className="ml-auto shrink-0 text-[10.5px] text-[#b3a68d]">{p.members} weavers · {p.entries} entries</span>
+                  </div>
+                  <div className="mt-3">
+                    <button type="button" onClick={() => void joinProject(p.id)} disabled={p.joined || p.isOwner} className={cn(p.joined || p.isOwner ? GP_GHOST : GP_HAND, "min-h-[38px] w-full py-1.5 text-[12px]")} data-testid={`discover-join-project-${p.id}`}>
+                      {p.isOwner ? "Your workshop" : p.joined ? "Joined" : "Ask to weave"}
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    /* --------------------------- KNOWLEDGE ----------------------------- */
+    if (dest === "knowledge") {
+      return (
+        <div data-testid="discover-knowledge" className="space-y-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => { setEpistemicFilter(""); void read("knowledge", searchTerm); }}
+              className={cn("rounded-full border px-3 py-1.5 text-[11px] font-semibold", epistemicFilter === "" ? "border-[#cbb98d] bg-white text-[#4c4436]" : "border-[#e4d9bd] bg-white/50 text-[#a2947c]")}
+            >
+              All
+            </button>
+            {Object.entries(EPISTEMIC_DRESS).map(([key, dress]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => { setEpistemicFilter(key); void read("knowledge", searchTerm); }}
+                className="rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors"
+                style={{
+                  color: dress.color,
+                  borderColor: epistemicFilter === key ? dress.color : dress.edge,
+                  background: epistemicFilter === key ? dress.bg : "transparent",
+                }}
+              >
+                {dress.label}
+              </button>
+            ))}
+          </div>
+          <p className="text-[11px] italic leading-relaxed text-[#a2947c]">
+            Every entry wears its own nature: what stands established, what is hypothesized, what is
+            interpreted, what is imagined. Attribution and sources stay with each contribution.
+          </p>
+          {(knowledge ?? []).length === 0 ? (
+            <EmptyRoom icon={BookOpen} line={t("The index rests quiet — research, reflections and discoveries will gather here.")} />
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{(knowledge ?? []).map(knowledgeCard)}</div>
+          )}
+        </div>
+      );
+    }
+
+    return null;
+  }, [loading, error, dest, forYou, people, creations, circles, projects, knowledge, interests, sort, typeFilter, epistemicFilter, seekingOnly, creationCard, knowledgeCard, follow, connect, joinCircle, joinProject, t]);
+
+  /* the knowledge card stands apart — its label is the point */
+  function knowledgeCard(k: DiscoverKnowledge) {
+    const dress = EPISTEMIC_DRESS[k.epistemicLabel ?? "interpretation"];
+    return (
+      <article key={k.id} className="gp-card rounded-[20px] p-4" data-testid="discover-knowledge-card">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border px-2.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.12em]" style={{ color: dress.color, borderColor: dress.edge, background: dress.bg }}>
+            {dress.label}
+          </span>
+          {k.contentType && <span className="text-[10px] text-[#b3a68d]">{k.contentType}</span>}
+        </div>
+        <h3 className="mt-2 line-clamp-1 font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">{k.title}</h3>
+        <p className="mt-1 line-clamp-3 text-[12px] leading-[1.65] text-[#7c715f] [overflow-wrap:anywhere]">{k.preview}</p>
+        <div className="mt-2.5 flex items-center gap-2">
+          <MakerMark name={k.author.name} size={22} />
+          <span className="truncate text-[11px] font-semibold text-[#5c5344]">{k.author.name}</span>
+          <span className="ml-auto shrink-0 text-[10.5px] text-[#a2947c]">{k.resonanceCount} ✦</span>
+        </div>
+      </article>
+    );
+  }
+
+  function SectionHead({ label }: { label: string }) {
+    return (
+      <h2 className="mb-2.5 font-[family-name:var(--font-literata)] text-[13px] font-semibold uppercase tracking-[0.14em] text-[#a2947c]">
+        {label}
+      </h2>
+    );
+  }
+
+  /* the mirror's own listening card — kept whole from the hall's first wall */
+  function MirrorConnections({ onNote }: { onNote: (note: string | null) => void }) {
+    const [myPosts, setMyPosts] = useState<Array<{ id: string; title: string }>>([]);
+    const [mirrorPostId, setMirrorPostId] = useState("");
+    const [suggestions, setSuggestions] = useState<Array<{ userId: string; name: string; reason: string; themes: string | null; postTitle: string }> | null>(null);
+    const [listening, setListening] = useState(false);
+    const [mirrorNote, setMirrorNote] = useState<string | null>(null);
+
+    useEffect(() => {
+      void (async () => {
+        try {
+          const data = await netFetch<{ posts: Array<{ id: string; title: string }> }>("/api/gathering?mine=1&take=20");
+          setMyPosts(data.posts);
+          if (data.posts.length > 0) setMirrorPostId(data.posts[0].id);
+        } catch {
+          /* the card stays honest */
+        }
+      })();
+    }, []);
+
+    const listen = async () => {
+      if (!mirrorPostId) return;
+      setListening(true);
+      setMirrorNote(null);
+      try {
+        const data = await netFetch<{ suggestions: Array<{ userId: string; name: string; reason: string; themes: string | null; postTitle: string }> }>(
+          "/api/network/mirror",
+          { method: "POST", body: { postId: mirrorPostId } }
+        );
+        setSuggestions(data.suggestions);
+        if (data.suggestions.length === 0) setMirrorNote("M.E. heard no kindred voice yet — the hall grows, and the listening continues.");
+      } catch (err) {
+        setMirrorNote(err instanceof Error ? err.message : "The listening faltered.");
+      } finally {
+        setListening(false);
+      }
+    };
+
+    const openDoor = async (userId: string) => {
+      try {
+        await netFetch("/api/network/connections", { method: "POST", body: { userId, viaMirror: true } });
+        onNote("A door was offered — their yes opens it.");
+      } catch (err) {
+        onNote(err instanceof Error ? err.message : "The door would not open.");
+      }
+    };
+
+    return (
+      <div className="gp-card mt-10 rounded-[26px] border-[#7c5cad]/25 p-5 sm:p-6" data-testid="mirror-connections">
+        <div className="flex items-center gap-2.5">
+          <span
+            aria-hidden="true"
+            className="flex size-9 items-center justify-center rounded-[12px] border border-white/90"
+            style={{ background: "linear-gradient(150deg,#fffdf8 0%,#ece2f4 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.95), 0 2px 5px -2px rgba(124,92,173,0.35)" }}
+          >
+            <Sparkles className="size-4 text-[#7c5cad]" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">{t("Mirror connections")}</p>
+            <p className="text-[11px] text-[#a2947c]">{t("M.E. listens from one of your offerings and names kindred voices it senses.")}</p>
+          </div>
+        </div>
+        {myPosts.length === 0 ? (
+          <p className="mt-4 text-[12.5px] italic leading-relaxed text-[#8a7c64]">
+            {t("Hang an offering in the hall first — M.E. reads your own words to listen from.")}
+          </p>
+        ) : (
+          <>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <select
+                value={mirrorPostId}
+                onChange={(e) => setMirrorPostId(e.target.value)}
+                aria-label={t("The offering M.E. listens from")}
+                className="min-w-0 flex-1 rounded-[16px] border border-[#eee5d0] bg-white/80 px-3 py-2.5 text-[12.5px] text-[#5c5344] outline-none focus:border-[#cbb98d]"
+                data-testid="mirror-select"
+              >
+                {myPosts.map((p) => (
+                  <option key={p.id} value={p.id}>{p.title}</option>
+                ))}
+              </select>
+              <button type="button" onClick={() => void listen()} disabled={listening || !mirrorPostId} className={GP_HAND} data-testid="mirror-listen">
+                {listening ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Sparkles className="size-4" aria-hidden="true" />}
+                {t("Listen")}
+              </button>
+            </div>
+            {mirrorNote && <p className="mt-3 text-[12.5px] italic leading-relaxed text-[#7c5cad]" role="status">{mirrorNote}</p>}
+            {suggestions !== null && suggestions.length > 0 && (
+              <div className="mt-4 space-y-3">
+                {suggestions.map((s) => (
+                  <div key={s.userId} className="rounded-[20px] border border-[#e4d9bd] bg-white/70 p-4" data-testid={`mirror-suggestion-${s.userId}`}>
+                    <div className="flex items-center gap-2.5">
+                      <MakerMark name={s.name} size={28} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[12.5px] font-semibold text-[#3d3428]">{s.name}</p>
+                        {s.themes && <p className="text-[10.5px] font-semibold text-[#7c5cad]">{s.themes}</p>}
+                      </div>
+                      <button type="button" onClick={() => void openDoor(s.userId)} className={cn(GP_HAND, "px-3 py-1.5 text-[11.5px]")} data-testid={`mirror-open-${s.userId}`}>
+                        <UserPlus className="size-3.5" aria-hidden="true" />
+                        {t("Open a door")}
+                      </button>
+                    </div>
+                    <p className="mt-2 text-[12.5px] italic leading-[1.7] text-[#5c5344] [overflow-wrap:anywhere]">“{s.reason}”</p>
+                    <p className="mt-1 text-[10.5px] text-[#a2947c]">{t("sensed from")} “{s.postTitle}”</p>
                   </div>
                 ))}
               </div>
             )}
-          </div>
+          </>
         )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="gp-scroll h-full overflow-y-auto px-4 pb-16 pt-4 sm:px-6" data-testid="discover-section">
+      <div className="mx-auto w-full max-w-[1200px]">
+        {/* the mouth's own tabs */}
+        <div className="gp-seg mb-4 flex items-center gap-0.5 overflow-x-auto rounded-full border border-white/80 bg-white/45 p-1" role="tablist" aria-label={t("Discover")}>
+          {DESTS.map((d) => {
+            const DIcon = d.icon;
+            const on = dest === d.key;
+            return (
+              <button
+                key={d.key}
+                type="button"
+                role="tab"
+                aria-selected={on}
+                onClick={() => setDest(d.key)}
+                data-testid={`discover-dest-${d.key}`}
+                className={cn(
+                  "focus-glow flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11.5px] font-semibold transition-colors duration-300",
+                  on ? "bg-white text-[#5c5344] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_10px_-6px_rgba(122,103,70,0.45)]" : "text-[#a2947c] hover:text-[#7c715f]"
+                )}
+              >
+                <DIcon className="size-3.5" aria-hidden="true" />
+                {t(d.label)}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* the shared search — the current answers a word */}
+        <div className="mb-5 flex items-center gap-2">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-[#b3a68d]" aria-hidden="true" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") runSearch();
+              }}
+              placeholder={t("Search the whole current…")}
+              aria-label={t("Search the whole current…")}
+              className={cn(GP_INPUT, "pl-10")}
+              data-testid="discover-search"
+            />
+          </div>
+          <button type="button" onClick={runSearch} className={cn(GP_HAND, "min-h-[44px] px-5")} data-testid="discover-search-run">
+            {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Search className="size-4" aria-hidden="true" />}
+            {t("Search")}
+          </button>
+        </div>
+
+        {body}
 
         {note && (
           <p className="mt-4 text-center text-[12.5px] italic text-[#8a6f46]" role="status">
             {note}
           </p>
         )}
+      </div>
 
-        {/* ---------- MIRROR CONNECTIONS ---------- */}
-        <div className="gp-card mt-10 rounded-[26px] border-[#7c5cad]/25 p-5 sm:p-6" data-testid="mirror-connections">
-          <div className="flex items-center gap-2.5">
-            <span
-              aria-hidden="true"
-              className="flex size-9 items-center justify-center rounded-[12px] border border-white/90"
-              style={{
-                background: "linear-gradient(150deg,#fffdf8 0%,#ece2f4 100%)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.95), 0 2px 5px -2px rgba(124,92,173,0.35)",
-              }}
-            >
-              <Sparkles className="size-4 text-[#7c5cad]" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">
-                {t("Mirror connections")}
-              </p>
-              <p className="text-[11px] text-[#a2947c]">
-                {t("M.E. listens from one of your offerings and names kindred voices it senses.")}
-              </p>
+      {/* the preferences drawer */}
+      {prefsOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("Tune the current")}
+          className="fixed inset-0 z-[96] flex items-center justify-center bg-[rgba(46,38,24,0.32)] p-4 backdrop-blur-[3px]"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setPrefsOpen(false);
+          }}
+        >
+          <div className={cn(GP_CARD, "w-full max-w-[440px] rounded-[26px] bg-[linear-gradient(165deg,#fffef9_0%,#f7f0de_100%)] p-5")}>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-[family-name:Cinzel] text-[15px] font-semibold text-[#3d3428]">{t("Tune the current")}</p>
+                <p className="mt-0.5 text-[11.5px] text-[#a2947c]">
+                  {t("Comma-separated threads of interest. The current bends toward them; nothing is ranked, only relevant.")}
+                </p>
+              </div>
+              <button type="button" onClick={() => setPrefsOpen(false)} aria-label="Close" className="focus-glow flex size-8 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f]">
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+            <input
+              value={interestDraft}
+              onChange={(e) => setInterestDraft(e.target.value.slice(0, 200))}
+              placeholder={t("dreams, cosmology, field recording…")}
+              className={cn(GP_INPUT, "mt-3")}
+              data-testid="discover-interests-input"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" onClick={() => setPrefsOpen(false)} className={cn(GP_GHOST, "min-h-[44px] px-5")}>
+                {t("Not yet")}
+              </button>
+              <button type="button" onClick={() => void savePrefs()} disabled={savingPrefs} className={cn(GP_HAND, "min-h-[44px] px-5")} data-testid="discover-interests-save">
+                {savingPrefs ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+                {t("Let the current listen")}
+              </button>
             </div>
           </div>
-
-          {myPosts.length === 0 ? (
-            <p className="mt-4 text-[12.5px] italic leading-relaxed text-[#8a7c64]">
-              {t("Hang an offering in the hall first — M.E. reads your own words to listen from.")}
-            </p>
-          ) : (
-            <>
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <select
-                  value={mirrorPostId}
-                  onChange={(e) => setMirrorPostId(e.target.value)}
-                  aria-label={t("The offering M.E. listens from")}
-                  className="min-w-0 flex-1 rounded-[16px] border border-[#eee5d0] bg-white/80 px-3 py-2.5 text-[12.5px] text-[#5c5344] outline-none focus:border-[#cbb98d]"
-                  data-testid="mirror-select"
-                >
-                  {myPosts.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.title}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => void listen()}
-                  disabled={listening || !mirrorPostId}
-                  className={GP_HAND}
-                  data-testid="mirror-listen"
-                >
-                  {listening ? (
-                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <Sparkles className="size-4" aria-hidden="true" />
-                  )}
-                  {t("Listen")}
-                </button>
-              </div>
-
-              {mirrorNote && (
-                <p className="mt-3 text-[12.5px] italic leading-relaxed text-[#7c5cad]" role="status">
-                  {mirrorNote}
-                </p>
-              )}
-
-              {mirror !== null && mirror.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  {mirror.map((s) => (
-                    <div key={s.userId} className="rounded-[20px] border border-[#e4d9bd] bg-white/70 p-4" data-testid={`mirror-suggestion-${s.userId}`}>
-                      <div className="flex items-center gap-2.5">
-                        <MakerMark name={s.name} size={28} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[12.5px] font-semibold text-[#3d3428]">{s.name}</p>
-                          {s.themes && (
-                            <p className="text-[10.5px] font-semibold text-[#7c5cad]">{s.themes}</p>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => void openDoor(s)}
-                          className={cn(GP_HAND, "px-3 py-1.5 text-[11.5px]")}
-                          data-testid={`mirror-open-${s.userId}`}
-                        >
-                          <UserPlus className="size-3.5" aria-hidden="true" />
-                          {t("Open a door")}
-                        </button>
-                      </div>
-                      <p className="mt-2 text-[12.5px] italic leading-[1.7] text-[#5c5344] [overflow-wrap:anywhere]">
-                        “{s.reason}”
-                      </p>
-                      <p className="mt-1 text-[10.5px] text-[#a2947c]">
-                        {t("sensed from")} “{s.postTitle}”
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

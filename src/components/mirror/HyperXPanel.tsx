@@ -8,7 +8,8 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Check, Copy, FileDown, Gem, Loader2 } from "lucide-react";
+import { Check, Copy, FileDown, Gem, Loader2, Send } from "lucide-react";
+import PublishToGathering from "@/components/gathering/PublishToGathering";
 import { cleanCopyText } from "@/lib/copy-clean";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -439,6 +440,8 @@ export function HyperXAnswer({
 }) {
   const t = useT();
   const language = useMirror((s) => s.language);
+  /* THE PUBLICATION HAND — this discovery carried to the hall */
+  const [publishOpen, setPublishOpen] = useState(false);
   /* THE ONE READER — the crystals are split once per answer: the old
      call read the text twice on every render (each streamed breath
      paid the toll twice) */
@@ -886,7 +889,26 @@ export function HyperXAnswer({
           body itself rests empty but the crystals stand, the hand
           copies the whole truth as it is. */}
       {answer.trim().length > 0 && (
-        <div className="mt-2 flex justify-end">
+        <div className="mt-2 flex justify-end gap-2">
+          {/* THE PUBLICATION HAND — the discovery carried to the hall as
+              research, its HyperX birthplace remembered, its epistemic
+              nature worn honestly */}
+          <button
+            type="button"
+            onClick={() => setPublishOpen(true)}
+            aria-label={t("Publish to the hall")}
+            title={t("Publish to the hall")}
+            data-testid={`${testId}-publish`}
+            className={cn(
+              "focus-glow inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-all duration-300",
+              "border-[color-mix(in_srgb,#c9a75c_45%,transparent)] text-[#c9a75c] hover:brightness-110"
+            )}
+          >
+            <Send className="size-3" aria-hidden="true" />
+            <span className="mono-label uppercase tracking-[0.16em]">
+              {t("Publish to the hall")}
+            </span>
+          </button>
           <button
             type="button"
             onClick={() => void copyDiscovery()}
@@ -1075,6 +1097,23 @@ export function HyperXAnswer({
           )}
         </div>
       )}
+
+      {/* THE PUBLICATION HAND — the discovery carried to the hall as
+          research: its question stands for a title, its truth for the
+          body, the HyperX room remembered as its birthplace */}
+      <PublishToGathering
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        payload={{
+          sourcePortal: "hyperx",
+          recentSector: "observatory",
+          titleHint: question.slice(0, 120),
+          suggestedTitle: question.slice(0, 140) || "A discovery",
+          preview: answer.slice(0, 4000),
+          generic: true,
+          contentTypeLabel: "Research / Exploration",
+        }}
+      />
     </div>
   );
 }

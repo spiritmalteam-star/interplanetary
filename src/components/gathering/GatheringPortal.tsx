@@ -11,7 +11,6 @@ import {
   Library,
   Loader2,
   MessagesSquare,
-  PenLine,
   Users,
   Waypoints,
   Sparkles,
@@ -29,7 +28,6 @@ import {
 } from "./shared";
 import FeedSection from "./FeedSection";
 import DiscoverSection from "./DiscoverSection";
-import CreateSection from "./CreateSection";
 import CirclesSection from "./CirclesSection";
 import EncountersSection from "./EncountersSection";
 import MessagesSection from "./MessagesSection";
@@ -37,6 +35,7 @@ import CollaborateSection from "./CollaborateSection";
 import LibrarySection from "./LibrarySection";
 import ProfileSheet from "./ProfileSheet";
 import NotificationsSheet from "./NotificationsSheet";
+import PublishPickerSheet from "./PublishPickerSheet";
 
 /* ------------------------------------------------------------------ */
 /*  THE GATHERING'S PORTAL — the independent social heart of the       */
@@ -45,15 +44,19 @@ import NotificationsSheet from "./NotificationsSheet";
 /*  manners:                                                           */
 /*                                                                     */
 /*    GATHERING — the living community stream (the three natural       */
-/*      hands first: share a reflection, share a creation, meet        */
+/*      hands first: share a reflection, publish a work, meet          */
 /*      someone; the gallery wall and the vertical stream beneath);    */
-/*    DISCOVER — find people and creations; M.E. listens here;         */
-/*    CREATE — publish and share, into the hall or a circle;           */
+/*    DISCOVER — six destinations: for you, people, creations,         */
+/*      circles, projects, knowledge; M.E. listens here;               */
 /*    CIRCLES — communities to join, or to found;                      */
 /*    ENCOUNTERS — meaningful introductions, consent always;           */
 /*    MESSAGES — private and group conversations;                      */
 /*    COLLABORATE — shared workshops and the evolution path;           */
 /*    LIBRARY — the collective archive of the community's work.        */
+/*                                                                     */
+/*  CREATION LIVES IN THE HOUSE'S ROOMS — ArtX, Music, Book, HyperX,   */
+/*  a transmission's own line. The Gathering publishes finished work,  */
+/*  it does not make it: there is no create street, no second studio.  */
 /*                                                                     */
 /*  THE PORCELAIN WEATHER — milk-white and cream, clean and three-     */
 /*  dimensional. THE MIRROR SPIRIT — the network stands beside the     */
@@ -64,7 +67,6 @@ import NotificationsSheet from "./NotificationsSheet";
 type Section =
   | "gathering"
   | "discover"
-  | "create"
   | "circles"
   | "encounters"
   | "messages"
@@ -74,7 +76,6 @@ type Section =
 const SECTIONS: Array<{ key: Section; label: string; icon: LucideIcon }> = [
   { key: "gathering", label: "Gathering", icon: Waypoints },
   { key: "discover", label: "Discover", icon: Compass },
-  { key: "create", label: "Create", icon: PenLine },
   { key: "circles", label: "Circles", icon: Users },
   { key: "encounters", label: "Encounters", icon: Sparkles },
   { key: "messages", label: "Messages", icon: MessagesSquare },
@@ -93,6 +94,10 @@ export default function GatheringPortal() {
   /* carried between rooms — the weave and library hands of the stream */
   const [weaveSeed, setWeaveSeed] = useState<GatheringPost | null>(null);
   const [librarySeed, setLibrarySeed] = useState<GatheringPost | null>(null);
+
+  /* the publication picker — the hall's only creation-adjacent door, */
+  /* and it creates nothing: it carries finished works in */
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const closePortal = useCallback(() => {
     useMirror.getState().closeGatheringPortal();
@@ -144,14 +149,6 @@ export default function GatheringPortal() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [overlay, closePortal]);
-
-  const onHung = useCallback((post: GatheringPost) => {
-    /* a hung offering refreshes the visitor's own count */
-    setMe((prev) =>
-      prev ? { ...prev, counts: { ...prev.counts, posts: prev.counts.posts + 1 } } : prev
-    );
-    setSection("gathering");
-  }, []);
 
   if (typeof document === "undefined") return null;
 
@@ -315,6 +312,7 @@ export default function GatheringPortal() {
                 active
                 circles={circles}
                 onMeetSomeone={() => setSection("encounters")}
+                onPublishWork={() => setPickerOpen(true)}
                 onWeaveFrom={(post) => {
                   setWeaveSeed(post);
                   setSection("collaborate");
@@ -329,8 +327,6 @@ export default function GatheringPortal() {
                 active
                 onOpenMessages={() => setSection("messages")}
               />
-            ) : section === "create" ? (
-              <CreateSection circles={circles} onHung={onHung} />
             ) : section === "circles" ? (
               <CirclesSection active />
             ) : section === "encounters" ? (
@@ -353,6 +349,9 @@ export default function GatheringPortal() {
           </motion.section>
         </AnimatePresence>
       </div>
+
+      {/* the picker stands above everything — it is not a room, it is a hand */}
+      <PublishPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />
     </motion.div>,
     document.body
   );
