@@ -215,7 +215,9 @@ export function LanguageButton({
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={t("Choose the language of everything")}
+        /* the visible word stands inside the name — voice-control
+           speakers may say what they see ("Deutsch") and be heard */
+        aria-label={`${current.native} — ${t("Choose the language of everything")}`}
         title={t("Choose the language of everything")}
         data-testid={testId}
         className={

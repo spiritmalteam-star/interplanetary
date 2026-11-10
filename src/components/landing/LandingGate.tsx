@@ -818,7 +818,9 @@ export default function LandingGate() {
           <span className="pt-ring pt-ring-4" />
           <span className="pt-streaks" />
           <span className="pt-sigil">
-            <img src="/images/landing/sigils/sigil-09.png" alt="" width={256} height={256} decoding="async" />
+            {/* every sigil stands in its own true square — the art is
+                centred in 560×560, so the declared box is honest */}
+            <img src="/images/landing/sigils/sigil-09.png" alt="" width={560} height={560} decoding="async" />
           </span>
         </div>
       )}

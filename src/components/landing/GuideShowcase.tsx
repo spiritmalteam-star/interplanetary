@@ -194,9 +194,13 @@ export default function GuideShowcase({
       </p>
 
       {/* the reading rail — the numbers below carry the walk, flanked
-          by two calm arrows for the hand that prefers a named door */}
+          by two calm arrows for the hand that prefers a named door.
+          ARIA LAW: the arrows are plain buttons under a group — a
+          tablist may own only tabs, so the numbered plates keep their
+          own tablist (a display:contents wrapper, invisible to the
+          eye, exact to the ear). */}
       <div
-        role="tablist"
+        role="group"
         aria-label={t("Choose a slide by its number")}
         className="mx-auto mt-3.5 flex w-full max-w-[900px] flex-wrap items-center justify-center gap-1.5 px-4"
       >
@@ -209,26 +213,28 @@ export default function GuideShowcase({
         >
           <ChevronLeft className="size-3.5" aria-hidden="true" />
         </button>
-        {GUIDE_METAS.map((g, i) => (
-          <button
-            key={g.slug}
-            type="button"
-            role="tab"
-            aria-selected={i === active}
-            onClick={() => go(i)}
-            aria-label={`${i + 1} — ${t(g.title)}`}
-            title={t(g.title)}
-            data-testid={`guide-num-${i + 1}`}
-            className={cn(
-              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300 motion-reduce:transition-none",
-              i === active
-                ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
-                : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[#c6d2db]"
-            )}
-          >
-            {i + 1}
-          </button>
-        ))}
+        <div role="tablist" aria-label={t("Guides")} className="contents">
+          {GUIDE_METAS.map((g, i) => (
+            <button
+              key={g.slug}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              onClick={() => go(i)}
+              aria-label={`${i + 1} — ${t(g.title)}`}
+              title={t(g.title)}
+              data-testid={`guide-num-${i + 1}`}
+              className={cn(
+                "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300 motion-reduce:transition-none",
+                i === active
+                  ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
+                  : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[#c6d2db]"
+              )}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           onClick={next}

@@ -160,9 +160,13 @@ export default function LandingSlides() {
 
       {/* the reading rail — a quiet row of numbers flanked by two calm
           arrows: the stage is swept by the hand, the keyboard, or a
-          neighbouring arrow; no clock ever turns the plates */}
+          neighbouring arrow; no clock ever turns the plates.
+          ARIA LAW: the arrows are plain buttons under a group — a
+          tablist may own only tabs, so the numbered plates keep their
+          own tablist (a display:contents wrapper, invisible to the
+          eye, exact to the ear). */}
       <div
-        role="tablist"
+        role="group"
         aria-label={t("Choose a slide by its number")}
         className="mx-auto mt-3.5 flex w-full max-w-[660px] flex-wrap items-center justify-center gap-1.5 px-4 lg:max-w-[720px]"
       >
@@ -175,28 +179,30 @@ export default function LandingSlides() {
         >
           <ChevronLeft className="size-3.5" aria-hidden="true" />
         </button>
-        {SLIDES.map((s, i) => (
-          <button
-            key={s.src}
-            type="button"
-            role="tab"
-            aria-selected={i === active}
-            onClick={() => go(i)}
-            aria-label={t("Go to slide {i} — {title}", {
-              i: i + 1,
-              title: t(s.title),
-            })}
-            data-testid="landing-slides-num"
-            className={cn(
-              "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300 motion-reduce:transition-none",
-              i === active
-                ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
-                : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)]"
-            )}
-          >
-            {i + 1}
-          </button>
-        ))}
+        <div role="tablist" aria-label={t("Slides")} className="contents">
+          {SLIDES.map((s, i) => (
+            <button
+              key={s.src}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              onClick={() => go(i)}
+              aria-label={t("Go to slide {i} — {title}", {
+                i: i + 1,
+                title: t(s.title),
+              })}
+              data-testid="landing-slides-num"
+              className={cn(
+                "focus-glow mono-label flex size-7 items-center justify-center rounded-full border text-[10px] tracking-normal transition-all duration-300 motion-reduce:transition-none",
+                i === active
+                  ? "border-[rgba(232,217,176,0.85)] bg-[rgba(232,217,176,0.14)] text-[var(--lp-gold-ink)]"
+                  : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:border-[var(--hairline-hover)] hover:text-[var(--lp-body)]"
+              )}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           onClick={next}

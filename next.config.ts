@@ -21,7 +21,10 @@ const csp = [
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
+  /* the upgrade law stands only where https actually serves — in dev
+     it would force every localhost request to a https door that is
+     not there, and the page would never open at all */
+  ...(process.env.NODE_ENV !== "production" ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const securityHeaders = [
