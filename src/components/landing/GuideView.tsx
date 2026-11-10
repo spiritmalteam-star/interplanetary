@@ -169,7 +169,7 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
               {block.kicker}
             </p>
           ) : null}
-          <h2 className="mt-2.5 font-[family-name:Cinzel] text-[23px] font-semibold leading-tight tracking-wide text-[#372e1c] sm:text-[27px]">
+          <h2 className="mt-2.5 font-[family-name:var(--font-cinzel)] text-[23px] font-semibold leading-tight tracking-wide text-[#372e1c] sm:text-[27px]">
             {block.heading}
           </h2>
           <div className="mt-4 space-y-3.5">
@@ -233,7 +233,7 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
           className="mx-auto max-w-[680px] rounded-2xl border p-5 sm:p-6"
           style={{ borderColor: EDGE, backgroundColor: CARD_BG }}
         >
-          <h3 className="font-[family-name:Cinzel] text-[16px] font-semibold tracking-wide text-[#7a5c14]">
+          <h3 className="font-[family-name:var(--font-cinzel)] text-[16px] font-semibold tracking-wide text-[#7a5c14]">
             {block.heading}
           </h3>
           <ul className="mt-3.5 space-y-2.5">
@@ -268,7 +268,7 @@ function Block({ block, a, b }: { block: GuideBlock; a: string; b: string }) {
           >
             {t("The practice")}
           </p>
-          <h3 className="mt-2 font-[family-name:Cinzel] text-[16.5px] font-semibold tracking-wide text-[#372e1c]">
+          <h3 className="mt-2 font-[family-name:var(--font-cinzel)] text-[16.5px] font-semibold tracking-wide text-[#372e1c]">
             {block.title}
           </h3>
           <ol className="mt-3.5 space-y-2.5">
@@ -398,7 +398,7 @@ export default function GuideView({
             <p className="mono-label text-[10px] uppercase tracking-[0.3em] text-[#8d7c5c]">
               {guide.subtitle}
             </p>
-            <h1 className="mt-3.5 font-[family-name:Cinzel] text-[clamp(28px,7.5vw,42px)] font-semibold leading-[1.14] tracking-wide text-[#332b1a]">
+            <h1 className="mt-3.5 font-[family-name:var(--font-cinzel)] text-[clamp(28px,7.5vw,42px)] font-semibold leading-[1.14] tracking-wide text-[#332b1a]">
               {guide.title}
             </h1>
             <div className="relative mx-auto mt-7 aspect-[2/1] w-full overflow-hidden rounded-[22px] shadow-[0_26px_60px_-38px_rgba(90,70,30,0.6)] ring-1 ring-[rgba(122,100,58,0.28)]">

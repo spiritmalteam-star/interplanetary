@@ -1138,7 +1138,7 @@ export default function DiscoverSection({
           <div className={cn(GP_CARD, "w-full max-w-[440px] rounded-[26px] bg-[linear-gradient(165deg,#fffef9_0%,#f7f0de_100%)] p-5")}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-[family-name:Cinzel] text-[15px] font-semibold text-[#3d3428]">{t("Tune the current")}</p>
+                <p className="font-[family-name:var(--font-cinzel)] text-[15px] font-semibold text-[#3d3428]">{t("Tune the current")}</p>
                 <p className="mt-0.5 text-[11.5px] text-[#a2947c]">
                   {t("Comma-separated threads of interest. The current bends toward them; nothing is ranked, only relevant.")}
                 </p>

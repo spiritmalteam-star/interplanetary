@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { useTheme } from "next-themes";
+import { bootUiLanguage, useDocumentLang } from "@/lib/i18n";
 import { toast } from "sonner";
 import { useMirror, LANDING_SCOPES } from "@/lib/mirror-store";
 import { SCOPE_META } from "@/lib/mirror/workspaces";
@@ -189,6 +190,13 @@ function scopeDress(key: string): CSSProperties {
 export default function LandingGate() {
   const { setTheme } = useTheme();
   const landingScope = useMirror((s) => s.landingScope);
+  /* the page's language is read from the visitor's device at the very
+     first breath — and <html lang> follows the chosen voice, so screen
+     readers and browsing agents hear what the eye sees */
+  useEffect(() => {
+    bootUiLanguage();
+  }, []);
+  useDocumentLang();
   const [phase, setPhase] = useState<Phase>("landing");
   const [Chamber, setChamber] = useState<ComponentType<
     { bare?: boolean; onExpand?: () => void; onMinimize?: () => void }

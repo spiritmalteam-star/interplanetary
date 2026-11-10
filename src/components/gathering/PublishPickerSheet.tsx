@@ -147,7 +147,7 @@ export default function PublishPickerSheet({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-[family-name:Cinzel] text-[16px] font-semibold tracking-wide text-[#3d3428]">
+            <p className="font-[family-name:var(--font-cinzel)] text-[16px] font-semibold tracking-wide text-[#3d3428]">
               Publish a work
             </p>
             <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#a2947c]">

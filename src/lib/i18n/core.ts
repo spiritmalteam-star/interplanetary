@@ -166,14 +166,33 @@ export async function ensureDict(language: LanguageCode): Promise<void> {
   }
 }
 
+/* MISSING-KEY DETECTION — in development every key a dictionary does
+   not yet carry is named once (and only once) in the console, so gaps
+   are found while working and never in front of a visitor. In
+   production a missing key silently falls back to the English source. */
+const warnedMissing = new Set<string>();
+function warnMissing(language: LanguageCode, key: string) {
+  if (process.env.NODE_ENV === "production") return;
+  const tag = `${language}::${key}`;
+  if (warnedMissing.has(tag)) return;
+  warnedMissing.add(tag);
+  console.warn(
+    `[i18n] missing key in "${language}": ${JSON.stringify(key)} — English shown`
+  );
+}
+
 /** Pure translation — usable outside React (API helpers, tests). */
 export function translate(
   language: LanguageCode,
   key: string,
   params?: Record<string, string | number>
 ): string {
-  let out: string =
-    language !== "en" ? (DICTS[language as Exclude<LanguageCode, "en">]?.[key] ?? key) : key;
+  let out: string = key;
+  if (language !== "en") {
+    const found = DICTS[language as Exclude<LanguageCode, "en">]?.[key];
+    if (found) out = found;
+    else warnMissing(language, key);
+  }
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       out = out.replaceAll(`{${k}}`, String(v));

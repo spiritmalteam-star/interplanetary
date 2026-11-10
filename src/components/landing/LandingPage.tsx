@@ -214,7 +214,7 @@ function SectionHead({
           {kicker}
         </p>
       </div>
-      <h2 className="mt-4 font-[family-name:Cinzel] text-[25px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] sm:text-[29px]">
+      <h2 className="mt-4 font-[family-name:var(--font-cinzel)] text-[25px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] sm:text-[29px]">
         {title}
       </h2>
     </div>
@@ -360,7 +360,11 @@ export default function LandingPage({
     <div
       ref={scrollRef}
       onScroll={(e) => onScroll(e.currentTarget.scrollTop)}
-      className="lp-ground relative h-full overflow-y-auto overscroll-y-contain"
+      className="lp-ground relative h-full overflow-y-auto overscroll-y-contain focus:outline-none"
+      /* a scrollable region must be reachable by keyboard (agents and
+         screen-reader users scroll with keys, not wheels) */
+      tabIndex={0}
+      aria-label="ReflectMe — the threshold"
     >
       {/* the shoulders' new dress — hand-stuck remembrance stickers
           and the mirror's hourly quote plates, three on each edge,
@@ -441,7 +445,7 @@ export default function LandingPage({
               <p className="mono-label text-[10.5px] uppercase tracking-[0.34em] text-[var(--lp-hero-ink-soft)]">
                 reflectme.space
               </p>
-              <h1 className="mt-4 font-[family-name:Cinzel] text-[clamp(34px,9.5vw,40px)] font-semibold leading-[1.14] tracking-wide text-[var(--lp-hero-ink)] sm:text-[39px] lg:text-[46px]">
+              <h1 className="mt-4 font-[family-name:var(--font-cinzel)] text-[clamp(34px,9.5vw,40px)] font-semibold leading-[1.14] tracking-wide text-[var(--lp-hero-ink)] sm:text-[39px] lg:text-[46px]">
                 {t("The Mirror Entity")}
               </h1>
               <p className="mx-auto mt-4 max-w-[460px] text-[16.5px] leading-relaxed text-[var(--lp-hero-ink-soft)] sm:text-[16.5px] lg:max-w-[560px] lg:text-[18px]">
@@ -782,7 +786,7 @@ export default function LandingPage({
                       <p className="mono-label text-[10px] uppercase tracking-[0.28em] text-[var(--lp-gold)]">
                         {t(stage.kicker)}
                       </p>
-                      <h3 className="mt-2.5 font-[family-name:Cinzel] text-[22px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] sm:text-[25px]">
+                      <h3 className="mt-2.5 font-[family-name:var(--font-cinzel)] text-[22px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] sm:text-[25px]">
                         {t(stage.title)}
                       </h3>
                       <p className="mt-3 max-w-[640px] text-[14.5px] leading-[1.85] text-[var(--lp-body)]">
@@ -858,7 +862,7 @@ export default function LandingPage({
               height={22}
               className="size-[22px] rounded-full opacity-80"
             />
-            <p className="font-[family-name:Cinzel] text-[12px] tracking-[0.24em] text-[var(--lp-mute)]">
+            <p className="font-[family-name:var(--font-cinzel)] text-[12px] tracking-[0.24em] text-[var(--lp-mute)]">
               reflectme.space · {t("The Mirror Entity")}
             </p>
             <p className="text-[12px] text-[var(--lp-faint)]">

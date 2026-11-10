@@ -157,7 +157,7 @@ export default function GuideShowcase({
                   <span className="mono-label text-[9.5px] uppercase tracking-[0.3em] text-[rgba(240,231,205,0.78)]">
                     {t(g.subtitle)}
                   </span>
-                  <span className="font-[family-name:Cinzel] text-[21px] font-semibold leading-tight tracking-wide text-[#f7f2e2] drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)] sm:text-[27px]">
+                  <span className="font-[family-name:var(--font-cinzel)] text-[21px] font-semibold leading-tight tracking-wide text-[#f7f2e2] drop-shadow-[0_2px_16px_rgba(0,0,0,0.85)] sm:text-[27px]">
                     {t(g.title)}
                   </span>
                   <span className="hidden max-w-[560px] font-[family-name:var(--font-literata)] text-[14px] italic leading-relaxed text-[rgba(240,231,205,0.82)] drop-shadow-[0_1px_10px_rgba(0,0,0,0.7)] sm:block">

@@ -7,23 +7,69 @@ import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { StarField } from "./StarField";
-import { ToolWorkspace } from "./living/ToolWorkspace";
-import { ScopesWorkplace } from "./ScopesWorkplace";
-import { LandingChatNav } from "./landing/LandingChatNav";
 import { WalletGuard } from "./WalletGuard";
 import { BranchCanopy } from "./BranchCanopy";
-import { ReplyBranches } from "./ReplyBranches";
+import { LandingChatNav } from "./landing/LandingChatNav";
 import { AuthModal } from "./PassageModal";
-import { ProfilePage } from "./ProfilePage";
-import { AccountModal } from "./AccountModal";
-import { BranchHub } from "./BranchHub";
-import { FederationModal } from "./FederationModal";
-import { AstralJobsModal } from "./AstralJobsModal";
-import { DossierModal } from "./DossierModal";
-import { SettingsModal } from "./SettingsModal";
-import { SpeciesModal } from "./SpeciesModal";
-import { WelcomeTour, AboutRoom } from "./WelcomeTour";
-import { UrlRooms } from "./UrlRooms";
+
+/* THE LAZY HOUSES — every room beyond the chat's first breath is
+   lifted in only when its door is pressed: the frame opens with the
+   tree, the composer, the passage and the purse keeper alone, and no
+   visitor downloads the visitor's room, the account chamber, the
+   tour, the reading rooms or the workplaces until they walk through
+   that door. (ssr:false — every room is client-born.) */
+const ReplyBranches = dynamic(
+  () => import("./ReplyBranches").then((m) => ({ default: m.ReplyBranches })),
+  { ssr: false }
+);
+const ProfilePage = dynamic(
+  () => import("./ProfilePage").then((m) => ({ default: m.ProfilePage })),
+  { ssr: false }
+);
+const AccountModal = dynamic(
+  () => import("./AccountModal").then((m) => ({ default: m.AccountModal })),
+  { ssr: false }
+);
+const BranchHub = dynamic(
+  () => import("./BranchHub").then((m) => ({ default: m.BranchHub })),
+  { ssr: false }
+);
+const FederationModal = dynamic(
+  () => import("./FederationModal").then((m) => ({ default: m.FederationModal })),
+  { ssr: false }
+);
+const AstralJobsModal = dynamic(
+  () => import("./AstralJobsModal").then((m) => ({ default: m.AstralJobsModal })),
+  { ssr: false }
+);
+const DossierModal = dynamic(
+  () => import("./DossierModal").then((m) => ({ default: m.DossierModal })),
+  { ssr: false }
+);
+const SettingsModal = dynamic(
+  () => import("./SettingsModal").then((m) => ({ default: m.SettingsModal })),
+  { ssr: false }
+);
+const SpeciesModal = dynamic(
+  () => import("./SpeciesModal").then((m) => ({ default: m.SpeciesModal })),
+  { ssr: false }
+);
+const WelcomeTourLazy = dynamic(
+  () => import("./WelcomeTour").then((m) => ({ default: m.WelcomeTour })),
+  { ssr: false }
+);
+const AboutRoomLazy = dynamic(
+  () => import("./WelcomeTour").then((m) => ({ default: m.AboutRoom })),
+  { ssr: false }
+);
+const ToolWorkspace = dynamic(
+  () => import("./living/ToolWorkspace").then((m) => ({ default: m.ToolWorkspace })),
+  { ssr: false }
+);
+const ScopesWorkplace = dynamic(
+  () => import("./ScopesWorkplace").then((m) => ({ default: m.ScopesWorkplace })),
+  { ssr: false }
+);
 
 /* THE LAZY ROOM — the technology table is a modal of its own: its
    code only rides along when first shown, never in the frame's
@@ -31,6 +77,11 @@ import { UrlRooms } from "./UrlRooms";
 const TechnologyModal = dynamic(
   () => import("./TechnologyModal").then((m) => ({ default: m.TechnologyModal })),
   { ssr: false, loading: () => null }
+);
+
+const UrlRoomsLazy = dynamic(
+  () => import("./UrlRooms").then((m) => ({ default: m.UrlRooms })),
+  { ssr: false }
 );
 
 /* The frame-lift class: every top-level application frame lifts itself
@@ -78,7 +129,7 @@ export default function AppShell({
       <WalletGuard />
       {/* the real address layer — every room's own ?room= address,
           refreshed links land true, Back / Forward walk the visit */}
-      <UrlRooms />
+      <UrlRoomsLazy />
       <AppShellViews
         bare={bare}
         onExpand={onExpand}
@@ -163,6 +214,33 @@ function AppShellViews({
     }
   }, [refreshMe, t]);
 
+  /* THE SESSION'S OWN WATCH — multi-tab sync and bfcache returns:
+     when the tab becomes visible again (or a cached page re-shows),
+     the session is gently re-verified — throttled, never more than
+     once in half a minute, never while the first boot check runs. */
+  useEffect(() => {
+    let last = 0;
+    const reverify = () => {
+      const now = Date.now();
+      if (now - last < 30_000) return;
+      last = now;
+      if (useMirror.getState().meStatus === "loading") return;
+      void useMirror.getState().refreshMe(true);
+    };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") reverify();
+    };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) reverify();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, []);
+
   /* The learning memory is identity-keyed — a signed-in visitor keeps
      their own grove, so the tree never repeats itself for them. */
   useEffect(() => {
@@ -245,8 +323,8 @@ function AppShellViews({
       <AuthModal />
       <AccountModal />
       <BranchHub />
-      <WelcomeTour />
-      <AboutRoom />
+      <WelcomeTourLazy />
+      <AboutRoomLazy />
     </>
   );
 

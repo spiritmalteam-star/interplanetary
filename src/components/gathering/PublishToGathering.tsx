@@ -191,7 +191,7 @@ export default function PublishToGathering({
         {/* the crown */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-[family-name:Cinzel] text-[16px] font-semibold tracking-wide text-[#3d3428]">
+            <p className="font-[family-name:var(--font-cinzel)] text-[16px] font-semibold tracking-wide text-[#3d3428]">
               Publish to the Gathering
             </p>
             <p className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-[#a2947c]">
@@ -221,7 +221,7 @@ export default function PublishToGathering({
             >
               {done.deduplicated ? <CircleDot className="size-5 text-[#8a6f46]" aria-hidden="true" /> : <Check className="size-5 text-[#8a6f46]" aria-hidden="true" />}
             </span>
-            <p className="font-[family-name:Cinzel] text-[15px] font-semibold text-[#3d3428]">
+            <p className="font-[family-name:var(--font-cinzel)] text-[15px] font-semibold text-[#3d3428]">
               {done.deduplicated ? "This work already hangs in the hall." : "The offering hangs in the hall."}
             </p>
             <button type="button" onClick={onClose} className={`${GP_HAND} min-h-[44px] px-6`}>

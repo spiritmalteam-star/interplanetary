@@ -2017,7 +2017,7 @@ export function LightCodesView() {
                 />
                 <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
-                    <p className="font-[family-name:Cinzel] text-[13px] tracking-[0.28em] text-[var(--scope-a)]">
+                    <p className="font-[family-name:var(--font-cinzel)] text-[13px] tracking-[0.28em] text-[var(--scope-a)]">
                       {t("THE ETHERMIX DECK")}
                     </p>
                     <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">

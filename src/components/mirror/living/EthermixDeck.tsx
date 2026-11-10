@@ -1695,7 +1695,7 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
             className={cn("absolute inset-x-4 top-0 h-px", PRISM_EDGE)}
           />
           <div className="flex items-center justify-between gap-2">
-            <span className="font-[family-name:Cinzel] text-[12px] tracking-[0.3em] text-[var(--scope-a)]">
+            <span className="font-[family-name:var(--font-cinzel)] text-[12px] tracking-[0.3em] text-[var(--scope-a)]">
               {t("Deck {id}", { id: id.toUpperCase() })}
             </span>
             {ui.synced && (
@@ -2024,7 +2024,7 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
             aria-hidden="true"
             className="size-3 shrink-0 rotate-45 bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(168,85,247,0.7),rgba(232,217,176,0.85))] shadow-[0_0_12px_color-mix(in_srgb,var(--scope-a)_60%,transparent)]"
           />
-          <h2 className="font-[family-name:Cinzel] text-[17px] tracking-[0.34em] text-[var(--scope-a)]">
+          <h2 className="font-[family-name:var(--font-cinzel)] text-[17px] tracking-[0.34em] text-[var(--scope-a)]">
             {t("ETHERMIX")}
           </h2>
           <span className="hidden text-[11.5px] italic text-muted-foreground sm:inline">
@@ -2138,7 +2138,7 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
                   className="size-4 shrink-0 text-[var(--scope-a)]"
                   aria-hidden="true"
                 />
-                <span className="w-6 text-center font-[family-name:Cinzel] text-[11px] tracking-widest">
+                <span className="w-6 text-center font-[family-name:var(--font-cinzel)] text-[11px] tracking-widest">
                   A
                 </span>
               </div>
@@ -2155,7 +2155,7 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
                   onChange={setCrossfade}
                 />
               </div>
-              <span className="w-6 text-center font-[family-name:Cinzel] text-[11px] tracking-widest">
+              <span className="w-6 text-center font-[family-name:var(--font-cinzel)] text-[11px] tracking-widest">
                 B
               </span>
               {/* THE AUTO-PILOT — the deck carries the set by itself:
@@ -2225,7 +2225,7 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
               />
               <div className="flex flex-wrap items-center gap-3">
                 <Waves className="size-4 text-[var(--scope-a)]" aria-hidden="true" />
-                <h3 className="font-[family-name:Cinzel] text-[12px] tracking-[0.3em] text-[var(--scope-a)]">
+                <h3 className="font-[family-name:var(--font-cinzel)] text-[12px] tracking-[0.3em] text-[var(--scope-a)]">
                   {t("THE SYNTH")}
                 </h3>
                 <span className="text-[11px] text-muted-foreground">
@@ -2358,7 +2358,7 @@ export function EthermixDeck({ onClose }: { onClose: () => void }) {
               />
               <div className="flex items-center gap-3">
                 <Drum className="size-4 text-[var(--scope-a)]" aria-hidden="true" />
-                <h3 className="font-[family-name:Cinzel] text-[12px] tracking-[0.3em] text-[var(--scope-a)]">
+                <h3 className="font-[family-name:var(--font-cinzel)] text-[12px] tracking-[0.3em] text-[var(--scope-a)]">
                   {t("THE DRUMS")}
                 </h3>
                 <span className="text-[11px] text-muted-foreground">

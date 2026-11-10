@@ -259,7 +259,7 @@ export function MakerMark({ name, size = 30 }: { name: string; size?: number }) 
   return (
     <span
       aria-hidden="true"
-      className="flex shrink-0 items-center justify-center rounded-full border border-white/90 font-[family-name:Cinzel] font-semibold text-[#8a6f46]"
+      className="flex shrink-0 items-center justify-center rounded-full border border-white/90 font-[family-name:var(--font-cinzel)] font-semibold text-[#8a6f46]"
       style={{
         width: size,
         height: size,

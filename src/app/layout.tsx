@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono, Literata } from "next/font/google";
-import "@fontsource/cinzel/400.css";
-import "@fontsource/cinzel/600.css";
-import "@fontsource/cinzel/700.css";
-import "@fontsource/patrick-hand/400.css";
+import {
+  Cinzel,
+  JetBrains_Mono,
+  Literata,
+  Plus_Jakarta_Sans,
+} from "next/font/google";
 import "./globals.css";
 import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/mirror/theme-provider";
@@ -28,6 +29,19 @@ const literata = Literata({
   variable: "--font-literata",
   subsets: ["latin"],
   style: ["normal", "italic"],
+  display: "swap",
+});
+
+/* Cinzel — the threshold's display voice (the hero, the section
+   titles). Self-hosted and preloaded by next/font: the words are
+   painted in their true face at the first paint, with `swap`
+   guarding the very first frame. (The render-blocking @fontsource
+   stylesheet and the never-worn Patrick Hand are gone — no font
+   ships that nothing wears.) */
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
   display: "swap",
 });
 
@@ -93,10 +107,10 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  /* the walk owns its own pinch — the page never zooms under the
-     visitor's fingers; the tree scales beneath them instead */
-  maximumScale: 1,
-  userScalable: false,
+  /* THE VISITOR'S OWN HANDS — pinch zoom is never taken away: the
+     page honours the browser's native magnification on every device
+     (an accessibility law; the walk scales beneath the fingers by
+     design, not by locking the viewport). */
   /* the whole application fits the visible frame on every device —
      no scrolling ever needed to reach the input */
   viewportFit: "cover",
@@ -111,7 +125,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${jakartaSans.variable} ${jetbrainsMono.variable} ${literata.variable} antialiased bg-background text-foreground`}
+        className={`${jakartaSans.variable} ${jetbrainsMono.variable} ${literata.variable} ${cinzel.variable} antialiased bg-background text-foreground`}
       >
         <ThemeProvider>
           <QueryProvider>

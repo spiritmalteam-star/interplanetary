@@ -214,7 +214,7 @@ export default function InterplanetaryBridge({
             <Orbit className="size-4" style={{ color: "#67e8f9" }} />
           </span>
           <div className="min-w-0 flex-1">
-            <h3 className="truncate font-[family-name:Cinzel] text-[15px] font-semibold tracking-wide text-[var(--lp-head)]">
+            <h3 className="truncate font-[family-name:var(--font-cinzel)] text-[15px] font-semibold tracking-wide text-[var(--lp-head)]">
               {t("The Interplanetary Bridge")}
             </h3>
             <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-[var(--lp-faint)]">
@@ -320,7 +320,7 @@ export default function InterplanetaryBridge({
               <p className="mono-label text-[9px] tracking-[0.2em]" style={{ color: accent }}>
                 {record.i}
               </p>
-              <h4 className="mt-1 font-[family-name:Cinzel] text-[19px] font-semibold leading-tight tracking-wide text-[var(--lp-head)]">
+              <h4 className="mt-1 font-[family-name:var(--font-cinzel)] text-[19px] font-semibold leading-tight tracking-wide text-[var(--lp-head)]">
                 {record.n}
               </h4>
               {record.e && (

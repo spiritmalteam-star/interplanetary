@@ -164,7 +164,13 @@ export function AuthModal() {
     }
   }, []);
 
-  if (!authOpen) return null;
+  /* THE MACHINE'S LAW — while the first server verification is still
+     in flight (meStatus "loading"), the passage stays closed: nothing
+     can flash, and a visitor the server has already confirmed never
+     sees the sign-in form appear "again" at the letter's return. */
+  const meStatus = useMirror((s) => s.meStatus);
+
+  if (!authOpen || meStatus === "loading") return null;
 
   /* THE RESIGNED LETTER — one fresh key flies to the pending address */
   const resendLetter = async () => {
@@ -636,7 +642,7 @@ export function AuthModal() {
             height={30}
             className="size-[30px] rounded-full opacity-90 dark:hidden"
           />
-          <span className="font-[family-name:Cinzel] text-[14px] tracking-[0.22em] text-[var(--lp-gold)]">
+          <span className="font-[family-name:var(--font-cinzel)] text-[14px] tracking-[0.22em] text-[var(--lp-gold)]">
             reflectme.space
           </span>
         </div>

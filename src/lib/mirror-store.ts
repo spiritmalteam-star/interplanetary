@@ -28,6 +28,7 @@ import {
   type LanguageCode,
   type VoiceId,
 } from "@/lib/i18n/core";
+import { bootUiLanguage, setUiLanguage } from "@/lib/i18n";
 import {
   attachmentsToPayload,
   type ChatAttachment,
@@ -5036,8 +5037,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   setLanguage: (code) => {
     set({ language: code });
-    /* THE LAZY VOICES — the chosen tongue travels at once */
-    void ensureDict(code);
+    /* THE LAZY VOICES — the chosen tongue travels at once, and the
+       language's own keeper hears the same word: every surface (the
+       landing included) follows instantly, no reload, no loss */
+    void setUiLanguage(code);
     try {
       localStorage.setItem("mirror-entity-language", code);
     } catch {
@@ -5121,6 +5124,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     };
     if (s.language && isLanguageCode(s.language)) {
       set({ language: s.language });
+      void setUiLanguage(s.language);
       try {
         localStorage.setItem("mirror-entity-language", s.language);
       } catch {
@@ -5192,6 +5196,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   bootPreferences: () => {
     if (typeof window === "undefined") return;
+    /* the language's own keeper wakes with the device's chosen voice —
+       the landing translates before the laboratory even mounts */
+    bootUiLanguage();
     /* the archive wakes first — the conversations return before the
        tuning is read, so the visitor lands back inside their words */
     get().hydrateChats();

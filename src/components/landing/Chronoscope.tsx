@@ -732,7 +732,7 @@ export default function Chronoscope() {
             <h3
               id="chrono-card-title"
               tabIndex={-1}
-              className="mt-1 line-clamp-2 break-words font-[family-name:Cinzel] text-[22px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none sm:text-[28px]"
+              className="mt-1 line-clamp-2 break-words font-[family-name:var(--font-cinzel)] text-[22px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none sm:text-[28px]"
             >
               {displayName}
             </h3>
@@ -1190,7 +1190,7 @@ export default function Chronoscope() {
                   <h3
                     id="chrono-card-title"
                     tabIndex={-1}
-                    className="mt-1 font-[family-name:Cinzel] text-[21px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none sm:text-[26px]"
+                    className="mt-1 font-[family-name:var(--font-cinzel)] text-[21px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none sm:text-[26px]"
                   >
                     {displayName}
                   </h3>
@@ -1948,7 +1948,7 @@ export function TechPanel({ civ, t }: { civ: CivRecord; t: (s: string) => string
       <h4 className="mono-label text-[10px] uppercase tracking-[0.24em] text-[var(--lp-violet-bright)]">
         {t("Signature technology")} · {tech.id}
       </h4>
-      <p className="mt-1.5 font-[family-name:Cinzel] text-[15px] font-semibold text-[var(--lp-head)]">
+      <p className="mt-1.5 font-[family-name:var(--font-cinzel)] text-[15px] font-semibold text-[var(--lp-head)]">
         {tech.name}
       </p>
       {tech.sum && <p className="mt-1.5 text-[13.5px] leading-[1.8] text-[var(--lp-body)]">{tech.sum}</p>}
@@ -2004,7 +2004,7 @@ export function BiotaPanel({ civ, t }: { civ: CivRecord; t: (s: string) => strin
       <h4 className="mono-label text-[10px] uppercase tracking-[0.24em] text-[var(--lp-violet-bright)]">
         {t("Native life")} · {b.id}
       </h4>
-      <p className="mt-1.5 font-[family-name:Cinzel] text-[15px] font-semibold text-[var(--lp-head)]">
+      <p className="mt-1.5 font-[family-name:var(--font-cinzel)] text-[15px] font-semibold text-[var(--lp-head)]">
         {b.name}
         {b.sci ? <span className="ml-2 font-[family-name:var(--font-literata)] text-[12.5px] italic text-[var(--lp-gold)]">{b.sci}</span> : null}
       </p>
@@ -2034,7 +2034,7 @@ export function VistaPanel({ civ, t }: { civ: CivRecord; t: (s: string) => strin
       <h4 className="mono-label text-[10px] uppercase tracking-[0.24em] text-[var(--lp-violet-bright)]">
         {t("Homeworld vista")} · {v.id}
       </h4>
-      <p className="mt-1.5 font-[family-name:Cinzel] text-[15px] font-semibold text-[var(--lp-head)]">
+      <p className="mt-1.5 font-[family-name:var(--font-cinzel)] text-[15px] font-semibold text-[var(--lp-head)]">
         {v.title}
       </p>
       {v.cap && <p className="mt-1.5 text-[13.5px] leading-[1.8] text-[var(--lp-body)]">{v.cap}</p>}

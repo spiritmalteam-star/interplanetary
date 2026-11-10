@@ -198,7 +198,7 @@ export default function GatheringPortal() {
               <span className="block size-3.5 rounded-[5px] border border-[#cbb98d] bg-[linear-gradient(150deg,#fefcf6,#e8dcbd)]" />
             </span>
             <div className="min-w-0">
-              <p className="truncate font-[family-name:Cinzel] text-[14px] font-semibold tracking-wide text-[#3d3428] sm:text-[15px]">
+              <p className="truncate font-[family-name:var(--font-cinzel)] text-[14px] font-semibold tracking-wide text-[#3d3428] sm:text-[15px]">
                 {t("The Gathering")}
               </p>
               <p className="mono-label hidden text-[8px] uppercase tracking-[0.26em] text-[#a2947c] sm:block">

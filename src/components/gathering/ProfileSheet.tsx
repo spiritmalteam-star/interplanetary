@@ -83,7 +83,7 @@ export default function ProfileSheet({
           <div className="flex items-center gap-3">
             <MakerMark name={me?.name ?? "·"} size={44} />
             <div className="min-w-0">
-              <p className="truncate font-[family-name:Cinzel] text-[16px] font-semibold text-[#3d3428]">
+              <p className="truncate font-[family-name:var(--font-cinzel)] text-[16px] font-semibold text-[#3d3428]">
                 {me?.name ?? "…"}
               </p>
               <p className="text-[11px] text-[#a2947c]">
