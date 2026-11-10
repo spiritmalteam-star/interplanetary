@@ -9,6 +9,7 @@ export type ToolPermission =
   | "search:public"
   | "read:public"
   | "read:own"
+  | "compose:draft"
   | "publish:own"
   | "write:circles"
   | "write:projects"

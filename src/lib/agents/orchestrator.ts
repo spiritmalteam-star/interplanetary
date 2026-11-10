@@ -161,12 +161,17 @@ export async function runTask(taskId: string, userId: string): Promise<RunResult
   const totalSteps = steps.length || 1;
   let done = 0;
   let approvalIndex = -1;
+  const outputs: Record<string, unknown> = {};
 
   try {
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
       if (step.status === "completed" || step.status === "skipped") {
         done++;
+        /* THE CHAIN'S OWN MEMORY — a resumed run restores what the
+           earlier run truly produced, so a parked step's references
+           still resolve to the real results, never to a guess. */
+        outputs[step.key] = step.output;
         continue;
       }
 
@@ -194,17 +199,20 @@ export async function runTask(taskId: string, userId: string): Promise<RunResult
         throw new Error(step.error);
       }
 
-      const validationError = tool.validate({ ...(step.input ?? {}), ...pickRunInput(taskInput, step.key) });
+      const merged = { ...(step.input ?? {}), ...pickRunInput(taskInput, step.key) };
+      delete (merged as { needsApproval?: boolean }).needsApproval;
+
+      /* the chain resolves here — every "$ref" borrows a real result */
+      const resolvedInput = resolveRefs(merged, outputs) as Record<string, unknown>;
+
+      const validationError = tool.validate(resolvedInput);
       if (validationError) {
         step.status = "failed";
         step.error = validationError;
         throw new Error(validationError);
       }
 
-      const merged = { ...(step.input ?? {}), ...pickRunInput(taskInput, step.key) };
-      delete (merged as { needsApproval?: boolean }).needsApproval;
-
-      const outcome = await withTimeout(tool.execute(merged, ctx), tool.timeoutMs);
+      const outcome = await withTimeout(tool.execute(resolvedInput, ctx), tool.timeoutMs);
       if (!outcome.ok) {
         step.status = "failed";
         step.error = outcome.error ?? "the tool refused";
@@ -213,6 +221,7 @@ export async function runTask(taskId: string, userId: string): Promise<RunResult
       step.status = "completed";
       step.output = outcome.data;
       step.error = null;
+      outputs[step.key] = outcome.data;
       done++;
       await db.agentTask.update({
         where: { id: taskId },
@@ -297,6 +306,43 @@ export async function cancelTask(taskId: string, userId: string): Promise<boolea
 function pickRunInput(taskInput: Record<string, unknown>, stepKey: string): Record<string, unknown> {
   const scoped = taskInput[stepKey];
   return scoped && typeof scoped === "object" && !Array.isArray(scoped) ? (scoped as Record<string, unknown>) : {};
+}
+
+/* THE CHAINING LAW — a plan is one journey, not five strangers: a
+   step's input value written as "$<stepKey>.<path>" borrows the real
+   output of an earlier completed step (e.g. "$step0.0.id" is the id of
+   the first result the search truly returned). A reference that cannot
+   resolve stays itself — the tool then refuses honestly instead of
+   guessing. Nothing is invented; the chain walks on actual results. */
+function resolveRefs(value: unknown, outputs: Record<string, unknown>): unknown {
+  if (typeof value === "string") {
+    const m = value.match(/^\$([A-Za-z0-9_]+)((?:\.[A-Za-z0-9_]+|\[\d+\])*)$/);
+    if (!m) return value;
+    const base = outputs[m[1]];
+    if (base === undefined) return value;
+    const segs = (m[2] ?? "")
+      .replace(/\[(\d+)\]/g, ".$1")
+      .split(".")
+      .filter(Boolean);
+    let cur: unknown = base;
+    for (const seg of segs) {
+      if (cur !== null && typeof cur === "object" && (cur as Record<string, unknown>)[seg] !== undefined) {
+        cur = (cur as Record<string, unknown>)[seg];
+      } else {
+        return value;
+      }
+    }
+    return cur;
+  }
+  if (Array.isArray(value)) return value.map((v) => resolveRefs(v, outputs));
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = resolveRefs(v, outputs);
+    }
+    return out;
+  }
+  return value;
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {

@@ -468,8 +468,32 @@ async function postImpl(
        work; every other omni ask plans, acts within rights, and answers. */
     if (mode === "omni") {
       try {
+        /* THE STAGED WORK'S STAND-DOWN — a cancel rides the same door:
+           the visitor's no closes the gate honestly, nothing moves. */
+        if (typeof body?.cancelTaskId === "string" && body.cancelTaskId) {
+          const { cancelOmniTask } = await import("@/lib/omni/engine");
+          const cancelled = await cancelOmniTask(visitor.user.id, String(body.cancelTaskId));
+          return withAnonCookie(
+            NextResponse.json({
+              transmission: cancelled.message,
+              classification: "WORLD_BUILDING",
+              createdAt: new Date().toISOString(),
+              omni: { taskId: cancelled.ok ? String(body.cancelTaskId) : null, needsApproval: false, steps: [] },
+            }),
+            visitor
+          );
+        }
         if (typeof body?.approveTaskId === "string" && body.approveTaskId) {
-          const approved = await approveOmniTask(visitor.user.id, String(body.approveTaskId));
+          const verdict = await approveOmniTask(visitor.user.id, String(body.approveTaskId));
+          if (!verdict.ok) {
+            /* THE HONEST VERDICT — a yes that cannot find its work is
+               spoken plainly (404/409), never dressed as a server storm. */
+            return withAnonCookie(
+              NextResponse.json({ error: verdict.message, code: "APPROVAL_UNAVAILABLE" }, { status: verdict.status }),
+              visitor
+            );
+          }
+          const approved = verdict.result;
           return withAnonCookie(
             NextResponse.json({
               transmission: approved.transmission,

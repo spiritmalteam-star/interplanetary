@@ -94,13 +94,16 @@ const PrimeDeck = dynamic(
   () => import("./PrimeAmbient").then((m) => ({ default: m.PrimeDeck })),
   { ssr: false, loading: () => null }
 );
+const PrimeConfirmCard = dynamic(
+  () => import("./PrimeAmbient").then((m) => ({ default: m.PrimeConfirmCard })),
+  { ssr: false, loading: () => null }
+);
 import { blendVisualRequest, isVisualIntent } from "@/lib/visual-intent";
 import { ZoomableLightbox } from "./ZoomableLightbox";
 import {
   ENERGY_NOTICE,
   EnergyError,
   speakReplyGift,
-  offerOmniConfirm,
 } from "@/lib/speak-client";
 import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
@@ -422,6 +425,17 @@ interface RoomTurn {
      braided from (HyperX's fusion crossings only): the badge beside
      the question shows which fusion stood behind the answer. */
   fusion?: string[];
+  /* THE PRIME'S OWN LEDGER — the work M.E. Prime staged with this
+     answer: its taskId, whether the visitor's yes is still waited
+     for, and the honest steps as they truly ran (the workbench's
+     own confirm card reads from this). */
+  omni?: OmniTurnMeta;
+}
+
+interface OmniTurnMeta {
+  taskId: string;
+  needsApproval: boolean;
+  steps: { tool: string; status: string; name: string }[];
 }
 
 /* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
@@ -1411,7 +1425,7 @@ async function speakWithTransmission(
   /* THE ASK'S OWN STOP — the asker's abort hand: a superseding ask
      lays this crossing down mid-breath, quietly. */
   signal?: AbortSignal
-): Promise<{ text: string; vision: string | null }> {
+): Promise<{ text: string; vision: string | null; omni: OmniTurnMeta | null }> {
   const carried =
     attachments && attachments.length > 0
       ? attachmentsToPayload(attachments)
@@ -1573,8 +1587,8 @@ async function speakWithTransmission(
         paintVisibleOff = null;
         flushPaint();
         if (streamError) throw new Error(streamError);
-        if (finalText !== null) return { text: finalText, vision: null };
-        if (partial.trim()) return { text: partial, vision: null };
+        if (finalText !== null) return { text: finalText, vision: null, omni: null };
+        if (partial.trim()) return { text: partial, vision: null, omni: null };
         /* an empty stream — the one-breath ask below carries the words */
       }
     } catch (err) {
@@ -1587,7 +1601,7 @@ async function speakWithTransmission(
          its partial words down and says nothing of it: no failure, no
          error hand, the room keeps exactly what arrived. */
       if (err instanceof Error && err.name === "AbortError") {
-        return { text: partial, vision: null };
+        return { text: partial, vision: null, omni: null };
       }
       /* the house's own word (a quiet field) travels truthfully; any
          other storm falls through to the patient one-breath ask */
@@ -1610,12 +1624,10 @@ async function speakWithTransmission(
     "transmission",
     "The field is quiet"
   );
-  /* THE PRIME'S OWN GATE — a staged consequential step raises the
-     confirmation hand at once; nothing acts without the visitor's yes. */
-  if (gift.omni?.needsApproval && gift.omni.taskId) {
-    offerOmniConfirm(gift.omni.taskId);
-  }
-  return gift;
+  /* THE PRIME'S OWN LEDGER RIDES HOME — the staged work travels with
+     the words; the room's own confirm card (not a stray toast) keeps
+     the visitor's yes beside the work that waits for it. */
+  return { text: gift.text, vision: gift.vision, omni: gift.omni };
 }
 
 /* ------------------- the copy hand — words kept ----------------------
@@ -4364,7 +4376,7 @@ export function BranchCanopy({
             },
           ]);
         };
-        const { text: reply, vision } = await speakWithTransmission(
+        const { text: reply, vision, omni: turnOmni } = await speakWithTransmission(
           scopeCategory,
           q,
           q,
@@ -4419,6 +4431,9 @@ export function BranchCanopy({
                      unless it already DID, breath by breath (a replay
                      would make the reader watch it twice) */
                   justLanded: !streamedLanding,
+                  /* THE PRIME'S OWN LEDGER — the staged work rides the
+                     turn: its confirm card stands beneath the words */
+                  omni: turnOmni ?? undefined,
                 }
               : turn
           )
@@ -5139,7 +5154,7 @@ export function BranchCanopy({
           }
         : undefined;
       try {
-        const { text: reply } = await speakWithTransmission(
+        const { text: reply, omni: roomOmni } = await speakWithTransmission(
           realm
             ? (LANDING_SCOPE_CATEGORY[landingScope] ??
                 ("absolute" as const))
@@ -5169,6 +5184,9 @@ export function BranchCanopy({
                      born now: it may materialize in the stream — unless
                      it already did, breath by breath */
                   justLanded: !streamedRoom,
+                  /* THE PRIME'S OWN LEDGER — the staged work rides the
+                     room's turn: its confirm card stands beneath */
+                  omni: roomOmni ?? undefined,
                 }
               : turn
           )
@@ -5240,6 +5258,82 @@ export function BranchCanopy({
       threadBusy,
       zoom,
     ]
+  );
+
+  /* THE PRIME'S OWN GATE — the workbench's confirm hands: the staged
+     work resolves inside the conversation (never a stray toast). A
+     confirm sends the visitor's yes through the same audited door; a
+     stand-down closes the gate honestly. The verdict's words join the
+     thread as a turn, and the work's own ledger flips to resolved. */
+  const [omniResolvingId, setOmniResolvingId] = useState<string | null>(null);
+  const [omniVerdictError, setOmniVerdictError] = useState<string | null>(null);
+
+  const resolveOmniTask = useCallback(
+    async (
+      taskId: string,
+      action: "confirm" | "cancel",
+      scope: "landing" | "room",
+      roomQ?: string
+    ) => {
+      if (omniResolvingId) return;
+      setOmniResolvingId(taskId);
+      setOmniVerdictError(null);
+      const label = action === "confirm" ? "Confirm — let it act" : "Stand down";
+      const readMeta = (d: unknown): OmniTurnMeta | undefined => {
+        const o = (d as { omni?: { taskId?: unknown; needsApproval?: unknown; steps?: unknown } })?.omni;
+        return o && typeof o === "object" && typeof o.taskId === "string"
+          ? {
+              taskId: o.taskId,
+              needsApproval: o.needsApproval === true,
+              steps: Array.isArray(o.steps) ? (o.steps as OmniTurnMeta["steps"]) : [],
+            }
+          : undefined;
+      };
+      try {
+        const res = await fetch("/api/transmission", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: action === "confirm" ? "confirm" : "stand down",
+            mode: "omni",
+            ...(action === "confirm" ? { approveTaskId: taskId } : { cancelTaskId: taskId }),
+          }),
+        });
+        const d = (await res.json().catch(() => null)) as {
+          transmission?: unknown;
+          error?: unknown;
+        } | null;
+        const text = typeof d?.transmission === "string" ? d.transmission.trim() : "";
+        if (!res.ok || !text) {
+          throw new Error(
+            typeof d?.error === "string" && d.error
+              ? d.error
+              : "The confirmation could not cross — the field rested. Press once more."
+          );
+        }
+        const meta = readMeta(d);
+        const resolveTurn = (turn: RoomTurn): RoomTurn =>
+          turn.omni?.taskId === taskId
+            ? { ...turn, omni: { ...(turn.omni as OmniTurnMeta), needsApproval: false } }
+            : turn;
+        const verdictTurn: RoomTurn = { q: label, a: text, loading: false, omni: meta };
+        if (scope === "room" && roomQ) {
+          applyRoomTurn(roomQ, (t) => [...t.map(resolveTurn), verdictTurn]);
+        } else {
+          setLandingThread((t) => [...t.map(resolveTurn), verdictTurn]);
+          landingThreadRef.current = [...landingThreadRef.current.map(resolveTurn), verdictTurn];
+        }
+      } catch (err) {
+        setOmniVerdictError(
+          err instanceof Error && err.message
+            ? err.message
+            : "The confirmation could not cross — the field rested. Press once more."
+        );
+      } finally {
+        setOmniResolvingId(null);
+      }
+    },
+    [omniResolvingId, applyRoomTurn]
   );
 
   /* THE TRANSMISSION'S OWN BEGINNING — a new turn never yanks the eye
@@ -7071,6 +7165,33 @@ export function BranchCanopy({
                             />
                           </div>
                         )}
+                        {/* THE PRIME'S OWN GATE — the staged work's confirm
+                            card stands beneath the answer that staged it:
+                            the honest ledger and the two hands, inside the
+                            conversation. Nothing acts without this press. */}
+                        {lastLandingTurn?.omni?.needsApproval && !roomLoading && (
+                          <PrimeConfirmCard
+                            taskId={lastLandingTurn.omni.taskId}
+                            steps={lastLandingTurn.omni.steps ?? []}
+                            busy={omniResolvingId === lastLandingTurn.omni.taskId}
+                            error={omniVerdictError}
+                            testId={`${testIdPrefix}-prime-confirm`}
+                            onConfirm={() =>
+                              void resolveOmniTask(
+                                lastLandingTurn.omni!.taskId,
+                                "confirm",
+                                "landing"
+                              )
+                            }
+                            onCancel={() =>
+                              void resolveOmniTask(
+                                lastLandingTurn.omni!.taskId,
+                                "cancel",
+                                "landing"
+                              )
+                            }
+                          />
+                        )}
                       </>
                     ) : null
                   ) : displayError && !roomLoading && (revealStage >= 2 || realm) ? (
@@ -7350,6 +7471,36 @@ export function BranchCanopy({
                                 : undefined
                             }
                           />
+                          {/* THE PRIME'S OWN GATE — the room's staged work
+                              keeps its confirm card right beneath its own
+                              turn; the visitor's yes never leaves the room */}
+                          {i === thread.length - 1 &&
+                            turn.omni?.needsApproval &&
+                            !turn.loading && (
+                              <PrimeConfirmCard
+                                taskId={turn.omni.taskId}
+                                steps={turn.omni.steps ?? []}
+                                busy={omniResolvingId === turn.omni.taskId}
+                                error={omniVerdictError}
+                                testId={`${testIdPrefix}-prime-confirm-room`}
+                                onConfirm={() =>
+                                  void resolveOmniTask(
+                                    turn.omni!.taskId,
+                                    "confirm",
+                                    "room",
+                                    zoomQ ?? undefined
+                                  )
+                                }
+                                onCancel={() =>
+                                  void resolveOmniTask(
+                                    turn.omni!.taskId,
+                                    "cancel",
+                                    "room",
+                                    zoomQ ?? undefined
+                                  )
+                                }
+                              />
+                            )}
                         </div>
                       ))}
                     </div>

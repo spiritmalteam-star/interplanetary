@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Atom,
   BookOpen,
+  ChevronDown,
   Compass,
   Feather,
   Globe2,
@@ -30,6 +31,7 @@ import {
   GP_INPUT,
   MakerMark,
   netFetch,
+  relativeTime,
 } from "./shared";
 
 /* ------------------------------------------------------------------ */
@@ -127,6 +129,32 @@ interface ForYouPayload {
   themes: Array<{ tag: string; count: number }>;
 }
 
+interface ReaderPost {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  tags: string[];
+  sourcePortal: string | null;
+  sourceType: string | null;
+  cover: string | null;
+  refUrl: string | null;
+  resonanceCount: number;
+  echoCount: number;
+  createdAt: string;
+  author: { id?: string; name: string; image: string | null; anon: boolean };
+  mine: boolean;
+  resonated: boolean;
+}
+
+interface ReaderEcho {
+  id: string;
+  body: string;
+  createdAt: string;
+  author: { name: string; image: string | null; anon: boolean };
+  isMine: boolean;
+}
+
 type Dest = "for-you" | "people" | "creations" | "circles" | "projects" | "knowledge";
 
 const DESTS: Array<{ key: Dest; label: string; icon: LucideIcon }> = [
@@ -187,6 +215,24 @@ export default function DiscoverSection({
   const [knowledge, setKnowledge] = useState<DiscoverKnowledge[] | null>(null);
   const [note, setNote] = useState<string | null>(null);
 
+  /* THE READER — a publication opened whole: the full body, its echoes
+     and its resonance, never a truncated card. Every work card in the
+     current opens this reader. */
+  const [reading, setReading] = useState<string | null>(null);
+  const [readerPost, setReaderPost] = useState<ReaderPost | null>(null);
+  const [readerEchoes, setReaderEchoes] = useState<ReaderEcho[]>([]);
+  const [readerLoading, setReaderLoading] = useState(false);
+  const [readerError, setReaderError] = useState<string | null>(null);
+  const [readerEchoDraft, setReaderEchoDraft] = useState("");
+  const [readerSending, setReaderSending] = useState(false);
+
+  /* THE DEEP CURRENT — creations read on and on: the sentinel hand
+     pours the next page when it reaches the bottom of the scroll. */
+  const [creationsCursor, setCreationsCursor] = useState<string | null>(null);
+  const [creationsHasMore, setCreationsHasMore] = useState(false);
+  const [creationsMoreLoading, setCreationsMoreLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
   /* the preferences' quiet drawer — explicit interests tune the current */
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [interestDraft, setInterestDraft] = useState<string>("");
@@ -210,7 +256,12 @@ export default function DiscoverSection({
           setForYou(p);
           setInterests(p.interests ?? []);
         } else if (which === "people") setPeople((data as { people: DiscoverMaker[] }).people);
-        else if (which === "creations") setCreations((data as { creations: DiscoverCreation[] }).creations);
+        else if (which === "creations") {
+          const d = data as { creations: DiscoverCreation[]; hasMore?: boolean; cursor?: string | null };
+          setCreations(d.creations);
+          setCreationsHasMore(Boolean(d.hasMore));
+          setCreationsCursor(d.cursor ?? null);
+        }
         else if (which === "circles") setCircles((data as { circles: DiscoverCircle[] }).circles);
         else if (which === "projects") setProjects((data as { projects: DiscoverProject[] }).projects);
         else if (which === "knowledge") setKnowledge((data as { knowledge: DiscoverKnowledge[] }).knowledge);
@@ -241,6 +292,113 @@ export default function DiscoverSection({
     setSearchTerm(term);
     void read(dest, term);
   };
+
+  /* THE DEEP CURRENT'S HAND — pour the next page of creations into the
+     same grid (the shelf never ends at fifteen works). */
+  const loadMoreCreations = useCallback(async () => {
+    if (!creationsHasMore || creationsMoreLoading || creationsCursor === null) return;
+    setCreationsMoreLoading(true);
+    try {
+      const params = new URLSearchParams({ dest: "creations", cursor: creationsCursor });
+      if (searchTerm) params.set("q", searchTerm);
+      if (typeFilter) params.set("type", typeFilter);
+      const data = await netFetch<{ creations: DiscoverCreation[]; hasMore?: boolean; cursor?: string | null }>(
+        `/api/discover?${params.toString()}`
+      );
+      const more = data.creations ?? [];
+      setCreations((prev) => [...(prev ?? []), ...more]);
+      setCreationsHasMore(Boolean(data.hasMore));
+      setCreationsCursor(data.cursor ?? null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The current could not be reached.");
+    } finally {
+      setCreationsMoreLoading(false);
+    }
+  }, [creationsHasMore, creationsMoreLoading, creationsCursor, searchTerm, typeFilter]);
+
+  /* the sentinel — one breath above the floor, the next page arrives */
+  useEffect(() => {
+    const root = scrollRef.current;
+    if (!root || dest !== "creations" || !creationsHasMore) return;
+    const sentinel = root.querySelector<HTMLElement>("[data-current-sentinel]");
+    if (!sentinel) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) void loadMoreCreations();
+      },
+      { root, rootMargin: "400px 0px" }
+    );
+    io.observe(sentinel);
+    return () => io.disconnect();
+  }, [dest, creationsHasMore, loadMoreCreations]);
+
+  /* ------------------- THE READER'S OWN HANDS ----------------------- */
+
+  const openReader = useCallback(async (id: string) => {
+    setReading(id);
+    setReaderPost(null);
+    setReaderEchoes([]);
+    setReaderError(null);
+    setReaderEchoDraft("");
+    setReaderLoading(true);
+    try {
+      const data = await netFetch<{ post: ReaderPost; echoes: ReaderEcho[] }>(`/api/gathering/${id}`);
+      setReaderPost(data.post);
+      setReaderEchoes(data.echoes ?? []);
+    } catch (err) {
+      setReaderError(err instanceof Error ? err.message : "The offering could not be opened.");
+    } finally {
+      setReaderLoading(false);
+    }
+  }, []);
+
+  const closeReader = useCallback(() => {
+    setReading(null);
+    setReaderPost(null);
+    setReaderError(null);
+  }, []);
+
+  /* the reader's echo hand — a response, signed, calm */
+  const sendReaderEcho = useCallback(async () => {
+    if (!reading || readerEchoDraft.trim().length < 2) return;
+    setReaderSending(true);
+    try {
+      const data = await netFetch<{ echo: ReaderEcho }>(`/api/gathering/${reading}/echoes`, {
+        method: "POST",
+        body: { body: readerEchoDraft.trim() },
+      });
+      setReaderEchoes((prev) => [...prev, data.echo]);
+      setReaderEchoDraft("");
+      setReaderPost((prev) => (prev ? { ...prev, echoCount: prev.echoCount + 1 } : prev));
+    } catch {
+      setNote("The echo could not be carried.");
+    } finally {
+      setReaderSending(false);
+    }
+  }, [reading, readerEchoDraft]);
+
+  /* the reader's resonance hand — one tuning, taken back freely; the
+     server's own count comes back, so the column never drifts */
+  const toggleReaderResonance = useCallback(async () => {
+    if (!reading || !readerPost) return;
+    try {
+      const data = await netFetch<{ resonated: boolean; resonanceCount: number }>(
+        `/api/gathering/${reading}/resonate`,
+        { method: "POST", body: {} }
+      );
+      setReaderPost((prev) =>
+        prev ? { ...prev, resonated: data.resonated, resonanceCount: data.resonanceCount } : prev
+      );
+      /* the cards of the same work keep their honest counts */
+      setCreations((prev) =>
+        prev
+          ? prev.map((c) => (c.id === reading ? { ...c, resonanceCount: data.resonanceCount } : c))
+          : prev
+      );
+    } catch {
+      setNote("The resonance could not be tuned.");
+    }
+  }, [reading, readerPost]);
 
   useEffect(() => {
     if (!note) return;
@@ -313,48 +471,61 @@ export default function DiscoverSection({
     const meta = TYPE_META[p.contentType] ?? TYPE_META.reflection;
     const Icon = meta.icon;
     return (
-      <article key={p.id} className="gp-card overflow-hidden rounded-[20px]" data-testid="discover-creation-card">
-        {p.cover ? (
-           
-          <img src={p.cover} alt="" className="h-36 w-full object-cover" loading="lazy" />
-        ) : (
-          <div
-            aria-hidden="true"
-            className="flex h-24 items-center justify-center border-b border-[#eadfc4]"
-            style={{ background: `linear-gradient(150deg, color-mix(in srgb, ${meta.accent} 7%, #fffdf8) 0%, #f6efdd 100%)` }}
-          >
-            <Icon className="size-7" style={{ color: meta.accent }} />
-          </div>
-        )}
-        <div className="p-4">
-          <div className="flex items-center gap-2">
-            <span
-              className="rounded-full border px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.12em]"
-              style={{ color: meta.accent, borderColor: `color-mix(in srgb, ${meta.accent} 34%, transparent)`, background: `color-mix(in srgb, ${meta.accent} 7%, transparent)` }}
+      <article
+        key={p.id}
+        className="gp-card group overflow-hidden rounded-[22px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_18px_38px_-16px_rgba(122,103,70,0.45)]"
+        data-testid="discover-creation-card"
+      >
+        <button
+          type="button"
+          onClick={() => void openReader(p.id)}
+          aria-label={t("Read the whole offering")}
+          className="focus-glow block w-full cursor-pointer text-left"
+        >
+          {p.cover ? (
+            <img src={p.cover} alt="" className="h-40 w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" loading="lazy" />
+          ) : (
+            <div
+              aria-hidden="true"
+              className="flex h-32 items-center justify-center border-b border-[#eadfc4] transition-transform duration-500 sm:h-36"
+              style={{ background: `linear-gradient(150deg, color-mix(in srgb, ${meta.accent} 9%, #fffdf8) 0%, #f3ecdb 60%, #ece2cb 100%)` }}
             >
-              {p.contentType}
-            </span>
-            {p.sourcePortal && <span className="text-[10px] text-[#b3a68d]">from {p.sourcePortal}</span>}
-          </div>
-          <h3 className="mt-2 line-clamp-1 font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">{p.title}</h3>
-          <p className="mt-1 line-clamp-2 text-[12px] leading-[1.6] text-[#7c715f] [overflow-wrap:anywhere]">{p.preview}</p>
-          <div className="mt-2.5 flex items-center gap-2">
-            <MakerMark name={p.author.name} size={22} />
-            <span className="truncate text-[11px] font-semibold text-[#5c5344]">{p.author.name}</span>
-            <span className="ml-auto shrink-0 text-[10.5px] text-[#a2947c]">
-              {p.resonanceCount} ✦ {p.echoCount !== undefined ? `· ${p.echoCount} ✒` : ""}
-            </span>
-          </div>
-          {p.tags && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {p.tags.split(",").slice(0, 4).map((tag) => (
-                <span key={tag} className="rounded-full border border-[#e4d9bd] px-2 py-0.5 text-[10px] text-[#8a7c64]">
-                  {tag.trim()}
-                </span>
-              ))}
+              <Icon className="size-8 opacity-80" style={{ color: meta.accent }} />
             </div>
           )}
-        </div>
+          <div className="p-4 sm:p-5">
+            <div className="flex items-center gap-2">
+              <span
+                className="rounded-full border px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.12em]"
+                style={{ color: meta.accent, borderColor: `color-mix(in srgb, ${meta.accent} 34%, transparent)`, background: `color-mix(in srgb, ${meta.accent} 7%, transparent)` }}
+              >
+                {p.contentType}
+              </span>
+              {p.sourcePortal && <span className="truncate text-[10px] text-[#b3a68d]">from {p.sourcePortal}</span>}
+              <span className="ml-auto shrink-0 text-[10.5px] font-medium text-[#b0a184]">
+                {t("Read whole")} →
+              </span>
+            </div>
+            <h3 className="mt-2.5 line-clamp-2 font-[family-name:var(--font-literata)] text-[15px] font-semibold leading-snug text-[#3d3428]">{p.title}</h3>
+            <p className="mt-1.5 line-clamp-4 text-[12.5px] leading-[1.7] text-[#7c715f] [overflow-wrap:anywhere]">{p.preview}</p>
+            <div className="mt-3 flex items-center gap-2">
+              <MakerMark name={p.author.name} size={24} />
+              <span className="truncate text-[11.5px] font-semibold text-[#5c5344]">{p.author.name}</span>
+              <span className="ml-auto shrink-0 text-[10.5px] text-[#a2947c]">
+                {p.resonanceCount} ✦ {p.echoCount !== undefined ? `· ${p.echoCount} ✒` : ""}
+              </span>
+            </div>
+            {p.tags && (
+              <div className="mt-2.5 flex flex-wrap gap-1">
+                {p.tags.split(",").slice(0, 4).map((tag) => (
+                  <span key={tag} className="rounded-full border border-[#e4d9bd] px-2 py-0.5 text-[10px] text-[#8a7c64]">
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </button>
       </article>
     );
   };
@@ -397,15 +568,14 @@ export default function DiscoverSection({
           {forYou.creations.length > 0 && (
             <section aria-label="Public creations">
               <SectionHead label="Works moving through the current" />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{forYou.creations.map(creationCard)}</div>
+              <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">{forYou.creations.map(creationCard)}</div>
             </section>
           )}
 
           {forYou.makers.length > 0 && (
             <section aria-label="Makers who may resonate">
               <SectionHead label="Makers who may resonate" />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {forYou.makers.map((m) => (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{forYou.makers.map((m) => (
                   <div key={m.id} className="gp-card rounded-[20px] p-4">
                     <div className="flex items-center gap-2.5">
                       <MakerMark name={m.name} size={30} />
@@ -582,7 +752,7 @@ export default function DiscoverSection({
           {(creations ?? []).length === 0 ? (
             <EmptyRoom icon={Library} line={t("The gallery rests quiet. Works published from the rooms will hang here.")} />
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{(creations ?? []).map(creationCard)}</div>
+            <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">{(creations ?? []).map(creationCard)}</div>
           )}
         </div>
       );
@@ -708,24 +878,31 @@ export default function DiscoverSection({
     return null;
   }, [loading, error, dest, forYou, people, creations, circles, projects, knowledge, interests, sort, typeFilter, epistemicFilter, seekingOnly, creationCard, knowledgeCard, follow, connect, joinCircle, joinProject, t]);
 
-  /* the knowledge card stands apart — its label is the point */
+  /* the knowledge card stands apart — its label is the point, and it
+     too opens whole in the reader */
   function knowledgeCard(k: DiscoverKnowledge) {
     const dress = EPISTEMIC_DRESS[k.epistemicLabel ?? "interpretation"];
     return (
-      <article key={k.id} className="gp-card rounded-[20px] p-4" data-testid="discover-knowledge-card">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full border px-2.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.12em]" style={{ color: dress.color, borderColor: dress.edge, background: dress.bg }}>
-            {dress.label}
-          </span>
-          {k.contentType && <span className="text-[10px] text-[#b3a68d]">{k.contentType}</span>}
-        </div>
-        <h3 className="mt-2 line-clamp-1 font-[family-name:var(--font-literata)] text-[14px] font-semibold text-[#3d3428]">{k.title}</h3>
-        <p className="mt-1 line-clamp-3 text-[12px] leading-[1.65] text-[#7c715f] [overflow-wrap:anywhere]">{k.preview}</p>
-        <div className="mt-2.5 flex items-center gap-2">
-          <MakerMark name={k.author.name} size={22} />
-          <span className="truncate text-[11px] font-semibold text-[#5c5344]">{k.author.name}</span>
-          <span className="ml-auto shrink-0 text-[10.5px] text-[#a2947c]">{k.resonanceCount} ✦</span>
-        </div>
+      <article
+        key={k.id}
+        className="gp-card group rounded-[22px] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_18px_38px_-16px_rgba(122,103,70,0.45)]"
+        data-testid="discover-knowledge-card"
+      >
+        <button type="button" onClick={() => void openReader(k.id)} aria-label={t("Read the whole offering")} className="focus-glow block w-full cursor-pointer rounded-[22px] p-4 text-left sm:p-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border px-2.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.12em]" style={{ color: dress.color, borderColor: dress.edge, background: dress.bg }}>
+              {dress.label}
+            </span>
+            {k.contentType && <span className="text-[10px] text-[#b3a68d]">{k.contentType}</span>}
+          </div>
+          <h3 className="mt-2.5 line-clamp-2 font-[family-name:var(--font-literata)] text-[15px] font-semibold leading-snug text-[#3d3428]">{k.title}</h3>
+          <p className="mt-1.5 line-clamp-4 text-[12.5px] leading-[1.7] text-[#7c715f] [overflow-wrap:anywhere]">{k.preview}</p>
+          <div className="mt-3 flex items-center gap-2">
+            <MakerMark name={k.author.name} size={24} />
+            <span className="truncate text-[11.5px] font-semibold text-[#5c5344]">{k.author.name}</span>
+            <span className="ml-auto shrink-0 text-[10.5px] text-[#a2947c]">{k.resonanceCount} ✦</span>
+          </div>
+        </button>
       </article>
     );
   }
@@ -852,8 +1029,12 @@ export default function DiscoverSection({
   }
 
   return (
-    <div className="gp-scroll h-full overflow-y-auto px-4 pb-16 pt-4 sm:px-6" data-testid="discover-section">
-      <div className="mx-auto w-full max-w-[1200px]">
+    <div
+      ref={scrollRef}
+      className="gp-scroll h-full overflow-y-auto px-4 pb-24 pt-4 sm:px-6"
+      data-testid="discover-section"
+    >
+      <div className="mx-auto w-full max-w-[1440px]">
         {/* the mouth's own tabs */}
         <div className="gp-seg mb-4 flex items-center gap-0.5 overflow-x-auto rounded-full border border-white/80 bg-white/45 p-1" role="tablist" aria-label={t("Discover")}>
           {DESTS.map((d) => {
@@ -903,12 +1084,45 @@ export default function DiscoverSection({
 
         {body}
 
+        {/* the deep current's sentinel — reaching the floor pours the
+            next page of the gallery, so the shelf is never a dead end */}
+        {dest === "creations" && creationsHasMore && (
+          <div data-current-sentinel="" className="flex justify-center py-6">
+            {creationsMoreLoading ? (
+              <span className="flex items-center gap-2 text-[12px] text-[#8a6f46]">
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                {t("The current gathers itself…")}
+              </span>
+            ) : (
+              <button type="button" onClick={() => void loadMoreCreations()} className={cn(GP_GHOST, "min-h-[40px] px-5")}>
+                <ChevronDown className="size-4" aria-hidden="true" />
+                {t("More of the current")}
+              </button>
+            )}
+          </div>
+        )}
+
         {note && (
           <p className="mt-4 text-center text-[12.5px] italic text-[#8a6f46]" role="status">
             {note}
           </p>
         )}
       </div>
+
+      {/* THE READER — the offering opened whole */}
+      <PublicationReader
+        open={reading !== null}
+        post={readerPost}
+        echoes={readerEchoes}
+        loading={readerLoading}
+        error={readerError}
+        echoDraft={readerEchoDraft}
+        sending={readerSending}
+        onEchoDraft={setReaderEchoDraft}
+        onEcho={() => void sendReaderEcho()}
+        onResonate={() => void toggleReaderResonance()}
+        onClose={closeReader}
+      />
 
       {/* the preferences drawer */}
       {prefsOpen && (
@@ -952,6 +1166,209 @@ export default function DiscoverSection({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  THE READER — a publication opened whole. The current's cards keep  */
+/*  their quiet previews; the reader is where a work is read entire —  */
+/*  its full words, its maker's name, its echoes, one resonance.       */
+/* ================================================================== */
+
+function PublicationReader({
+  open,
+  post,
+  echoes,
+  loading,
+  error,
+  echoDraft,
+  sending,
+  onEchoDraft,
+  onEcho,
+  onResonate,
+  onClose,
+}: {
+  open: boolean;
+  post: ReaderPost | null;
+  echoes: ReaderEcho[];
+  loading: boolean;
+  error: string | null;
+  echoDraft: string;
+  sending: boolean;
+  onEchoDraft: (v: string) => void;
+  onEcho: () => void;
+  onResonate: () => void;
+  onClose: () => void;
+}) {
+  const t = useT();
+  if (!open) return null;
+  const meta = post ? (TYPE_META[post.sourceType ?? post.kind] ?? TYPE_META.reflection) : null;
+  const MetaIcon = meta?.icon ?? BookOpen;
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("The reader")}
+      data-testid="publication-reader"
+    >
+      <div className="absolute inset-0 bg-[#2b2416]/45 backdrop-blur-[3px]" onClick={onClose} aria-hidden="true" />
+      <div
+        className="gp-card relative flex max-h-[92vh] w-full max-w-[820px] flex-col overflow-hidden rounded-t-[28px] sm:rounded-[28px]"
+        style={{ background: "linear-gradient(170deg,#fffdf9 0%,#fbf5e8 100%)" }}
+      >
+        {/* the reader's crown */}
+        <div className="flex shrink-0 items-center gap-2.5 border-b border-[#eee5d0] px-4 py-3 sm:px-6">
+          <span
+            aria-hidden="true"
+            className="flex size-8 shrink-0 items-center justify-center rounded-[11px] border border-white/90"
+            style={{ background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.95), 0 2px 6px -2px rgba(122,103,70,0.4)" }}
+          >
+            <MetaIcon className="size-4" style={{ color: meta?.accent ?? "#8a6f46" }} />
+          </span>
+          <p className="mono-label min-w-0 flex-1 truncate text-[9px] uppercase tracking-[0.22em] text-[#8a6f46]">
+            {post?.sourcePortal ? `${post.sourcePortal} · ${post.sourceType ?? post.kind}` : (post?.kind ?? "")}
+          </p>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("Close the reader")}
+            data-testid="publication-reader-close"
+            className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-colors hover:text-[#3d3428]"
+          >
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* the reader's body */}
+        <div className="nice-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-7">
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 py-16 text-[#8a6f46]">
+              <Loader2 className="size-5 animate-spin" aria-hidden="true" />
+              <span className="text-[13px]">{t("The offering opens itself…")}</span>
+            </div>
+          ) : error ? (
+            <div className="py-10 text-center">
+              <p className="font-[family-name:var(--font-literata)] text-[13.5px] italic leading-[1.8] text-[#8a7c64]">{error}</p>
+              <button type="button" onClick={onClose} className={cn(GP_GHOST, "mt-4 min-h-[40px] px-5")}>{t("Close the reader")}</button>
+            </div>
+          ) : post ? (
+            <>
+              <h2 className="font-[family-name:var(--font-literata)] text-[22px] font-semibold leading-[1.3] text-[#3d3428] sm:text-[26px]">
+                {post.title}
+              </h2>
+              <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="flex items-center gap-2">
+                  <MakerMark name={post.author.name} size={28} />
+                  <span className="text-[12.5px] font-semibold text-[#5c5344]">{post.author.name}</span>
+                </span>
+                <span className="text-[11px] text-[#a2947c]">{relativeTime(post.createdAt, t)}</span>
+                {post.tags.length > 0 && (
+                  <span className="flex flex-wrap gap-1">
+                    {post.tags.slice(0, 6).map((tag) => (
+                      <span key={tag} className="rounded-full border border-[#e4d9bd] bg-white/60 px-2 py-0.5 text-[10px] text-[#8a7c64]">#{tag}</span>
+                    ))}
+                  </span>
+                )}
+              </div>
+
+              {post.cover && (
+                <img src={post.cover} alt="" className="mt-5 max-h-[420px] w-full rounded-[18px] border border-[#eee5d0] object-cover" />
+              )}
+              {post.refUrl && (
+                <a
+                  href={post.refUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-[#0f766e] underline decoration-[#bcdcd6] underline-offset-4 hover:decoration-[#0f766e]"
+                >
+                  <Music className="size-3.5" aria-hidden="true" />
+                  {t("Hear the work itself")}
+                </a>
+              )}
+
+              {/* THE WHOLE WORD — the body stands complete, every line of it */}
+              <div className="mt-5 space-y-3.5">
+                {post.body.split(/\n{2,}/).map((para, i) => (
+                  <p key={i} className="whitespace-pre-line font-[family-name:var(--font-literata)] text-[14.5px] leading-[1.85] text-[#4c4436] [overflow-wrap:anywhere]">
+                    {para}
+                  </p>
+                ))}
+              </div>
+
+              {/* the reader's hands — one resonance, echoes beneath */}
+              <div className="mt-7 border-t border-[#eee5d0] pt-5">
+                <button
+                  type="button"
+                  onClick={onResonate}
+                  aria-pressed={post.resonated}
+                  data-testid="publication-reader-resonate"
+                  className={cn(
+                    "focus-glow inline-flex min-h-[40px] items-center gap-2 rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-all duration-300",
+                    post.resonated
+                      ? "border-[#cbb98d] bg-[linear-gradient(150deg,#fffdf8_0%,#f3ead6_100%)] text-[#8a6f46]"
+                      : "border-[#e4d9bd] bg-white/70 text-[#7c715f] hover:border-[#d3c39c]"
+                  )}
+                >
+                  <Sparkles className="size-4" aria-hidden="true" />
+                  {post.resonated ? t("Resonating") : t("Resonate")}
+                  <span className="text-[#a2947c]">· {post.resonanceCount}</span>
+                </button>
+
+                {/* the echoes */}
+                <div className="mt-6" data-testid="publication-reader-echoes">
+                  <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-[#a2947c]">
+                    {t("Echoes")} · {echoes.length}
+                  </p>
+                  {echoes.length === 0 ? (
+                    <p className="mt-3 text-[12.5px] italic leading-relaxed text-[#8a7c64]">
+                      {t("No echoes yet — the first response waits for you.")}
+                    </p>
+                  ) : (
+                    <ul className="mt-3 space-y-3">
+                      {echoes.map((e) => (
+                        <li key={e.id} className="rounded-[18px] border border-[#eee5d0] bg-white/70 px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <MakerMark name={e.author.name} size={22} />
+                            <span className="text-[11.5px] font-semibold text-[#5c5344]">{e.author.name}</span>
+                            <span className="ml-auto text-[10px] text-[#b3a68d]">{relativeTime(e.createdAt, t)}</span>
+                          </div>
+                          <p className="mt-1.5 text-[12.5px] leading-[1.7] text-[#5c5344] [overflow-wrap:anywhere]">{e.body}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* the echo's own hand */}
+                  <div className="mt-4 flex items-end gap-2">
+                    <textarea
+                      value={echoDraft}
+                      onChange={(e) => onEchoDraft(e.target.value.slice(0, 600))}
+                      placeholder={t("Leave an echo — short, calm, yours…")}
+                      aria-label={t("Leave an echo")}
+                      rows={2}
+                      className={cn(GP_INPUT, "min-h-[44px] resize-y")}
+                      data-testid="publication-reader-echo-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={onEcho}
+                      disabled={sending || echoDraft.trim().length < 2}
+                      className={cn(GP_HAND, "min-h-[44px] shrink-0 px-5")}
+                      data-testid="publication-reader-echo-send"
+                    >
+                      {sending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+                      {t("Echo")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

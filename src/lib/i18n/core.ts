@@ -17,6 +17,7 @@ export type LanguageCode =
   | "it"
   | "el"
   | "de"
+  | "nl"
   | "tr";
 
 export interface LanguageMeta {
@@ -41,17 +42,21 @@ export const LANGUAGES: LanguageMeta[] = [
   { code: "it", native: "Italiano", english: "Italian" },
   { code: "el", native: "Ελληνικά", english: "Greek" },
   { code: "de", native: "Deutsch", english: "German" },
+  { code: "nl", native: "Nederlands", english: "Dutch" },
   { code: "tr", native: "Türkçe", english: "Turkish" },
 ];
 
-/* THE NINE VOICES OF THE BUTTON — Albanian first (the keeper's own
-   tongue leads), then the eight most-spoken languages of the world in
-   alphabetical order. English is the default; this exact order is the
-   law of every language button in the house. */
+/* THE VOICES OF THE BUTTON — Albanian first (the keeper's own tongue
+   leads), then the world's tongues in alphabetical order. German and
+   Dutch stand in the open picker at the keeper's word. English is the
+   default; this exact order is the law of every language button in
+   the house. */
 export const PICKER_LANGUAGES: LanguageMeta[] = [
   { code: "sq", native: "Shqip", english: "Albanian" },
   { code: "ar", native: "العربية", english: "Arabic" },
   { code: "zh", native: "中文", english: "Chinese" },
+  { code: "de", native: "Deutsch", english: "German" },
+  { code: "nl", native: "Nederlands", english: "Dutch" },
   { code: "en", native: "English", english: "English" },
   { code: "fr", native: "Français", english: "French" },
   { code: "hi", native: "हिन्दी", english: "Hindi" },
@@ -73,6 +78,7 @@ export const LANGUAGE_NAMES: Record<LanguageCode, string> = {
   it: "Italian",
   el: "Greek",
   de: "German",
+  nl: "Dutch",
   tr: "Turkish",
 };
 
@@ -94,6 +100,7 @@ export const LOCALES: Record<LanguageCode, string> = {
   it: "it-IT",
   el: "el-GR",
   de: "de-DE",
+  nl: "nl-NL",
   tr: "tr-TR",
 };
 
@@ -147,6 +154,7 @@ export async function ensureDict(language: LanguageCode): Promise<void> {
       : lang === "it" ? await import("./dicts/it")
       : lang === "el" ? await import("./dicts/el")
       : lang === "de" ? await import("./dicts/de")
+      : lang === "nl" ? await import("./dicts/nl")
       : await import("./dicts/tr");
     DICTS[lang] = (mod as unknown as { [k: string]: Dict })[lang];
     dictVersion += 1;

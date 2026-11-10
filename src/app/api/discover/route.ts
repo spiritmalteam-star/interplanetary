@@ -20,11 +20,11 @@ import { networkName, wallIdsFor } from "@/lib/server/network";
 /*  never enter a public answer — not by omission, by construction.    */
 /* ------------------------------------------------------------------ */
 
-const TAKE_MAX = 36;
+const TAKE_MAX = 48;
 
 function cleanTake(url: URL): number {
-  const n = Number(url.searchParams.get("take") ?? 12);
-  return Math.min(TAKE_MAX, Math.max(3, Number.isFinite(n) ? Math.floor(n) : 12));
+  const n = Number(url.searchParams.get("take") ?? 18);
+  return Math.min(TAKE_MAX, Math.max(3, Number.isFinite(n) ? Math.floor(n) : 18));
 }
 function cleanQ(url: URL): string {
   return (url.searchParams.get("q") ?? "").trim().toLowerCase().slice(0, 80);
@@ -175,11 +175,11 @@ export async function GET(req: NextRequest) {
         NextResponse.json({
           dest,
           interests,
-          creations: scoredCreations.slice(0, 8).map((p) => ({
-            id: p.id, title: p.title, preview: p.body.slice(0, 140), kind: p.kind,
+          creations: scoredCreations.slice(0, 12).map((p) => ({
+            id: p.id, title: p.title, preview: p.body.slice(0, 220), kind: p.kind,
             contentType: p.sourceType ?? p.kind, cover: p.cover, refUrl: p.refUrl,
-            resonanceCount: p.resonanceCount, createdAt: p.createdAt,
-            user: { id: p.user.id, name: networkName(p.user), image: p.user.image },
+            tags: p.tags, resonanceCount: p.resonanceCount, createdAt: p.createdAt,
+            author: { id: p.user.id, name: networkName(p.user), image: p.user.image },
           })),
           makers: scoredMakers.slice(0, 6).map((m) => ({
             id: m.user.id, name: networkName(m.user), image: m.user.image,
@@ -198,7 +198,7 @@ export async function GET(req: NextRequest) {
           knowledge: knowledge.map((k) => ({
             id: k.id, title: k.title, epistemicLabel: k.epistemic, contentType: k.sourceType ?? "reflection",
             preview: k.body.slice(0, 120), createdAt: k.createdAt,
-            user: { id: k.user.id, name: networkName(k.user) },
+            author: { id: k.user.id, name: networkName(k.user) },
           })),
           themes,
         }),
@@ -317,7 +317,7 @@ export async function GET(req: NextRequest) {
             resonanceCount: p.resonanceCount,
             echoCount: p.echoCount,
             createdAt: p.createdAt,
-            user: { id: p.user.id, name: networkName(p.user), image: p.user.image },
+            author: { id: p.user.id, name: networkName(p.user), image: p.user.image },
           })),
           hasMore,
           cursor: hasMore ? rows[take - 1].createdAt.toISOString() : null,
@@ -435,7 +435,7 @@ export async function GET(req: NextRequest) {
             id: k.id, title: k.title, preview: k.body.slice(0, 200), epistemicLabel: k.epistemic,
             contentType: k.sourceType ?? "reflection", sourcePortal: k.sourcePortal, tags: k.tags,
             resonanceCount: k.resonanceCount, createdAt: k.createdAt,
-            user: { id: k.user.id, name: networkName(k.user) },
+            author: { id: k.user.id, name: networkName(k.user) },
           })),
           hasMore,
           cursor: hasMore ? rows[take - 1].createdAt.toISOString() : null,

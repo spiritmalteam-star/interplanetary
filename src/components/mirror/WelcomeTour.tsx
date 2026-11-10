@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, Compass, X } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -162,16 +163,33 @@ export function WelcomeTour() {
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
   /* THE FIRST VISIT — offered once, after the session's own glance has
-     settled, never during a sensitive return flow. */
+     settled, never during a sensitive return flow, and never over an
+     already-open room: the Gathering's portal (a body-level window)
+     stands above every dialog the shell carries, so the tour keeps
+     silent while a room is open and steps aside the moment one opens. */
   useEffect(() => {
     if (meStatus !== "ready") return;
     if (readTourFlag()) return;
     const id = window.setTimeout(() => {
       if (sensitiveReturnUnderway()) return;
-      useMirror.getState().openTour();
+      const s = useMirror.getState();
+      if (s.gatheringPortalOpen || s.communionOpen || s.aboutOpen) return;
+      s.openTour();
     }, 1200);
     return () => window.clearTimeout(id);
   }, [meStatus]);
+
+  /* THE ROOM'S OWN PRIORITY — if the Gathering's portal (or the About
+     room) opens while the tour stands, the tour folds at once (the
+     dismissal flag is NOT carved: the tour is offered again another
+     day — the room simply takes the visitor's breath now). */
+  const gatheringPortalOpen = useMirror((s) => s.gatheringPortalOpen);
+  const communionOpen = useMirror((s) => s.communionOpen);
+  const aboutOpen = useMirror((s) => s.aboutOpen);
+  useEffect(() => {
+    if (!tourOpen) return;
+    if (gatheringPortalOpen || communionOpen || aboutOpen) closeTour();
+  }, [tourOpen, gatheringPortalOpen, communionOpen, aboutOpen, closeTour]);
 
   /* focus management — the dialog receives focus on open and returns
      it to the hand that opened the tour */
@@ -222,7 +240,15 @@ export function WelcomeTour() {
   const current = SLIDES[slide];
   const last = slide === SLIDES.length - 1;
 
-  return (
+  /* THE PORTAL'S OWN LAW — the tour renders at the document's body,
+     never inside the shell: the shell's ancestors carry transforms and
+     their own stacking contexts, which once trapped the tour's
+     z-index beneath the Gathering's body-level portal and left its
+     close hand unreachable. From the body it always floats at the
+     height it was given. */
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[95] flex items-center justify-center p-3 sm:p-6"
       role="dialog"
@@ -355,7 +381,8 @@ export function WelcomeTour() {
           {t("Read About Us as a page")}
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -395,6 +422,13 @@ export function AboutRoom() {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const restoreFocus = useRef<HTMLElement | null>(null);
 
+  /* the Gathering's portal takes the breath — the About room folds
+     when a room of the house opens over it */
+  const gatheringPortalOpen = useMirror((s) => s.gatheringPortalOpen);
+  useEffect(() => {
+    if (aboutOpen && gatheringPortalOpen) closeAbout();
+  }, [aboutOpen, gatheringPortalOpen, closeAbout]);
+
   useEffect(() => {
     if (!aboutOpen) return;
     restoreFocus.current = document.activeElement as HTMLElement | null;
@@ -426,8 +460,11 @@ export function AboutRoom() {
   }, [aboutOpen]);
 
   if (!aboutOpen) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  /* the same body-level law as the tour — the About room floats above
+     every portal the house carries */
+  return createPortal(
     <div
       className="fixed inset-0 z-[94] flex items-start justify-center overflow-y-auto p-3 sm:p-6"
       role="dialog"
@@ -572,6 +609,7 @@ export function AboutRoom() {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

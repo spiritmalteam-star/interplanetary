@@ -177,7 +177,7 @@ export async function speakReplyGift(
     transmission?: unknown;
     vision?: unknown;
     error?: unknown;
-    omni?: { taskId?: unknown; needsApproval?: unknown };
+    omni?: { taskId?: unknown; needsApproval?: unknown; steps?: unknown };
   } | null;
   const raw = field === "reply" ? d?.reply : d?.transmission;
   const reply = typeof raw === "string" ? raw.trim() : "";
@@ -187,9 +187,22 @@ export async function speakReplyGift(
     );
   }
   const omniRaw = d?.omni;
+  /* THE LEDGER'S OWN SHAPE — the staged work rides with its steps as
+     they truly ran (an absent ledger is an honest empty one, never a
+     crash: the confirm card reads from this). */
+  const omniSteps: { tool: string; status: string; name: string }[] =
+    omniRaw && typeof omniRaw === "object" && Array.isArray((omniRaw as { steps?: unknown }).steps)
+      ? ((omniRaw as { steps: { tool?: unknown; status?: unknown; name?: unknown }[] }).steps
+          .filter((s) => s && typeof s === "object" && typeof s.tool === "string")
+          .map((s) => ({
+            tool: String(s.tool),
+            status: typeof s.status === "string" ? s.status : "pending",
+            name: typeof s.name === "string" ? s.name : "",
+          })))
+      : [];
   const omni =
     omniRaw && typeof omniRaw === "object" && typeof omniRaw.taskId === "string"
-      ? { taskId: omniRaw.taskId, needsApproval: omniRaw.needsApproval === true }
+      ? { taskId: omniRaw.taskId, needsApproval: omniRaw.needsApproval === true, steps: omniSteps }
       : null;
   return {
     text: reply,
