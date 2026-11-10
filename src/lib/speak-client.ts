@@ -143,7 +143,7 @@ export async function speakReplyGift(
   body: unknown,
   field: "reply" | "transmission",
   fallback: string
-): Promise<{ text: string; vision: string | null }> {
+): Promise<{ text: string; vision: string | null; omni: { taskId: string; needsApproval: boolean } | null }> {
   const attempt = async (): Promise<{ res: Response; data: unknown }> => {
     const res = await speakDoor(url, {
       method: "POST",
@@ -177,6 +177,7 @@ export async function speakReplyGift(
     transmission?: unknown;
     vision?: unknown;
     error?: unknown;
+    omni?: { taskId?: unknown; needsApproval?: unknown };
   } | null;
   const raw = field === "reply" ? d?.reply : d?.transmission;
   const reply = typeof raw === "string" ? raw.trim() : "";
@@ -185,8 +186,50 @@ export async function speakReplyGift(
       typeof d?.error === "string" && d.error ? d.error : fallback
     );
   }
+  const omniRaw = d?.omni;
+  const omni =
+    omniRaw && typeof omniRaw === "object" && typeof omniRaw.taskId === "string"
+      ? { taskId: omniRaw.taskId, needsApproval: omniRaw.needsApproval === true }
+      : null;
   return {
     text: reply,
     vision: typeof d?.vision === "string" && d.vision.trim() ? d.vision.trim() : null,
+    omni,
   };
+}
+
+/** M.E. PRIME'S CONFIRMATION HAND — a consequential step is staged and
+    waits for the visitor's explicit yes: one toast, one Confirm hand,
+    the approval crossing through the same door. Nothing acts without
+    this press — the law of the house. */
+export function offerOmniConfirm(taskId: string): void {
+  if (typeof window === "undefined") return;
+  import("sonner")
+    .then(({ toast }) => {
+      toast("M.E. Prime awaits your yes", {
+        description:
+          "One consequential step is staged — confirm to let it act. Nothing moves without you.",
+        duration: 20000,
+        action: {
+          label: "Confirm",
+          onClick: () => {
+            void fetch("/api/transmission", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query: "confirm", mode: "omni", approveTaskId: taskId }),
+            })
+              .then((r) => r.json())
+              .then((d: { transmission?: string; error?: string }) => {
+                if (d?.transmission) {
+                  toast.success(d.transmission.slice(0, 240));
+                } else {
+                  toast.error(d?.error || "The confirmation could not cross — press once more.");
+                }
+              })
+              .catch(() => toast.error("The confirmation could not cross — press once more."));
+          },
+        },
+      });
+    })
+    .catch(() => undefined);
 }

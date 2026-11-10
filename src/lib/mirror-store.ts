@@ -237,6 +237,7 @@ export type ToolTabKey =
    own field — the discovery voice, chosen from the crown's own
    HyperX hand. */
 export type LandingScopeKey =
+  | "omni"
   | "mirror"
   | "interplanetary"
   | "quantum"
@@ -245,6 +246,7 @@ export type LandingScopeKey =
   | "hyperx";
 
 export const LANDING_SCOPES: LandingScopeKey[] = [
+  "omni",
   "mirror",
   "interplanetary",
   "quantum",

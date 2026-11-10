@@ -87,6 +87,7 @@ import {
   ENERGY_NOTICE,
   EnergyError,
   speakReplyGift,
+  offerOmniConfirm,
 } from "@/lib/speak-client";
 import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
@@ -1374,7 +1375,7 @@ async function speakWithTransmission(
      story) — both speaking through /api/transmission's own doors.
      "hyperx" is the discovery voice — its own mode through the same
      door (the server carries the HyperX specialization). */
-  category: BranchId | "mirror" | "absolute" | "hyperx",
+  category: BranchId | "mirror" | "absolute" | "hyperx" | "omni",
   query: string,
   branchQuestion: string,
   transmission: string,
@@ -1590,12 +1591,18 @@ async function speakWithTransmission(
     }
   }
 
-  return speakReplyGift(
+  const gift = await speakReplyGift(
     "/api/transmission",
     transmissionBody,
     "transmission",
     "The field is quiet"
   );
+  /* THE PRIME'S OWN GATE — a staged consequential step raises the
+     confirmation hand at once; nothing acts without the visitor's yes. */
+  if (gift.omni?.needsApproval && gift.omni.taskId) {
+    offerOmniConfirm(gift.omni.taskId);
+  }
+  return gift;
 }
 
 /* ------------------- the copy hand — words kept ----------------------
@@ -4695,6 +4702,10 @@ export function BranchCanopy({
     barRef: roomHandsRef,
     hold: historyOpen,
     rebindKey: zoomQ ?? "room",
+    /* THE DESKTOP'S OWN LAW — the room's crown (the fresh-floor hand
+       among them) never sinks away on a wide screen: the visitor's
+       hands stand at the top from the first word to the last. */
+    desktopPersistent: true,
   });
 
   /* a new room opens at its own top — one quiet reset, never a jump */

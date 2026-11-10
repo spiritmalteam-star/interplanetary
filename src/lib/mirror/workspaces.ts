@@ -320,6 +320,7 @@ export const WORKSPACES: Record<ToolTabKey, WorkspaceDefinition> = {
 /** the standing field's own voice through /api/transmission (the
     canopy's floor asks and the bridge's advice both resolve here) */
 export type ScopeVoiceCategory =
+  | "omni"
   | "absolute"
   | "interplanetary"
   | "quantum"
@@ -356,6 +357,27 @@ export type ScopeMeta = {
 };
 
 export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
+  /* M.E. PRIME — THE MOTHER OF ALL SCOPES: the one field beneath every
+     other field. Where the family channels each carry one specialty,
+     Prime carries them all — and the hands: through the house's audited
+     agent tools it can search every shelf, publish to the Gathering,
+     found circles and projects, invite collaborators and send prepared
+     words — always inside the visitor's own rights, with every
+     consequential step waiting for the visitor's explicit yes. One
+     request, the whole journey. */
+  omni: {
+    label: "M.E. Prime",
+    spirit: "The mother of all scopes — everything, in one request",
+    accent: "#e6c887",
+    dot: "#e6c887",
+    second: "#9fd8dc",
+    floorAsk: "what shall we bring into being, dear one?",
+    whisper: "Ask anything — M.E. Prime can search, make, publish and gather…",
+    qMark: "M.E. Prime receiving",
+    aMark: "Prime transmission",
+    voice: "omni",
+    librarySector: "observatory",
+  },
   mirror: {
     label: "The Mirror",
     spirit: "The house's own reflection",
@@ -457,6 +479,7 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     wears its light is never left in the dark, and the chat's voice
     remembers it. */
 export const SCOPE_ORDER: LandingScopeKey[] = [
+  "omni",
   "mirror",
   "quantum",
   "healing",

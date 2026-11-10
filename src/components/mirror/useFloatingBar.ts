@@ -48,17 +48,33 @@ export function useFloatingBarAutoHide({
   /** Change to re-bind the listeners when the scroller remounts
       (the conversation is keyed by view). */
   rebindKey,
+  /** THE DESKTOP'S OWN LAW — when true, the wide screen keeps its
+      hands: on a desktop pointer (fine pointer, ≥1024px) the bar never
+      sinks away — the new chat and every room hand stand at the top
+      from the first word to the last. The phone keeps the reading
+      bar law as it always was. */
+  desktopPersistent = false,
 }: {
   rootRef: React.RefObject<HTMLElement | null>;
   barRef: React.RefObject<HTMLElement | null>;
   hold?: boolean;
   delayMs?: number;
   rebindKey?: string;
+  desktopPersistent?: boolean;
 }): boolean {
   /* whether the bar has sunk; an external hold (an open menu) raises
      it again for as long as it lasts — derived, never doubled */
   const [sank, setSank] = useState(false);
-  const hidden = sank && !hold;
+  const [desktop, setDesktop] = useState(false);
+  useEffect(() => {
+    if (!desktopPersistent) return;
+    const mq = window.matchMedia("(min-width: 1024px) and (pointer: fine)");
+    const apply = () => setDesktop(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [desktopPersistent]);
+  const hidden = sank && !hold && !desktop;
 
   const timerRef = useRef<number | null>(null);
   const hoverRef = useRef(false);

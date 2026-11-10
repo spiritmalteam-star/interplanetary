@@ -41,6 +41,48 @@ export const MIRROR_ENTITY_AGENT: AgentManifest = {
 };
 
 /**
+ * M.E. PRIME — the mother of all scopes: the house's one general field
+ * that plans and acts through the full audited tool surface, strictly
+ * inside the authorizing visitor's own rights, with every consequential
+ * step parked at the human approval gate.
+ */
+export const ME_PRIME_AGENT: AgentManifest = {
+  agentKey: "me-prime",
+  name: "M.E. Prime",
+  description:
+    "The mother of all scopes: understands the visitor's intention across the whole house and acts through the audited tools — searching, publishing, founding circles and projects, inviting, sending — always within the visitor's own rights, with consequential steps awaiting the visitor's explicit yes.",
+  version: "1.0.0",
+  capabilities: [
+    "understand_intention_across_scopes",
+    "search_every_public_shelf",
+    "publish_to_gathering",
+    "found_circles_and_projects",
+    "invite_and_send_prepared",
+  ],
+  supportedTasks: ["find_collaborators", "found_circle", "open_project", "publish_creation", "summarize_discussion", "search_creations"],
+  toolDependencies: [
+    "search_public_creations",
+    "search_people",
+    "search_circles",
+    "get_public_profile",
+    "get_publication",
+    "search_knowledge",
+    "get_project",
+    "rank_collaborators",
+    "publish_transmission",
+    "create_circle",
+    "create_project",
+    "update_project",
+    "invite_collaborator",
+    "send_message",
+    "get_task_status",
+    "cancel_task",
+  ],
+  permissions: ["search:public", "read:public", "read:own", "publish:own", "write:circles", "write:projects", "write:messages", "tasks:manage"],
+  modelConfig: { persona: "me-prime", temperature: 0.7 },
+};
+
+/**
  * An operator agent demonstrates the delegated pattern: it may act on a
  * human's behalf through tools that write — but only when the task that
  * summons it was created by that human, and every step is audited.
@@ -69,7 +111,7 @@ export const STEWARD_AGENT: AgentManifest = {
   permissions: ["search:public", "read:public", "read:own", "write:circles", "write:projects", "write:messages", "tasks:manage"],
 };
 
-const BUILTIN_MANIFESTS: AgentManifest[] = [MIRROR_ENTITY_AGENT, STEWARD_AGENT];
+const BUILTIN_MANIFESTS: AgentManifest[] = [MIRROR_ENTITY_AGENT, ME_PRIME_AGENT, STEWARD_AGENT];
 
 /** Every declared tool dependency must actually exist — a manifest that lies cannot register. */
 function validateManifest(m: AgentManifest): string[] {
@@ -114,7 +156,7 @@ export async function ensureAgentRegistrySeeded(): Promise<void> {
         toolDependencies: JSON.stringify(manifest.toolDependencies),
         permissions: JSON.stringify(manifest.permissions),
         modelConfig: manifest.modelConfig ? JSON.stringify(manifest.modelConfig) : null,
-        status: manifest.agentKey === "mirror-entity" ? "active" : "inactive",
+        status: manifest.agentKey === "mirror-entity" || manifest.agentKey === "me-prime" ? "active" : "inactive",
       },
       update: {
         name: manifest.name,
