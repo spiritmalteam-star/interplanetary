@@ -1,3 +1,13 @@
+// ---------------------------------------------------------------------------
+// THIS SCHEMA IS THE CLOUD TWIN OF prisma/schema.prisma (sqlite) — GENERATED,
+// never hand-edited: scripts/select-schema.mjs derives it from the canonical
+// file on every postgres build, so the two can never drift again. Every
+// model, every field, every index is the canonical one; only the datasource
+// provider below is swapped. (A hand-kept twin once drifted behind the
+// canonical shapes and the cloud's client lost its accessors — every passage
+// that touched them fell with "Cannot read properties of undefined".)
+// ---------------------------------------------------------------------------
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -22,12 +32,6 @@ datasource db {
 //  - Subscription / Payment → Stripe is the source of truth for money
 //  - ApiKey → hashed at rest, prefix shown, full secret seen once
 //  - ProcessedEvent → webhook idempotency; the same event never pays twice
-// ---------------------------------------------------------------------------
-// THIS SCHEMA IS THE CLOUD TWIN OF prisma/schema.prisma (sqlite). The two
-// MUST carry the same shapes — every model, every field, every index. A
-// model that lives in one and rests in the other leaves the sky's own
-// client without its accessor (db.model === undefined), and every passage
-// that touches it falls with "Cannot read properties of undefined".
 // ---------------------------------------------------------------------------
 
 model User {
@@ -56,6 +60,29 @@ model User {
   marketListings  MarketListing[]
   expansion       ExpansionProfile?
   expansionEvents ExpansionEvent[]
+  gatheringPosts  GatheringPost[]
+  gatheringResonances GatheringResonance[]
+  gatheringEchoes     GatheringEcho[]
+  networkProfile              NetworkProfile? @relation("NetworkProfile")
+  networkFollowing            NetworkFollow[] @relation("NetworkFollowing")
+  networkFollowers            NetworkFollow[] @relation("NetworkFollowers")
+  networkConnectionsRequested NetworkConnection[] @relation("NetworkConnectionsRequested")
+  networkConnectionsReceived  NetworkConnection[] @relation("NetworkConnectionsReceived")
+  networkCirclesOwned         NetworkCircle[] @relation("NetworkCirclesOwned")
+  networkCircleMemberships    NetworkCircleMember[] @relation("NetworkCircleMemberships")
+  networkConversations        NetworkConversationMember[] @relation("NetworkConversations")
+  networkMessages             NetworkMessage[] @relation("NetworkMessages")
+  networkProjectsOwned        NetworkProject[] @relation("NetworkProjectsOwned")
+  networkProjectMemberships   NetworkProjectMember[] @relation("NetworkProjectMemberships")
+  networkProjectEntries       NetworkProjectEntry[] @relation("NetworkProjectEntries")
+  networkLibraryContributions NetworkLibraryItem[] @relation("NetworkLibraryContributions")
+  networkNotifications        NetworkNotification[] @relation("NetworkNotifications")
+  networkBlocking             NetworkBlock[] @relation("NetworkBlocking")
+  networkBlockedBy            NetworkBlock[] @relation("NetworkBlockedBy")
+  networkReports              NetworkReport[] @relation("NetworkReports")
+  memoryItems                 MemoryItem[]
+  networkMirrorSuggested      NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggested")
+  agentTasks                  AgentTask[]
 }
 
 model LibraryEntry {
@@ -260,7 +287,8 @@ model ProcessedEvent {
 // The per-user credit pipeline (the frontier law): every passage carries
 // its own wallet, purchases land here instantly through Stripe's signed
 // webhooks, and every AI operation the five gated doors serve is weighed
-// against it BEFORE it runs. The allowed values are the law written here:
+// against it BEFORE it runs. SQLite keeps no enums — the allowed values
+// are the law written here:
 //   planTier    : FREE | SEEKER | OBSERVATORY_PRO
 //   actionType  : CHAT | AKASHIC | ART_X | LIGHT_CODES | DREAM_BOOK |
 //                 SUBSCRIPTION_GRANT | TOPUP_PURCHASE
@@ -396,12 +424,12 @@ model ExpansionProfile {
 }
 
 model ExpansionEvent {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kind      String // pick | transmission | grow
-  scope     String?
-  movement  String?
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind     String // pick | transmission | grow
+  scope    String?
+  movement String?
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
@@ -529,6 +557,30 @@ model CreationArtifact {
 }
 
 // ---------------------------------------------------------------------------
+// THE WORKS IN MOTION — the visitor's own hall of carrying processes: every
+// long weaving that has begun keeps its honest progress here, so a page
+// turned away never loses the work, and a failed press may be asked to rise
+// again. The Profile's "Works in Motion" room reads this hall and speaks it.
+// ---------------------------------------------------------------------------
+model ProcessJob {
+  id        String   @id @default(cuid())
+  userId    String // the visitor's own id (a signed keeper, or the anon cookie's user row)
+  kind      String // "hyperx-pdf" — the deep research press (more kinds may follow)
+  title     String   @default("") // the work's own name, spoken in the hall
+  subtitle  String? // one honest line beneath the name (the question, the topic)
+  status    String   @default("running") // running | done | failed
+  progress  Int      @default(0) // 0..100
+  stage     String? // the stage the work stands at, spoken plainly
+  input     String   @default("{}") // JSON: everything the work needs to rise again (resume)
+  result    String? // JSON: what the work made (libraryId, filename, words, pages)
+  error     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
 // THE KEEPER'S OWN CONSOLE — live platform configuration. Prices, packs and
 // service switches the administrator may tune without a redeploy; every row
 // remembers who last moved it. The code's defaults stand whenever a row
@@ -539,4 +591,435 @@ model PlatformConfig {
   value     Json
   updatedBy String? // the admin email that last moved this row
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// THE GATHERING — the house's shared hall: where individual reflections
+// meet, inspire, challenge and enrich one another. Not a social network
+// attached to a Mirror — the existing Mirror experience expanding into a
+// shared human environment. Every post keeps its maker's name; nothing
+// is ever published without its maker's explicit yes; no rankings, no
+// vanity metrics — only resonance (a tuning, not a trophy) and echoes
+// (a response, not a comment section).
+// ---------------------------------------------------------------------------
+model GatheringPost {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind           String   // reflection | creation | dream | music | book | artwork | discovery | question
+  title          String
+  body           String
+  sector         String?  // the room the offering came from (dreambook, lightcodes, artx, quantum, healx, book, hyperx, manifest, invent)
+  resonanceCount Int      @default(0)
+  echoCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  circleId       String? // hung inside a circle, or in the open hall when null
+  circle         NetworkCircle? @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  tags           String? // comma-separated threads of meaning
+  projectSeeds   NetworkProject[] @relation("NetworkProjectSeeds")
+  mirrorSuggestions NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggestions")
+  resonances     GatheringResonance[]
+  echoes         GatheringEcho[]
+
+  /* CONTEXTUAL PUBLISHING — every offering remembers where it was born.
+     sourceId + sourcePortal identify the original creation (LibraryEntry
+     or MusicTrack); the publication carries its own snapshot fields so a
+     private source record is never exposed by reading the hall. */
+  sourcePortal String? // artx | music | book | dreambook | hyperx | channeling | invent | manifest
+  sourceType   String? // artwork | music | book | story | dream | research | exploration | transmission | intention | invention
+  sourceId     String? // LibraryEntry.id or MusicTrack.id — provenance only, never fetched for display
+  refKind      String? // library | music — which table holds the source
+  refUrl       String? // playable / viewable media reference owned by the source
+  cover        String? // publication cover image (data URL or asset path)
+  visibility   String  @default("public") // public | circle | connections | draft
+  epistemic    String? // established | hypothesis | interpretation | creative — the Knowledge distinction
+  status       String  @default("published") // published | removed (moderation)
+
+  @@unique([userId, sourcePortal, sourceId]) // publication idempotency — one source, one offering per maker
+  @@index([createdAt])
+  @@index([circleId])
+  @@index([visibility])
+  @@index([sourceId])
+}
+
+model GatheringResonance {
+  id        String        @id @default(cuid())
+  postId    String
+  post      GatheringPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([postId, userId])
+}
+
+model GatheringEcho {
+  id        String        @id @default(cuid())
+  postId    String
+  post      GatheringPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime      @default(now())
+
+  @@index([postId, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// THE LIVING EVOLUTION NETWORK — the Gathering Room's social layer.
+//
+// An extension, never a replacement: the same User rows, the same sessions,
+// the same honesty laws. People connect through what they think, discover,
+// imagine, create and contribute. M.E. facilitates; it never rules.
+// ---------------------------------------------------------------------------
+
+// the creator's own introduction — richer profiles, one per keeper
+model NetworkProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation("NetworkProfile", fields: [userId], references: [id], onDelete: Cascade)
+  bio         String?  // the personal introduction, the maker's own words
+  interests   String?  // comma-separated fields of curiosity
+  disciplines String?  // comma-separated creative disciplines
+  visibility  String   @default("public") // public | private
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// quiet following — a path of attention, never a popularity score
+model NetworkFollow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("NetworkFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("NetworkFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
+}
+
+// meaningful introductions — requested, consented, never automatic
+model NetworkConnection {
+  id          String   @id @default(cuid())
+  requesterId String
+  requester   User     @relation("NetworkConnectionsRequested", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String
+  addressee   User     @relation("NetworkConnectionsReceived", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      String   @default("pending") // pending | accepted
+  note        String?  // the introduction's own words
+  viaMirror   Boolean  @default(false) // M.E. sensed the resonance; a human chose to open the door
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([requesterId, addresseeId])
+  @@index([addresseeId])
+}
+
+// circles — communities around interests, disciplines and shared projects
+model NetworkCircle {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  focus       String   // consciousness | art | music | science | philosophy | dreams | humanity | technology | projects
+  visibility  String   @default("public") // public | invite
+  ownerId     String
+  owner       User     @relation("NetworkCirclesOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  members     NetworkCircleMember[]
+  posts       GatheringPost[]
+
+  @@index([focus])
+}
+
+model NetworkCircleMember {
+  id        String       @id @default(cuid())
+  circleId  String
+  circle    NetworkCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation("NetworkCircleMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  role      String       @default("member") // owner | member
+  createdAt DateTime     @default(now())
+
+  @@unique([circleId, userId])
+  @@index([userId])
+}
+
+// messages — one-to-one and group conversations, participants only
+model NetworkConversation {
+  id        String   @id @default(cuid())
+  isGroup   Boolean  @default(false)
+  title     String?  // group conversations carry a name
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members   NetworkConversationMember[]
+  messages  NetworkMessage[]
+
+  @@index([updatedAt])
+}
+
+model NetworkConversationMember {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   NetworkConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User                @relation("NetworkConversations", fields: [userId], references: [id], onDelete: Cascade)
+  lastReadAt     DateTime            @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model NetworkMessage {
+  id             String              @id @default(cuid())
+  conversationId String
+  conversation   NetworkConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User                @relation("NetworkMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  body           String
+  createdAt      DateTime            @default(now())
+
+  @@index([conversationId, createdAt])
+}
+
+// collective creation — shared workspaces where ideas become works together
+model NetworkProject {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  focus       String   // book | music | artwork | research | invention | community
+  status      String   @default("open") // open | weaving | published
+  seedPostId  String?  // the idea it grew from (an evolution path's first stone)
+  seedPost    GatheringPost? @relation("NetworkProjectSeeds", fields: [seedPostId], references: [id], onDelete: SetNull)
+  ownerId     String
+  owner       User     @relation("NetworkProjectsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+  seeking     Boolean  @default(false) // the maker openly welcomes collaborators
+  requiredSkills String? // comma-separated threads a collaborator might carry
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  members     NetworkProjectMember[]
+  entries     NetworkProjectEntry[]
+  libraryItem NetworkLibraryItem?
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model NetworkProjectMember {
+  id        String         @id @default(cuid())
+  projectId String
+  project   NetworkProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation("NetworkProjectMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  role      String         @default("collaborator") // owner | collaborator
+  createdAt DateTime       @default(now())
+
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+model NetworkProjectEntry {
+  id        String         @id @default(cuid())
+  projectId String
+  project   NetworkProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User           @relation("NetworkProjectEntries", fields: [userId], references: [id], onDelete: Cascade)
+  body      String
+  createdAt DateTime       @default(now())
+
+  @@index([projectId, createdAt])
+}
+
+// the collective library — the community's growing archive, attribution kept
+model NetworkLibraryItem {
+  id         String         @id @default(cuid())
+  title      String
+  summary    String
+  category   String         // reflection | artwork | music | book | research | invention | project | discovery | question
+  tags       String?        // comma-separated threads of meaning
+  authorName String         // the maker's own name, kept forever
+  userId     String
+  user       User           @relation("NetworkLibraryContributions", fields: [userId], references: [id], onDelete: Cascade)
+  projectId  String?        // born of a shared project
+  project    NetworkProject? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  postId     String?        // grown from an offering
+  createdAt  DateTime       @default(now())
+
+  @@index([category])
+  @@index([createdAt])
+  @@unique([projectId])
+}
+
+// the bell — connection requests, echoes, invitations, M.E.'s suggestions
+model NetworkNotification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation("NetworkNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  type      String    // echo | resonance | follow | connection_request | connection_accepted | circle_join | project_entry | project_invite | message
+  actorName String
+  body      String?
+  refType   String?   // post | circle | project | conversation | connection
+  refId     String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// the quiet walls — a visitor may close a door and ask for help
+model NetworkBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("NetworkBlocking", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("NetworkBlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+model NetworkReport {
+  id         String   @id @default(cuid())
+  reporterId String
+  reporter   User     @relation("NetworkReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType String   // post | echo | user | message
+  targetId   String
+  reason     String
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// MIRROR CONNECTIONS — M.E. sensed a thematic resonance between two makers;
+// recorded only when asked for, opened only when a human chooses
+model NetworkMirrorSuggestion {
+  id        String   @id @default(cuid())
+  postId    String
+  post      GatheringPost @relation("NetworkMirrorSuggestions", fields: [postId], references: [id], onDelete: Cascade)
+  userId    String   // the kindred maker M.E. found
+  user      User     @relation("NetworkMirrorSuggested", fields: [userId], references: [id], onDelete: Cascade)
+  reason    String   // M.E.'s own words about the resonance
+  themes    String?  // the shared threads of meaning
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+/* ==================== AGENT INFRASTRUCTURE ====================
+   Registered capability, never inherited authority. An agent acts
+   only through audited tools, only inside its granted permissions,
+   and only on behalf of a human whose own rights bound every step. */
+model AgentRecord {
+  id            String   @id @default(cuid())
+  agentKey      String   @unique
+  name          String
+  description   String
+  version       String
+  capabilities  String   @default("[]") // JSON array of capability names
+  supportedTasks String  @default("[]") // JSON array of task kinds
+  toolDependencies String @default("[]") // JSON array of tool names
+  permissions   String   @default("[]") // JSON array of granted permission keys
+  modelConfig   String?  // JSON model configuration
+  status        String   @default("inactive") // active | inactive | suspended
+  ownerType     String   @default("system") // system | service
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tasks         AgentTask[]
+  grants        AgentGrant[]
+}
+
+model AgentGrant {
+  id         String   @id @default(cuid())
+  agentId    String
+  agent      AgentRecord @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  permission String   // tool-level permission key, least privilege
+  scope      String?  // optional resource scope qualifier
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@unique([agentId, permission])
+}
+
+model AgentTask {
+  id               String   @id @default(cuid())
+  agentId          String?
+  agent            AgentRecord? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind             String   // workflow | tool
+  name             String
+  input            String   @default("{}") // JSON task input
+  steps            String?  // JSON plan: [{key, name, tool, status, output?, error?}]
+  status           String   @default("queued") // queued | running | awaiting_approval | completed | failed | cancelled
+  progress         Int      @default(0)
+  result           String?  // JSON structured result
+  error            String?
+  idempotencyKey   String?  @unique // retries never double side effects
+  correlationId    String?
+  attempts         Int      @default(0)
+  maxAttempts      Int      @default(3)
+  approvalRequired Boolean  @default(false)
+  approvedAt       DateTime?
+  timeoutSec       Int      @default(120)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  startedAt        DateTime?
+  finishedAt       DateTime?
+
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model SystemEvent {
+  id            String   @id @default(cuid())
+  eventId       String   @unique // deduplication — delivery stays exactly-once
+  type          String   // transmission.completed | publication.published | ...
+  actorType     String   // user | agent | system
+  actorId       String?
+  source        String   // emitting subsystem
+  correlationId String?
+  schemaVersion String   @default("1")
+  payload       String   @default("{}") // JSON
+  deadLetter    Boolean  @default(false)
+  deliveredAt   DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([type, createdAt])
+}
+
+model AuditRecord {
+  id           String   @id @default(cuid())
+  actorType    String   // user | agent | system
+  actorId      String?
+  action       String   // publication.publish | tool.invoke | task.run ...
+  resourceType String?
+  resourceId   String?
+  meta         String?  // JSON — never private content, only references
+  createdAt    DateTime @default(now())
+
+  @@index([action, createdAt])
+}
+
+// ---------------------------------------------------------------------------
+//  THE M.E. MEMORY — the five domains, additive (the runtime's gentle shelf).
+//  domain: personal | conversation | project | community | public
+//  Every row belongs to ONE owner; personal/conversation/project are the
+//  writable shelves, community/public are the future knowledge graph's.
+// ---------------------------------------------------------------------------
+model MemoryItem {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  domain    String
+  scopeKey  String?
+  content   String
+  sourceRef String?
+  weight    Int       @default(1)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, domain, scopeKey])
 }

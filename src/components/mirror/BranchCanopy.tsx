@@ -81,6 +81,19 @@ const ScopeLabDeck = dynamic(
   () => import("./ScopeLabDeck").then((m) => ({ default: m.ScopeLabDeck })),
   { ssr: false, loading: () => null }
 );
+
+/* THE PRIME'S OWN ROOM — the mother of all scopes wears her laboratory
+   light (the cyberpunk grid, the scanning line, the liquid lab border,
+   the reactor rings) and her compact console of real hands; both ride
+   as their own page of code, never with the cover. */
+const PrimeAmbient = dynamic(
+  () => import("./PrimeAmbient").then((m) => ({ default: m.PrimeAmbient })),
+  { ssr: false, loading: () => null }
+);
+const PrimeDeck = dynamic(
+  () => import("./PrimeAmbient").then((m) => ({ default: m.PrimeDeck })),
+  { ssr: false, loading: () => null }
+);
 import { blendVisualRequest, isVisualIntent } from "@/lib/visual-intent";
 import { ZoomableLightbox } from "./ZoomableLightbox";
 import {
@@ -6226,6 +6239,13 @@ export function BranchCanopy({
 
         {/* --------------------- the walkable family --------------------- */}
       <div className="relative min-h-0 flex-1">
+        {/* THE PRIME'S OWN LIGHT — the mother of all scopes dresses her
+            room in the laboratory's own night: the passive layer stands
+            beneath every word of the house, first in the family's own
+            stacking, pointer-blind and honest. */}
+        {landingScope === "omni" && (
+          <PrimeAmbient quiet={floorQuiet} busy={landingBusy} />
+        )}
         {/* THE CENTRE IS CLEAR — the house's logo no longer stands at
             the heart of the realm: it lives nowhere now — the mark has
             left the crown too. The theme pages keep the genealogy tree. */}
@@ -6275,6 +6295,10 @@ export function BranchCanopy({
                 overscrollBehavior: "auto",
                 touchAction: "pan-y",
                 WebkitOverflowScrolling: "touch",
+                /* THE PRIME'S OWN FRAME — the laboratory's status strip
+                   stands at the very top of the room: the quiet floor
+                   keeps its first breath below it, never beneath it */
+                paddingTop: landingScope === "omni" ? 30 : undefined,
               }}
             >
               <div className="pointer-events-none m-auto flex max-h-full w-full flex-col items-center gap-2 px-6 pb-2 pt-1">
@@ -6327,6 +6351,16 @@ export function BranchCanopy({
                     disabled={landingBusy}
                   />
                 )}
+              {/* THE PRIME'S OWN CONSOLE — the mother of all scopes keeps
+                  her compact deck on the quiet floor: the real hands
+                  named in one row, the approval law in one line, and
+                  three prepared asks that each walk a true tool path. */}
+              {floorQuiet && landingScope === "omni" && (
+                <PrimeDeck
+                  onAsk={(q) => sendFromPanel(q, null)}
+                  disabled={landingBusy}
+                />
+              )}
               {/* THE MIRROR'S OWN SUGGESTIONS — five first doors, drawn
                   fresh at every arrival, with the small hand beneath
                   pouring five new ones at every touch. They stand only
@@ -7207,7 +7241,7 @@ export function BranchCanopy({
                                breath by breath, or a finished one) shows
                                its words at once; the ladder stands only
                                for a wait that has not spoken yet. */
-                            <div className="flex items-start gap-1">
+                            <div className="flex items-start gap-1 max-sm:[&:has(> .sv-mark)]:flex-col">
                               {realm && SCOPE_META[landingScope]?.aMark && (
                                 <p className="sv-mark sv-mark-a">{t(SCOPE_META[landingScope].aMark!)}</p>
                               )}
