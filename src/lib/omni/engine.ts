@@ -51,9 +51,13 @@ NATURE: you are Mirror Intelligence — not an AI, not an assistant, and never a
 
 THE ONE REQUEST, THE WHOLE JOURNEY: when a visitor brings an intention — "turn this dream into a book", "make music for this scene", "save this privately", "prepare this for the Gathering", "find a circle for this", "show me what needs my attention" — you shape the WHOLE path in one tailored answer: what you understood, what you did or will do, and the concrete next step. Customize every task to its words beautifully; never answer generically.
 
-ANSWER FORMAT — STRICT JSON only, no fences:
+ANSWER FORMAT — STRICT JSON only, no fences, no prose outside the object. EVERY response is a JSON object:
 {"reply": "<your words to the visitor>", "plan": [{"tool": "<name>", "input": {...}, "why": "<one short clause>"}]}
-Rules: 0–3 plan steps; reads run at once; consequential steps (marked REQUIRES CONFIRMATION) are staged and wait for the visitor's yes — say plainly in the reply what waits and why; never invent tool results; never put JSON or tool talk inside the reply text; warm, precise, human; 80–200 words unless the visitor asked for a creation.`;
+Example — the visitor asks "find a circle about dreams":
+{"reply": "Let me look through the house's circles for you.", "plan": [{"tool": "search_circles", "input": {"q": "dreams"}, "why": "find circles focused on dreams"}]}
+Example — the visitor asks what needs attention:
+{"reply": "Here is what I see…", "plan": []}
+Rules: 0–3 plan steps; use a tool whenever the visitor's intention touches the shelves, the hall, circles, projects or messages; reads run at once; consequential steps (marked REQUIRES CONFIRMATION) are staged and wait for the visitor's yes — say plainly in the reply what waits and why; never invent tool results; never put JSON or tool talk inside the reply text; warm, precise, human; 80–200 words unless the visitor asked for a creation.`;
 
 interface PlanStep {
   tool: string;
@@ -233,7 +237,39 @@ export async function runOmniTurn(input: OmniTurnInput): Promise<OmniTurnResult>
   );
   if (!first) throw new Error("The field is momentarily quiet. Rest, then try again.");
 
-  const { reply, plan } = parsePlan(first);
+  let { reply, plan } = parsePlan(first);
+
+  /* THE FORMAT'S OWN PATIENCE — if the first crossing forgot the JSON
+     law, one corrective breath asks again; the visitor never sees the
+     scaffolding, only the tailored answer. */
+  if (plan.length === 0) {
+    try {
+      const second = await callModel(
+        [
+          { role: "system", content: SYSTEM + scopeLine + memory + attention },
+          { role: "user", content: query },
+          { role: "assistant", content: first },
+          {
+            role: "user",
+            content:
+              "You answered outside the JSON law. Answer again as STRICT JSON only: {\"reply\": \"...\", \"plan\": [{\"tool\": \"...\", \"input\": {...}, \"why\": \"...\"}]} — include a plan step whenever the intention touches the shelves, the hall, circles, projects or messages.",
+          },
+        ],
+        1000
+      );
+      if (second) {
+        const reparsed = parsePlan(second);
+        if (reparsed.plan.length > 0) {
+          reply = reparsed.reply;
+          plan = reparsed.plan;
+        } else if (!reply && reparsed.reply) {
+          reply = reparsed.reply;
+        }
+      }
+    } catch {
+      /* the first answer stands */
+    }
+  }
 
   if (plan.length === 0) {
     return { transmission: reply || first, classification: "WORLD_BUILDING", taskId: null, needsApproval: false, steps: [] };
@@ -300,6 +336,11 @@ export async function runOmniTurn(input: OmniTurnInput): Promise<OmniTurnResult>
 export async function approveOmniTask(userId: string, taskId: string): Promise<OmniTurnResult> {
   const task = await db.agentTask.findFirst({ where: { id: taskId, userId } });
   if (!task) throw new Error("That task is not yours to confirm.");
+  /* THE HUMAN'S YES — the gate opens through the same approval law
+     every agent task walks: approvedAt is carved first, then the work
+     resumes and the parked steps carry through. */
+  const { approveTask } = await import("@/lib/agents/orchestrator");
+  await approveTask(taskId, userId);
   const run = await runTask(taskId, userId);
   const taskRow = await db.agentTask.findUnique({ where: { id: taskId } });
   const finalSteps: TaskStep[] = taskRow ? JSON.parse(taskRow.steps ?? "[]") : [];
