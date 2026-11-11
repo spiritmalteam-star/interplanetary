@@ -6,6 +6,7 @@ import {
   BookOpen,
   CircleQuestionMark,
   Feather,
+  Flame,
   MoonStar,
   Music,
   Sparkles,
@@ -28,7 +29,8 @@ export type GatheringKind =
   | "music"
   | "book"
   | "discovery"
-  | "question";
+  | "question"
+  | "intention";
 
 export const KIND_META: Record<GatheringKind, { icon: LucideIcon; accent: string }> = {
   reflection: { icon: Feather, accent: "#8a6f46" },
@@ -38,6 +40,7 @@ export const KIND_META: Record<GatheringKind, { icon: LucideIcon; accent: string
   book: { icon: BookOpen, accent: "#8a6d3b" },
   discovery: { icon: Atom, accent: "#0d9488" },
   question: { icon: CircleQuestionMark, accent: "#9a6b8a" },
+  intention: { icon: Flame, accent: "#b45309" },
 };
 
 /* The composer's own kinds — conversations only. "creation" stays in
@@ -46,6 +49,7 @@ export const KIND_META: Record<GatheringKind, { icon: LucideIcon; accent: string
    the rooms where they were born, never composed here. */
 export const KIND_ORDER: GatheringKind[] = [
   "reflection",
+  "intention",
   "dream",
   "music",
   "book",
@@ -61,6 +65,7 @@ export const KIND_OFFERING_LABEL: Record<GatheringKind, string> = {
   book: "A written work",
   discovery: "A discovery",
   question: "A question",
+  intention: "An intention",
 };
 
 export const KIND_FILTER_LABEL: Record<GatheringKind, string> = {
@@ -71,6 +76,7 @@ export const KIND_FILTER_LABEL: Record<GatheringKind, string> = {
   book: "Books",
   discovery: "Discoveries",
   question: "Questions",
+  intention: "Intentions",
 };
 
 export const FOCUS_LABELS: Record<string, string> = {
@@ -100,6 +106,9 @@ export interface GatheringPost {
   title: string;
   body: string;
   sector: string | null;
+  mediaUrl?: string | null;
+  mediaType?: string | null;
+  mediaName?: string | null;
   tags: string[];
   circle: { id: string; name: string } | null;
   resonanceCount: number;
@@ -220,12 +229,9 @@ export interface MeState {
   };
 }
 
-/* THE VIBE — the gathering's two quantum fields. "purple" is the deep
-   violet field (lavender stars); "gold" is the ink-dark ember sky with
-   the gold constellation. The choice rests on the visitor's device. */
-export type GathVibe = "purple" | "gold";
-
-export const VIBE_STORAGE_KEY = "mirror-gathering-vibe";
+/* THE VIBE — retired. The hall wears the house's own weather now:
+   porcelain in the daylight, the site's own crystal dark at night.
+   No second palette, no constellation — the flicker left with it. */
 
 /* the quiet fetch every door speaks through */
 export async function netFetch<T>(
@@ -266,7 +272,7 @@ export function MakerMark({ name, size = 30 }: { name: string; size?: number }) 
   return (
     <span
       aria-hidden="true"
-      className="flex shrink-0 items-center justify-center rounded-full border border-white/90 font-[family-name:var(--font-cinzel)] font-semibold text-[#8a6f46]"
+      className="gp-pearl flex shrink-0 items-center justify-center rounded-full border border-white/90 font-[family-name:var(--font-cinzel)] font-semibold text-[#8a6f46]"
       style={{
         width: size,
         height: size,
@@ -296,6 +302,11 @@ export const GP_GHOST =
 export const GP_INPUT =
   "w-full rounded-[16px] border border-[#e4d9bd] bg-white/80 px-4 py-2.5 text-[13px] leading-relaxed text-[#4c4436] outline-none transition-colors duration-300 placeholder:text-[#b3a68d] focus:border-[#cbb98d] [overflow-wrap:anywhere]";
 
+/* the small icon hand — a compact round porcelain button that speaks
+   through its title and its aria-label, not through long words */
+export const GP_ICON_BTN =
+  "focus-glow flex shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428] disabled:opacity-50";
+
 /* an empty room speaks honestly */
 export function EmptyRoom({
   icon: Icon,
@@ -308,7 +319,7 @@ export function EmptyRoom({
     <div className="flex flex-col items-center gap-3 py-16 text-center">
       <span
         aria-hidden="true"
-        className="flex size-12 items-center justify-center rounded-[16px] border border-white/90"
+        className="gp-pearl flex size-12 items-center justify-center rounded-[16px] border border-white/90"
         style={{
           background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)",
           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",

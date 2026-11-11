@@ -29,9 +29,17 @@ export const GATHERING_KINDS = [
   "book",
   "discovery",
   "question",
+  "intention", // the seeker's own vow — a purpose spoken into the hall
   // publication kinds — hung by the publication house, not by a composer
   "artwork",
 ] as const;
+
+export const GATHERING_MEDIA_TYPES = ["image", "video"] as const;
+export type GatheringMediaType = (typeof GATHERING_MEDIA_TYPES)[number];
+
+export function isGatheringMediaType(v: unknown): v is GatheringMediaType {
+  return typeof v === "string" && (GATHERING_MEDIA_TYPES as readonly string[]).includes(v);
+}
 
 export type GatheringKind = (typeof GATHERING_KINDS)[number];
 
@@ -106,6 +114,9 @@ export async function GET(req: NextRequest) {
       title: p.title,
       body: p.body,
       sector: p.sector,
+      mediaUrl: p.mediaUrl,
+      mediaType: p.mediaType,
+      mediaName: p.mediaName,
       tags: (p.tags ?? "")
         .split(",")
         .map((s) => s.trim())
@@ -161,13 +172,19 @@ export async function POST(req: NextRequest) {
       sector?: unknown;
       tags?: unknown;
       circleId?: unknown;
+      mediaUrl?: unknown;
+      mediaType?: unknown;
+      mediaName?: unknown;
     } | null;
     if (!raw) {
       return NextResponse.json({ error: "The offering arrived unreadable." }, { status: 400 });
     }
 
     if (!isGatheringKind(raw.kind)) {
-      return NextResponse.json({ error: "Choose one of the seven intentions." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Choose the offering's own intention." },
+        { status: 400 }
+      );
     }
 
     const title = typeof raw.title === "string" ? raw.title.trim() : "";
@@ -198,6 +215,26 @@ export async function POST(req: NextRequest) {
             .join(",")
         : null;
 
+    /* the offering's own picture or film — only the house's shelf may
+       be named; a foreign address never enters the hall */
+    let media: { url: string; type: string; name: string | null } | null = null;
+    if (typeof raw.mediaUrl === "string" && raw.mediaUrl.startsWith("/gathering-media/")) {
+      if (!isGatheringMediaType(raw.mediaType)) {
+        return NextResponse.json(
+          { error: "The offering's media wears an unknown shape." },
+          { status: 400 }
+        );
+      }
+      media = {
+        url: raw.mediaUrl.slice(0, 200),
+        type: raw.mediaType,
+        name:
+          typeof raw.mediaName === "string" && raw.mediaName.trim().length >= 1
+            ? raw.mediaName.trim().slice(0, 120)
+            : null,
+      };
+    }
+
     /* a circle's wall — only a member hangs inside it */
     let circleId: string | null = null;
     if (typeof raw.circleId === "string" && raw.circleId.length > 0) {
@@ -223,6 +260,9 @@ export async function POST(req: NextRequest) {
         sector,
         tags,
         circleId,
+        ...(media
+          ? { mediaUrl: media.url, mediaType: media.type, mediaName: media.name }
+          : {}),
       },
     });
 
@@ -254,6 +294,9 @@ export async function POST(req: NextRequest) {
           title: created.title,
           body: created.body,
           sector: created.sector,
+          mediaUrl: created.mediaUrl,
+          mediaType: created.mediaType,
+          mediaName: created.mediaName,
           tags: (created.tags ?? "")
             .split(",")
             .map((s) => s.trim())

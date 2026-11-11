@@ -22,11 +22,9 @@ import { cn } from "@/lib/utils";
 import {
   type CircleCard,
   type GatheringPost,
-  type GathVibe,
   type MeState,
   MakerMark,
   netFetch,
-  VIBE_STORAGE_KEY,
 } from "./shared";
 import FeedSection from "./FeedSection";
 import DiscoverSection from "./DiscoverSection";
@@ -60,18 +58,12 @@ import PublishPickerSheet from "./PublishPickerSheet";
 /*  a transmission's own line. The Gathering publishes finished work,  */
 /*  it does not make it: there is no create street, no second studio.  */
 /*                                                                     */
-/*  THE PORCELAIN WEATHER — milk-white and cream, clean and three-     */
-/*  dimensional. THE MIRROR SPIRIT — the network stands beside the     */
-/*  house, never over it: no entanglement counts, no vanity metrics,   */
-/*  no ranks. M.E. facilitates; humans choose.                         */
-/*                                                                     */
-/*  THE VIBE — the gathering's quantum identity pass. One switch in    */
-/*  the profile room recolors the whole portal: the PURPLE FIELD       */
-/*  (deep violet gradients, lavender stars) or the GOLD CONSTELLATION  */
-/*  (an ink-dark ember sky, gold threads). Both vibes keep the text    */
-/*  near-white and high-contrast; the accents live on borders, rings,  */
-/*  glows and hands. The choice rests on the visitor's own device      */
-/*  (localStorage "mirror-gathering-vibe") — no account round-trip.    */
+/*  THE HALL'S OWN WEATHER — two faces of one house: porcelain in the  */
+/*  daylight (milk-white, cream, three-dimensional), the site's own    */
+/*  lit-crystal dark at night. The gathering drinks the same tokens    */
+/*  the whole Reflect Me house drinks, so dark mode here is dark mode  */
+/*  everywhere. No second palette, no switch, no constellation — the   */
+/*  flicker left with it.                                              */
 /* ------------------------------------------------------------------ */
 
 type Section =
@@ -94,294 +86,181 @@ const SECTIONS: Array<{ key: Section; label: string; icon: LucideIcon }> = [
 ];
 
 /* ================================================================== */
-/*  THE VIBE ENGINE — two palettes, one law: text stays near-white     */
-/*  and readable on both fields; color lives on edges, glows, hands.   */
-/*  The vars ride the portal's root; every room below drinks from      */
-/*  them (the porcelain utilities are re-tuned in the style block).    */
+/*  THE HALL'S VARS — porcelain by day; at night the hall's own vars   */
+/*  are poured again from the site's own dark tokens, so every room    */
+/*  below reads true in both weathers without touching its classes.    */
 /* ================================================================== */
 
-const VIBE_VARS: Record<GathVibe, React.CSSProperties> = {
-  purple: {
-    "--gath": "#a78bfa",
-    "--gath-strong": "#c4b5fd",
-    "--gath-ink": "#f4effe",
-    "--gath-ink-2": "#d9cef2",
-    "--gath-ink-3": "#a99cc9",
-    "--gath-soft": "#c9b8f5",
-    "--gath-card": "#251a44",
-    "--gath-edge": "rgba(196, 181, 253, 0.20)",
-    "--gath-edge-active": "rgba(167, 139, 250, 0.62)",
-    "--gath-glow-a": "rgba(124, 92, 173, 0.38)",
-    "--gath-glow-b": "rgba(88, 60, 160, 0.30)",
-    "--gath-glow-c": "rgba(167, 139, 250, 0.18)",
-    "--gath-star": "#cfc0ff",
-    "--gath-sheet": "linear-gradient(168deg, #271b49 0%, #1e1440 55%, #191036 100%)",
-    "--gath-ok": "#6ee7b7",
-    "--gath-warn": "#fbbf24",
-    /* the gathering speaks for itself while it is open — the app's own
-       tokens are locally re-tuned so anything inside reads true */
-    "--background": "#170f2b",
-    "--foreground": "#f4effe",
-    "--card": "#251a44",
-    "--hairline": "rgba(196, 181, 253, 0.20)",
-  } as React.CSSProperties,
-  gold: {
-    "--gath": "#d4af37",
-    "--gath-strong": "#e6c96a",
-    "--gath-ink": "#f8f1de",
-    "--gath-ink-2": "#ded0af",
-    "--gath-ink-3": "#b0a17f",
-    "--gath-soft": "#e2c877",
-    "--gath-card": "#261c0e",
-    "--gath-edge": "rgba(212, 175, 55, 0.22)",
-    "--gath-edge-active": "rgba(212, 175, 55, 0.62)",
-    "--gath-glow-a": "rgba(212, 175, 55, 0.15)",
-    "--gath-glow-b": "rgba(146, 104, 22, 0.22)",
-    "--gath-glow-c": "rgba(255, 216, 120, 0.10)",
-    "--gath-star": "#ecd28a",
-    "--gath-sheet": "linear-gradient(168deg, #2a1f0f 0%, #221810 55%, #1a120b 100%)",
-    "--gath-ok": "#6ee7b7",
-    "--gath-warn": "#fbbf24",
-    /* the ember override — every token the app's widgets drink is
-       locally re-inked so the gold field keeps every word readable */
-    "--background": "#171008",
-    "--foreground": "#f8f1de",
-    "--card": "#261c0e",
-    "--hairline": "rgba(212, 175, 55, 0.22)",
-  } as React.CSSProperties,
-};
-
-/* the vibe's own re-tuning of the hall — the porcelain utilities and
-   the hall's gp-* garments are re-dressed per vibe without touching
-   the house's own stylesheet: everything here rides the portal root */
 const GATH_STYLE = `
-/* --- the fields themselves --- */
-.gath-purple .gp-sky {
-  background:
-    radial-gradient(120% 90% at 12% 0%, rgba(124, 92, 173, 0.38) 0%, rgba(124, 92, 173, 0) 55%),
-    radial-gradient(90% 70% at 88% 12%, rgba(88, 60, 160, 0.32) 0%, rgba(88, 60, 160, 0) 60%),
-    radial-gradient(110% 80% at 50% 108%, rgba(46, 28, 84, 0.92) 0%, rgba(46, 28, 84, 0) 62%),
-    linear-gradient(168deg, #201540 0%, #190f31 48%, #130b24 100%);
-}
-.gath-gold .gp-sky {
-  background:
-    radial-gradient(120% 90% at 12% 0%, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0) 55%),
-    radial-gradient(90% 70% at 88% 12%, rgba(146, 104, 22, 0.22) 0%, rgba(146, 104, 22, 0) 60%),
-    radial-gradient(110% 80% at 50% 108%, rgba(64, 44, 12, 0.88) 0%, rgba(64, 44, 12, 0) 62%),
-    linear-gradient(168deg, #1c1409 0%, #171008 48%, #110b06 100%);
+/* --- the daylight law: porcelain vars (the original hall) --- */
+.gath-hall {
+  --gath: #8a6f46;
+  --gath-strong: #a16207;
+  --gath-ink: #3d3428;
+  --gath-ink-2: #5c5344;
+  --gath-ink-3: #a2947c;
+  --gath-soft: #8a6f46;
+  --gath-card: #fffdf8;
+  --gath-edge: rgba(214, 197, 164, 0.55);
+  --gath-edge-active: rgba(178, 158, 122, 0.85);
+  --gath-glow-a: rgba(253, 250, 242, 0.9);
+  --gath-glow-b: rgba(244, 233, 210, 0.75);
+  --gath-glow-c: rgba(238, 226, 200, 0.6);
+  --gath-sheet: linear-gradient(168deg, #fffdf8 0%, #faf5e8 60%, #f4ecda 100%);
+  --gath-ok: #5f7a52;
+  --gath-warn: #b45309;
+  --gath-amber: #a16207;
+  --gath-teal: #0d9488;
+  --gath-lav: #7c5cad;
 }
 
-/* --- the porcelain garments, re-woven on the dark fields --- */
-:is(.gath-purple, .gath-gold) .gp-card {
-  background: linear-gradient(158deg, color-mix(in srgb, var(--gath-card) 88%, transparent) 0%, color-mix(in srgb, var(--gath-card) 72%, transparent) 100%);
+/* --- the night law: the hall drinks the site's own dark tokens --- */
+.dark .gath-hall {
+  --gath: #a9c3e2;
+  --gath-strong: #cfe0f2;
+  --gath-ink: #eef4fb;
+  --gath-ink-2: #d7e2f0;
+  --gath-ink-3: #b6c4d8;
+  --gath-soft: #cfe0f2;
+  --gath-card: #243459;
+  --gath-edge: rgba(168, 203, 255, 0.14);
+  --gath-edge-active: rgba(140, 190, 255, 0.45);
+  --gath-glow-a: rgba(140, 190, 255, 0.13);
+  --gath-glow-b: rgba(96, 148, 224, 0.10);
+  --gath-glow-c: rgba(168, 203, 255, 0.08);
+  --gath-sheet: linear-gradient(168deg, #243459 0%, #203054 55%, #1c2b4a 100%);
+  --gath-ok: #86c9a8;
+  --gath-warn: #f0b263;
+  --gath-amber: #e8b954;
+  --gath-teal: #6fc7bd;
+  --gath-lav: #a5b8ea;
+}
+
+/* --- the night sky — the site's own crystal ground, opaque, still --- */
+.dark .gath-hall .gp-sky {
+  background:
+    radial-gradient(120% 90% at 12% 0%, rgba(140, 190, 255, 0.09) 0%, rgba(140, 190, 255, 0) 55%),
+    radial-gradient(90% 70% at 88% 12%, rgba(96, 148, 224, 0.07) 0%, rgba(96, 148, 224, 0) 60%),
+    linear-gradient(168deg, #1c2b4a 0%, #1a2744 52%, #182341 100%);
+}
+
+/* --- the night garments: crystal glass, no blur, no flicker --- */
+.dark .gath-hall .gp-card {
+  background: linear-gradient(158deg, color-mix(in srgb, var(--gath-card) 92%, transparent) 0%, color-mix(in srgb, var(--gath-card) 78%, transparent) 100%);
   border: 1px solid var(--gath-edge);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 18px 42px -20px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 42px -20px rgba(0, 0, 0, 0.5);
 }
-:is(.gath-purple, .gath-gold) .gp-card-hover:hover {
+.dark .gath-hall .gp-card-hover:hover {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 24px 52px -22px rgba(0, 0, 0, 0.68);
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 52px -22px rgba(0, 0, 0, 0.56);
 }
-:is(.gath-purple, .gath-gold) .gp-glass {
-  background: linear-gradient(165deg, color-mix(in srgb, var(--gath-card) 82%, transparent) 0%, color-mix(in srgb, var(--gath-card) 68%, transparent) 100%);
+.dark .gath-hall .gp-glass {
+  background: linear-gradient(165deg, color-mix(in srgb, var(--gath-card) 88%, transparent) 0%, color-mix(in srgb, var(--gath-card) 76%, transparent) 100%);
   border-color: var(--gath-edge);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 16px 40px -20px rgba(0, 0, 0, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 16px 40px -20px rgba(0, 0, 0, 0.45);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
-:is(.gath-purple, .gath-gold) .gp-seg {
+.dark .gath-hall .gp-seg {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 10px 24px -14px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 10px 24px -14px rgba(0, 0, 0, 0.4);
 }
-:is(.gath-purple, .gath-gold) .gp-seg-thumb {
-  background: color-mix(in srgb, var(--gath) 24%, var(--gath-card));
+.dark .gath-hall .gp-seg-thumb {
+  background: color-mix(in srgb, var(--gath) 22%, var(--gath-card));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 2px 8px -2px rgba(0, 0, 0, 0.5);
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 2px 8px -2px rgba(0, 0, 0, 0.4);
 }
-:is(.gath-purple, .gath-gold) .gp-scroll { scrollbar-color: var(--gath-edge) transparent; }
-:is(.gath-purple, .gath-gold) .gp-scroll::-webkit-scrollbar-thumb { background: var(--gath-edge); }
+.dark .gath-hall .gp-scroll { scrollbar-color: var(--gath-edge) transparent; }
+.dark .gath-hall .gp-scroll::-webkit-scrollbar-thumb { background: var(--gath-edge); }
 
-/* --- the ink law: every porcelain word re-inks, high-contrast --- */
-:is(.gath-purple, .gath-gold) .text-\\[\\#3d3428\\],
-:is(.gath-purple, .gath-gold) .text-\\[\\#4c4436\\],
-:is(.gath-purple, .gath-gold) .text-\\[\\#5c5344\\] { color: var(--gath-ink); }
-:is(.gath-purple, .gath-gold) .text-\\[\\#7c715f\\],
-:is(.gath-purple, .gath-gold) .text-\\[\\#8a7c64\\] { color: var(--gath-ink-2); }
-:is(.gath-purple, .gath-gold) .text-\\[\\#a2947c\\],
-:is(.gath-purple, .gath-gold) .text-\\[\\#b3a68d\\],
-:is(.gath-purple, .gath-gold) .text-\\[\\#b0a184\\],
-:is(.gath-purple, .gath-gold) .text-\\[\\#bfb398\\] { color: var(--gath-ink-3); }
-:is(.gath-purple, .gath-gold) .text-\\[\\#8a6f46\\] { color: var(--gath-soft); }
-:is(.gath-purple, .gath-gold) .text-\\[\\#b45309\\] { color: var(--gath-warn); }
-:is(.gath-purple, .gath-gold) .text-\\[\\#5f7a52\\] { color: var(--gath-ok); }
-:is(.gath-purple, .gath-gold) .text-\\[\\#7c5cad\\] { color: var(--gath-strong); }
-:is(.gath-purple, .gath-gold) .text-\\[\\#0f766e\\],
-:is(.gath-purple, .gath-gold) .text-\\[\\#0d9488\\] { color: #2dd4bf; }
-:is(.gath-purple, .gath-gold) .placeholder\\:text-\\[\\#b3a68d\\]::placeholder,
-:is(.gath-purple, .gath-gold) .placeholder\\:text-\\[\\#bfb398\\]::placeholder { color: var(--gath-ink-3); }
-:is(.gath-purple, .gath-gold) .hover\\:text-\\[\\#3d3428\\]:hover,
-:is(.gath-purple, .gath-gold) .hover\\:text-\\[\\#7c715f\\]:hover { color: var(--gath-ink); }
-:is(.gath-purple, .gath-gold) .hover\\:text-\\[\\#b45309\\]:hover { color: var(--gath-warn); }
+/* --- the night ink law: every porcelain word re-inks to crystal --- */
+.dark .gath-hall .text-\\[\\#3d3428\\] { color: var(--gath-ink); }
+.dark .gath-hall .text-\\[\\#4c4436\\],
+.dark .gath-hall .text-\\[\\#5c5344\\],
+.dark .gath-hall .text-\\[\\#7c715f\\] { color: var(--gath-ink-2); }
+.dark .gath-hall .text-\\[\\#a2947c\\],
+.dark .gath-hall .text-\\[\\#8a7c64\\],
+.dark .gath-hall .text-\\[\\#b3a68d\\],
+.dark .gath-hall .text-\\[\\#b0a184\\],
+.dark .gath-hall .text-\\[\\#bfb398\\] { color: var(--gath-ink-3); }
+.dark .gath-hall .text-\\[\\#8a6f46\\] { color: var(--gath-soft); }
+.dark .gath-hall .text-\\[\\#a16207\\] { color: var(--gath-amber); }
+.dark .gath-hall .text-\\[\\#b45309\\],
+.dark .gath-hall .text-\\[\\#9a4f21\\],
+.dark .gath-hall .text-\\[\\#b3542f\\] { color: var(--gath-warn); }
+.dark .gath-hall .text-\\[\\#5f7a52\\] { color: var(--gath-ok); }
+.dark .gath-hall .text-\\[\\#7c5cad\\] { color: var(--gath-lav); }
+.dark .gath-hall .text-\\[\\#cbb98d\\] { color: var(--gath-strong); }
+.dark .gath-hall .text-\\[\\#0f766e\\],
+.dark .gath-hall .text-\\[\\#0d9488\\] { color: var(--gath-teal); }
+.dark .gath-hall .placeholder\\:text-\\[\\#b3a68d\\]::placeholder,
+.dark .gath-hall .placeholder\\:text-\\[\\#bfb398\\]::placeholder { color: var(--gath-ink-3); }
+.dark .gath-hall .hover\\:text-\\[\\#3d3428\\]:hover,
+.dark .gath-hall .hover\\:text-\\[\\#7c715f\\]:hover { color: var(--gath-ink); }
+.dark .gath-hall .hover\\:text-\\[\\#8a6f46\\]:hover { color: var(--gath-strong); }
+.dark .gath-hall .hover\\:text-\\[\\#b45309\\]:hover { color: var(--gath-warn); }
 
-/* --- the hairline law: edges drink the vibe, never shout --- */
-:is(.gath-purple, .gath-gold) .border-\\[\\#e4d9bd\\],
-:is(.gath-purple, .gath-gold) .border-\\[\\#e8dfc9\\],
-:is(.gath-purple, .gath-gold) .border-\\[\\#eadfc4\\],
-:is(.gath-purple, .gath-gold) .border-\\[\\#eee5d0\\],
-:is(.gath-purple, .gath-gold) .border-\\[\\#eadfca\\],
-:is(.gath-purple, .gath-gold) .border-\\[\\#eadfca\\]\\/70,
-:is(.gath-purple, .gath-gold) .border-white\\/75,
-:is(.gath-purple, .gath-gold) .border-white\\/80,
-:is(.gath-purple, .gath-gold) .border-white\\/85,
-:is(.gath-purple, .gath-gold) .border-white\\/90 { border-color: var(--gath-edge); }
-:is(.gath-purple, .gath-gold) .border-white\\/95 { border-color: rgba(255, 255, 255, 0.55); }
-:is(.gath-purple, .gath-gold) .border-\\[\\#cbb98d\\],
-:is(.gath-purple, .gath-gold) .border-\\[\\#d3c39c\\],
-:is(.gath-purple, .gath-gold) .border-\\[\\#d9c99a\\]\\/60,
-:is(.gath-purple, .gath-gold) .border-\\[\\#d9c99a\\]\\/50 { border-color: var(--gath-edge-active); }
-:is(.gath-purple, .gath-gold) .hover\\:border-\\[\\#d3c39c\\]:hover { border-color: var(--gath-edge-active); }
-:is(.gath-purple, .gath-gold) .border-\\[\\#d8e5d0\\],
-:is(.gath-purple, .gath-gold) .border-\\[\\#c7d8c0\\] { border-color: color-mix(in srgb, var(--gath-ok) 40%, transparent); }
-:is(.gath-purple, .gath-gold) .border-\\[\\#7c5cad\\]\\/25,
-:is(.gath-purple, .gath-gold) .border-\\[\\#7c5cad\\]\\/40 { border-color: color-mix(in srgb, var(--gath-strong) 38%, transparent); }
+/* --- the night hairline law: edges drink the crystal, never shout --- */
+.dark .gath-hall .border-\\[\\#e4d9bd\\],
+.dark .gath-hall .border-\\[\\#e8dfc9\\],
+.dark .gath-hall .border-\\[\\#eadfc4\\],
+.dark .gath-hall .border-\\[\\#eee5d0\\],
+.dark .gath-hall .border-\\[\\#eadfca\\],
+.dark .gath-hall .border-\\[\\#eadfca\\]\\/60,
+.dark .gath-hall .border-\\[\\#eadfca\\]\\/70,
+.dark .gath-hall .border-white\\/75,
+.dark .gath-hall .border-white\\/80,
+.dark .gath-hall .border-white\\/85,
+.dark .gath-hall .border-white\\/90 { border-color: var(--gath-edge); }
+.dark .gath-hall .border-white\\/95 { border-color: var(--gath-edge-active); }
+.dark .gath-hall .border-\\[\\#cbb98d\\],
+.dark .gath-hall .border-\\[\\#cbb98d\\]\\/50,
+.dark .gath-hall .border-\\[\\#d3c39c\\],
+.dark .gath-hall .border-\\[\\#d9c99a\\]\\/60,
+.dark .gath-hall .border-\\[\\#d9c99a\\]\\/50 { border-color: var(--gath-edge-active); }
+.dark .gath-hall .hover\\:border-\\[\\#d3c39c\\]:hover { border-color: var(--gath-edge-active); }
+.dark .gath-hall .border-\\[\\#d8e5d0\\],
+.dark .gath-hall .border-\\[\\#c7d8c0\\] { border-color: color-mix(in srgb, var(--gath-ok) 40%, transparent); }
+.dark .gath-hall .border-\\[\\#7c5cad\\]\\/25,
+.dark .gath-hall .border-\\[\\#7c5cad\\]\\/40 { border-color: color-mix(in srgb, var(--gath-lav) 38%, transparent); }
+.dark .gath-hall .border-\\[\\#a16207\\]\\/40,
+.dark .gath-hall .border-\\[\\#a16207\\]\\/45 { border-color: color-mix(in srgb, var(--gath-amber) 45%, transparent); }
+.dark .gath-hall .border-\\[\\#b45309\\]\\/30,
+.dark .gath-hall .border-\\[\\#b45309\\]\\/45 { border-color: color-mix(in srgb, var(--gath-warn) 45%, transparent); }
+.dark .gath-hall .border-\\[\\#0d9488\\]\\/40,
+.dark .gath-hall .border-\\[\\#0d9488\\]\\/50 { border-color: color-mix(in srgb, var(--gath-teal) 45%, transparent); }
 
-/* --- the surface law: translucent vibe glass, hairline edges --- */
-:is(.gath-purple, .gath-gold) .bg-white\\/45 { background-color: color-mix(in srgb, var(--gath-card) 45%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-:is(.gath-purple, .gath-gold) .bg-white\\/50 { background-color: color-mix(in srgb, var(--gath-card) 50%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-:is(.gath-purple, .gath-gold) .bg-white\\/55 { background-color: color-mix(in srgb, var(--gath-card) 55%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-:is(.gath-purple, .gath-gold) .bg-white\\/60 { background-color: color-mix(in srgb, var(--gath-card) 60%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-:is(.gath-purple, .gath-gold) .bg-white\\/70 { background-color: color-mix(in srgb, var(--gath-card) 70%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-:is(.gath-purple, .gath-gold) .bg-white\\/80 { background-color: color-mix(in srgb, var(--gath-card) 80%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-:is(.gath-purple, .gath-gold) .bg-white { background-color: color-mix(in srgb, var(--gath) 16%, var(--gath-card)); }
-:is(.gath-purple, .gath-gold) .bg-\\[\\#faf5e6\\] { background-color: color-mix(in srgb, var(--gath) 13%, var(--gath-card)); }
-:is(.gath-purple, .gath-gold) .bg-\\[\\#f2f7ee\\],
-:is(.gath-purple, .gath-gold) .bg-\\[\\#eef5ea\\] { background-color: color-mix(in srgb, var(--gath-ok) 13%, var(--gath-card)); }
-:is(.gath-purple, .gath-gold) .bg-\\[\\#7c5cad\\]\\/10 { background-color: color-mix(in srgb, var(--gath-strong) 14%, transparent); }
-:is(.gath-purple, .gath-gold) .bg-\\[\\#3d3428\\]\\/25 { background-color: rgba(8, 5, 18, 0.5); }
-:is(.gath-purple, .gath-gold) .bg-\\[\\#2b2416\\]\\/45 { background-color: rgba(6, 4, 2, 0.6); }
+/* --- the night surface law: translucent crystal, no blur to flicker --- */
+.dark .gath-hall .bg-white\\/45,
+.dark .gath-hall .bg-white\\/50,
+.dark .gath-hall .bg-white\\/55 { background-color: color-mix(in srgb, var(--gath-card) 52%, transparent); }
+.dark .gath-hall .bg-white\\/60,
+.dark .gath-hall .bg-white\\/70,
+.dark .gath-hall .bg-white\\/80 { background-color: color-mix(in srgb, var(--gath-card) 74%, transparent); }
+.dark .gath-hall .bg-white { background-color: var(--gath-card); }
+.dark .gath-hall .bg-\\[\\#faf5e6\\] { background-color: color-mix(in srgb, var(--gath-amber) 12%, var(--gath-card)); }
+.dark .gath-hall .bg-\\[\\#fdf1e7\\] { background-color: color-mix(in srgb, var(--gath-amber) 14%, var(--gath-card)); }
+.dark .gath-hall .bg-\\[\\#f2f7ee\\],
+.dark .gath-hall .bg-\\[\\#eef5ea\\] { background-color: color-mix(in srgb, var(--gath-ok) 13%, var(--gath-card)); }
+.dark .gath-hall .bg-\\[\\#7c5cad\\]\\/10 { background-color: color-mix(in srgb, var(--gath-lav) 16%, transparent); }
+.dark .gath-hall .bg-\\[\\#e4d9bd\\] { background-color: color-mix(in srgb, var(--gath-strong) 40%, transparent); }
+.dark .gath-hall .bg-\\[\\#3d3428\\]\\/25,
+.dark .gath-hall .bg-\\[\\#2b2416\\]\\/45,
+.dark .gath-hall .bg-\\[rgba\\(46\\,38\\,24\\,0\\.32\\)\\] { background-color: rgba(9, 14, 26, 0.55); }
 
-/* --- the constellation's breath — opacity and scale only, and it
-       stands completely still for the stillness law --- */
-.gath-star {
-  opacity: var(--dim, 0.5);
-  animation: gath-twinkle var(--dur, 4s) ease-in-out var(--delay, 0s) infinite;
-  will-change: opacity, transform;
-}
-@keyframes gath-twinkle {
-  0%, 100% { opacity: var(--dim, 0.5); transform: scale(0.9); }
-  50% { opacity: 1; transform: scale(1.18); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .gath-star { animation: none; opacity: 0.7; transform: none; }
-}
+/* --- the pearl law: the hall's little ivory pieces (maker marks,
+       the offering hand, the search hand) keep their warm ink on
+       cream, whatever the night wears around them --- */
+.dark .gath-hall .gp-pearl,
+.dark .gath-hall .gp-pearl * { color: #8a6f46; }
 `;
-
-/* ================================================================== */
-/*  THE CONSTELLATION — a deterministic sky. The same forty stars in   */
-/*  the same places on every visit, in both vibes: lavender-tinted     */
-/*  over the purple field, gold threads over the ember. Lines join     */
-/*  near neighbors; the stars breathe (opacity and scale only).        */
-/* ================================================================== */
-
-function mulberry32(seed: number) {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-/* computed once, from a fixed seed — the sky never rerolls */
-const GATH_CONSTELLATION = (() => {
-  const rnd = mulberry32(0x67a7e5c9);
-  const stars = Array.from({ length: 40 }, (_, i) => ({
-    id: i,
-    x: 2.5 + rnd() * 95,
-    y: 3 + rnd() * 93,
-    r: 1.1 + rnd() * 1.7,
-    dur: 3 + rnd() * 3.4,
-    delay: -(rnd() * 6),
-    dim: 0.32 + rnd() * 0.3,
-  }));
-  /* threads between near neighbors — the same math in both vibes */
-  const links: Array<[number, number]> = [];
-  for (let i = 0; i < stars.length; i++) {
-    for (let j = i + 1; j < stars.length; j++) {
-      const dx = stars[i].x - stars[j].x;
-      const dy = stars[i].y - stars[j].y;
-      if (Math.hypot(dx, dy) < 13.5) links.push([i, j]);
-    }
-  }
-  return { stars, links };
-})();
-
-function GathConstellation() {
-  const { stars, links } = GATH_CONSTELLATION;
-  return (
-    <div
-      aria-hidden="true"
-      data-testid="gath-constellation"
-      className="pointer-events-none absolute inset-0 overflow-hidden"
-    >
-      <svg
-        className="absolute inset-0 h-full w-full"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-      >
-        {links.map(([a, b]) => (
-          <line
-            key={`${a}-${b}`}
-            x1={stars[a].x}
-            y1={stars[a].y}
-            x2={stars[b].x}
-            y2={stars[b].y}
-            stroke="var(--gath-star)"
-            strokeOpacity={0.16}
-            strokeWidth={1}
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-      </svg>
-      {stars.map((s) => (
-        <span
-          key={s.id}
-          className="gath-star absolute rounded-full"
-          style={
-            {
-              left: `${s.x}%`,
-              top: `${s.y}%`,
-              width: s.r * 2,
-              height: s.r * 2,
-              background: "var(--gath-star)",
-              boxShadow:
-                "0 0 6px 1px color-mix(in srgb, var(--gath-star) 55%, transparent)",
-              "--dur": `${s.dur}s`,
-              "--delay": `${s.delay}s`,
-              "--dim": `${s.dim}`,
-            } as React.CSSProperties
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-/* the visitor's stored choice — a device-local tune, never a server round-trip */
-function readStoredVibe(): GathVibe {
-  try {
-    return window.localStorage.getItem(VIBE_STORAGE_KEY) === "gold" ? "gold" : "purple";
-  } catch {
-    return "purple";
-  }
-}
 
 export default function GatheringPortal() {
   const t = useT();
@@ -390,11 +269,6 @@ export default function GatheringPortal() {
   const [circles, setCircles] = useState<CircleCard[]>([]);
   const [unread, setUnread] = useState(0);
   const [overlay, setOverlay] = useState<"none" | "profile" | "notifications">("none");
-  /* the vibe wakes from the visitor's own device — read at first breath,
-     so the field is already dressed before the portal's first paint */
-  const [vibe, setVibe] = useState<GathVibe>(() =>
-    typeof window === "undefined" ? "purple" : readStoredVibe()
-  );
   /* carried between rooms — the weave and library hands of the stream */
   const [weaveSeed, setWeaveSeed] = useState<GatheringPost | null>(null);
   const [librarySeed, setLibrarySeed] = useState<GatheringPost | null>(null);
@@ -402,15 +276,6 @@ export default function GatheringPortal() {
   /* the publication picker — the hall's only creation-adjacent door, */
   /* and it creates nothing: it carries finished works in */
   const [pickerOpen, setPickerOpen] = useState(false);
-
-  const changeVibe = useCallback((next: GathVibe) => {
-    setVibe(next);
-    try {
-      window.localStorage.setItem(VIBE_STORAGE_KEY, next);
-    } catch {
-      /* storage closed — the field still changes for this visit */
-    }
-  }, []);
 
   const closePortal = useCallback(() => {
     useMirror.getState().closeGatheringPortal();
@@ -475,16 +340,11 @@ export default function GatheringPortal() {
       aria-modal="true"
       aria-label={t("The Gathering")}
       data-testid="gathering-portal"
-      data-vibe={vibe}
-      className={cn(
-        "fixed inset-0 z-[90] overflow-hidden",
-        vibe === "gold" ? "gath-gold" : "gath-purple"
-      )}
-      style={VIBE_VARS[vibe]}
+      className="gath-hall fixed inset-0 z-[90] overflow-hidden"
     >
       <style>{GATH_STYLE}</style>
 
-      {/* ---------- the vibe's own sky ---------- */}
+      {/* ---------- the hall's own sky (porcelain by day, crystal at night) ---------- */}
       <div aria-hidden="true" className="gp-sky absolute inset-0">
         <div
           className="gp-drift absolute -top-32 left-[8%] h-[420px] w-[560px] rounded-full"
@@ -499,9 +359,6 @@ export default function GatheringPortal() {
           style={{ background: "radial-gradient(closest-side, var(--gath-glow-c), transparent)" }}
         />
       </div>
-
-      {/* ---------- the constellation — the same sky in both vibes ---------- */}
-      <GathConstellation />
 
       {/* ---------- the portal's crown ---------- */}
       <header className="gp-glass absolute inset-x-0 top-0 z-10 border-x-0 border-t-0">
@@ -636,13 +493,7 @@ export default function GatheringPortal() {
             className="h-full"
           >
             {overlay === "profile" ? (
-              <ProfileSheet
-                me={me}
-                vibe={vibe}
-                onVibe={changeVibe}
-                onSaved={setMe}
-                onClose={() => setOverlay("none")}
-              />
+              <ProfileSheet me={me} onSaved={setMe} onClose={() => setOverlay("none")} />
             ) : overlay === "notifications" ? (
               <NotificationsSheet onCount={setUnread} onClose={() => setOverlay("none")} />
             ) : section === "gathering" ? (

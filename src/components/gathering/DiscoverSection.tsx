@@ -139,6 +139,9 @@ interface ReaderPost {
   sourceType: string | null;
   cover: string | null;
   refUrl: string | null;
+  mediaUrl?: string | null;
+  mediaType?: string | null;
+  mediaName?: string | null;
   resonanceCount: number;
   echoCount: number;
   createdAt: string;
@@ -568,14 +571,14 @@ export default function DiscoverSection({
           {forYou.creations.length > 0 && (
             <section aria-label="Public creations">
               <SectionHead label="Works moving through the current" />
-              <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">{forYou.creations.map(creationCard)}</div>
+              <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">{forYou.creations.map(creationCard)}</div>
             </section>
           )}
 
           {forYou.makers.length > 0 && (
             <section aria-label="Makers who may resonate">
               <SectionHead label="Makers who may resonate" />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{forYou.makers.map((m) => (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{forYou.makers.map((m) => (
                   <div key={m.id} className="gp-card rounded-[20px] p-4">
                     <div className="flex items-center gap-2.5">
                       <MakerMark name={m.name} size={30} />
@@ -594,7 +597,7 @@ export default function DiscoverSection({
           {forYou.circles.length > 0 && (
             <section aria-label="Circles at work">
               <SectionHead label="Circles at work" />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {forYou.circles.map((c) => (
                   <div key={c.id} className="gp-card rounded-[20px] p-4">
                     <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#a2947c]">{c.focus}</p>
@@ -759,7 +762,7 @@ export default function DiscoverSection({
           {(creations ?? []).length === 0 ? (
             <EmptyRoom icon={Library} line={t("The gallery rests quiet. Works published from the rooms will hang here.")} />
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">{(creations ?? []).map(creationCard)}</div>
+            <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">{(creations ?? []).map(creationCard)}</div>
           )}
         </div>
       );
@@ -772,7 +775,7 @@ export default function DiscoverSection({
           {(circles ?? []).length === 0 ? (
             <EmptyRoom icon={Globe2} line={t("No circle answers that word yet — perhaps yours will be the first.")} />
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {(circles ?? []).map((c) => (
                 <div key={c.id} className="gp-card rounded-[20px] p-4" data-testid="discover-circle-card">
                   <p className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-[#a2947c]">{c.focus}</p>
@@ -1038,10 +1041,10 @@ export default function DiscoverSection({
   return (
     <div
       ref={scrollRef}
-      className="gp-scroll h-full overflow-y-auto px-4 pb-24 pt-4 sm:px-6"
+      className="gp-scroll h-full overflow-y-auto px-3 pb-24 pt-4 sm:px-5"
       data-testid="discover-section"
     >
-      <div className="mx-auto w-full max-w-[1440px]">
+      <div className="mx-auto w-full max-w-[1760px]">
         {/* the mouth's own tabs */}
         <div className="gp-seg mb-4 flex items-center gap-0.5 overflow-x-auto rounded-full border border-white/80 bg-white/45 p-1" role="tablist" aria-label={t("Discover")}>
           {DESTS.map((d) => {
@@ -1083,9 +1086,8 @@ export default function DiscoverSection({
               data-testid="discover-search"
             />
           </div>
-          <button type="button" onClick={runSearch} className={cn(GP_HAND, "min-h-[44px] px-5")} data-testid="discover-search-run">
+          <button type="button" onClick={runSearch} aria-label={t("Search")} title={t("Search")} className="focus-glow gp-pearl flex size-11 shrink-0 items-center justify-center rounded-full border border-white/90 text-[#8a6f46] transition-all duration-300 hover:brightness-[1.03]" style={{ background: "linear-gradient(150deg,#fffdf8 0%,#f3ead6 100%)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.95), 0 8px 18px -8px rgba(122,103,70,0.45)" }} data-testid="discover-search-run">
             {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Search className="size-4" aria-hidden="true" />}
-            {t("Search")}
           </button>
         </div>
 
@@ -1287,6 +1289,17 @@ function PublicationReader({
               {post.cover && (
                 <img src={post.cover} alt="" className="mt-5 max-h-[420px] w-full rounded-[18px] border border-[#eee5d0] object-cover" />
               )}
+              {post.mediaUrl && post.mediaType === "video" && (
+                <video
+                  src={post.mediaUrl}
+                  controls
+                  preload="metadata"
+                  className="mt-5 max-h-[420px] w-full rounded-[18px] border border-[#eee5d0] bg-black object-contain"
+                />
+              )}
+              {!post.cover && post.mediaUrl && post.mediaType !== "video" && (
+                <img src={post.mediaUrl} alt="" className="mt-5 max-h-[420px] w-full rounded-[18px] border border-[#eee5d0] object-cover" />
+              )}
               {post.refUrl && (
                 <a
                   href={post.refUrl}
@@ -1318,8 +1331,8 @@ function PublicationReader({
                   className={cn(
                     "focus-glow inline-flex min-h-[40px] items-center gap-2 rounded-full border px-4 py-2 text-[12.5px] font-semibold transition-all duration-300",
                     post.resonated
-                      ? "border-[#cbb98d] bg-[linear-gradient(150deg,#fffdf8_0%,#f3ead6_100%)] text-[#8a6f46]"
-                      : "border-[#e4d9bd] bg-white/70 text-[#7c715f] hover:border-[#d3c39c]"
+                      ? "focus-glow gp-pearl inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[#cbb98d] bg-[linear-gradient(150deg,#fffdf8_0%,#f3ead6_100%)] px-4 py-2 text-[12.5px] font-semibold text-[#8a6f46] transition-all duration-300"
+                      : "focus-glow inline-flex min-h-[40px] items-center gap-2 rounded-full border border-[#e4d9bd] bg-white/70 px-4 py-2 text-[12.5px] font-semibold text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c]"
                   )}
                 >
                   <Sparkles className="size-4" aria-hidden="true" />

@@ -63,7 +63,7 @@ tool-results/
 # the keyless template may travel
 !.env.example
 skills/
-upload/
+/upload/
 scripts/
 
 # runtime state
@@ -79,3 +79,6 @@ scripts/
 /server.log.*
 agent-ctx/
 .zscripts/lh/
+
+# the gathering’s own media shelf — visitor uploads never enter the repository
+public/gathering-media/

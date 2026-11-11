@@ -622,6 +622,9 @@ model GatheringPost {
   refKind      String? // library | music — which table holds the source
   refUrl       String? // playable / viewable media reference owned by the source
   cover        String? // publication cover image (data URL or asset path)
+  mediaUrl     String? // the offering's own picture or film, hung beside the words (asset path)
+  mediaType    String? // image | video — how the hall shows the offering's media
+  mediaName    String? // the file's own name, spoken gently beside the offering
   visibility   String  @default("public") // public | circle | connections | draft
   epistemic    String? // established | hypothesis | interpretation | creative — the Knowledge distinction
   status       String  @default("published") // published | removed (moderation)
