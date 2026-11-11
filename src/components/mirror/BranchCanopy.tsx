@@ -42,14 +42,12 @@ import {
   Link2,
   ListTree,
   LoaderCircle,
-  Map as MapIcon,
   Maximize2,
   Menu,
   Minimize2,
   MessageSquarePlus,
   MessageSquareText,
   Moon,
-  Music,
   NotebookPen,
   Palette,
   Phone,
@@ -63,7 +61,6 @@ import {
   Sun,
   TreeDeciduous,
   UserRound,
-  UsersRound,
   Volume2,
   VolumeX,
   X,
@@ -6209,50 +6206,14 @@ export function BranchCanopy({
                 codex lives at the scopes' shore and inside the codex
                 hall itself. Nothing of the register remains at the top
                 of the chat where InDream and Scopes stand. */}
-            {/* THE MUSIC DOOR STANDS IN EVERY CROWN — the chamber of
-                sound is one touch from the walk as well: the loom turns
-                where the visitor stands */}
-            <button
-              type="button"
-              onClick={() => openLightCodes()}
-              aria-label={t("Music")}
-              title={t("Music — sound transmissions through Mirror Entity")}
-              data-testid={`${testIdPrefix}-door-music`}
-              className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              <Music className="size-3" aria-hidden="true" />
-            </button>
-            {/* THE GATHERING — the presences' own hall, raised over any
-                room of the house from the realm's crown */}
-            {realm && (
-              <button
-                type="button"
-                onClick={() => useMirror.getState().openGatheringPortal()}
-                aria-label={t("The Gathering")}
-                title={t("The Gathering")}
-                data-testid={`${testIdPrefix}-door-gathering`}
-                className="focus-glow pm-tap pm-breath group relative flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-              >
-                <UsersRound className="size-3 transition-transform duration-300 group-hover:scale-110" aria-hidden="true" />
-                <span
-                  aria-hidden="true"
-                  className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-[var(--gd)] opacity-70 animate-pulse"
-                />
-              </button>
-            )}
-            {/* THE TREE'S MAP — one small map that summons the living
-                suggestions board: the whole grove, every branch, grown
-                and expandable, over any room */}
-            <button
-              type="button"
-              onClick={() => useMirror.getState().openTreeBoard()}
-              aria-label={t("The tree's map")}
-              title={t("The tree's map")}
-              data-testid={`${testIdPrefix}-door-map`}
-              className="focus-glow pm-tap pm-breath group flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
-            >
-              <MapIcon className="size-3 transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" aria-hidden="true" />
-            </button>
+            {/* THE ADDED DOORS HAVE LEFT THE CROWN — the music hand, the
+                gathering hand and the map hand that once stood at the
+                top of the chat are gone from it for good: the chamber
+                of sound lives in the making rooms, the gathering is
+                raised by the threshold's own sigil, and the map is the
+                gathering's own — one small map inside the hall, where
+                the visitor localizes and speaks an intention for a
+                specific region of the earth. */}
             {/* THE ABOUT DOOR HAS MOVED HOME — it left the house doors:
                 About Us now wears its own question mark at the crown's
                 very top right, alone in its circle. */}

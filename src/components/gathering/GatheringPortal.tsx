@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   Library,
   Loader2,
+  Map as MapIcon,
   MessagesSquare,
   Users,
   Waypoints,
@@ -36,6 +37,7 @@ import LibrarySection from "./LibrarySection";
 import ProfileSheet from "./ProfileSheet";
 import NotificationsSheet from "./NotificationsSheet";
 import PublishPickerSheet from "./PublishPickerSheet";
+import RegionAtlas from "./RegionAtlas";
 
 /* ------------------------------------------------------------------ */
 /*  THE GATHERING'S PORTAL — the independent social heart of the       */
@@ -303,10 +305,15 @@ export default function GatheringPortal() {
   const [me, setMe] = useState<MeState | null>(null);
   const [circles, setCircles] = useState<CircleCard[]>([]);
   const [unread, setUnread] = useState(0);
-  const [overlay, setOverlay] = useState<"none" | "profile" | "notifications">("none");
+  const [overlay, setOverlay] = useState<
+    "none" | "profile" | "notifications" | "atlas"
+  >("none");
   /* carried between rooms — the weave and library hands of the stream */
   const [weaveSeed, setWeaveSeed] = useState<GatheringPost | null>(null);
   const [librarySeed, setLibrarySeed] = useState<GatheringPost | null>(null);
+  /* the atlas' own breath — every intention spoken at the map asks the
+     stream to read itself again, so the hall and the map agree */
+  const [atlasSignal, setAtlasSignal] = useState(0);
 
   /* the publication picker — the hall's only creation-adjacent door, */
   /* and it creates nothing: it carries finished works in */
@@ -433,6 +440,22 @@ export default function GatheringPortal() {
 
           <div className="flex-1" />
 
+          {/* THE ATLAS' OWN DOOR — the map stands only inside the hall:
+              one small hand that opens the world's shores, where the
+              visitor localizes and speaks an intention for a specific
+              region. It has no life outside the gathering. */}
+          <button
+            type="button"
+            onClick={() => setOverlay(overlay === "atlas" ? "none" : "atlas")}
+            aria-label={t("The region atlas — localize an intention")}
+            title={t("The region atlas — localize an intention")}
+            aria-pressed={overlay === "atlas"}
+            data-testid="gathering-atlas"
+            className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428]"
+          >
+            <MapIcon className="size-4" aria-hidden="true" />
+          </button>
+
           {/* the bell — every ring a real row */}
           <button
             type="button"
@@ -531,10 +554,16 @@ export default function GatheringPortal() {
               <ProfileSheet me={me} onSaved={setMe} onClose={() => setOverlay("none")} />
             ) : overlay === "notifications" ? (
               <NotificationsSheet onCount={setUnread} onClose={() => setOverlay("none")} />
+            ) : overlay === "atlas" ? (
+              <RegionAtlas
+                onPosted={() => setAtlasSignal((n) => n + 1)}
+                onClose={() => setOverlay("none")}
+              />
             ) : section === "gathering" ? (
               <FeedSection
                 active
                 circles={circles}
+                refreshSignal={atlasSignal}
                 onMeetSomeone={() => setSection("encounters")}
                 onPublishWork={() => setPickerOpen(true)}
                 onWeaveFrom={(post) => {

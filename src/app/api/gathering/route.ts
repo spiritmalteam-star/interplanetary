@@ -47,6 +47,25 @@ export function isGatheringKind(v: unknown): v is GatheringKind {
   return typeof v === "string" && (GATHERING_KINDS as readonly string[]).includes(v);
 }
 
+/* THE ATLAS' OWN SHORES — the only regions an intention may wear. A
+   whitelist keeps the map honest: no free-text places, only the
+   shores the atlas itself draws. */
+export const GATHERING_REGIONS = [
+  "north-america",
+  "south-america",
+  "europe",
+  "africa",
+  "middle-east",
+  "asia",
+  "oceania",
+] as const;
+
+export type GatheringRegion = (typeof GATHERING_REGIONS)[number];
+
+export function isGatheringRegion(v: unknown): v is GatheringRegion {
+  return typeof v === "string" && (GATHERING_REGIONS as readonly string[]).includes(v);
+}
+
 const TITLE_MAX = 120;
 const BODY_MAX = 4000;
 
@@ -69,6 +88,7 @@ export async function GET(req: NextRequest) {
     const kind = url.searchParams.get("kind");
     const mine = url.searchParams.get("mine") === "1";
     const circleId = url.searchParams.get("circle");
+    const region = url.searchParams.get("region");
     const q = (url.searchParams.get("q") ?? "").trim().toLowerCase().slice(0, 60);
     const cursor = url.searchParams.get("cursor");
     const take = Math.min(30, Math.max(5, Number(url.searchParams.get("take") ?? 15)));
@@ -80,6 +100,7 @@ export async function GET(req: NextRequest) {
       where: {
         ...(mine ? { userId: visitor.user.id } : {}),
         ...(isGatheringKind(kind) ? { kind } : {}),
+        ...(isGatheringRegion(region) ? { region } : {}),
         ...(circleId ? { circleId } : { circleId: mine ? undefined : null }),
         ...(q
           ? {
@@ -113,6 +134,7 @@ export async function GET(req: NextRequest) {
       title: p.title,
       body: p.body,
       sector: p.sector,
+      region: p.region,
       mediaUrl: p.mediaUrl,
       mediaType: p.mediaType,
       mediaName: p.mediaName,
@@ -170,6 +192,7 @@ export async function POST(req: NextRequest) {
       body?: unknown;
       sector?: unknown;
       tags?: unknown;
+      region?: unknown;
       circleId?: unknown;
       mediaUrl?: unknown;
       mediaType?: unknown;
@@ -213,6 +236,10 @@ export async function POST(req: NextRequest) {
             .slice(0, 6)
             .join(",")
         : null;
+
+    /* the intention's own shore — only a shore the atlas draws may be
+       worn; anything else arrives without a region */
+    const region = isGatheringRegion(raw.region) ? raw.region : null;
 
     /* the offering's own picture or film — only the house's shelf may
        be named; a foreign address never enters the hall */
@@ -258,6 +285,7 @@ export async function POST(req: NextRequest) {
         body,
         sector,
         tags,
+        region,
         circleId,
         ...(media
           ? { mediaUrl: media.url, mediaType: media.type, mediaName: media.name }
@@ -293,6 +321,7 @@ export async function POST(req: NextRequest) {
           title: created.title,
           body: created.body,
           sector: created.sector,
+          region: created.region,
           mediaUrl: created.mediaUrl,
           mediaType: created.mediaType,
           mediaName: created.mediaName,

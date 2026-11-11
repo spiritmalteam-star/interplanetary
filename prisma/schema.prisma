@@ -607,6 +607,7 @@ model GatheringPost {
   circleId       String? // hung inside a circle, or in the open hall when null
   circle         NetworkCircle? @relation(fields: [circleId], references: [id], onDelete: Cascade)
   tags           String? // comma-separated threads of meaning
+  region         String? // the atlas region an intention is spoken for (europe, north-america, …)
   projectSeeds   NetworkProject[] @relation("NetworkProjectSeeds")
   mirrorSuggestions NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggestions")
   resonances     GatheringResonance[]
@@ -634,6 +635,7 @@ model GatheringPost {
   @@index([circleId])
   @@index([visibility])
   @@index([sourceId])
+  @@index([region])
 }
 
 model GatheringResonance {

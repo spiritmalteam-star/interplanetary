@@ -1294,6 +1294,33 @@ function PlayerBar() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* THE PUBLICATION HAND — the composition, carried to the hall with
+            its maker's name and the music room remembered as its birthplace
+            (it lives here, where the publication hand itself stands) */}
+        <PublishToGathering
+          open={publishTrack !== null}
+          onClose={() => setPublishTrack(null)}
+          payload={
+            publishTrack
+              ? {
+                  sourcePortal: "music",
+                  sourceId: publishTrack.libraryId ?? null,
+                  refKind: publishTrack.libraryId ? "music" : null,
+                  recentSector: publishTrack.libraryId ? null : "lightcodes",
+                  titleHint: publishTrack.title.slice(0, 120),
+                  suggestedTitle: publishTrack.title,
+                  preview:
+                    publishTrack.notes ||
+                    publishTrack.intention ||
+                    "A composition born in the music room.",
+                  refUrl: publishTrack.audioUrl,
+                  generic: false,
+                  contentTypeLabel: "Music",
+                }
+              : null
+          }
+        />
       </div>
     </section>
   );
@@ -1951,33 +1978,6 @@ function ChamberStatus() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* THE PUBLICATION HAND — the composition, carried to the hall with
-          its maker's name and the music room remembered as its birthplace
-          (it lives here, where the publication hand itself stands) */}
-      <PublishToGathering
-        open={publishTrack !== null}
-        onClose={() => setPublishTrack(null)}
-        payload={
-          publishTrack
-            ? {
-                sourcePortal: "music",
-                sourceId: publishTrack.libraryId ?? null,
-                refKind: publishTrack.libraryId ? "music" : null,
-                recentSector: publishTrack.libraryId ? null : "lightcodes",
-                titleHint: publishTrack.title.slice(0, 120),
-                suggestedTitle: publishTrack.title,
-                preview:
-                  publishTrack.notes ||
-                  publishTrack.intention ||
-                  "A composition born in the music room.",
-                refUrl: publishTrack.audioUrl,
-                generic: false,
-                contentTypeLabel: "Music",
-              }
-            : null
-        }
-      />
     </section>
   );
 }

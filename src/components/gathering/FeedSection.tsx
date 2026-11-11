@@ -43,6 +43,7 @@ import {
   MakerMark,
   netFetch,
   relativeTime,
+  regionLabel,
 } from "./shared";
 
 /* ------------------------------------------------------------------ */
@@ -224,7 +225,10 @@ function OfferingTile({
             <p className="truncate text-[11px] font-semibold text-[#5c5344]">
               {post.author.name}
             </p>
-            <p className="text-[10px] text-[#a2947c]">{relativeTime(post.createdAt, t)}</p>
+            <p className="text-[10px] text-[#a2947c]">
+              {relativeTime(post.createdAt, t)}
+              {regionLabel(post.region) ? ` · ${t(regionLabel(post.region)!)}` : ""}
+            </p>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-2.5 text-[#a2947c]">
@@ -347,7 +351,12 @@ function StreamSlide({
                 </p>
                 <p className="text-[10.5px] text-[#a2947c]">
                   {relativeTime(post.createdAt, t)}
-                  {post.circle ? ` · ${post.circle.name}` : post.sector ? ` · ${post.sector}` : ""}
+                  {post.circle
+                    ? ` · ${post.circle.name}`
+                    : post.sector
+                      ? ` · ${post.sector}`
+                      : ""}
+                  {regionLabel(post.region) ? ` · ${t(regionLabel(post.region)!)}` : ""}
                 </p>
               </div>
             </div>
@@ -701,6 +710,7 @@ function ComposerSheet({
 export default function FeedSection({
   active,
   circles,
+  refreshSignal = 0,
   onMeetSomeone,
   onPublishWork,
   onWeaveFrom,
@@ -708,6 +718,7 @@ export default function FeedSection({
 }: {
   active: boolean;
   circles: CircleCard[];
+  refreshSignal?: number;
   onMeetSomeone: () => void;
   onPublishWork: () => void;
   onWeaveFrom: (post: GatheringPost) => void;
@@ -734,6 +745,17 @@ export default function FeedSection({
     const id = window.setTimeout(() => setNote(null), 3200);
     return () => window.clearTimeout(id);
   }, [note]);
+
+  /* THE ATLAS' OWN ECHO — when an intention is spoken at the map, the
+     hall reads itself again (once per spoken vow, never on a loop):
+     the stream and the atlas always agree. */
+  const lastSignalRef = useRef(0);
+  useEffect(() => {
+    if (refreshSignal <= 0 || refreshSignal === lastSignalRef.current) return;
+    lastSignalRef.current = refreshSignal;
+    hall.rekindle({ kind });
+    mine.rekindle();
+  }, [refreshSignal, kind, hall, mine]);
 
   const chooseKind = useCallback(
     (k: string | null) => {

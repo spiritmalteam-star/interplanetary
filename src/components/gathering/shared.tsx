@@ -106,6 +106,7 @@ export interface GatheringPost {
   title: string;
   body: string;
   sector: string | null;
+  region: string | null;
   mediaUrl?: string | null;
   mediaType?: string | null;
   mediaName?: string | null;
@@ -117,6 +118,36 @@ export interface GatheringPost {
   author: { name: string; image: string | null; anon: boolean };
   mine: boolean;
   resonated: boolean;
+}
+
+/* THE ATLAS' OWN SHORES — the seven regions the hall's map draws.
+   The ids are the post's own words in the database; the names are
+   what the hall wears. */
+export const REGION_IDS = [
+  "north-america",
+  "south-america",
+  "europe",
+  "africa",
+  "middle-east",
+  "asia",
+  "oceania",
+] as const;
+
+export type RegionId = (typeof REGION_IDS)[number];
+
+export const REGION_LABELS: Record<RegionId, string> = {
+  "north-america": "North America",
+  "south-america": "South America",
+  europe: "Europe",
+  africa: "Africa",
+  "middle-east": "Middle East & West Asia",
+  asia: "Asia",
+  oceania: "Oceania & the Pacific",
+};
+
+export function regionLabel(id: string | null | undefined): string | null {
+  if (!id) return null;
+  return (REGION_LABELS as Record<string, string>)[id] ?? null;
 }
 
 export interface GatheringEcho {
