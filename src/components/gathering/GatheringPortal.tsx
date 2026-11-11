@@ -114,6 +114,35 @@ const GATH_STYLE = `
   --gath-lav: #7c5cad;
 }
 
+/* --- THE SOLID GROUND LAW (daylight) — every section, every panel,
+       every publishing surface stands opaque: no veil, no glass, no
+       translucency anywhere the visitor reads or writes. The hall's
+       own sky carries all the depth; the walls simply stand. --- */
+.gath-hall .gp-card {
+  background: #fffdf8;
+}
+.gath-hall .gp-glass {
+  background: #fffdf8;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.gath-hall .bg-white\/45,
+.gath-hall .bg-white\/50,
+.gath-hall .bg-white\/55,
+.gath-hall .bg-white\/60,
+.gath-hall .bg-white\/70,
+.gath-hall .bg-white\/80 {
+  background-color: #fffdf8;
+}
+.gath-hall .bg-white {
+  background-color: #ffffff;
+}
+.gath-hall input,
+.gath-hall textarea,
+.gath-hall select {
+  background-color: #ffffff;
+}
+
 /* --- the night law: the hall drinks the site's own dark tokens --- */
 .dark .gath-hall {
   --gath: #a9c3e2;
@@ -144,9 +173,9 @@ const GATH_STYLE = `
     linear-gradient(168deg, #1c2b4a 0%, #1a2744 52%, #182341 100%);
 }
 
-/* --- the night garments: crystal glass, no blur, no flicker --- */
+/* --- the night garments: SOLID crystal cards, no blur, no flicker --- */
 .dark .gath-hall .gp-card {
-  background: linear-gradient(158deg, color-mix(in srgb, var(--gath-card) 92%, transparent) 0%, color-mix(in srgb, var(--gath-card) 78%, transparent) 100%);
+  background: var(--gath-card);
   border: 1px solid var(--gath-edge);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.06),
@@ -158,7 +187,7 @@ const GATH_STYLE = `
     0 24px 52px -22px rgba(0, 0, 0, 0.56);
 }
 .dark .gath-hall .gp-glass {
-  background: linear-gradient(165deg, color-mix(in srgb, var(--gath-card) 88%, transparent) 0%, color-mix(in srgb, var(--gath-card) 76%, transparent) 100%);
+  background: var(--gath-card);
   border-color: var(--gath-edge);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
@@ -237,13 +266,14 @@ const GATH_STYLE = `
 .dark .gath-hall .border-\\[\\#0d9488\\]\\/40,
 .dark .gath-hall .border-\\[\\#0d9488\\]\\/50 { border-color: color-mix(in srgb, var(--gath-teal) 45%, transparent); }
 
-/* --- the night surface law: translucent crystal, no blur to flicker --- */
+/* --- the night surface law: SOLID crystal — no veil, no blur,
+       no translucency anywhere the visitor reads or writes --- */
 .dark .gath-hall .bg-white\\/45,
 .dark .gath-hall .bg-white\\/50,
-.dark .gath-hall .bg-white\\/55 { background-color: color-mix(in srgb, var(--gath-card) 52%, transparent); }
+.dark .gath-hall .bg-white\\/55,
 .dark .gath-hall .bg-white\\/60,
 .dark .gath-hall .bg-white\\/70,
-.dark .gath-hall .bg-white\\/80 { background-color: color-mix(in srgb, var(--gath-card) 74%, transparent); }
+.dark .gath-hall .bg-white\\/80 { background-color: var(--gath-card); }
 .dark .gath-hall .bg-white { background-color: var(--gath-card); }
 .dark .gath-hall .bg-\\[\\#faf5e6\\] { background-color: color-mix(in srgb, var(--gath-amber) 12%, var(--gath-card)); }
 .dark .gath-hall .bg-\\[\\#fdf1e7\\] { background-color: color-mix(in srgb, var(--gath-amber) 14%, var(--gath-card)); }
@@ -254,6 +284,11 @@ const GATH_STYLE = `
 .dark .gath-hall .bg-\\[\\#3d3428\\]\\/25,
 .dark .gath-hall .bg-\\[\\#2b2416\\]\\/45,
 .dark .gath-hall .bg-\\[rgba\\(46\\,38\\,24\\,0\\.32\\)\\] { background-color: rgba(9, 14, 26, 0.55); }
+.dark .gath-hall input,
+.dark .gath-hall textarea,
+.dark .gath-hall select {
+  background-color: color-mix(in srgb, var(--gath-card) 88%, #10192e);
+}
 
 /* --- the pearl law: the hall's little ivory pieces (maker marks,
        the offering hand, the search hand) keep their warm ink on

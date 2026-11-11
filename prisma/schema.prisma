@@ -676,6 +676,7 @@ model NetworkProfile {
   interests   String?  // comma-separated fields of curiosity
   disciplines String?  // comma-separated creative disciplines
   visibility  String   @default("public") // public | private
+  prefs       Json?    // the bell's own manners: { resonance, echoes, connections, library }
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

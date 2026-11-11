@@ -2,14 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
+import { networkName } from "@/lib/server/network";
 
 /* ------------------------------------------------------------------ */
-/*  THE QUIET WALLS — POST /api/network/safety                         */
+/*  THE QUIET WALLS — /api/network/safety                              */
 /*                                                                     */
-/*  A visitor may close a door (block) and open it again, or ask for   */
-/*  a hand from the house (report). Every request is the visitor's     */
-/*  own; nothing is judged automatically.                              */
+/*  GET  — the doors this visitor has closed: the blocked makers,      */
+/*         each with the name they wear, for the profile's own         */
+/*         privacy room; the visitor's own walls, only theirs.         */
+/*  POST — a visitor may close a door (block) and open it again, or    */
+/*         ask for a hand from the house (report). Every request is    */
+/*         the visitor's own; nothing is judged automatically.         */
 /* ------------------------------------------------------------------ */
+
+export async function GET(req: NextRequest) {
+  try {
+    const visitor = await resolveVisitor(req);
+    const rows = await db.networkBlock.findMany({
+      where: { blockerId: visitor.user.id },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      include: {
+        blocked: { select: { id: true, name: true, email: true, provider: true } },
+      },
+    });
+    const blocked = rows.map((r) => ({
+      id: r.blocked.id,
+      name: networkName(r.blocked),
+      since: r.createdAt.toISOString(),
+    }));
+    return withAnonCookie(NextResponse.json({ blocked }), visitor);
+  } catch (err) {
+    console.error("network safety GET failed", err);
+    return NextResponse.json({ error: "The walls could not be read." }, { status: 500 });
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {

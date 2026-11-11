@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence } from "framer-motion";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
-import GatheringPortal from "@/components/gathering/GatheringPortal";
 
 /* ------------------------------------------------------------------ */
 /*  THE LIVING NETWORK — the doorway at the threshold's edge.          */
@@ -122,11 +120,6 @@ export default function LivingNetwork() {
           </span>
         )}
       </button>
-
-      {/* ============== THE PORTAL — the hall itself ============== */}
-      <AnimatePresence>
-        {open && <GatheringPortal key="gathering-portal" />}
-      </AnimatePresence>
     </>
   );
 }

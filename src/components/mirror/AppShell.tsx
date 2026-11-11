@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import dynamic from "next/dynamic";
+import { AnimatePresence } from "framer-motion";
 import { useMirror } from "@/lib/mirror-store";
 import { setLearningIdentity } from "@/lib/learning-branches";
 import { useT } from "@/lib/i18n";
@@ -142,8 +143,21 @@ export default function AppShell({
         onExpand={onExpand}
         onMinimize={onMinimize}
       />
+      {/* THE GATHERING'S PORTAL — ONE mount for the whole house, raised
+          only while the store's door stands open: the landing's sigil
+          and the crown's own door both write that one truth, and the
+          return hand folds it — so the hall never stands by default
+          and the back hand always works. */}
+      <GatheringPortalGate />
     </div>
   );
+}
+
+/* THE GATHERING'S GATE — the hall exists only while the store's door
+   is open. Nothing renders by default; the landing always leads. */
+function GatheringPortalGate() {
+  const open = useMirror((s) => s.gatheringPortalOpen);
+  return <AnimatePresence>{open && <GatheringPortal />}</AnimatePresence>;
 }
 
 function AppShellViews({
@@ -448,9 +462,6 @@ function AppShellViews({
       <SettingsModal />
       <TechnologyModal />
       <SpeciesModal />
-      {/* THE GATHERING'S PORTAL — raised by the crown's own door too:
-          the presences' hall stands over every room of the house */}
-      <GatheringPortal />
       {passageModals}
     </div>
   );

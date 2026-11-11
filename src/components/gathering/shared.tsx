@@ -212,6 +212,13 @@ export interface NotificationRow {
   createdAt: string;
 }
 
+export interface NetworkPrefsState {
+  resonance: boolean;
+  echoes: boolean;
+  connections: boolean;
+  library: boolean;
+}
+
 export interface MeState {
   id: string;
   name: string;
@@ -219,6 +226,12 @@ export interface MeState {
   interests: string[];
   disciplines: string[];
   visibility: string;
+  /* the landing passage — the two profiles are one: the house's own
+     email for the signed-in; a quiet guest carries nothing personal */
+  email: string | null;
+  anon: boolean;
+  since: string | null;
+  prefs: NetworkPrefsState;
   counts: {
     posts: number;
     circles: number;

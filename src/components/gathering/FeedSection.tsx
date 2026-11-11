@@ -75,12 +75,17 @@ function useGatheringFeed(mine: boolean, circleId: string | null) {
   const circleRef = useRef(circleId);
   mineRef.current = mine;
   circleRef.current = circleId;
+  /* THE ONE BREATH LAW — the hall's first reading happens once, no
+     matter how many times the reader object is handed back: an empty
+     room is a still room, never a loop of knockings. */
+  const bootedRef = useRef(false);
 
   const read = useCallback(
     async (opts: { fresh?: boolean; kind?: string | null; q?: string | null } = {}) => {
       const fresh = opts.fresh ?? false;
       if (!fresh && !hasMoreRef.current) return;
       if (fresh) {
+        bootedRef.current = true;
         setLoading(true);
         setError(false);
       } else {
@@ -109,6 +114,12 @@ function useGatheringFeed(mine: boolean, circleId: string | null) {
     },
     []
   );
+
+  /* the first breath — read once when the reader is born */
+  useEffect(() => {
+    if (bootedRef.current) return;
+    void read({ fresh: true });
+  }, [read]);
 
   const rekindle = useCallback(
     (opts?: { kind?: string | null; q?: string | null }) => {
@@ -715,13 +726,8 @@ export default function FeedSection({
   const hall = useGatheringFeed(false, null);
   const mine = useGatheringFeed(true, null);
 
-  /* the section's first breath reads the hall */
-  useEffect(() => {
-    if (!active) return;
-    if (hall.posts.length === 0 && !hall.error) void hall.read({ fresh: true, kind: null });
-    if (mine.posts.length === 0 && !mine.error && !mine.loading) void mine.read({ fresh: true, kind: null });
-    /* the first breath alone — the feeds re-read themselves on demand */
-  }, [active, hall, mine]);
+  /* the readers carry their own first breath — the section only
+     answers the active gate; no effect ever re-reads an empty hall */
 
   useEffect(() => {
     if (!note) return;

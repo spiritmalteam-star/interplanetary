@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
-import { networkName, splitList, wallIdsFor } from "@/lib/server/network";
+import {
+  networkName,
+  readNetworkPrefs,
+  splitList,
+  wallIdsFor,
+} from "@/lib/server/network";
 
 /* ------------------------------------------------------------------ */
 /*  THE VISITOR'S OWN IDENTITY IN THE NETWORK                          */
@@ -39,6 +45,8 @@ async function meShape(userId: string) {
     interests: splitList(profile?.interests),
     disciplines: splitList(profile?.disciplines),
     visibility: profile?.visibility ?? "public",
+    prefs: readNetworkPrefs(profile?.prefs),
+    since: profile?.createdAt ?? null,
     counts: {
       posts,
       circles,
@@ -55,10 +63,20 @@ export async function GET(req: NextRequest) {
     const visitor = await resolveVisitor(req);
     const walls = await wallIdsFor(visitor.user.id);
     const me = await meShape(visitor.user.id);
+    const isAnon =
+      visitor.user.provider === "anon" || visitor.user.email.startsWith("anon:");
     return withAnonCookie(
       NextResponse.json({
-        me: { ...me, name: networkName(visitor.user) },
-        anon: visitor.user.provider === "anon",
+        me: {
+          ...me,
+          name: networkName(visitor.user),
+          /* the landing passage — the two profiles are one: a signed-in
+             maker carries the house's own email here; a quiet guest
+             carries nothing personal at all */
+          email: isAnon ? null : visitor.user.email,
+          anon: isAnon,
+        },
+        anon: isAnon,
         walls: Array.from(walls),
       }),
       visitor
@@ -83,6 +101,7 @@ export async function PATCH(req: NextRequest) {
       disciplines?: unknown;
       visibility?: unknown;
       name?: unknown;
+      prefs?: unknown;
     } | null;
     if (!raw) {
       return NextResponse.json({ error: "The introduction arrived unreadable." }, { status: 400 });
@@ -104,6 +123,28 @@ export async function PATCH(req: NextRequest) {
     if (disciplines !== undefined) data.disciplines = disciplines;
     if (visibility !== undefined) data.visibility = visibility;
 
+    /* the bell's own manners — four honest switches, merged over the
+       previous setting so a partial hand never silences the rest */
+    let prefs: Prisma.InputJsonValue | undefined;
+    if (raw.prefs && typeof raw.prefs === "object") {
+      const existing = await db.networkProfile.findUnique({
+        where: { userId: visitor.user.id },
+        select: { prefs: true },
+      });
+      const prev = readNetworkPrefs(existing?.prefs);
+      const next = raw.prefs as Record<string, unknown>;
+      prefs = {
+        resonance:
+          typeof next.resonance === "boolean" ? next.resonance : prev.resonance,
+        echoes: typeof next.echoes === "boolean" ? next.echoes : prev.echoes,
+        connections:
+          typeof next.connections === "boolean"
+            ? next.connections
+            : prev.connections,
+        library: typeof next.library === "boolean" ? next.library : prev.library,
+      } as Prisma.InputJsonValue;
+    }
+
     /* a keeper may also wear a chosen name in the network — the same
        rule the hall speaks: between 2 and 40 letters */
     let nameChanged = false;
@@ -118,11 +159,18 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    if (Object.keys(data).length > 0) {
+    if (Object.keys(data).length > 0 || prefs !== undefined) {
       await db.networkProfile.upsert({
         where: { userId: visitor.user.id },
-        create: { userId: visitor.user.id, ...data },
-        update: data,
+        create: {
+          userId: visitor.user.id,
+          ...data,
+          ...(prefs !== undefined ? { prefs } : {}),
+        },
+        update: {
+          ...data,
+          ...(prefs !== undefined ? { prefs } : {}),
+        },
       });
     }
 
@@ -130,6 +178,8 @@ export async function PATCH(req: NextRequest) {
     const fresh = nameChanged
       ? await db.user.findUnique({ where: { id: visitor.user.id }, select: { name: true, email: true, provider: true } })
       : null;
+    const isAnon =
+      visitor.user.provider === "anon" || visitor.user.email.startsWith("anon:");
 
     return withAnonCookie(
       NextResponse.json({
@@ -137,6 +187,8 @@ export async function PATCH(req: NextRequest) {
         me: {
           ...me,
           name: fresh ? networkName(fresh) : networkName(visitor.user),
+          email: isAnon ? null : visitor.user.email,
+          anon: isAnon,
         },
       }),
       visitor

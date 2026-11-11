@@ -50,16 +50,15 @@ export function isGatheringKind(v: unknown): v is GatheringKind {
 const TITLE_MAX = 120;
 const BODY_MAX = 4000;
 
-/** the display name a post's maker wears in the hall */
+/** the display name a post's maker wears in the hall — the landing
+    profile's own name for the signed-in; the minted astral name for
+    the quiet guest (one mint, shared with the whole network) */
 export function gatheringName(user: {
   name: string | null;
   email: string;
   provider?: string | null;
 }): string {
-  if (user.name && user.name.trim().length >= 2) return user.name.trim().slice(0, 40);
-  if (user.provider === "anon") return "A quiet explorer";
-  const local = user.email.split("@")[0] ?? "";
-  return local.length >= 2 ? local.slice(0, 40) : "A quiet explorer";
+  return networkName(user);
 }
 
 /* ---------------- GET /api/gathering — the living exhibition ---------------- */
