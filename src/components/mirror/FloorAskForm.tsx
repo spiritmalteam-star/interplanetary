@@ -306,7 +306,7 @@ export const FloorAskForm = memo(function FloorAskForm({
             aria-label={t("Conversation history")}
             title={t("Conversation history — kept only on this device, for this visit")}
             data-testid={`${testIdPrefix}-ask-history`}
-            className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
+            className="focus-glow pm-tap flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
           >
             <History className="size-3.5" aria-hidden="true" />
           </button>
@@ -354,7 +354,7 @@ export const FloorAskForm = memo(function FloorAskForm({
           aria-label={t("Open the direct mirror connection")}
           title={t("Open the direct mirror connection")}
           data-testid={`${testIdPrefix}-ask-call`}
-          className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          className="focus-glow pm-tap flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Phone className="size-3.5" aria-hidden="true" />
         </button>
@@ -372,7 +372,7 @@ export const FloorAskForm = memo(function FloorAskForm({
             title={t("The nine lenses of fusion")}
             data-testid={`${testIdPrefix}-ask-fusion`}
             className={cn(
-              "focus-glow relative flex size-8 shrink-0 items-center justify-center rounded-full transition-colors duration-300",
+              "focus-glow pm-tap relative flex size-8 shrink-0 items-center justify-center rounded-full transition-colors duration-300",
               fusionArmed
                 ? "text-[var(--hyperx-fusion,#e879f9)]"
                 : "text-muted-foreground hover:text-foreground"
@@ -426,7 +426,7 @@ export const FloorAskForm = memo(function FloorAskForm({
             aria-label={t("Stop")}
             title={t("Stop")}
             data-testid={`${testIdPrefix}-ask-stop`}
-            className="focus-glow flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
+            className="focus-glow pm-tap flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
           >
             <Square className="size-3.5" aria-hidden="true" />
           </button>
@@ -441,10 +441,19 @@ export const FloorAskForm = memo(function FloorAskForm({
              inks it, one quiet glow at rest, one light sweep per
              hover, a spring press. */
           className={cn(
-            "btn-primary focus-glow flex size-8 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-35"
+            "btn-primary focus-glow pm-tap flex size-8 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed",
+            /* THE BEACON — while the crossing streams the send hand
+               becomes the spinning blade (pm-beacon) wearing the
+               breathing aura (pm-channeling); the resting dim is laid
+               down so the light is never dulled. */
+            floorBusy ? "pm-channeling" : "disabled:opacity-35"
           )}
         >
-          <Send className="size-3.5" aria-hidden="true" />
+          {floorBusy ? (
+            <span className="pm-beacon" aria-hidden="true" />
+          ) : (
+            <Send className="size-3.5" aria-hidden="true" />
+          )}
         </button>
       </form>
       {/* THE TEMPORARY CHAT'S OWN LINE — the landing's floor is free

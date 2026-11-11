@@ -5661,3 +5661,360 @@ html:not(.dark) .lp-sigil-img {
     animation: none !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  LIGHT CODES — the transmission loom: the chamber weaving sound     */
+/*  on the visitor's own machine. Compositor-only; still under         */
+/*  reduced motion.                                                    */
+/* ------------------------------------------------------------------ */
+@keyframes lc-loom-spin { to { transform: rotate(360deg); } }
+@keyframes lc-loom-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes lc-loom-core {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.14); opacity: 1; }
+}
+@keyframes lc-loom-ring {
+  0% { transform: scale(0.7); opacity: 0.7; }
+  100% { transform: scale(1.65); opacity: 0; }
+}
+@keyframes lc-loom-dash { to { stroke-dashoffset: -288; } }
+
+.lc-loom-spin { animation: lc-loom-spin 7s linear infinite; transform-origin: center; }
+.lc-loom-spin-rev { animation: lc-loom-spin-rev 11.5s linear infinite; transform-origin: center; }
+.lc-loom-core { animation: lc-loom-core 2.6s ease-in-out infinite; }
+.lc-loom-ring { animation: lc-loom-ring 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+.lc-loom-ring-late { animation: lc-loom-ring 2.8s cubic-bezier(0.22, 1, 0.36, 1) 1.4s infinite; }
+.lc-loom-orbiter { animation: lc-loom-spin 9s linear infinite; transform-origin: center; }
+.lc-loom-orbiter-rev { animation: lc-loom-spin-rev 14s linear infinite; transform-origin: center; }
+.lc-loom-indeterminate { animation: lc-loom-dash 1.6s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-loom-spin,
+  .lc-loom-spin-rev,
+  .lc-loom-core,
+  .lc-loom-ring,
+  .lc-loom-ring-late,
+  .lc-loom-orbiter,
+  .lc-loom-orbiter-rev,
+  .lc-loom-indeterminate {
+    animation: none;
+  }
+}
+
+/* ================================================================== */
+/*  PRIME MOTION — the house's tactile layer: press physics on every   */
+/*  hand, the crown's shared breath, the channeling beacon, the        */
+/*  streaming ribbon and the shimmering proceeding label. Transform    */
+/*  and opacity only — no layout, no paint loops; every infinite       */
+/*  motion stands behind prefers-reduced-motion: no-preference.        */
+/*  Colors read the standing accents: --scope-a/--gd gold, --cy cyan.  */
+/* ================================================================== */
+
+/* — THE TAP: press physics in pure CSS — a spring squish while the
+     hand is held (fast in, ~90ms), a magnetic one-pixel lift on hover,
+     and a radial pulse ring that charges small and bright while
+     pressed and expands away on release. A resting hand never lifts. */
+.pm-tap {
+  contain: layout;
+  touch-action: manipulation;
+  transition:
+    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    border-color 300ms ease,
+    background-color 300ms ease,
+    color 300ms ease,
+    box-shadow 300ms ease,
+    opacity 300ms ease;
+}
+.pm-tap:disabled {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* the pulse ring — charged small and bright while pressed */
+  .pm-tap::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(1.45);
+    box-shadow:
+      0 0 0 1.5px
+        color-mix(in srgb, var(--scope-a, var(--gd)) 48%, transparent);
+    transition:
+      transform 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 480ms ease-out;
+  }
+  .pm-tap:active::after {
+    opacity: 0.95;
+    transform: scale(0.94);
+    transition-duration: 0ms;
+  }
+  /* the magnetic lift — hover only, and never under a resting hand */
+  @media (hover: hover) {
+    .pm-tap:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+  }
+  /* the spring squish — fast in, springing back on release */
+  .pm-tap:active:not(:disabled) {
+    transform: scale(0.88);
+    transition-duration: 90ms;
+  }
+}
+
+/* — THE BREATH: the crown's synchronized halo. The rings live on the
+     round buttons (pm-breath) and wake only while the crown's own row
+     carries pm-live — bound to the live channel's streaming. */
+.pm-breath {
+  position: relative;
+}
+.pm-live .pm-breath::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 9999px;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px
+      color-mix(in srgb, var(--scope-a, var(--gd)) 40%, transparent),
+    0 0 12px 2px
+      color-mix(in srgb, var(--scope-a, var(--gd)) 22%, transparent);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pm-live .pm-breath::before {
+    animation: pm-breath 2.8s ease-in-out infinite;
+  }
+}
+@keyframes pm-breath {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+/* — THE BEACON: a 16px blade ring turning on the compositor (conic
+     gradient masked to a rim, rotated by transform alone — no
+     registered properties), worn by the composer's send hand while
+     the crossing streams. pm-channeling is the breathing border-glow
+     aura the button wears around it. Reduced motion keeps the ring
+     still and the aura resting. */
+.pm-beacon {
+  position: relative;
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+}
+.pm-beacon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    color-mix(in srgb, var(--scope-a, var(--gd)) 90%, transparent) 55deg,
+    transparent 110deg,
+    transparent 180deg,
+    color-mix(in srgb, var(--cy, #7dd3fc) 80%, transparent) 235deg,
+    transparent 290deg
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 2.5px),
+    #000 calc(100% - 2px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 2.5px),
+    #000 calc(100% - 2px)
+  );
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pm-beacon::before {
+    animation: pm-spin 1.15s linear infinite;
+  }
+  .pm-channeling {
+    animation: pm-aura 2.1s ease-in-out infinite;
+  }
+}
+@keyframes pm-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes pm-aura {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px
+        color-mix(in srgb, var(--scope-a, var(--gd)) 34%, transparent),
+      0 0 9px 0
+        color-mix(in srgb, var(--scope-a, var(--gd)) 22%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px
+        color-mix(in srgb, var(--scope-a, var(--gd)) 60%, transparent),
+      0 0 18px 3px
+        color-mix(in srgb, var(--scope-a, var(--gd)) 45%, transparent);
+  }
+}
+
+/* — THE RIBBON: a 2px indeterminate ribbon under the crown while the
+     live channel streams: one blade of light crossing on the
+     compositor, arriving with a soft fade. */
+.pm-ribbon {
+  pointer-events: none;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 9999px;
+  opacity: 0;
+  background: color-mix(in srgb, var(--scope-a, var(--gd)) 12%, transparent);
+  animation: pm-fade-in 480ms ease-out 90ms backwards;
+}
+.pm-ribbon::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 34%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--scope-a, var(--gd)) 85%, transparent) 45%,
+    color-mix(in srgb, var(--cy, #7dd3fc) 80%, transparent) 65%,
+    transparent
+  );
+  transform: translateX(-110%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pm-ribbon::before {
+    animation: pm-ribbon-run 1.5s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+  }
+}
+@keyframes pm-ribbon-run {
+  to {
+    transform: translateX(310%);
+  }
+}
+
+/* — THE PROCEEDING: the streaming room's honest word — the label
+     shimmers as a blade of light crosses it, the spark trail's three
+     motes rise in a staggered breath. */
+.pm-proceed {
+  animation: pm-fade-in 600ms ease 100ms backwards;
+}
+.pm-shimmer {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+.pm-shimmer-text {
+  display: inline-block;
+}
+.pm-shimmer-sheen {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 42%;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in srgb, var(--scope-a, var(--gd)) 38%, transparent) 50%,
+    transparent
+  );
+  transform: translateX(-130%) skewX(-12deg);
+}
+.pm-motes {
+  position: relative;
+  display: inline-block;
+  width: 10px;
+  height: 12px;
+}
+.pm-mote {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--scope-a, var(--gd)) 90%, transparent);
+  opacity: 0;
+  transform: translateY(4px);
+}
+.pm-mote:nth-child(2) {
+  background: color-mix(in srgb, var(--cy, #7dd3fc) 90%, transparent);
+}
+.pm-mote:nth-child(3) {
+  width: 2px;
+  height: 2px;
+  margin-left: -1px;
+  background: color-mix(in srgb, var(--gd) 70%, transparent);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pm-shimmer-sheen {
+    animation: pm-sheen 2.2s ease-in-out infinite;
+  }
+  .pm-shimmer-text {
+    animation: pm-word 2.2s ease-in-out infinite;
+  }
+  .pm-mote {
+    animation: pm-mote 1.8s ease-in infinite;
+  }
+  .pm-mote:nth-child(2) {
+    animation-delay: 0.3s;
+  }
+  .pm-mote:nth-child(3) {
+    animation-delay: 0.6s;
+  }
+}
+@keyframes pm-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pm-sheen {
+  to {
+    transform: translateX(330%) skewX(-12deg);
+  }
+}
+@keyframes pm-word {
+  0%,
+  100% {
+    opacity: 0.72;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes pm-mote {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.7);
+  }
+  25% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-9px) scale(1);
+  }
+}

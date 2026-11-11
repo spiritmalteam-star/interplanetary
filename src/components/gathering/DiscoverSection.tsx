@@ -406,17 +406,17 @@ export default function DiscoverSection({
     return () => window.clearTimeout(id);
   }, [note]);
 
-  /* ---------------- hands: follow, connect, join ---------------- */
+  /* ---------------- hands: entangle, connect, join ---------------- */
 
   const follow = useCallback(async (makerId: string) => {
     try {
       await netFetch(`/api/network/people/${makerId}`, { method: "POST", body: {} });
       setPeople((prev) => prev?.map((p) => (p.id === makerId ? { ...p, following: !p.following } : p)) ?? prev);
-      setNote("The follow has changed hands.");
+      setNote(t("The entanglement has changed hands."));
     } catch (err) {
-      setNote(err instanceof Error ? err.message : "The door would not open.");
+      setNote(err instanceof Error ? err.message : t("The door would not open."));
     }
-  }, []);
+  }, [t]);
 
   const connect = useCallback(async (makerId: string) => {
     try {
@@ -707,9 +707,16 @@ export default function DiscoverSection({
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-2">
-                    <button type="button" onClick={() => void follow(m.id)} className={cn(GP_GHOST, "min-h-[38px] flex-1 py-1.5 text-[11.5px]")} data-testid={`discover-follow-${m.id}`}>
+                    <button
+                      type="button"
+                      onClick={() => void follow(m.id)}
+                      title={t("Entangle — your presences stay connected across the field")}
+                      aria-label={m.following ? t("Entangled") : t("Entangle")}
+                      className={cn(GP_GHOST, "min-h-[38px] flex-1 py-1.5 text-[11.5px]")}
+                      data-testid={`discover-follow-${m.id}`}
+                    >
                       <UserCheck className="size-3.5" aria-hidden="true" />
-                      {m.following ? "Following" : "Follow"}
+                      {m.following ? t("Entangled") : t("Entangle")}
                     </button>
                     {m.connectionState === "accepted" ? (
                       <span className="min-h-[38px] flex-1 rounded-full border border-[#d8e5d0] bg-[#f2f7ee] px-3 py-2 text-center text-[11.5px] font-semibold text-[#5f7a52]">Connected</span>
@@ -1135,7 +1142,10 @@ export default function DiscoverSection({
             if (e.target === e.currentTarget) setPrefsOpen(false);
           }}
         >
-          <div className={cn(GP_CARD, "w-full max-w-[440px] rounded-[26px] bg-[linear-gradient(165deg,#fffef9_0%,#f7f0de_100%)] p-5")}>
+          <div
+            className={cn(GP_CARD, "w-full max-w-[440px] rounded-[26px] p-5")}
+            style={{ background: "var(--gath-sheet)" }}
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="font-[family-name:var(--font-cinzel)] text-[15px] font-semibold text-[#3d3428]">{t("Tune the current")}</p>
@@ -1217,7 +1227,7 @@ function PublicationReader({
       <div className="absolute inset-0 bg-[#2b2416]/45 backdrop-blur-[3px]" onClick={onClose} aria-hidden="true" />
       <div
         className="gp-card relative flex max-h-[92vh] w-full max-w-[820px] flex-col overflow-hidden rounded-t-[28px] sm:rounded-[28px]"
-        style={{ background: "linear-gradient(170deg,#fffdf9 0%,#fbf5e8 100%)" }}
+        style={{ background: "var(--gath-sheet)" }}
       >
         {/* the reader's crown */}
         <div className="flex shrink-0 items-center gap-2.5 border-b border-[#eee5d0] px-4 py-3 sm:px-6">

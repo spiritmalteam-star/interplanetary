@@ -24,7 +24,7 @@ import {
   professionProfiles,
 } from "@/lib/profession-profiles";
 import { sectionImage } from "@/lib/entity-utils";
-import { sceneImageFor, sceneImageForDistinct, slugify } from "@/lib/profile-visuals";
+import { sceneImageFor, slugify } from "@/lib/profile-visuals";
 import { distinctChains, ProfileFigure } from "./ProfileBits";
 import { ModalShell } from "./ModalShell";
 import type { ProfessionDomain } from "@/lib/mirror-types";
@@ -69,19 +69,15 @@ export function AstralJobsModal() {
   const domain = professionDomains.find((d) => d.id === domainId) ?? null;
   const role = domain?.professions.find((p) => p.name === profession) ?? null;
 
-  /* the page's three plates — own painting first, no image ever twice */
+  /* the page's two plates — own painting first, no image ever twice
+     (the old spatial workplace scene was asked to leave) */
   const domainMaster = domain ? sectionImage(`dom-${domain.id}`) : null;
   const craftScene = role ? sceneImageFor(role.name, "calling") : null;
-  const workplaceScene =
-    role && domainMaster
-      ? sceneImageForDistinct(role.name, "workplace", [craftScene!, domainMaster])
-      : null;
   const plates =
-    domain && role && domainMaster && craftScene && workplaceScene
+    domain && role && domainMaster && craftScene
       ? distinctChains([
           [`/images/ai/astral/job-${slugify(role.name)}.jpg`, domainMaster],
           [craftScene],
-          [workplaceScene],
         ])
       : null;
 
@@ -344,12 +340,6 @@ export function AstralJobsModal() {
                   </p>
                 </div>
 
-                {/* the third plate — the workplace, wrapped by the toolkit */}
-                <ProfileFigure
-                  sources={plates[2]}
-                  alt={t("The workplace of the {name} — an impressionistic scene", { name: role.name })}
-                  testid="profession-gallery-workplace"
-                />
                 <div>
                   <h5 className="mono-label text-[11px] text-[var(--cy)]">{t("Toolkit")}</h5>
                   <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -362,12 +352,6 @@ export function AstralJobsModal() {
                       </span>
                     ))}
                   </div>
-                </div>
-                <div>
-                  <h5 className="mono-label text-[11px] text-[var(--cy)]">{t("Where the work happens")}</h5>
-                  <p className="mt-1 text-[15px] leading-relaxed text-foreground/85">
-                    {professionProfiles[role.name].workplace}
-                  </p>
                 </div>
                 <div>
                   <h5 className="mono-label text-[11px] text-[var(--gd)]">{t("Honest hazards")}</h5>

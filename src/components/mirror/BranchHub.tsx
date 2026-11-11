@@ -38,7 +38,10 @@ function isMainBranch(b: HubBranch): b is "interplanetary" | "healing" {
 
 export function BranchHub() {
   const t = useT();
-  const [open, setOpen] = useState(false);
+  const [driftBranch, setDriftBranch] = useState<HubBranch | null>(null);
+  const boardOpen = useMirror((s) => s.treeBoardOpen);
+  const closeBoard = useMirror((s) => s.closeTreeBoard);
+  const open = driftBranch !== null || boardOpen;
   const [branch, setBranch] = useState<HubBranch>("manifesting");
 
   /* the threads the hub can drift to — their last breaths are the
@@ -62,14 +65,13 @@ export function BranchHub() {
   const activeMode = useMirror((s) => s.activeMode);
 
   /* THE DRIFT — one quiet event from a branch panel's link opens the
-     hub on the branch the conversation belongs to. */
+     hub on the branch the conversation belongs to. THE MAP'S OWN
+     BOARD — the crown's small map opens the whole grove (no drift,
+     no locked branch) through the store's own flag. */
   useEffect(() => {
     const onDrift = (e: Event) => {
       const detail = (e as CustomEvent<{ branch?: string }>).detail;
-      const b = detail?.branch;
-      if (!b) return;
-      setBranch(b as HubBranch);
-      setOpen(true);
+      setDriftBranch((detail?.branch as HubBranch) ?? "manifesting");
     };
     window.addEventListener(TREE_DRIFT_EVENT, onDrift);
     return () => window.removeEventListener(TREE_DRIFT_EVENT, onDrift);
@@ -156,9 +158,22 @@ export function BranchHub() {
 
   const treeBranch: BranchId =
     branch === CHANNELING_BRANCH ? activeMode : branch;
+  /* the drift locks the board to its own branch; the map's whole
+     grove keeps every branch free to walk */
+  const lockedBranch: BranchId | undefined =
+    driftBranch !== null && driftBranch !== CHANNELING_BRANCH
+      ? (driftBranch as BranchId)
+      : undefined;
+
+  const handleClose = (o: boolean) => {
+    if (!o) {
+      setDriftBranch(null);
+      closeBoard();
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className="max-h-[88dvh] w-[calc(100vw-2rem)] overflow-y-auto sm:max-w-[820px]"
         data-testid="branch-hub"
@@ -168,19 +183,22 @@ export function BranchHub() {
             {t("The living tree")}
           </DialogTitle>
           <DialogDescription>
-            {t("The branches of this conversation, linked with their branch of the tree.")}
+            {lockedBranch
+              ? t("The branches of this conversation, linked with their branch of the tree.")
+              : t("The whole grove — every branch, walkable, growable, expandable.")}
           </DialogDescription>
         </DialogHeader>
         <SuggestionTree
           focusBranch={treeBranch}
-          /* THE CATEGORIZATION LAW — the hub opens on the branch the
-             conversation belongs to, that branch alone. */
-          lockedBranch={treeBranch}
+          /* THE CATEGORIZATION LAW — a drift opens on the branch the
+             conversation belongs to; the map's board opens the whole
+             grove with no locked branch. */
+          lockedBranch={lockedBranch}
           contextText={wiring.context}
           onPick={(q) => {
             if (wiring.loading) return;
             wiring.ask(q);
-            setOpen(false);
+            handleClose(false);
           }}
           disabled={wiring.loading}
           testIdPrefix="hub-tree"

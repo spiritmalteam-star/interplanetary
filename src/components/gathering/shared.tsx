@@ -220,6 +220,13 @@ export interface MeState {
   };
 }
 
+/* THE VIBE — the gathering's two quantum fields. "purple" is the deep
+   violet field (lavender stars); "gold" is the ink-dark ember sky with
+   the gold constellation. The choice rests on the visitor's device. */
+export type GathVibe = "purple" | "gold";
+
+export const VIBE_STORAGE_KEY = "mirror-gathering-vibe";
+
 /* the quiet fetch every door speaks through */
 export async function netFetch<T>(
   url: string,

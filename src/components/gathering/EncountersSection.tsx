@@ -96,12 +96,20 @@ export default function EncountersSection({
     void load();
   }, [active, load]);
 
-  const follow = useCallback(
+  const entangle = useCallback(
     async (person: PersonCard) => {
       setBusyId(person.id);
       try {
-        await netFetch(`/api/network/people/${person.id}`, { method: "POST" });
-        setNote(null);
+        const res = await netFetch<{ following?: boolean }>(`/api/network/people/${person.id}`, {
+          method: "POST",
+        });
+        setNote(
+          t(
+            res?.following === false
+              ? "The entanglement rests — you let it go."
+              : "Entangled — your presences stay connected across the field."
+          )
+        );
         void load();
       } catch {
         /* the hand stays where it was */
@@ -109,7 +117,7 @@ export default function EncountersSection({
         setBusyId(null);
       }
     },
-    [load]
+    [load, t]
   );
 
   const sendRequest = useCallback(async () => {
@@ -291,14 +299,16 @@ export default function EncountersSection({
                     )}
                     <button
                       type="button"
-                      onClick={() => void follow(p)}
+                      onClick={() => void entangle(p)}
                       disabled={busyId === p.id}
+                      title={t("Entangle — your presences stay connected across the field")}
+                      aria-label={t("Entangle")}
                       className={GP_GHOST}
                     >
                       {busyId === p.id ? (
                         <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
                       ) : null}
-                      {t("Follow")}
+                      {t("Entangle")}
                     </button>
                   </div>
                 </div>

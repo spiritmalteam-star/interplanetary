@@ -42,6 +42,13 @@ const AstralJobsModal = dynamic(
   () => import("./AstralJobsModal").then((m) => ({ default: m.AstralJobsModal })),
   { ssr: false }
 );
+/* THE GATHERING'S PORTAL — the presences' hall, lifted only when its
+   door is pressed (the crown's own gathering door or the threshold's
+   sigil); the house keeps breathing beneath it. */
+const GatheringPortal = dynamic(
+  () => import("@/components/gathering/GatheringPortal"),
+  { ssr: false }
+);
 const DossierModal = dynamic(
   () => import("./DossierModal").then((m) => ({ default: m.DossierModal })),
   { ssr: false }
@@ -441,6 +448,9 @@ function AppShellViews({
       <SettingsModal />
       <TechnologyModal />
       <SpeciesModal />
+      {/* THE GATHERING'S PORTAL — raised by the crown's own door too:
+          the presences' hall stands over every room of the house */}
+      <GatheringPortal />
       {passageModals}
     </div>
   );

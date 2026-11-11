@@ -86,7 +86,11 @@ export const WALLET_COSTS: Record<string, number> = {
   CHAT: 0, // THE CHAT IS FREE FOREVER — the weigh never looks at it
   AKASHIC: walletCost("AKASHIC", 5),
   ART_X: walletCost("ART_X", 5),
-  LIGHT_CODES: walletCost("LIGHT_CODES", 5),
+  /* LIGHT CODES — the chamber's door never weighs a purse: the music
+     must always sound (and the resonance loom weaves on the visitor's
+     own machine when the engine's key rests). The keeper may price it
+     again from the vault (WALLET_COST_LIGHT_CODES) without a line. */
+  LIGHT_CODES: walletCost("LIGHT_CODES", 0),
   DREAM_BOOK: walletCost("DREAM_BOOK", 15),
 };
 

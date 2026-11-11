@@ -4,20 +4,32 @@ import { useCallback, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import { type MeState, GP_HAND, GP_INPUT, RoomLabel, MakerMark, netFetch } from "./shared";
+import {
+  type GathVibe,
+  type MeState,
+  GP_HAND,
+  GP_INPUT,
+  RoomLabel,
+  MakerMark,
+  netFetch,
+} from "./shared";
 
 /* ------------------------------------------------------------------ */
 /*  THE VISITOR'S OWN ROOM — the introduction, the fields of curiosity */
 /*  and craft, the quiet counts. Rich profiles without vanity: no      */
-/*  follower numbers, no ranks — only what a maker chooses to wear.    */
+/*  entanglement numbers, no ranks — only what a maker chooses to wear.*/
 /* ------------------------------------------------------------------ */
 
 export default function ProfileSheet({
   me,
+  vibe,
+  onVibe,
   onSaved,
   onClose,
 }: {
   me: MeState | null;
+  vibe: GathVibe;
+  onVibe: (v: GathVibe) => void;
   onSaved: (me: MeState) => void;
   onClose: () => void;
 }) {
@@ -92,6 +104,94 @@ export default function ProfileSheet({
                   : ""}
               </p>
             </div>
+          </div>
+
+          {/* ---------- the vibe — one switch recolors the whole gathering ---------- */}
+          <div
+            className="mt-5 rounded-[20px] p-4"
+            style={{
+              border: "1px solid var(--gath-edge, #e4d9bd)",
+              background: "color-mix(in srgb, var(--gath, #a78bfa) 7%, transparent)",
+            }}
+            data-testid="gath-vibe-panel"
+          >
+            <RoomLabel>{t("One switch recolors the whole gathering")}</RoomLabel>
+            <div
+              role="group"
+              aria-label={t("The gathering's vibe")}
+              className="mt-2.5 flex flex-wrap gap-2"
+            >
+              <button
+                type="button"
+                onClick={() => onVibe("purple")}
+                aria-pressed={vibe === "purple"}
+                data-testid="gath-vibe-purple"
+                title={t("Purple field — deep violet gradients, lavender stars")}
+                style={{
+                  color:
+                    vibe === "purple"
+                      ? "var(--gath-ink, #f4effe)"
+                      : "var(--gath-ink-3, #a99cc9)",
+                  borderColor:
+                    vibe === "purple"
+                      ? "var(--gath-edge-active, rgba(167, 139, 250, 0.62))"
+                      : "var(--gath-edge, rgba(196, 181, 253, 0.20))",
+                  background:
+                    vibe === "purple"
+                      ? "color-mix(in srgb, var(--gath, #a78bfa) 16%, var(--gath-card, #251a44))"
+                      : "transparent",
+                }}
+                className="focus-glow flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold transition-all duration-300"
+              >
+                <span
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 rounded-full"
+                  style={{
+                    background: "linear-gradient(140deg, #c4b5fd 0%, #7c5cad 55%, #2e1a5e 100%)",
+                    boxShadow: "0 0 6px rgba(167, 139, 250, 0.55)",
+                  }}
+                />
+                {t("Purple field")}
+              </button>
+              <button
+                type="button"
+                onClick={() => onVibe("gold")}
+                aria-pressed={vibe === "gold"}
+                data-testid="gath-vibe-gold"
+                title={t("Gold constellation — an ember-dark sky, gold threads")}
+                style={{
+                  color:
+                    vibe === "gold"
+                      ? "var(--gath-ink, #f4effe)"
+                      : "var(--gath-ink-3, #a99cc9)",
+                  borderColor:
+                    vibe === "gold"
+                      ? "var(--gath-edge-active, rgba(212, 175, 55, 0.62))"
+                      : "var(--gath-edge, rgba(196, 181, 253, 0.20))",
+                  background:
+                    vibe === "gold"
+                      ? "color-mix(in srgb, var(--gath, #d4af37) 16%, var(--gath-card, #251a44))"
+                      : "transparent",
+                }}
+                className="focus-glow flex min-h-[40px] flex-1 items-center justify-center gap-2 rounded-full border px-4 py-2 text-[12px] font-semibold transition-all duration-300"
+              >
+                <span
+                  aria-hidden="true"
+                  className="size-3.5 shrink-0 rounded-full"
+                  style={{
+                    background: "linear-gradient(140deg, #f2dc9b 0%, #d4af37 55%, #6e4f12 100%)",
+                    boxShadow: "0 0 6px rgba(212, 175, 55, 0.55)",
+                  }}
+                />
+                {t("Gold constellation")}
+              </button>
+            </div>
+            <p
+              className="mt-2 text-[10.5px] leading-relaxed"
+              style={{ color: "var(--gath-ink-3, #a99cc9)" }}
+            >
+              {t("Your field follows you on this device.")}
+            </p>
           </div>
 
           <div className="mt-5">

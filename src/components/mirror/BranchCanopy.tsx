@@ -42,6 +42,7 @@ import {
   Link2,
   ListTree,
   LoaderCircle,
+  Map as MapIcon,
   Maximize2,
   Menu,
   Minimize2,
@@ -62,6 +63,7 @@ import {
   Sun,
   TreeDeciduous,
   UserRound,
+  UsersRound,
   Volume2,
   VolumeX,
   X,
@@ -154,6 +156,7 @@ import { useWorkspaceMemory } from "@/lib/workspace-memory";
 import { TAB_META } from "./living/ToolWorkspace";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
+import { ShimmerLabel, SparkTrail } from "./PrimeMotion";
 import { ExpansionRing } from "./ExpansionMirror";
 import { LiveCall } from "./LiveCall";
 import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
@@ -1674,7 +1677,7 @@ const RoomShareButton = memo(function RoomShareButton({
       aria-label={t("Share this transmission")}
       title={t("Share this transmission")}
       data-testid={testId}
-      className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
+      className="focus-glow pm-tap flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
     >
       {shared ? (
         <Check className="size-3" aria-hidden="true" />
@@ -1728,7 +1731,7 @@ const RoomCopyButton = memo(function RoomCopyButton({
       aria-label={t("Copy")}
       title={t("Copy")}
       data-testid={testId}
-      className="focus-glow flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
+      className="focus-glow pm-tap flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
     >
       {copied ? (
         <Check className="size-3" aria-hidden="true" />
@@ -2282,6 +2285,7 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   leading,
   scopeKey,
   bare = false,
+  channeling = false,
 }: {
   roomKey: string;
   disabled?: boolean;
@@ -2296,6 +2300,10 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
       own line keeps the quiet shape: no attachments, a softly glowing
       frame, the mirror's own word. */
   bare?: boolean;
+  /** THE BEACON'S SEAT — true while the room's crossing streams: the
+      send hand rests and the spinning blade (pm-beacon) takes its
+      place, the button wearing the breathing aura (pm-channeling). */
+  channeling?: boolean;
 }) {
   const t = useT();
   const [draft, setDraft] = useState("");
@@ -2394,9 +2402,20 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
           type="submit"
           disabled={disabled || !draft.trim()}
           aria-label={t("Send")}
-          className="btn-primary focus-glow flex size-7 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-35"
+          data-testid={`${testIdPrefix}-zoom-send`}
+          className={cn(
+            "btn-primary focus-glow pm-tap flex size-7 shrink-0 items-center justify-center rounded-full disabled:cursor-not-allowed",
+            /* THE BEACON — while the crossing streams the send hand
+               becomes the spinning blade and the glow breathes; the
+               resting dim is laid down so the light is never dulled. */
+            channeling ? "pm-channeling" : "disabled:opacity-35"
+          )}
         >
-          <Send className="size-3" aria-hidden="true" />
+          {channeling ? (
+            <span className="pm-beacon" aria-hidden="true" />
+          ) : (
+            <Send className="size-3" aria-hidden="true" />
+          )}
         </button>
       </form>
     </div>
@@ -2445,7 +2464,7 @@ function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
       aria-label={t("Profile")}
       title={t("Profile")}
       data-testid={`${testIdPrefix}-profile-icon`}
-      className="focus-glow flex size-7 items-center justify-center rounded-full border text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] hover:text-foreground"
+      className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] hover:text-foreground"
       style={{
         borderColor:
           "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
@@ -2480,7 +2499,7 @@ function CrownLightHand({ testIdPrefix }: { testIdPrefix: string }) {
       aria-label={t("Toggle between deep space and daylight laboratory")}
       title={t("Toggle theme")}
       data-testid={`${testIdPrefix}-light-hand`}
-      className="focus-glow group flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
+      className="focus-glow pm-tap pm-breath group flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
     >
       {/* CSS-driven swap avoids hydration mismatch and effect state */}
       <Sun
@@ -5643,7 +5662,14 @@ export function BranchCanopy({
         }
       >
         <div
-          className="mx-auto flex w-full max-w-[760px] items-center gap-1 sm:gap-1.5"
+          className={cn(
+            "mx-auto flex w-full max-w-[760px] items-center gap-1 sm:gap-1.5",
+            /* THE CROWN'S SHARED BREATH — while the live channel streams
+               the crown's own row carries pm-live, and every round
+               button's halo (pm-breath) breathes in one synchronized
+               rhythm, one tide through the whole compass. */
+            liveLoading && "pm-live"
+          )}
         >
           {/* THE CROWN'S OWN ROW — the theme pages' and the threshold's
               quiet crown. THE REALM ITSELF no longer wears this row:
@@ -5670,7 +5696,7 @@ export function BranchCanopy({
               title={t("Where the walk stands")}
               data-testid={`${testIdPrefix}-menu`}
               className={cn(
-                "focus-glow flex size-7 items-center justify-center rounded-full border transition-all duration-300",
+                "focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border transition-all duration-300",
                 crownMenu === "menu"
                   ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
                   : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
@@ -5952,7 +5978,7 @@ export function BranchCanopy({
               title={t("The categories of the house")}
               data-testid={`${testIdPrefix}-cats`}
               className={cn(
-                "focus-glow flex h-7 items-center gap-1.5 rounded-full border px-2.5 transition-all duration-300",
+                "focus-glow pm-tap pm-breath flex h-7 items-center gap-1.5 rounded-full border px-2.5 transition-all duration-300",
                 crownMenu === "cats"
                   ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
                   : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
@@ -6160,7 +6186,7 @@ export function BranchCanopy({
               aria-label={t("Akashic")}
               title={t("Akashic")}
               data-testid={`${testIdPrefix}-door-akashic`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
               <ScrollText className="size-3" aria-hidden="true" />
             </button>
@@ -6172,7 +6198,7 @@ export function BranchCanopy({
               aria-label={t("Book")}
               title={t("Book")}
               data-testid={`${testIdPrefix}-door-book`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
               <BookOpen className="size-3" aria-hidden="true" />
             </button>
@@ -6183,18 +6209,50 @@ export function BranchCanopy({
                 codex lives at the scopes' shore and inside the codex
                 hall itself. Nothing of the register remains at the top
                 of the chat where InDream and Scopes stand. */}
-            {!realm && (
+            {/* THE MUSIC DOOR STANDS IN EVERY CROWN — the chamber of
+                sound is one touch from the walk as well: the loom turns
+                where the visitor stands */}
             <button
               type="button"
               onClick={() => openLightCodes()}
               aria-label={t("Music")}
               title={t("Music — sound transmissions through Mirror Entity")}
               data-testid={`${testIdPrefix}-door-music`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             >
               <Music className="size-3" aria-hidden="true" />
             </button>
+            {/* THE GATHERING — the presences' own hall, raised over any
+                room of the house from the realm's crown */}
+            {realm && (
+              <button
+                type="button"
+                onClick={() => useMirror.getState().openGatheringPortal()}
+                aria-label={t("The Gathering")}
+                title={t("The Gathering")}
+                data-testid={`${testIdPrefix}-door-gathering`}
+                className="focus-glow pm-tap pm-breath group relative flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              >
+                <UsersRound className="size-3 transition-transform duration-300 group-hover:scale-110" aria-hidden="true" />
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-[var(--gd)] opacity-70 animate-pulse"
+                />
+              </button>
             )}
+            {/* THE TREE'S MAP — one small map that summons the living
+                suggestions board: the whole grove, every branch, grown
+                and expandable, over any room */}
+            <button
+              type="button"
+              onClick={() => useMirror.getState().openTreeBoard()}
+              aria-label={t("The tree's map")}
+              title={t("The tree's map")}
+              data-testid={`${testIdPrefix}-door-map`}
+              className="focus-glow pm-tap pm-breath group flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <MapIcon className="size-3 transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110" aria-hidden="true" />
+            </button>
             {/* THE ABOUT DOOR HAS MOVED HOME — it left the house doors:
                 About Us now wears its own question mark at the crown's
                 very top right, alone in its circle. */}
@@ -6237,7 +6295,7 @@ export function BranchCanopy({
                   aria-label={t("New branches")}
                   title={t("New branches")}
                   data-testid={`${testIdPrefix}-renew`}
-                  className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                  className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <RefreshCw className="size-3" aria-hidden="true" />
                 </button>
@@ -6247,7 +6305,7 @@ export function BranchCanopy({
                   aria-label={t("Hide the branches")}
                   title={t("Hide the branches")}
                   data-testid={`${testIdPrefix}-close`}
-                  className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                  className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
                 >
                   <X className="size-3.5" aria-hidden="true" />
                 </button>
@@ -6281,7 +6339,7 @@ export function BranchCanopy({
               aria-label={t("About Us")}
               title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
               data-testid={`${testIdPrefix}-about-question`}
-              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
+              className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground max-md:hidden"
             >
               <CircleQuestionMark className="size-3.5" aria-hidden="true" />
             </button>
@@ -6295,6 +6353,17 @@ export function BranchCanopy({
             compass, no second rank beneath it. */}
       </div>
         </div>
+        {/* THE PRIME'S RIBBON — while the live channel streams, a 2px
+            indeterminate ribbon crosses just beneath the crown: one
+            blade of light on the compositor, arriving with a soft
+            fade, gone the breath the channel rests. */}
+        {liveLoading && (
+          <div
+            aria-hidden="true"
+            data-testid={`${testIdPrefix}-prime-ribbon`}
+            className="pm-ribbon absolute inset-x-0 top-full"
+          />
+        )}
         {realm && (onExpand || onMinimize) && (
           /* THE CORNER'S OWN GEAR HAND — the hide-the-chat arrow is
              gone for good; the corner now carries the way across
@@ -6314,7 +6383,7 @@ export function BranchCanopy({
                 ? `${testIdPrefix}-corner-expand`
                 : `${testIdPrefix}-corner-landing`
             }
-            className="focus-glow absolute z-40 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            className="focus-glow pm-tap absolute z-40 flex size-7 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_22px_-12px_rgba(0,0,0,0.55)] transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
             style={{
               top: "max(0.5rem, env(safe-area-inset-top))",
               right: "max(0.75rem, env(safe-area-inset-right))",
@@ -6577,7 +6646,7 @@ export function BranchCanopy({
             aria-label={t("The whole family")}
             title={t("The whole family")}
             data-testid={`${testIdPrefix}-zoom-fit`}
-            className="focus-glow absolute bottom-3 right-3 z-20 flex size-8 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_28px_-14px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:text-foreground"
+            className="focus-glow pm-tap absolute bottom-3 right-3 z-20 flex size-8 items-center justify-center rounded-full border bg-background text-muted-foreground shadow-[0_8px_28px_-14px_rgba(0,0,0,0.55)] transition-colors duration-300 hover:text-foreground"
             style={{
               borderColor:
                 "color-mix(in srgb, var(--scope-a,var(--gd)) 28%, transparent)",
@@ -6767,6 +6836,21 @@ export function BranchCanopy({
                         {zoom.q}
                       </p>
                     )}
+                    {/* THE PROCEEDING — while the answer streams beneath,
+                        the room's own header carries the honest word: a
+                        shimmering "Proceeding" with three rising motes,
+                        transform and opacity alone. */}
+                    {roomLoading && (
+                      <span
+                        data-testid={`${testIdPrefix}-proceeding`}
+                        className="pm-proceed mt-0.5 flex items-center gap-1.5"
+                      >
+                        <SparkTrail />
+                        <ShimmerLabel className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+                          {t("Proceeding")}
+                        </ShimmerLabel>
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div
@@ -6829,7 +6913,7 @@ export function BranchCanopy({
                     aria-label={t("Clear the chat")}
                     title={t("Clear the chat")}
                     data-testid={`${testIdPrefix}-zoom-reload`}
-                    className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                    className="focus-glow pm-tap flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <RefreshCw className="size-3.5" aria-hidden="true" />
                   </button>
@@ -6845,7 +6929,7 @@ export function BranchCanopy({
                     title={narratorOpen ? t("Silence the narrator") : t("Let the narrator speak")}
                     data-testid={`${testIdPrefix}-zoom-narrator`}
                     className={cn(
-                      "focus-glow relative flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
+                      "focus-glow pm-tap relative flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
                       narratorOpen || narrLoading
                         ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
                         : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground",
@@ -6876,7 +6960,7 @@ export function BranchCanopy({
                         title={t("Conversation history — kept only on this device, for this visit")}
                         data-testid={`${testIdPrefix}-zoom-history`}
                         className={cn(
-                          "focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
+                          "focus-glow pm-tap flex size-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
                           historyOpen
                             ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,transparent)] text-[var(--scope-a,var(--gd))]"
                             : "hairline text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
@@ -6910,7 +6994,7 @@ export function BranchCanopy({
                       aria-label={t("Back to the wall")}
                       title={t("Back to the wall")}
                       data-testid={`${testIdPrefix}-zoom-back`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                      className="focus-glow pm-tap flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
                     >
                       <TreeDeciduous className="size-3.5" aria-hidden="true" />
                     </button>
@@ -6926,7 +7010,7 @@ export function BranchCanopy({
                       aria-label={t("New chat")}
                       title={t("New chat — a fresh floor for the next discovery")}
                       data-testid={`${testIdPrefix}-hyperx-new-chat-top`}
-                      className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#e879f9_55%,transparent)] hover:text-foreground"
+                      className="focus-glow pm-tap flex size-7 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#e879f9_55%,transparent)] hover:text-foreground"
                     >
                       <MessageSquarePlus className="size-3.5" aria-hidden="true" />
                     </button>
@@ -7542,7 +7626,7 @@ export function BranchCanopy({
                       aria-expanded={branchesOpen}
                       aria-controls={`${testIdPrefix}-branches-panel`}
                       data-testid={`${testIdPrefix}-branches-toggle`}
-                      className="focus-glow group flex w-full items-center gap-2 rounded-full border px-3.5 py-2 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
+                      className="focus-glow pm-tap group flex w-full items-center gap-2 rounded-full border px-3.5 py-2 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
                       style={{
                         borderColor:
                           "color-mix(in srgb, var(--scope-a,var(--gd)) 28%, transparent)",
@@ -7591,7 +7675,7 @@ export function BranchCanopy({
                               disabled={disabled}
                               title={t(BRANCH_TYPE_LABELS[b.type])}
                               data-testid={`${testIdPrefix}-cont`}
-                              className="focus-glow group flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-left transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
+                              className="focus-glow pm-tap group flex items-start gap-2.5 rounded-2xl border px-4 py-3 text-left transition-all duration-300 hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_60%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
                               style={{
                                 borderColor:
                                   "color-mix(in srgb, var(--scope-a,var(--gd)) 24%, transparent)",
@@ -7625,6 +7709,7 @@ export function BranchCanopy({
                 <ZoomReplyForm
                   roomKey={zoom.q}
                   disabled={disabled || liveLoading || threadBusy}
+                  channeling={threadBusy || roomLoading}
                   onSend={sendReplyFromPanel}
                   testIdPrefix={testIdPrefix}
                   scopeKey={roomLiveScope}
@@ -7645,7 +7730,7 @@ export function BranchCanopy({
                             aria-label={t("Stop")}
                             title={t("Stop")}
                             data-testid={`${testIdPrefix}-room-stop`}
-                            className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
+                            className="focus-glow pm-tap flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground"
                           >
                             <Square className="size-3" aria-hidden="true" />
                           </button>
@@ -7665,7 +7750,7 @@ export function BranchCanopy({
                         aria-label={t("Open the direct mirror connection")}
                         title={t("Open the direct mirror connection")}
                         data-testid={`${testIdPrefix}-room-call`}
-                        className="focus-glow flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+                        className="focus-glow pm-tap flex size-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Phone className="size-3.5" aria-hidden="true" />
                       </button>

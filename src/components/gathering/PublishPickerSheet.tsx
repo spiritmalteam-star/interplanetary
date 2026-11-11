@@ -143,7 +143,8 @@ export default function PublishPickerSheet({
       }}
     >
       <div
-        className={`gp-scroll max-h-[88vh] w-full max-w-[560px] overflow-y-auto rounded-t-[26px] border border-white/85 bg-[linear-gradient(165deg,#fffef9_0%,#f7f0de_100%)] p-5 shadow-[0_30px_80px_-30px_rgba(60,48,26,0.5)] sm:rounded-[26px] sm:p-6 ${GP_CARD}`}
+        className={`gp-scroll max-h-[88vh] w-full max-w-[560px] overflow-y-auto rounded-t-[26px] border border-white/85 p-5 shadow-[0_30px_80px_-30px_rgba(60,48,26,0.5)] sm:rounded-[26px] sm:p-6 ${GP_CARD}`}
+        style={{ background: "var(--gath-sheet)" }}
       >
         <div className="flex items-start justify-between gap-3">
           <div>

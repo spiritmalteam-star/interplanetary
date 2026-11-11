@@ -844,6 +844,13 @@ interface MirrorState {
   openGatheringPortal: () => void;
   closeGatheringPortal: () => void;
 
+  /* THE TREE BOARD — the living tree, summoned over any world by the
+     crown's small map. When open, the branches' hub shows every
+     branch (no locked focus) — the whole grove at hand. */
+  treeBoardOpen: boolean;
+  openTreeBoard: () => void;
+  closeTreeBoard: () => void;
+
   setMode: (mode: Mode) => void;
   setSidebarTab: (tab: SidebarTab) => void;
   setSearch: (value: string) => void;
@@ -926,7 +933,9 @@ interface MirrorState {
   /* THE VISITOR'S OWN STYLE — the image look chosen through the "/"
      hand in any composer; every crystallization wears it. */
   visualStyle: string | null;
-  lcStatus: "idle" | "interpreting" | "polling" | "ready" | "error";
+  lcStatus: "idle" | "interpreting" | "rendering" | "polling" | "ready" | "error";
+  /** The resonance engine's own progress (0..1) while weaving locally. */
+  lcRenderProgress: number;
   /** THE MIRROR'S BRIEF — the chamber's composition draft: the direction
       the Mirror wrote (or one carried in from the chat), editable by
       the visitor's own hand before any sound is woven. */
@@ -1616,6 +1625,62 @@ function persistLcHistory(history: LcTrack[]): void {
   }
 }
 
+/* ------------------------------------------------------------------ */
+/*  THE RESONANCE LOOM — the chamber's own hand.                       */
+/*                                                                     */
+/*  When the sound engine's key is not placed (or the sky's allowance  */
+/*  rests), the chamber does not fall silent: the Mirror's standing    */
+/*  brief is woven RIGHT HERE on the visitor's machine into a real,    */
+/*  downloadable ambient transmission. The same shelf laws apply —     */
+/*  the sound also rests on the visitor's IndexedDB so the history     */
+/*  replays it, and the engineId carries the seed for a re-weave.      */
+/* ------------------------------------------------------------------ */
+async function weaveResonanceLocally(
+  brief: LcBrief,
+  shape: LcShape,
+  onProgress: (p: number) => void
+): Promise<LcTrack> {
+  const { renderResonanceTrack, encodeResonanceId } = await import(
+    "@/lib/resonance-engine"
+  );
+  const params = {
+    mode: brief.mode,
+    energy: shape.energy,
+    light: shape.light,
+    familiarity: shape.familiarity,
+    structure: shape.structure,
+    timeFeel: shape.timeFeel,
+    voice: shape.voice,
+    style: brief.style,
+    seed: (Math.random() * 0xffffffff) >>> 0,
+    title: brief.title,
+  };
+  const { blobUrl, duration } = await renderResonanceTrack(params, onProgress);
+  const id = `lc-${Date.now()}`;
+  /* the keeping law — the woven sound rests on the visitor's own shelf */
+  try {
+    const blob = await (await fetch(blobUrl)).blob();
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    void lcAudioSave(id, bytes, "audio/wav");
+  } catch {
+    /* memory only — the shelf may rest */
+  }
+  return {
+    id,
+    title: brief.title,
+    mode: brief.mode,
+    intention: brief.intention,
+    audioUrl: blobUrl,
+    duration,
+    style: brief.style || undefined,
+    lyrics: brief.lyrics,
+    notes: brief.notes || undefined,
+    length: "preview",
+    engineId: encodeResonanceId(params),
+    createdAt: Date.now(),
+  };
+}
+
 /** THE WORD MEASURE'S OWN SCALE — "auto" rides the melody's own
     length (a preview carries few words, the endless journey many);
     a chosen number is the visitor's own ask, capped at 1000. */
@@ -1829,7 +1894,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcLength: "preview" as "preview" | "full" | "loop",
   lcLyricsLength: "auto" as "auto" | 150 | 400 | 700 | 1000,
   visualStyle: null,
-  lcStatus: "idle" as "idle" | "interpreting" | "polling" | "ready" | "error",
+  lcStatus: "idle" as "idle" | "interpreting" | "rendering" | "polling" | "ready" | "error",
+  lcRenderProgress: 0,
   lcBrief: null,
   lcBusyOp: null,
   lcLabNote: null,
@@ -1860,6 +1926,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   authMode: "signin" as const,
   profilePageOpen: false,
   gatheringPortalOpen: false,
+  treeBoardOpen: false,
   wallet: null,
   walletPrices: null,
   walletPacks: null,
@@ -2172,6 +2239,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     const s = get();
     if (
       s.lcStatus === "interpreting" ||
+      s.lcStatus === "rendering" ||
       s.lcStatus === "polling" ||
       s.lcBusyOp
     )
@@ -2261,7 +2329,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   weaveBrief: async () => {
     const s = get();
     const brief = s.lcBrief;
-    if (!brief || s.lcStatus === "polling" || s.lcStatus === "interpreting")
+    if (
+      !brief ||
+      s.lcStatus === "polling" ||
+      s.lcStatus === "rendering" ||
+      s.lcStatus === "interpreting"
+    )
       return;
     /* THE SECOND DOOR — the standing brief is woven. Nothing is claimed
        until playable audio actually lands. The raw law rides the whole
@@ -2311,8 +2384,56 @@ export const useMirror = create<MirrorState>()((set, get) => ({
             audioUrl?: string;
             trackId?: string;
             jobId?: string;
+            /* the resonance loom's own hand — a weave rendered on the
+               visitor's machine when the engine's key is not placed */
+            renderParams?: Record<string, unknown>;
+            notice?: string;
           }
         | null;
+      /* THE RESONANCE HAND — the engine's key is not placed, so the
+         chamber weaves the standing brief on the visitor's own machine.
+         The progress breathes; the sound lands in the same player. */
+      if (wdata && wdata.engine === "resonance") {
+        set({
+          lcStatus: "rendering",
+          lcRenderProgress: 0,
+          lcError: null,
+          lcNotice: wdata.notice ?? null,
+        });
+        try {
+          const track = await weaveResonanceLocally(
+            brief,
+            raw ? LC_DEFAULT_SHAPE : s.lcShape,
+            (p) => {
+              if (get().lcStatus === "rendering")
+                set({
+                  lcRenderProgress: Math.max(get().lcRenderProgress, p),
+                });
+            }
+          );
+          const history = [
+            { ...track, audioUrl: "" },
+            ...get().lcHistory.filter((t) => t.id !== track.id),
+          ].slice(0, 40);
+          persistLcHistory(history);
+          set({
+            lcTrack: track,
+            lcStatus: "ready",
+            lcHistory: history,
+            lcRenderProgress: 1,
+            lcCarriedImage: null,
+          });
+          return;
+        } catch (loomErr) {
+          console.error(
+            "[light-codes] the resonance loom stumbled:",
+            loomErr
+          );
+          throw new Error(
+            "The chamber's resonance could not be woven on this device. Try again."
+          );
+        }
+      }
       if (!weave.ok) {
         throw new Error(
           (wdata && wdata.error) ||
@@ -2395,6 +2516,49 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         lcCarriedImage: null,
       });
     } catch (err) {
+      /* THE LOOM'S LAST HAND — when the weave failed because the sound
+         engine's key was never placed, the chamber's own resonance
+         engine answers: the standing brief is woven on this device. */
+      const weaveMsg = err instanceof Error ? err.message : "";
+      if (/sound engine's key is not/i.test(weaveMsg) && brief) {
+        set({
+          lcStatus: "rendering",
+          lcRenderProgress: 0,
+          lcError: null,
+          lcNotice:
+            "The engine's key is not placed — the resonance loom weaves this transmission on your own device.",
+        });
+        try {
+          const track = await weaveResonanceLocally(
+            brief,
+            raw ? LC_DEFAULT_SHAPE : s.lcShape,
+            (p) => {
+              if (get().lcStatus === "rendering")
+                set({
+                  lcRenderProgress: Math.max(get().lcRenderProgress, p),
+                });
+            }
+          );
+          const history = [
+            { ...track, audioUrl: "" },
+            ...get().lcHistory.filter((t) => t.id !== track.id),
+          ].slice(0, 40);
+          persistLcHistory(history);
+          set({
+            lcTrack: track,
+            lcStatus: "ready",
+            lcHistory: history,
+            lcRenderProgress: 1,
+            lcCarriedImage: null,
+          });
+          return;
+        } catch (loomErr) {
+          console.error(
+            "[light-codes] the resonance loom stumbled:",
+            loomErr
+          );
+        }
+      }
       const gate = applyVerificationGate(err);
       set({
         lcStatus: gate ? "idle" : "error",
@@ -4066,6 +4230,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openGatheringPortal: () =>
     set({ gatheringPortalOpen: true, mobileNavOpen: false }),
   closeGatheringPortal: () => set({ gatheringPortalOpen: false }),
+  openTreeBoard: () => set({ treeBoardOpen: true }),
+  closeTreeBoard: () => set({ treeBoardOpen: false }),
 
   openAccount: () => set({ accountOpen: true, mobileNavOpen: false }),
   closeAccount: () => set({ accountOpen: false }),

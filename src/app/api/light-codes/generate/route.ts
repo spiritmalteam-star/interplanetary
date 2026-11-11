@@ -228,6 +228,43 @@ function shapeWords(b: LcBody): string {
   return parts.join("; ");
 }
 
+/* ---------------- the chamber's own hand ------------------------------
+   When the Mirror's interpretive voice cannot be reached (a quiet sky,
+   a rate-limited hour), the chamber does not send the visitor away:
+   it writes the direction ITSELF from the mode's vocabulary, the shape
+   dials and the intention's own words. The music still sounds. */
+
+const FALLBACK_TITLES: Record<string, string[]> = {
+  "light-transmission": ["A Loom of Quiet Light", "The Field Between Stars", "Luminous Drift"],
+  "calming-frequencies": ["The Settling", "Slow Harbour", "Breath of the Quiet Hour"],
+  "other-stars": ["Signals from a Kind Star", "The Distant Chorus", "A World Made of Listening"],
+  restorative: ["The Kind Return", "Held by the Evening", "A Gentle Ending"],
+  reprogramming: ["The New Pattern", "Trust, Slowly", "The Open Door Within"],
+  "mirror-transmission": ["What the Mirror Holds", "The Unnamed Resonance", "A Transmission for Now"],
+};
+
+function localInterpret(b: LcBody): LcBrief {
+  const mode = LC_MODES.find((m) => m.id === (b.mode ?? "")) ?? LC_MODES[0];
+  const intention = (b.intention ?? "").trim();
+  const pool =
+    FALLBACK_TITLES[mode.id] ?? FALLBACK_TITLES["mirror-transmission"];
+  let h = 2166136261;
+  for (let i = 0; i < intention.length; i++) {
+    h ^= intention.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  const lyrics =
+    b.shape?.lyricsMode === "USER WRITES" && b.userLyrics?.trim()
+      ? b.userLyrics.trim().slice(0, 600)
+      : null;
+  return {
+    title: pool[Math.abs(h) % pool.length],
+    style: `${mode.vocabulary} ${shapeWords(b)}. One continuous, seamlessly connected piece — no abrupt breaks, no long silent gaps.`,
+    lyrics,
+    notes: `The Mirror's interpretive voice rests this hour, so the chamber wove the direction itself: ${mode.name.toLowerCase()} shaped by your words${intention ? ` — “${intention.slice(0, 80)}”` : ""}. The sound follows the shape you set.`,
+  };
+}
+
 /** The chosen chamber's own sonic law — the mode's vocabulary spoken
  *  to the interpreter, so each of the house's chambers keeps its own
  *  distinctive sound instead of a generic direction. */
@@ -1303,6 +1340,32 @@ async function postImpl(
       const key = process.env.GEMINI_API_KEY;
       if (!key) {
         noteLcError("nokey", "The sound engine's key is not placed.");
+        /* THE RESONANCE HAND — the engine's key is not placed, but the
+           chamber does not fall silent: for a plain weave the direction
+           the Mirror wrote rides home with the resonance engine's own
+           orders, and the visitor's machine weaves the sound locally.
+           (The journey's parts keep their honest error — a multi-part
+           journey cannot be woven piecewise on a device.) */
+        if (!b.loopPart) {
+          return NextResponse.json({
+            ...passed,
+            engine: "resonance",
+            notice:
+              "The sound engine's key is not placed — the resonance loom weaves this transmission on your own device.",
+            renderParams: {
+              mode: b.mode ?? "light-transmission",
+              energy: b.shape?.energy,
+              light: b.shape?.light,
+              familiarity: b.shape?.familiarity,
+              structure: b.shape?.structure,
+              timeFeel: b.shape?.timeFeel,
+              voice: b.shape?.voice,
+              style: passed.style,
+              seed: Math.floor(Math.random() * 0xffffffff),
+              title: passed.title,
+            },
+          });
+        }
         return NextResponse.json(
           {
             ...passed,
@@ -1827,7 +1890,19 @@ async function postImpl(
         ? `\n\n${attachmentBlocks.join("\n\n")}`
         : "";
 
-    const interp = await interpret(b, attachmentLines);
+    /* the Mirror speaks — and when the sky is quiet (rate limits, a
+       resting voice), the chamber's own hand takes the pen */
+    let interp: LcBrief;
+    try {
+      interp = await interpret(b, attachmentLines);
+    } catch (interpretErr) {
+      if (b.interpretOnly) throw interpretErr;
+      console.warn(
+        "[light-codes] interpreter unreachable — the chamber's own hand weaves:",
+        interpretErr instanceof Error ? interpretErr.message : interpretErr
+      );
+      interp = localInterpret(b);
+    }
     if (b.interpretOnly) {
       return NextResponse.json(interp);
     }

@@ -410,9 +410,142 @@ function VoiceRecordButton({
    of every sound this device still holds. When a new weave lands,
    the camera is already here. */
 
+/* ------------------- the transmission loom --------------------------- */
+
+/** The chamber's weaving animation — two counter-turning rings, two
+ *  orbiters, a breathing core and a progress ring. When `progress` is
+ *  null the ring shimmers indeterminately (interpreting / polling). */
+function TransmissionLoom({
+  progress,
+  size = 96,
+}: {
+  progress: number | null;
+  size?: number;
+}) {
+  const R = 46;
+  const C = 2 * Math.PI * R;
+  const accent = "var(--scope-a, var(--gd))";
+  return (
+    <div
+      className="relative shrink-0"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 120 120" className="absolute inset-0 size-full -rotate-90">
+        <circle
+          cx="60"
+          cy="60"
+          r={R}
+          fill="none"
+          stroke="color-mix(in srgb, var(--scope-a, var(--gd)) 18%, transparent)"
+          strokeWidth="2.5"
+        />
+        {progress === null ? (
+          <circle
+            cx="60"
+            cy="60"
+            r={R}
+            fill="none"
+            stroke={accent}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray="52 260"
+            className="lc-loom-indeterminate"
+          />
+        ) : (
+          <circle
+            cx="60"
+            cy="60"
+            r={R}
+            fill="none"
+            stroke={accent}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeDasharray={C}
+            strokeDashoffset={C * (1 - Math.max(0.02, Math.min(1, progress)))}
+            style={{ transition: "stroke-dashoffset 240ms ease-out" }}
+          />
+        )}
+      </svg>
+      <svg viewBox="0 0 120 120" className="lc-loom-spin absolute inset-0 size-full">
+        <circle
+          cx="60"
+          cy="60"
+          r="53"
+          fill="none"
+          stroke="color-mix(in srgb, var(--scope-a, var(--gd)) 32%, transparent)"
+          strokeWidth="1"
+          strokeDasharray="3 9"
+          strokeLinecap="round"
+        />
+      </svg>
+      <svg viewBox="0 0 120 120" className="lc-loom-spin-rev absolute inset-0 size-full">
+        <circle
+          cx="60"
+          cy="60"
+          r="36"
+          fill="none"
+          stroke="color-mix(in srgb, var(--scope-a, var(--gd)) 26%, transparent)"
+          strokeWidth="1"
+          strokeDasharray="2 12"
+          strokeLinecap="round"
+        />
+      </svg>
+      <span className="lc-loom-orbiter absolute inset-0">
+        <span
+          className="absolute left-1/2 top-[3px] size-1.5 -translate-x-1/2 rounded-full"
+          style={{
+            background: accent,
+            boxShadow:
+              "0 0 10px 1px color-mix(in srgb, var(--scope-a, var(--gd)) 70%, transparent)",
+          }}
+        />
+      </span>
+      <span className="lc-loom-orbiter-rev absolute inset-[14px]">
+        <span
+          className="absolute left-1/2 top-0 size-1 -translate-x-1/2 rounded-full"
+          style={{
+            background: "color-mix(in srgb, var(--scope-a, var(--gd)) 70%, white)",
+          }}
+        />
+      </span>
+      <span className="absolute inset-0 flex items-center justify-center">
+        <span
+          className="lc-loom-core size-9 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle at 38% 34%, color-mix(in srgb, var(--scope-a, var(--gd)) 85%, white), color-mix(in srgb, var(--scope-a, var(--gd)) 35%, transparent) 62%, transparent 78%)",
+            boxShadow:
+              "0 0 26px -4px color-mix(in srgb, var(--scope-a, var(--gd)) 65%, transparent)",
+          }}
+        />
+      </span>
+      <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <span
+          className="lc-loom-ring size-9 rounded-full border"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--scope-a, var(--gd)) 45%, transparent)",
+          }}
+        />
+      </span>
+      <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <span
+          className="lc-loom-ring-late size-9 rounded-full border"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--scope-a, var(--gd)) 30%, transparent)",
+          }}
+        />
+      </span>
+    </div>
+  );
+}
+
 function PlayerBar() {
   const track = useMirror((s) => s.lcTrack);
   const status = useMirror((s) => s.lcStatus);
+  const lcRenderProgress = useMirror((s) => s.lcRenderProgress);
   const history = useMirror((s) => s.lcHistory);
   const repeat = useMirror((s) => s.lcRepeat);
   const lcLength = useMirror((s) => s.lcLength);
@@ -455,16 +588,25 @@ function PlayerBar() {
      player that will hold the sound: while the chamber works, the
      stage carries the animation (full, when no sound holds the room
      yet; a quiet strip beneath the transport when one does). */
-  const weaving = status === "interpreting" || status === "polling";
+  const weaving =
+    status === "interpreting" ||
+    status === "rendering" ||
+    status === "polling";
   const weavePhrase = !weaving
     ? ""
     : status === "interpreting"
       ? t("The Mirror is translating intention into sound…")
-      : (lcLength === "loop" || lcLength === "full") && lcNotice
-        ? lcNotice
-        : lcLength === "full"
-          ? t("The full song is being woven — verses finding their chorus…")
-          : t("The sound is being woven — hold still…");
+      : status === "rendering"
+        ? t("The resonance loom is weaving on your device — hold still…")
+        : (lcLength === "loop" || lcLength === "full") && lcNotice
+          ? lcNotice
+          : lcLength === "full"
+            ? t("The full song is being woven — verses finding their chorus…")
+            : t("The sound is being woven — hold still…");
+  /* the loom's honest fraction — a real number only while the local
+     engine weaves; the sky's phases shimmer indeterminately */
+  const loomProgress =
+    status === "rendering" ? Math.max(0.02, lcRenderProgress) : null;
   const active = track;
   const karaokeOpen = karaokeOpenId !== null && karaokeOpenId === active?.id;
   const openKaraoke = () => setKaraokeOpenId(active?.id ?? null);
@@ -911,9 +1053,15 @@ function PlayerBar() {
                 aria-live="polite"
                 aria-busy="true"
               >
+                <TransmissionLoom progress={loomProgress} size={40} />
                 <p className="min-w-0 flex-1 text-[12.5px] italic leading-snug text-muted-foreground">
                   {weavePhrase}
                 </p>
+                {loomProgress !== null && (
+                  <span className="mono-label shrink-0 text-[9px] tabular-nums text-[var(--scope-a,var(--gd))]">
+                    {Math.round(loomProgress * 100)}%
+                  </span>
+                )}
               </div>
             )}
 
@@ -965,19 +1113,14 @@ function PlayerBar() {
         ) : weaving ? (
           /* THE CHANNELING ON THE STAGE — the music that is about to be
              channeled is seen forming right here, where it will land:
-             the honest weaving phrase stands where the empty shelf stood. */
+             the transmission loom turns where the empty shelf stood. */
           <div
             className="flex items-center gap-3 py-1"
             data-testid="lc-stage-weaving"
             aria-live="polite"
             aria-busy="true"
           >
-            <div
-              aria-hidden="true"
-              className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_75%,var(--scope-a))] shadow-[0_6px_22px_-10px_color-mix(in_srgb,var(--scope-a)_90%,transparent)]"
-            >
-              <AudioLines className="size-5 text-[#f6f4ef]" />
-            </div>
+            <TransmissionLoom progress={loomProgress} size={64} />
             <div className="min-w-0 flex-1">
               <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 {t("The music player")}
@@ -986,6 +1129,11 @@ function PlayerBar() {
                 <p className="min-w-0 flex-1 text-[12.5px] italic leading-snug text-muted-foreground">
                   {weavePhrase}
                 </p>
+                {loomProgress !== null && (
+                  <span className="mono-label shrink-0 text-[9.5px] tabular-nums text-[var(--scope-a,var(--gd))]">
+                    {Math.round(loomProgress * 100)}%
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -1803,6 +1951,33 @@ function ChamberStatus() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* THE PUBLICATION HAND — the composition, carried to the hall with
+          its maker's name and the music room remembered as its birthplace
+          (it lives here, where the publication hand itself stands) */}
+      <PublishToGathering
+        open={publishTrack !== null}
+        onClose={() => setPublishTrack(null)}
+        payload={
+          publishTrack
+            ? {
+                sourcePortal: "music",
+                sourceId: publishTrack.libraryId ?? null,
+                refKind: publishTrack.libraryId ? "music" : null,
+                recentSector: publishTrack.libraryId ? null : "lightcodes",
+                titleHint: publishTrack.title.slice(0, 120),
+                suggestedTitle: publishTrack.title,
+                preview:
+                  publishTrack.notes ||
+                  publishTrack.intention ||
+                  "A composition born in the music room.",
+                refUrl: publishTrack.audioUrl,
+                generic: false,
+                contentTypeLabel: "Music",
+              }
+            : null
+        }
+      />
     </section>
   );
 }
@@ -2515,31 +2690,8 @@ export function LightCodesView() {
         </div>
       )}
 
-      {/* THE PUBLICATION HAND — the composition, carried to the hall with
-          its maker's name and the music room remembered as its birthplace */}
-      <PublishToGathering
-        open={publishTrack !== null}
-        onClose={() => setPublishTrack(null)}
-        payload={
-          publishTrack
-            ? {
-                sourcePortal: "music",
-                sourceId: publishTrack.libraryId ?? null,
-                refKind: publishTrack.libraryId ? "music" : null,
-                recentSector: publishTrack.libraryId ? null : "lightcodes",
-                titleHint: publishTrack.title.slice(0, 120),
-                suggestedTitle: publishTrack.title,
-                preview:
-                  publishTrack.notes ||
-                  publishTrack.intention ||
-                  "A composition born in the music room.",
-                refUrl: publishTrack.audioUrl,
-                generic: false,
-                contentTypeLabel: "Music",
-              }
-            : null
-        }
-      />
+      {/* the publication hand lives inside the player bar — the sheet
+          rises from where the hand itself stands */}
     </div>
   );
 }

@@ -14,7 +14,7 @@ import { type NotificationRow, GP_GHOST, RoomLabel, netFetch, relativeTime } fro
 const TYPE_LINE: Record<string, string> = {
   echo: "echoed your offering",
   resonance: "resonated with your offering",
-  follow: "follows your path now",
+  follow: "is entangled with your path now",
   connection_request: "asked to meet you",
   connection_accepted: "opened the door you offered",
   circle_join: "joined a circle you keep",
