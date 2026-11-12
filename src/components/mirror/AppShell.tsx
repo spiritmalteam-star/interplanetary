@@ -50,6 +50,13 @@ const GatheringPortal = dynamic(
   () => import("@/components/gathering/GatheringPortal"),
   { ssr: false }
 );
+/* THE FLUX — the four-directional current of creations: full-screen
+   works walked in every direction, the mirror's illuminated path
+   beneath the visitor's free steps. Lifted only when its door opens. */
+const FluxField = dynamic(
+  () => import("./FluxField").then((m) => ({ default: m.FluxField })),
+  { ssr: false }
+);
 const DossierModal = dynamic(
   () => import("./DossierModal").then((m) => ({ default: m.DossierModal })),
   { ssr: false }
@@ -149,6 +156,10 @@ export default function AppShell({
           return hand folds it — so the hall never stands by default
           and the back hand always works. */}
       <GatheringPortalGate />
+      {/* THE FLUX GATE — the four-directional current, ONE mount for the
+          whole house: raised only while the store's own door stands
+          open, folded by its own return hand. */}
+      <FluxGate />
     </div>
   );
 }
@@ -158,6 +169,13 @@ export default function AppShell({
 function GatheringPortalGate() {
   const open = useMirror((s) => s.gatheringPortalOpen);
   return <AnimatePresence>{open && <GatheringPortal />}</AnimatePresence>;
+}
+
+/* THE FLUX GATE — the current exists only while the store's door is
+   open. Nothing renders by default; the walk always leads. */
+function FluxGate() {
+  const open = useMirror((s) => s.fluxOpen);
+  return <AnimatePresence>{open && <FluxField />}</AnimatePresence>;
 }
 
 function AppShellViews({

@@ -874,7 +874,7 @@ function EvolveMedChat() {
 
 /* --------------------------- the shell ------------------------------ */
 
-export function EvolveMed() {
+export function EvolveMed({ compact = false }: { compact?: boolean }) {
   const exitEvolveMed = useMirror((s) => s.exitEvolveMed);
   const setEmVector = useMirror((s) => s.setEmVector);
   const pinEmNotes = useMirror((s) => s.pinEmNotes);
@@ -944,7 +944,11 @@ export function EvolveMed() {
           <div
             className={cn(
               "flex min-h-0 min-w-0 flex-1 flex-col",
-              place === "chat" ? "pt-1.5 sm:pt-2" : "pt-16 sm:pt-20"
+              place === "chat"
+                ? "pt-1.5 sm:pt-2"
+                : compact
+                  ? "pt-9 sm:pt-10"
+                  : "pt-16 sm:pt-20"
             )}
           >
             {place === "chat" ? (
@@ -982,7 +986,7 @@ export function EvolveMed() {
                     />
                   )}
                   {place === "instruments" && <EmInstrumentsTab />}
-                  {place === "codex" && <EmCodexTab />}
+                  {place === "codex" && <EmCodexTab compact={compact} />}
                 </motion.div>
               </div>
             )}

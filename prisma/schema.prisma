@@ -73,6 +73,31 @@ model User {
   memoryItems                 MemoryItem[]
   networkMirrorSuggested      NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggested")
   agentTasks                  AgentTask[]
+  media           MediaAsset[]
+}
+
+// --------------------- the vault — each soul's storage --------------------
+//  Every visitor owns a private vault: uploaded videos, voices and
+//  images are kept under .media/<userId>/ on the disk and indexed here.
+//  A work may be PUBLISHED into the hall — then it streams to the whole
+//  field (the flux walks it, the gathering may hang it).
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // video | audio | image
+  title     String
+  fileKey   String // "<userId>/<file>" inside the .media vault
+  mime      String
+  size      Int // bytes
+  duration  Float? // seconds, when the browser could measure it
+  published Boolean  @default(false)
+  resonance Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([published, createdAt])
 }
 
 model LibraryEntry {

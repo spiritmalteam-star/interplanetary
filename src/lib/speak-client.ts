@@ -55,15 +55,29 @@ export function announceEnergy(): void {
 
 /** THE DOOR'S OWN PATIENCE — a dropped line (network storm) is
     knocked on once more before the silence is accepted; the door
-    itself never judges the statuses (the caller reads the body). */
+    itself never judges the statuses (the caller reads the body).
+    THE COMPLETION LAW — a door with no hand of its own is bounded:
+    one quiet breath of two minutes and forty-five seconds (under the
+    sky's own 180s cap), so no ask ever hangs forever. An asker that
+    carries its own signal (a streaming crossing, a superseded ask)
+    keeps its own hand untouched. */
+const DOOR_TIMEOUT_MS = 165_000;
+
 export async function speakDoor(url: string, init: RequestInit): Promise<Response> {
+  /* a fresh bound per knock — the second knock carries its own full
+     patience, never the first one's nearly-spent breath */
+  const bound = () =>
+    init.signal ??
+    (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"
+      ? AbortSignal.timeout(DOOR_TIMEOUT_MS)
+      : undefined);
   try {
-    return await fetch(url, init);
+    return await fetch(url, { ...init, signal: bound() });
   } catch (err) {
     const first = err;
     await sleep(1200);
     try {
-      return await fetch(url, init);
+      return await fetch(url, { ...init, signal: bound() });
     } catch {
       throw first;
     }

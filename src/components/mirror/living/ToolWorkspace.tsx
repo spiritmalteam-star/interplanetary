@@ -361,6 +361,12 @@ function ToolWorkspaceImpl({ bare = false }: { bare?: boolean }) {
       data-zoomed={zoomed || undefined}
       data-parked={parked || undefined}
       data-resource-profile={activeMeta?.resourceProfile ?? undefined}
+      /* THE WORKPLACE'S OWN TOUCH — while a room (the codex, the book,
+         the forge) stands open inside the docked lens, the whole window
+         keeps its touch: the codex reads and scrolls by its own hand,
+         never cut by the lens. No window standing — the threshold
+         yields as always. */
+      data-touch-keep="true"
       className={cn(
         "pointer-events-auto flex flex-col overflow-hidden border bg-background shadow-[0_24px_70px_-30px_rgba(0,0,0,0.6)]",
         parked

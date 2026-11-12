@@ -721,7 +721,7 @@ function ParticleXChat() {
 
 /* --------------------------- the shell ------------------------------ */
 
-export function ParticleX() {
+export function ParticleX({ compact = false }: { compact?: boolean }) {
   const exitParticleX = useMirror((s) => s.exitParticleX);
   const setPxScope = useMirror((s) => s.setPxScope);
   const pinPxNotes = useMirror((s) => s.pinPxNotes);
@@ -791,7 +791,11 @@ export function ParticleX() {
           <div
             className={cn(
               "flex min-h-0 min-w-0 flex-1 flex-col",
-              place === "chat" ? "pt-1.5 sm:pt-2" : "pt-16 sm:pt-20"
+              place === "chat"
+                ? "pt-1.5 sm:pt-2"
+                : compact
+                  ? "pt-9 sm:pt-10"
+                  : "pt-16 sm:pt-20"
             )}
           >
             {place === "chat" ? (
@@ -830,7 +834,7 @@ export function ParticleX() {
                     />
                   )}
                   {place === "tools" && <PxToolsTab />}
-                  {place === "codex" && <PxCodexTab />}
+                  {place === "codex" && <PxCodexTab compact={compact} />}
                 </motion.div>
               </div>
             )}

@@ -941,22 +941,36 @@ function EmCodexCard({
   paragraphs,
   icon: Icon,
   testId,
+  compact = false,
 }: {
   title: string;
   paragraphs: string[];
   icon: LucideIcon;
   testId: string;
+  compact?: boolean;
 }) {
   const t = useT();
   return (
-    <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6" data-testid={testId}>
+    <div
+      className={cn(
+        "scope-frame-card relative overflow-hidden rounded-2xl glass",
+        compact ? "p-4 sm:p-5" : "p-5 sm:p-6"
+      )}
+      data-testid={testId}
+    >
       <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
         <Icon className="size-3.5" aria-hidden="true" />
         {t(title)}
       </h3>
-      <div className="mt-3 space-y-3">
+      <div className={cn("mt-3 space-y-3", compact && "mt-2 space-y-2.5")}>
         {paragraphs.map((p, i) => (
-          <p key={i} className="text-[15.5px] leading-[1.85] text-foreground/88">
+          <p
+            key={i}
+            className={cn(
+              "leading-[1.85] text-foreground/88",
+              compact ? "text-[14px] leading-[1.7]" : "text-[15.5px]"
+            )}
+          >
             {t(p)}
           </p>
         ))}
@@ -965,11 +979,11 @@ function EmCodexCard({
   );
 }
 
-export function EmCodexTab() {
+export function EmCodexTab({ compact = false }: { compact?: boolean }) {
   const t = useT();
 
   return (
-    <div className="space-y-5">
+    <div className={compact ? "grid gap-3.5 sm:grid-cols-2" : "space-y-5"}>
       <EmCodexCard
         title="The Routing Matrix"
         icon={Compass}

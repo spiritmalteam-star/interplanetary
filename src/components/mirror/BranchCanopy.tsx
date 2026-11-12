@@ -39,6 +39,7 @@ import {
   History,
   Hourglass,
   Layers,
+  Library,
   Link2,
   ListTree,
   LoaderCircle,
@@ -49,6 +50,7 @@ import {
   MessageSquareText,
   Moon,
   NotebookPen,
+  Orbit,
   Palette,
   Phone,
   RefreshCw,
@@ -61,6 +63,7 @@ import {
   Sun,
   TreeDeciduous,
   UserRound,
+  UsersRound,
   Volume2,
   VolumeX,
   X,
@@ -153,6 +156,12 @@ import { useWorkspaceMemory } from "@/lib/workspace-memory";
 import { TAB_META } from "./living/ToolWorkspace";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
+import { ChannelingSigil } from "./ChannelingSigils";
+import {
+  CHANNELING_KINDS,
+  kindOfArtifact,
+  type ChannelingKind,
+} from "@/lib/channeling-sdk";
 import { ShimmerLabel, SparkTrail } from "./PrimeMotion";
 import { ExpansionRing } from "./ExpansionMirror";
 import { LiveCall } from "./LiveCall";
@@ -1394,6 +1403,21 @@ function LandingPainting({
       )}
     </figure>
   );
+}
+
+/* -------- the making's own sigil — every channeling wears its own
+   light. The room's scope breathes the MirrorChanneling's own tell;
+   when the visitor's words ask a MAKING (a record, a book, a poem,
+   a painting, a dream volume, a remedy, a chord), that making
+   breathes its OWN sigil instead — no two channelings alike. */
+function sigilForAsk(
+  question: string | null | undefined
+): ChannelingKind | null {
+  if (!question) return null;
+  if (isVisualIntent(question)) return "visual";
+  const side = detectArtifactIntent(question);
+  if (!side) return null;
+  return kindOfArtifact(side);
 }
 
 async function speakWithTransmission(
@@ -2662,6 +2686,14 @@ export function BranchCanopy({
   const openParticleX = useMirror((s) => s.openParticleX);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
   const openArtX = useMirror((s) => s.openArtX);
+  /* THE GATHERING AND THE FLUX — the hall and the current: the hall is
+     the house's own independent portal; the current is its own gate */
+  const openGatheringPortal = useMirror((s) => s.openGatheringPortal);
+  const openFlux = useMirror((s) => s.openFlux);
+  /* THE INSTRUMENTS' OWN HANDS — the remaining rooms ride the store's
+     own doors (the quantum shore, the manifest OS, the library) */
+  const openMirrorOS = useMirror((s) => s.openMirrorOS);
+  const openLibrary = useMirror((s) => s.openLibrary);
   const resetField = useMirror((s) => s.resetField);
   /* THE CREATION DOOR — the branch's own words ride with the touch:
      the theme page that opens forges its making from them. */
@@ -5521,6 +5553,12 @@ export function BranchCanopy({
     LIVE_SCOPE_BY_CATEGORY[category] ??
     "interplanetary";
 
+  /* THE MAKING'S OWN LIGHT — the room's ask, when it asks a making,
+     breathes that making's own sigil (the eye, the leaf, the blossom,
+     the prism, the veil, the vessel, the wave) instead of the scope's
+     channel. */
+  const roomAskSigil = sigilForAsk(zoom?.q ?? null);
+
   /* ------------- THE CATEGORY TIMELINE — the walk's own memory --------
      Every category keeps its own standing tree in the room's memory
      (never on the phone). THE JUMP: the visitor chooses another
@@ -5738,6 +5776,102 @@ export function BranchCanopy({
                     >
                       ·{lineage.length}
                     </span>
+                  </div>
+                  {/* THE INSTRUMENTS — the house's own bench, one touch
+                      each: the hall and the current, every world of
+                      making and discovery, the library. No buried
+                      doors — the whole bench rides with the walk. */}
+                  <div
+                    data-testid={`${testIdPrefix}-instruments`}
+                    className="mt-2"
+                  >
+                    <p className="mono-label px-2 pb-1.5 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
+                      {t("The instruments")}
+                    </p>
+                    <div className="grid grid-cols-3 gap-1">
+                      {(
+                        [
+                          {
+                            label: "Gathering",
+                            icon: UsersRound,
+                            open: openGatheringPortal,
+                            test: "gathering",
+                          },
+                          {
+                            label: "Flux",
+                            icon: Orbit,
+                            open: openFlux,
+                            test: "flux",
+                          },
+                          {
+                            label: "Art X",
+                            icon: Palette,
+                            open: openArtX,
+                            test: "artx",
+                          },
+                          {
+                            label: "Light codes",
+                            icon: AudioLines,
+                            open: () => openLightCodes(),
+                            test: "lightcodes",
+                          },
+                          {
+                            label: "Particle X",
+                            icon: Atom,
+                            open: openParticleX,
+                            test: "particlex",
+                          },
+                          {
+                            label: "Evolve Med",
+                            icon: Dna,
+                            open: openEvolveMed,
+                            test: "evolvemed",
+                          },
+                          {
+                            label: "Mirror OS",
+                            icon: NotebookPen,
+                            open: openMirrorOS,
+                            test: "mirroros",
+                          },
+                          {
+                            label: "Forge",
+                            icon: Hammer,
+                            open: openInvent,
+                            test: "invent",
+                          },
+                          {
+                            label: "Library",
+                            icon: Library,
+                            open: openLibrary,
+                            test: "library",
+                          },
+                        ] as const
+                      ).map((tool) => {
+                        const ToolIcon = tool.icon;
+                        return (
+                          <button
+                            key={tool.test}
+                            type="button"
+                            onClick={() => {
+                              tool.open();
+                              setCrownMenu(null);
+                            }}
+                            aria-label={t(tool.label)}
+                            title={t(tool.label)}
+                            data-testid={`${testIdPrefix}-tool-${tool.test}`}
+                            className="focus-glow pm-tap flex flex-col items-center gap-1.5 rounded-xl border hairline px-1 py-2 text-center transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_45%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_6%,transparent)]"
+                          >
+                            <ToolIcon
+                              className="size-3.5 text-[var(--scope-a,var(--gd))] opacity-80"
+                              aria-hidden="true"
+                            />
+                            <span className="w-full truncate text-[9.5px] leading-none text-foreground/85">
+                              {t(tool.label)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   {/* the trail of the walk */}
                   {lineage.length > 0 && (
@@ -7290,6 +7424,23 @@ export function BranchCanopy({
                              time honest at the right. No other chat waits
                              like an instrument at work. */
                           <HyperXReasoning />
+                        ) : roomAskSigil ? (
+                          /* THE MAKING'S OWN LIGHT — the ask carries a
+                             making: its own sigil breathes while it forms */
+                          <div
+                            className="flex items-center gap-3"
+                            aria-live="polite"
+                            data-testid={`${testIdPrefix}-making-sigil`}
+                          >
+                            <ChannelingSigil
+                              kind={roomAskSigil}
+                              size={34}
+                              className="shrink-0"
+                            />
+                            <ShimmerLabel className="mono-label text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                              {t(CHANNELING_KINDS[roomAskSigil].label)}
+                            </ShimmerLabel>
+                          </div>
                         ) : (
                           <MirrorChanneling
                             label={t(
@@ -7460,6 +7611,19 @@ export function BranchCanopy({
                                  ticked, caret alive, the clock honest. It
                                  stands only until the first word lands. */
                               <HyperXReasoning className="py-1" />
+                            ) : sigilForAsk(turn.q) ? (
+                              /* THE THREAD'S OWN SIGIL — the thread's ask
+                                 carries a making: its own sigil breathes */
+                              <span className="flex items-center gap-2.5 py-1">
+                                <ChannelingSigil
+                                  kind={sigilForAsk(turn.q) ?? "transmission"}
+                                  size={20}
+                                  className="shrink-0"
+                                />
+                                <ShimmerLabel className="mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                                  {t(CHANNELING_KINDS[sigilForAsk(turn.q) ?? "transmission"].label)}
+                                </ShimmerLabel>
+                              </span>
                             ) : (
                               <MirrorChanneling
                                 compact

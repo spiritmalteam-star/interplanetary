@@ -2944,6 +2944,16 @@ html:not(.dark) .lp-sigil-img {
     0 10px 36px -16px rgba(0, 0, 0, 0.55);
 }
 
+/* THE WORLD'S OWN SCROLL — when a world (Particle X, Evolve Med) is
+   opened inside the docked miniature, its reading rooms keep their
+   touch: the codex and every chamber scroll by their own hand, so no
+   page of a world is ever cut by the lens. The realm's own floor
+   still yields — the threshold scrolls beneath it as before. */
+.lens-docked .scope-particlex .nice-scroll,
+.lens-docked .scope-evolvemed .nice-scroll {
+  pointer-events: auto;
+}
+
 /* THE DORMANT LAW — while the docked portal is scrolled out of the
    eye, the merely decorative breath rests: no frame is spent on what
    nobody sees. The realm wakes the moment its slot returns.
@@ -3139,6 +3149,343 @@ html:not(.dark) .lp-sigil-img {
     transform: translateY(0);
   }
 }
+
+/* ========== THE CHANNELING ORB — the mirror's tiny companion ========
+   A breathing core inside a turning ring, two motes on their own
+   orbits, a soft aura around all of it: the small living ornament
+   that accompanies every transmission while it forms. Compositor
+   only — transform and opacity — so it costs almost nothing. */
+.chn-orb {
+  --chn: var(--scope-a, var(--gd));
+}
+.chn-orb-aura {
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--chn) 26%, transparent) 0%,
+    transparent 66%
+  );
+  animation: chn-aura 2.4s ease-in-out infinite;
+}
+.chn-orb-ring {
+  background: conic-gradient(
+    from 90deg,
+    transparent 0deg,
+    transparent 258deg,
+    color-mix(in srgb, var(--chn) 65%, #ffffff) 328deg,
+    #ffffff 352deg,
+    transparent 360deg
+  );
+  -webkit-mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 2.5px),
+    #000 calc(100% - 1.5px)
+  );
+  mask: radial-gradient(
+    farthest-side,
+    transparent calc(100% - 2.5px),
+    #000 calc(100% - 1.5px)
+  );
+  animation: chn-turn 1.8s linear infinite;
+}
+.chn-orb-spin {
+  animation: chn-turn 3.6s linear infinite;
+}
+.chn-orb-spin-slow {
+  animation: chn-turn 6.4s linear infinite reverse;
+}
+.chn-orb-mote {
+  background: color-mix(in srgb, var(--chn) 55%, #ffffff);
+  box-shadow: 0 0 6px 1px color-mix(in srgb, var(--chn) 55%, transparent);
+  opacity: 0.9;
+}
+.chn-orb-mote-dim {
+  opacity: 0.5;
+  box-shadow: none;
+}
+.chn-orb-core {
+  background: radial-gradient(
+    circle at 32% 28%,
+    color-mix(in srgb, var(--chn) 24%, #ffffff) 0%,
+    color-mix(in srgb, var(--chn) 82%, #05060a) 74%
+  );
+  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--chn) 80%, transparent);
+  animation: chn-core 2.1s ease-in-out infinite;
+}
+@keyframes chn-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes chn-core {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+@keyframes chn-aura {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.14);
+    opacity: 0.95;
+  }
+}
+/* the shimmering word — one sweep of light crossing the label */
+.chn-shimmer {
+  overflow: hidden;
+}
+.chn-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 18%,
+    color-mix(in srgb, var(--scope-a, var(--gd)) 88%, #ffffff) 50%,
+    transparent 82%
+  );
+  transform: translateX(-120%);
+  animation: chn-sweep 2.3s ease-in-out infinite;
+  mix-blend-mode: screen;
+}
+@keyframes chn-sweep {
+  55%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chn-orb-aura,
+  .chn-orb-ring,
+  .chn-orb-spin,
+  .chn-orb-core {
+    animation: none !important;
+  }
+  .chn-shimmer::after {
+    animation: none !important;
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   THE CHANNELING SIGILS — one unique animation per kind of
+   channeling. Compositor only: transform and opacity, nothing else.
+   ------------------------------------------------------------------ */
+.csig {
+  color: var(--scope-a, var(--gd));
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--scope-a, var(--gd)) 38%, transparent));
+}
+
+/* akashic — the all-seeing eye */
+.csig-ak-runes {
+  animation: chn-turn 9s linear infinite;
+  transform-origin: 24px 24px;
+}
+.csig-ak-ring {
+  animation: csig-breathe 3.4s ease-in-out infinite;
+  transform-origin: 24px 24px;
+}
+.csig-ak-lid {
+  animation: csig-ak-lid 5.2s ease-in-out infinite;
+  transform-origin: 24px 24px;
+}
+.csig-ak-iris {
+  animation: csig-breathe 2.6s ease-in-out infinite;
+  transform-origin: 24px 24px;
+}
+.csig-ak-pupil {
+  animation: csig-core-pulse 2.6s ease-in-out infinite;
+}
+@keyframes csig-ak-lid {
+  0%, 38%, 100% { transform: scaleY(1); opacity: 1; }
+  46%, 58% { transform: scaleY(0.06); opacity: 0.85; }
+}
+
+/* book — the turning leaf */
+.csig-bk-leaf {
+  animation: csig-bk-leaf 2.8s ease-in-out infinite;
+  transform-origin: 23px 22px;
+}
+@keyframes csig-bk-leaf {
+  0%, 100% { transform: rotateY(0deg) translateX(0px); opacity: 0.95; }
+  50% { transform: rotateY(-150deg) translateX(2px); opacity: 0.4; }
+}
+.csig-bk-lines {
+  animation: csig-fade 2.8s ease-in-out infinite;
+}
+@keyframes csig-fade {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.2; }
+}
+
+/* poem — the ink blossom */
+.csig-po-bloom {
+  animation: chn-turn 14s linear infinite;
+}
+.csig-po-petal {
+  animation: csig-po-petal 3.2s ease-in-out infinite;
+}
+@keyframes csig-po-petal {
+  0%, 100% { transform: scale(0.82); opacity: 0.7; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+.csig-po-drop {
+  animation: csig-core-pulse 3.2s ease-in-out infinite;
+}
+
+/* visual — the prism bloom */
+.csig-vs-prism {
+  animation: chn-turn 10s linear infinite;
+}
+.csig-vs-glass {
+  fill: color-mix(in srgb, var(--scope-a, var(--gd)) 7%, transparent);
+  animation: csig-vs-glass 3s ease-in-out infinite;
+}
+@keyframes csig-vs-glass {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+.csig-vs-beam { opacity: 0.25; }
+.csig-vs-beam-a { animation: csig-beam 2.2s ease-in-out infinite; }
+.csig-vs-beam-b { animation: csig-beam 2.2s ease-in-out 0.4s infinite; }
+.csig-vs-beam-c { animation: csig-beam 2.2s ease-in-out 0.8s infinite; }
+@keyframes csig-beam {
+  0%, 100% { opacity: 0.18; transform: scaleX(0.9); }
+  50% { opacity: 0.9; transform: scaleX(1.05); }
+}
+
+/* dream — the drifting veil */
+.csig-dm-moon {
+  animation: csig-breathe 4.4s ease-in-out infinite;
+  transform-origin: 24px 24px;
+}
+.csig-dm-veil-a { animation: csig-dm-veil 4.2s ease-in-out infinite; }
+.csig-dm-veil-b { animation: csig-dm-veil 4.2s ease-in-out 0.9s infinite; }
+.csig-dm-veil-c { animation: csig-dm-veil 4.2s ease-in-out 1.8s infinite; }
+@keyframes csig-dm-veil {
+  0%, 100% { transform: translateX(-3px); opacity: 0.55; }
+  50% { transform: translateX(3px); opacity: 1; }
+}
+.csig-dm-star { animation: csig-core-pulse 2.4s ease-in-out infinite; }
+
+/* forge — the striking spark */
+.csig-fg-hammer {
+  animation: csig-fg-strike 1.9s cubic-bezier(0.55, 0, 0.45, 1) infinite;
+}
+@keyframes csig-fg-strike {
+  0%, 100% { transform: rotate(-14deg); }
+  42% { transform: rotate(16deg); }
+  50% { transform: rotate(13deg); }
+}
+.csig-fg-spark-a { animation: csig-fg-spark 1.9s ease-out infinite; }
+.csig-fg-spark-b { animation: csig-fg-spark 1.9s ease-out 0.5s infinite; }
+.csig-fg-spark-c { animation: csig-fg-spark 1.9s ease-out 1s infinite; }
+@keyframes csig-fg-spark {
+  0%, 12% { transform: translateY(0) scale(0.6); opacity: 0; }
+  30% { opacity: 1; }
+  80%, 100% { transform: translateY(-13px) scale(1); opacity: 0; }
+}
+
+/* codes — the breathing chord */
+.csig-lc-bar {
+  animation: csig-lc-bar 1.7s ease-in-out infinite;
+}
+@keyframes csig-lc-bar {
+  0%, 100% { transform: scaleY(0.28); opacity: 0.65; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+/* remedy — the crafting vessel */
+.csig-rm-vessel {
+  animation: csig-breathe 3.6s ease-in-out infinite;
+  transform-origin: 24px 24px;
+}
+.csig-rm-drop-a { animation: csig-rm-drop 2.6s ease-in-out infinite; }
+.csig-rm-drop-b { animation: csig-rm-drop 2.6s ease-in-out 0.7s infinite; }
+.csig-rm-drop-c { animation: csig-rm-drop 2.6s ease-in-out 1.4s infinite; }
+@keyframes csig-rm-drop {
+  0%, 100% { transform: translateY(3px); opacity: 0.25; }
+  50% { transform: translateY(-6px); opacity: 0.95; }
+}
+
+/* quantum — the orbiting atom */
+.csig-qm-core { animation: csig-core-pulse 2.2s ease-in-out infinite; }
+.csig-qm-orbit-a {
+  animation: chn-turn 3.4s linear infinite;
+}
+.csig-qm-orbit-b {
+  animation: chn-turn 5.2s linear infinite reverse;
+}
+
+/* evolve — the breathing helix */
+.csig-ev-helix {
+  animation: csig-breathe 3.4s ease-in-out infinite;
+  transform-origin: 24px 24px;
+}
+.csig-ev-strand-a { animation: csig-ev-strand 2.6s ease-in-out infinite; }
+.csig-ev-strand-b { animation: csig-ev-strand 2.6s ease-in-out 1.3s infinite; }
+@keyframes csig-ev-strand {
+  0%, 100% { opacity: 0.55; transform: translateX(-1.5px); }
+  50% { opacity: 1; transform: translateX(1.5px); }
+}
+.csig-ev-rungs { animation: csig-fade 2.6s ease-in-out infinite; }
+
+/* manifest — the drawing blueprint */
+.csig-mf-line {
+  stroke-dasharray: 96;
+  animation: csig-mf-draw 3.6s linear infinite;
+  transform-origin: 24px 24px;
+}
+@keyframes csig-mf-draw {
+  0% { stroke-dashoffset: 96; }
+  62%, 100% { stroke-dashoffset: 0; }
+}
+.csig-mf-node { animation: csig-core-pulse 3.6s ease-in-out infinite; }
+
+/* art x — the circling brush dot */
+.csig-ax-dot { animation: chn-turn 4.6s linear infinite; }
+
+/* gathering — the converging rings */
+.csig-ga-ring-a { animation: csig-ga-ring 4.4s ease-in-out infinite; }
+.csig-ga-ring-b { animation: csig-ga-ring 4.4s ease-in-out 0.5s infinite; }
+.csig-ga-ring-c { animation: csig-ga-ring 4.4s ease-in-out 1s infinite; }
+@keyframes csig-ga-ring {
+  0%, 100% { transform: scale(0.92); opacity: 0.55; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+.csig-ga-soul { animation: csig-ga-soul 4.4s ease-in-out infinite; }
+.csig-ga-soul-b { animation: csig-ga-soul 4.4s ease-in-out 1.4s infinite; }
+.csig-ga-soul-c { animation: csig-ga-soul 4.4s ease-in-out 2.8s infinite; }
+@keyframes csig-ga-soul {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* shared sigil breaths */
+@keyframes csig-breathe {
+  0%, 100% { transform: scale(0.94); opacity: 0.75; }
+  50% { transform: scale(1.06); opacity: 1; }
+}
+@keyframes csig-core-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .csig *,
+  .csig-lc-bar {
+    animation: none !important;
+  }
+}
+
 /* the stillness law — every drift and pulse rests on request */
 @media (prefers-reduced-motion: reduce) {
   .landing-shard,

@@ -912,6 +912,12 @@ interface MirrorState {
   openAkashic: (opts?: { bare?: boolean }) => void;
   exitAkashic: () => void;
 
+  /* THE FLUX — the four-directional current of creations: its own
+     portal over the house (one mount, raised by the store's door). */
+  fluxOpen: boolean;
+  openFlux: () => void;
+  closeFlux: () => void;
+
   /* The Invent — the fourth book: the inventor's compact studio */
   openInvent: () => void;
   exitInvent: () => void;
@@ -1926,6 +1932,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   authMode: "signin" as const,
   profilePageOpen: false,
   gatheringPortalOpen: false,
+  fluxOpen: false,
   treeBoardOpen: false,
   wallet: null,
   walletPrices: null,
@@ -2107,6 +2114,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               s.activeToolTab === "akashic" ? null : s.activeToolTab,
           }
     ),
+
+  /* -------- THE FLUX — the four-directional current --------
+     Its own portal over the house (the house keeps breathing beneath
+     it): raised by the crown's flux door, folded by its own return
+     hand, the Escape key or the browser's Back. */
+  openFlux: () => set({ fluxOpen: true, mobileNavOpen: false }),
+  closeFlux: () => set({ fluxOpen: false }),
 
   /* -------- The Invent — the fourth book --------
      The inventor's compact studio: opening it suspends every other
@@ -3822,7 +3836,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       const data = await res.json().catch(() => null);
       raiseEnergy(res.status, data);
 
-      if (!res.ok) {
+      if (
+        !res.ok ||
+        !data ||
+        typeof data.transmission !== "string" ||
+        !data.transmission.trim()
+      ) {
         throw new Error(
           (data && data.error) ||
             "The field is momentarily quiet. Rest, then try again."
@@ -3863,7 +3882,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 id: replyId,
                 query,
                 text: data.transmission,
-                classification: data.classification,
+                classification: data.classification ?? "WORLD_BUILDING",
                 createdAt: data.createdAt ?? new Date().toISOString(),
                 ...(attachments
                   ? {
