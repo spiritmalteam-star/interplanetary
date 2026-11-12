@@ -39,7 +39,6 @@ import {
   History,
   Hourglass,
   Layers,
-  Library,
   Link2,
   ListTree,
   LoaderCircle,
@@ -50,7 +49,6 @@ import {
   MessageSquareText,
   Moon,
   NotebookPen,
-  Orbit,
   Palette,
   Phone,
   RefreshCw,
@@ -63,7 +61,6 @@ import {
   Sun,
   TreeDeciduous,
   UserRound,
-  UsersRound,
   Volume2,
   VolumeX,
   X,
@@ -2686,14 +2683,6 @@ export function BranchCanopy({
   const openParticleX = useMirror((s) => s.openParticleX);
   const openEvolveMed = useMirror((s) => s.openEvolveMed);
   const openArtX = useMirror((s) => s.openArtX);
-  /* THE GATHERING AND THE FLUX — the hall and the current: the hall is
-     the house's own independent portal; the current is its own gate */
-  const openGatheringPortal = useMirror((s) => s.openGatheringPortal);
-  const openFlux = useMirror((s) => s.openFlux);
-  /* THE INSTRUMENTS' OWN HANDS — the remaining rooms ride the store's
-     own doors (the quantum shore, the manifest OS, the library) */
-  const openMirrorOS = useMirror((s) => s.openMirrorOS);
-  const openLibrary = useMirror((s) => s.openLibrary);
   const resetField = useMirror((s) => s.resetField);
   /* THE CREATION DOOR — the branch's own words ride with the touch:
      the theme page that opens forges its making from them. */
@@ -5776,102 +5765,6 @@ export function BranchCanopy({
                     >
                       ·{lineage.length}
                     </span>
-                  </div>
-                  {/* THE INSTRUMENTS — the house's own bench, one touch
-                      each: the hall and the current, every world of
-                      making and discovery, the library. No buried
-                      doors — the whole bench rides with the walk. */}
-                  <div
-                    data-testid={`${testIdPrefix}-instruments`}
-                    className="mt-2"
-                  >
-                    <p className="mono-label px-2 pb-1.5 text-[8px] uppercase tracking-[0.2em] text-muted-foreground/60">
-                      {t("The instruments")}
-                    </p>
-                    <div className="grid grid-cols-3 gap-1">
-                      {(
-                        [
-                          {
-                            label: "Gathering",
-                            icon: UsersRound,
-                            open: openGatheringPortal,
-                            test: "gathering",
-                          },
-                          {
-                            label: "Flux",
-                            icon: Orbit,
-                            open: openFlux,
-                            test: "flux",
-                          },
-                          {
-                            label: "Art X",
-                            icon: Palette,
-                            open: openArtX,
-                            test: "artx",
-                          },
-                          {
-                            label: "Light codes",
-                            icon: AudioLines,
-                            open: () => openLightCodes(),
-                            test: "lightcodes",
-                          },
-                          {
-                            label: "Particle X",
-                            icon: Atom,
-                            open: openParticleX,
-                            test: "particlex",
-                          },
-                          {
-                            label: "Evolve Med",
-                            icon: Dna,
-                            open: openEvolveMed,
-                            test: "evolvemed",
-                          },
-                          {
-                            label: "Mirror OS",
-                            icon: NotebookPen,
-                            open: openMirrorOS,
-                            test: "mirroros",
-                          },
-                          {
-                            label: "Forge",
-                            icon: Hammer,
-                            open: openInvent,
-                            test: "invent",
-                          },
-                          {
-                            label: "Library",
-                            icon: Library,
-                            open: openLibrary,
-                            test: "library",
-                          },
-                        ] as const
-                      ).map((tool) => {
-                        const ToolIcon = tool.icon;
-                        return (
-                          <button
-                            key={tool.test}
-                            type="button"
-                            onClick={() => {
-                              tool.open();
-                              setCrownMenu(null);
-                            }}
-                            aria-label={t(tool.label)}
-                            title={t(tool.label)}
-                            data-testid={`${testIdPrefix}-tool-${tool.test}`}
-                            className="focus-glow pm-tap flex flex-col items-center gap-1.5 rounded-xl border hairline px-1 py-2 text-center transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_45%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_6%,transparent)]"
-                          >
-                            <ToolIcon
-                              className="size-3.5 text-[var(--scope-a,var(--gd))] opacity-80"
-                              aria-hidden="true"
-                            />
-                            <span className="w-full truncate text-[9.5px] leading-none text-foreground/85">
-                              {t(tool.label)}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
                   </div>
                   {/* the trail of the walk */}
                   {lineage.length > 0 && (

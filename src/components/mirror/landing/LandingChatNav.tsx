@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Hammer, Layers, Sparkles } from "lucide-react";
+import { Hammer, Layers, Orbit, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -43,6 +43,7 @@ export function LandingChatNav() {
   const landingScope = useMirror((s) => s.landingScope);
   const setLandingScope = useMirror((s) => s.setLandingScope);
   const closeScopes = useMirror((s) => s.closeScopes);
+  const openFlux = useMirror((s) => s.openFlux);
 
   /* IN DREAM — the workplace already stands (and the scopes are not
      standing over it)? One touch re-enters it (the window never
@@ -140,6 +141,22 @@ export function LandingChatNav() {
         <span className={cn(handLabel, "text-[#a21caf] dark:text-[#f5d0fe]")}>
           HyperX
         </span>
+      </button>
+
+      {/* ----------------------------- FLUX ----------------------------- */}
+      {/* THE FLUX — the four-directional current: the creations walked
+          in every direction, the mirror's illuminated path beneath the
+          walker's free steps. One icon hand — it opens over the house. */}
+      <button
+        type="button"
+        onClick={openFlux}
+        aria-haspopup="dialog"
+        aria-label={t("The Flux — creations walked in every direction")}
+        title={t("The Flux — creations walked in every direction")}
+        data-testid="landing-nav-flux"
+        className={cn(hand, "justify-center px-1.5 sm:px-2")}
+      >
+        <Orbit className="size-3 shrink-0 text-[#7c6f5b] dark:text-[#d3c39c]" aria-hidden="true" />
       </button>
 
       {/* ------------------ THE GATHERING HAS LEFT ------------------- */}

@@ -3,7 +3,6 @@
 import { memo } from "react";
 import { cn } from "@/lib/utils";
 import type { ChannelingKind } from "@/lib/channeling-sdk";
-import { ChannelingOrb } from "./ChannelingOrb";
 
 /* ------------------------------------------------------------------ */
 /*  THE CHANNELING SIGILS — every kind of channeling wears its OWN     */
@@ -31,7 +30,30 @@ const TransmissionSigil = memo(function TransmissionSigil({
   size: number;
   className?: string;
 }) {
-  return <ChannelingOrb size={size} className={className} />;
+  /* the standing channel's own orb — a breathing core inside a turning
+     ring, one bright mote riding its own orbit (the .chn-orb breaths
+     live in globals.css; the light is transform-and-opacity only) */
+  return (
+    <span
+      aria-hidden="true"
+      data-testid="channeling-orb"
+      className={cn("chn-orb relative inline-block shrink-0", className)}
+      style={{ width: size, height: size }}
+    >
+      <span className="chn-orb-aura absolute inset-0 rounded-full" />
+      <span className="chn-orb-ring absolute inset-0 rounded-full" />
+      <span className="chn-orb-spin absolute inset-0">
+        <i className="chn-orb-mote absolute left-1/2 top-0 size-[3px] -translate-x-1/2 rounded-full" />
+      </span>
+      <span className="chn-orb-spin chn-orb-spin-slow absolute inset-0">
+        <i className="chn-orb-mote chn-orb-mote-dim absolute left-1/2 top-px size-0.5 -translate-x-1/2 rounded-full" />
+      </span>
+      <span
+        className="chn-orb-core absolute rounded-full"
+        style={{ inset: Math.max(4, Math.round(size * 0.28)) }}
+      />
+    </span>
+  );
 });
 
 /** AKASHIC — the all-seeing eye: a slow iris inside a ring of runes. */
