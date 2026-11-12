@@ -468,7 +468,7 @@ const FluxCard = memo(function FluxCard({
 
 export function FluxField() {
   const t = useT();
-  const returnToObservatory = useMirror((s) => s.returnToObservatory);
+  const closeFlux = useMirror((s) => s.closeFlux);
 
   const [works, setWorks] = useState<FluxWork[] | null>(null);
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -776,7 +776,7 @@ export function FluxField() {
         <div className="pointer-events-auto flex items-center gap-2">
           <button
             type="button"
-            onClick={returnToObservatory}
+            onClick={closeFlux}
             aria-label={t("Back to the tree")}
             title={t("Back to the tree")}
             data-testid="flux-back"
