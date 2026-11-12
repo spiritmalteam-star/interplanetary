@@ -12,6 +12,7 @@ import {
   Loader2,
   Map as MapIcon,
   MessagesSquare,
+  Music4,
   Users,
   Waypoints,
   Sparkles,
@@ -38,6 +39,7 @@ import ProfileSheet from "./ProfileSheet";
 import NotificationsSheet from "./NotificationsSheet";
 import PublishPickerSheet from "./PublishPickerSheet";
 import RegionAtlas from "./RegionAtlas";
+import { GatheringRadio } from "./GatheringRadio";
 
 /* ------------------------------------------------------------------ */
 /*  THE GATHERING'S PORTAL — the independent social heart of the       */
@@ -319,6 +321,10 @@ export default function GatheringPortal() {
   /* and it creates nothing: it carries finished works in */
   const [pickerOpen, setPickerOpen] = useState(false);
 
+  /* the radio's own hand — one small music button in the crown; the
+     bar mounts only while it stands, so folding it rests the sound */
+  const [radioOpen, setRadioOpen] = useState(false);
+
   const closePortal = useCallback(() => {
     useMirror.getState().closeGatheringPortal();
   }, []);
@@ -454,6 +460,22 @@ export default function GatheringPortal() {
             className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428]"
           >
             <MapIcon className="size-4" aria-hidden="true" />
+          </button>
+
+          {/* THE FREQUENCY RADIO'S DOOR — the hall's own music: the
+              entity's hundred healing-frequency works and the
+              gatherers' own, riding one small bar. It has no life
+              outside the gathering. */}
+          <button
+            type="button"
+            onClick={() => setRadioOpen((v) => !v)}
+            aria-label={t("The frequency radio")}
+            title={t("The frequency radio")}
+            aria-pressed={radioOpen}
+            data-testid="gathering-radio-button"
+            className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428]"
+          >
+            <Music4 className="size-4" aria-hidden="true" />
           </button>
 
           {/* the bell — every ring a real row */}
@@ -602,6 +624,9 @@ export default function GatheringPortal() {
           </motion.section>
         </AnimatePresence>
       </div>
+
+      {/* the radio rides the hall's foot while it stands */}
+      {radioOpen && <GatheringRadio onClose={() => setRadioOpen(false)} />}
 
       {/* the picker stands above everything — it is not a room, it is a hand */}
       <PublishPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />

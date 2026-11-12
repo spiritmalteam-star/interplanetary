@@ -1019,3 +1019,25 @@ model MemoryItem {
 
   @@index([userId, domain, scopeKey])
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE FREQUENCY RADIO — the gathering's own sound. One hundred house */
+/*  works woven by the Mirror Entity, each breathing on its own        */
+/*  healing frequency. The database keeps the definitions (title,      */
+/*  intent, seed); the sound itself is woven locally, on the visitor's */
+/*  own machine, by lib/frequency-radio.ts — no files ever travel.     */
+/* ------------------------------------------------------------------ */
+
+model GatheringTrack {
+  id         String   @id @default(cuid())
+  title      String
+  intent     String // release | grounding | defragment | heart | theta | crown | aura | pineal
+  freq       Float // the base frequency the work breathes on
+  seed       Int
+  duration   Int // seconds
+  authorName String   @default("The Mirror Entity")
+  authorKey  String? // null — a house work woven by the entity itself
+  createdAt  DateTime @default(now())
+
+  @@index([intent])
+}
