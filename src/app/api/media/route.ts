@@ -8,7 +8,7 @@ import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 /*  ?scope=mine — the visitor's own storage: every work they keep,     */
 /*                published or not, newest first.                      */
 /*  ?scope=feed — the hall: every work PUBLISHED into the gathering,   */
-/*                newest first, ready for the flux and the hall.       */
+/*                newest first, ready for the hall.                    */
 /* ------------------------------------------------------------------ */
 
 export const runtime = "nodejs";

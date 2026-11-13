@@ -83,3 +83,4 @@ agent-ctx/
 # the gathering’s own media shelf — visitor uploads never enter the repository
 public/gathering-media/
 .media/
+.zshots/

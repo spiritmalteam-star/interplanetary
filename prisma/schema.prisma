@@ -95,7 +95,7 @@ model User {
 //  Every visitor owns a private vault: uploaded videos, voices and
 //  images are kept under .media/<userId>/ on the disk and indexed here.
 //  A work may be PUBLISHED into the hall — then it streams to the whole
-//  field (the flux walks it, the gathering may hang it).
+//  field (the gathering may hang it).
 
 model MediaAsset {
   id        String   @id @default(cuid())

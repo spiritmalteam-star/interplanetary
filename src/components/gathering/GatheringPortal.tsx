@@ -595,7 +595,7 @@ export default function GatheringPortal() {
 
       {/* ---------- the portal's crown ---------- */}
       <header className="gp-glass absolute inset-x-0 top-0 z-10 border-x-0 border-t-0 lg:left-[248px]">
-        <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-2.5 px-3 sm:h-16 sm:gap-3 sm:px-6">
+        <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-1.5 px-3 sm:h-16 sm:gap-3 sm:px-6">
           <button
             type="button"
             onClick={closePortal}
@@ -704,7 +704,7 @@ export default function GatheringPortal() {
             aria-label={t("Your introduction")}
             title={t("Your introduction")}
             data-testid="gathering-profile"
-            className="focus-glow flex max-w-[150px] shrink-0 items-center gap-2 rounded-full border border-[#e4d9bd] bg-white/70 py-1 pl-1 pr-2.5 transition-all duration-300 hover:border-[#d3c39c]"
+            className="focus-glow flex max-w-[112px] shrink-0 items-center gap-2 rounded-full border border-[#e4d9bd] bg-white/70 py-1 pl-1 pr-2.5 transition-all duration-300 hover:border-[#d3c39c] sm:max-w-[150px]"
           >
             <MakerMark name={me?.name ?? "·"} size={26} />
             <span className="truncate text-[12px] font-semibold text-[#5c5344]">
@@ -1012,7 +1012,7 @@ export default function GatheringPortal() {
       )}
 
       {/* M.E. listens in every room — it suggests, never acts */}
-      <MirrorAssistant section={section} me={me} />
+      <MirrorAssistant section={section} me={me} radioOpen={radioOpen} />
 
       {/* the first welcome — once, honestly, never again */}
       <FirstVisitSheet

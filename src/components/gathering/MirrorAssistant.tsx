@@ -34,9 +34,14 @@ const QUICK_HANDS: Array<{ action: AssistantAction; label: string }> = [
 export default function MirrorAssistant({
   section,
   me,
+  radioOpen = false,
 }: {
   section: string;
   me: MeState | null;
+  /** the frequency radio stands at the hall's foot — the mirror
+      lifts itself above its band on the palm, and comes back down
+      when the radio folds away */
+  radioOpen?: boolean;
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -114,7 +119,9 @@ export default function MirrorAssistant({
 
   return (
     <>
-      {/* the floating pearl — above the radio bar and the mobile nav */}
+      {/* the floating pearl — the one mirror presence in the hall:
+          it rests just above the palm's streets, lifts over the radio
+          while it plays, and never covers community content */}
       <motion.button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -122,8 +129,12 @@ export default function MirrorAssistant({
         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
         aria-label={t("Ask M.E.")}
         title={t("Ask M.E.")}
+        aria-expanded={open}
         data-testid="gath-assistant-open"
-        className="gp-pearl focus-glow fixed bottom-[84px] right-4 z-40 flex size-12 items-center justify-center rounded-full border border-white/90 sm:right-6"
+        className={cn(
+          "gp-pearl focus-glow fixed right-4 z-50 flex size-12 items-center justify-center rounded-full border border-white/90 transition-[bottom] duration-300 sm:right-6 lg:bottom-[84px]",
+          radioOpen ? "bottom-[196px]" : "bottom-[84px]"
+        )}
         style={{
           background: "linear-gradient(150deg,#fdf9ef 0%,#f3ead6 100%)",
           boxShadow:
@@ -145,7 +156,8 @@ export default function MirrorAssistant({
             data-testid="gath-assistant-panel"
             className={cn(
               GP_CARD,
-              "fixed bottom-[84px] right-4 z-40 flex max-h-[60vh] w-[min(92vw,380px)] flex-col overflow-hidden shadow-xl sm:right-6"
+              "fixed right-4 z-40 flex max-h-[60vh] w-[min(92vw,380px)] flex-col overflow-hidden shadow-xl transition-[bottom] duration-300 sm:right-6",
+              radioOpen ? "bottom-[260px] lg:bottom-[148px]" : "bottom-[148px]"
             )}
           >
             {/* the mirror's crown */}

@@ -1740,28 +1740,28 @@ export default function FeedSection({
   const feedList = view === "mine" ? mine : hall;
 
   return (
-    <div className="relative h-full">
-      {/* ---------- the three hands — small icon circles, learned once ---------- */}
-      <div className="mx-auto w-full max-w-[1200px] px-3 pt-3 sm:px-6 sm:pt-4" data-testid="gathering-three-hands">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-          {threeHands.map(({ key, label, icon: Icon, run }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={run}
-              aria-label={t(label)}
-              title={t(label)}
-              data-testid={`gathering-hand-${key}`}
-              className="gp-card gp-card-hover focus-glow flex size-10 items-center justify-center rounded-full outline-none"
-            >
-              <Icon className="size-4 text-[#a16207]" aria-hidden="true" />
-            </button>
-          ))}
-        </div>
+    <div className="relative flex h-full flex-col">
+      {/* ---------- the three hands and the four currents, one quiet crown ---------- */}
+      <div className="mx-auto w-full max-w-[1200px] shrink-0 px-3 pt-2.5 sm:px-6 sm:pt-3" data-testid="gathering-three-hands">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {threeHands.map(({ key, label, icon: Icon, run }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={run}
+                aria-label={t(label)}
+                title={t(label)}
+                data-testid={`gathering-hand-${key}`}
+                className="gp-card gp-card-hover focus-glow flex size-10 items-center justify-center rounded-full outline-none"
+              >
+                <Icon className="size-4 text-[#a16207]" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
 
-        {/* the four currents — above the views, gone when mine keeps its wall */}
-        {view !== "mine" && (
-          <div className="mt-4 flex items-center">
+          {/* the four currents — beside the hands, gone when mine keeps its wall */}
+          {view !== "mine" && (
             <div
               role="tablist"
               aria-label={t("The four currents")}
@@ -1797,11 +1797,11 @@ export default function FeedSection({
                 );
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* the hall's own segmented pill + intention chips */}
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
           <div
             role="tablist"
             aria-label={t("The Gathering")}
@@ -1879,10 +1879,7 @@ export default function FeedSection({
 
       {/* ---------- the rooms ---------- */}
       <div
-        className={cn(
-          "gp-scroll overflow-y-auto overscroll-y-contain px-3 pb-28 pt-4 sm:px-6 sm:pt-5",
-          view === "mine" ? "h-[calc(100%-124px)]" : "h-[calc(100%-178px)]"
-        )}
+        className="gp-scroll min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pb-28 pt-3 sm:px-6 sm:pt-4"
       >
         {view === "stream" ? (
           hall.loading ? (
@@ -1891,12 +1888,14 @@ export default function FeedSection({
               {t("The exhibition arrives…")}
             </p>
           ) : hall.posts.length === 0 ? (
-            <EmptyRoom
-              icon={Play}
-              line={t(
-                "The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question."
-              )}
-            />
+            <div className="flex h-full flex-col items-center justify-center">
+              <EmptyRoom
+                icon={Play}
+                line={t(
+                  "The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question."
+                )}
+              />
+            </div>
           ) : (
             <div ref={streamRef} className="gp-stream h-full overflow-hidden" data-testid="gp-stream">
               {hall.posts.map((p, i) => (
@@ -1940,14 +1939,16 @@ export default function FeedSection({
                 </button>
               </div>
             ) : feedList.posts.length === 0 ? (
-              <EmptyRoom
-                icon={LayoutGrid}
-                line={
-                  view === "mine"
-                    ? t("You have not hung anything yet — the offering line above waits for your first stone.")
-                    : t("The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question.")
-                }
-              />
+              <div className="flex h-full flex-col items-center justify-center">
+                <EmptyRoom
+                  icon={LayoutGrid}
+                  line={
+                    view === "mine"
+                      ? t("You have not hung anything yet — the offering line above waits for your first stone.")
+                      : t("The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question.")
+                  }
+                />
+              </div>
             ) : (
               <div className="mx-auto max-w-[1200px]">
                 <div
@@ -2000,14 +2001,16 @@ export default function FeedSection({
         )}
       </div>
 
-      {/* ---------- the offering hand — always within reach ---------- */}
+      {/* ---------- the offering hand — the wide desk's own door
+              (on the palm the create sheet in the nav carries every
+              beginning, so the hall stays clear) ---------- */}
       <button
         type="button"
         onClick={() => openComposer("reflection")}
         aria-label={t("The offering line")}
         title={t("The offering line")}
         data-testid="gathering-portal-offer"
-        className="focus-glow gp-pearl absolute bottom-5 right-4 z-10 flex items-center gap-2 rounded-full border border-white/95 py-3 pl-4 pr-5 text-[13px] font-semibold text-[#8a6f46] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[1.02] sm:bottom-7 sm:right-7"
+        className="focus-glow gp-pearl absolute bottom-7 right-7 z-10 hidden items-center gap-2 rounded-full border border-white/95 py-3 pl-4 pr-5 text-[13px] font-semibold text-[#8a6f46] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-[1.02] lg:flex"
         style={{
           background: "linear-gradient(150deg,#fffdf8 0%,#f4ebd7 100%)",
           boxShadow:
