@@ -1431,11 +1431,13 @@ function GrowSheet({
 /* =============== THE COMPOSER SHEET — the offering line, worn as a sheet =============== */
 function ComposerSheet({
   initialKind,
+  seed,
   circles,
   onClose,
   onHung,
 }: {
   initialKind: string;
+  seed?: { title?: string; body?: string; tags?: string } | null;
   circles: CircleCard[];
   onClose: () => void;
   onHung: (post: GatheringPost) => void;
@@ -1478,7 +1480,7 @@ function ComposerSheet({
           </button>
         </div>
         <div className="gp-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-7">
-          <ComposerForm initialKind={initialKind} circles={circles} onHung={onHung} compact />
+          <ComposerForm initialKind={initialKind} seed={seed ?? undefined} circles={circles} onHung={onHung} compact />
         </div>
       </motion.div>
     </motion.div>
@@ -1500,7 +1502,7 @@ export default function FeedSection({
   active: boolean;
   circles: CircleCard[];
   refreshSignal?: number;
-  composeIntent?: { kind: string; n: number } | null;
+  composeIntent?: { kind: string; n: number; seed?: { title?: string; body?: string; tags?: string } } | null;
   onComposeConsumed?: () => void;
   onMeetSomeone: () => void;
   onPublishWork: () => void;
@@ -1514,6 +1516,11 @@ export default function FeedSection({
   const [kind, setKind] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerKind, setComposerKind] = useState<string>("reflection");
+  const [composerSeed, setComposerSeed] = useState<{
+    title?: string;
+    body?: string;
+    tags?: string;
+  } | null>(null);
   const [echoPost, setEchoPost] = useState<GatheringPost | null>(null);
   const [armedId, setArmedId] = useState<string | null>(null);
   const [strikeId, setStrikeId] = useState<string | null>(null);
@@ -1687,8 +1694,9 @@ export default function FeedSection({
     [hall, mine]
   );
 
-  const openComposer = useCallback((k: string) => {
+  const openComposer = useCallback((k: string, seed?: { title?: string; body?: string; tags?: string } | null) => {
     setComposerKind(k);
+    setComposerSeed(seed ?? null);
     setComposerOpen(true);
   }, []);
 
@@ -1702,9 +1710,10 @@ export default function FeedSection({
     if (!composeIntent || n <= lastComposeRef.current) return;
     lastComposeRef.current = n;
     const kind = composeIntent.kind;
+    const seed = composeIntent.seed ?? null;
     const consume = onComposeConsumed;
     const id = window.setTimeout(() => {
-      openComposer(kind);
+      openComposer(kind, seed);
       consume?.();
     }, 0);
     return () => window.clearTimeout(id);
@@ -2093,6 +2102,7 @@ export default function FeedSection({
         {composerOpen && (
           <ComposerSheet
             initialKind={composerKind}
+            seed={composerSeed}
             circles={circles}
             onClose={() => setComposerOpen(false)}
             onHung={onHung}

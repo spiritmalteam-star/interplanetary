@@ -66,21 +66,25 @@ async function weavePictureDown(file: File): Promise<Blob> {
 
 export default function ComposerForm({
   initialKind,
+  seed,
   circles,
   onHung,
   compact = false,
 }: {
   initialKind: string;
+  /** a beginning carried into the fields (from the Mirror Laboratory) —
+      laid in at mount; the visitor edits and hangs it themselves */
+  seed?: { title?: string; body?: string; tags?: string };
   circles: CircleCard[];
   onHung: (post: GatheringPost) => void;
   compact?: boolean;
 }) {
   const t = useT();
   const [kind, setKind] = useState<string>(initialKind);
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
+  const [title, setTitle] = useState(seed?.title ?? "");
+  const [body, setBody] = useState(seed?.body ?? "");
   const [sector, setSector] = useState("");
-  const [tags, setTags] = useState("");
+  const [tags, setTags] = useState(seed?.tags ?? "");
   const [epistemic, setEpistemic] = useState("");
   const [circleId, setCircleId] = useState<string>("");
   const [media, setMedia] = useState<{ url: string; type: string; name: string | null } | null>(

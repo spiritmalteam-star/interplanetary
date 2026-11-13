@@ -152,7 +152,25 @@ function StatusPill({ status }: { status: string }) {
 /*  THE SECTION — list and detail under one AnimatePresence breath     */
 /* ================================================================== */
 
-export default function LaboratorySection({ active }: { active: boolean }) {
+export interface BenchSeedPayload {
+  title: string;
+  question: string;
+  hypothesis: string;
+  method: string;
+  n: number;
+}
+
+export default function LaboratorySection({
+  active,
+  benchSeed = null,
+  onBenchSeedConsumed,
+}: {
+  active: boolean;
+  /** a draft carried from the Mirror Laboratory — opens the bench form
+      pre-filled; the visitor's own hand still opens and hangs it */
+  benchSeed?: BenchSeedPayload | null;
+  onBenchSeedConsumed?: () => void;
+}) {
   const t = useT();
   const [labs, setLabs] = useState<LabSummary[] | null>(null);
   const [listErr, setListErr] = useState<string | null>(null);
@@ -174,6 +192,23 @@ export default function LaboratorySection({ active }: { active: boolean }) {
   const [nFocus, setNFocus] = useState<string | null>("science");
   const [nBusy, setNBusy] = useState(false);
   const [nErr, setNErr] = useState<string | null>(null);
+
+  /* THE CARRIED BEGINNING — a draft from the Mirror Laboratory opens
+     the bench sheet once with its fields laid in; the counter keeps
+     every knock distinct and the seed is consumed after use */
+  const lastBenchSeedRef = useRef(0);
+  useEffect(() => {
+    if (!benchSeed || benchSeed.n <= lastBenchSeedRef.current) return;
+    lastBenchSeedRef.current = benchSeed.n;
+    setNTitle(benchSeed.title);
+    setNQuestion(benchSeed.question);
+    setNHypothesis(benchSeed.hypothesis);
+    setNMethod(benchSeed.method);
+    setCreating(true);
+    const consume = onBenchSeedConsumed;
+    const id = window.setTimeout(() => consume?.(), 0);
+    return () => window.clearTimeout(id);
+  }, [benchSeed, onBenchSeedConsumed]);
 
   const load = useCallback(async () => {
     try {

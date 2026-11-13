@@ -1,7 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ComponentType,
+} from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -39,28 +46,74 @@ import {
   MakerMark,
   netFetch,
 } from "./shared";
-import FeedSection from "./FeedSection";
-import DiscoverSection from "./DiscoverSection";
-import CirclesSection from "./CirclesSection";
-import EncountersSection from "./EncountersSection";
-import MessagesSection from "./MessagesSection";
-import CollaborateSection from "./CollaborateSection";
-import LibrarySection from "./LibrarySection";
-import QuestionsSection from "./QuestionsSection";
-import LaboratorySection from "./LaboratorySection";
-import IntentionsSection from "./IntentionsSection";
-import LiveSection from "./LiveSection";
-import SavedSection from "./SavedSection";
-import MySpaceSection from "./MySpaceSection";
-import SettingsSection from "./SettingsSection";
-import GuidelinesSection from "./GuidelinesSection";
 import MirrorAssistant from "./MirrorAssistant";
 import FirstVisitSheet from "./FirstVisitSheet";
-import ProfileSheet from "./ProfileSheet";
-import NotificationsSheet from "./NotificationsSheet";
-import PublishPickerSheet from "./PublishPickerSheet";
-import RegionAtlas from "./RegionAtlas";
-import { GatheringRadio } from "./GatheringRadio";
+
+/* THE LAZY STREETS — every room of the network is lifted in only when
+   its own street is walked: the portal's first breath carries the
+   crown, the rail and the visitor's arrival alone, and no visitor
+   downloads the fifteen rooms' ~15,000 lines until they open that
+   door. Each chunk rides once and stays; the walk between rooms stays
+   fluid. (ssr:false — the hall itself is client-born.) */
+function SectionLoading() {
+  return (
+    <div
+      role="status"
+      aria-label="The room is arriving"
+      className="flex h-full items-center justify-center"
+    >
+      <span
+        aria-hidden="true"
+        className="gp-pearl flex size-10 items-center justify-center rounded-[14px] border border-white/90"
+        style={{
+          background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)",
+          boxShadow:
+            "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",
+        }}
+      >
+        <motion.span
+          className="block size-3.5 rounded-[6px] border border-[#cbb98d] bg-[linear-gradient(150deg,#fefcf6,#e8dcbd)]"
+          animate={{ opacity: [1, 0.45, 1] }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </span>
+    </div>
+  );
+}
+
+const lazyRoom = <P extends { active: boolean }>(
+  loader: () => Promise<{ default: ComponentType<P> }>
+) => dynamic(loader, { ssr: false, loading: () => <SectionLoading /> });
+
+const FeedSection = dynamic(() => import("./FeedSection"), { ssr: false, loading: () => <SectionLoading /> });
+const DiscoverSection = lazyRoom(() => import("./DiscoverSection"));
+const CirclesSection = lazyRoom(() => import("./CirclesSection"));
+const EncountersSection = lazyRoom(() => import("./EncountersSection"));
+const MessagesSection = lazyRoom(() => import("./MessagesSection"));
+const CollaborateSection = dynamic(() => import("./CollaborateSection"), { ssr: false, loading: () => <SectionLoading /> });
+const LibrarySection = dynamic(() => import("./LibrarySection"), { ssr: false, loading: () => <SectionLoading /> });
+const QuestionsSection = lazyRoom(() => import("./QuestionsSection"));
+const LaboratorySection = lazyRoom(() => import("./LaboratorySection"));
+const IntentionsSection = lazyRoom(() => import("./IntentionsSection"));
+const LiveSection = lazyRoom(() => import("./LiveSection"));
+const SavedSection = lazyRoom(() => import("./SavedSection"));
+const MySpaceSection = dynamic(() => import("./MySpaceSection"), { ssr: false, loading: () => <SectionLoading /> });
+const SettingsSection = dynamic(() => import("./SettingsSection"), { ssr: false, loading: () => <SectionLoading /> });
+const GuidelinesSection = lazyRoom(() => import("./GuidelinesSection"));
+/* THE MIRROR LABORATORY — the hall's unified field, its own street */
+const MirrorLaboratory = dynamic(() => import("./MirrorLaboratory"), {
+  ssr: false,
+  loading: () => <SectionLoading />,
+});
+/* the overlays and the radio bar ride on their own doors too */
+const ProfileSheet = dynamic(() => import("./ProfileSheet"), { ssr: false });
+const NotificationsSheet = dynamic(() => import("./NotificationsSheet"), { ssr: false });
+const RegionAtlas = dynamic(() => import("./RegionAtlas"), { ssr: false });
+const PublishPickerSheet = dynamic(() => import("./PublishPickerSheet"), { ssr: false });
+const GatheringRadio = dynamic(
+  () => import("./GatheringRadio").then((m) => ({ default: m.GatheringRadio })),
+  { ssr: false }
+);
 
 /* ------------------------------------------------------------------ */
 /*  THE GATHERING'S PORTAL — the independent social heart of the       */
@@ -104,6 +157,7 @@ import { GatheringRadio } from "./GatheringRadio";
 
 type Section =
   | "gathering"
+  | "mirror"
   | "discover"
   | "questions"
   | "circles"
@@ -123,6 +177,7 @@ type RoomDef = { key: Section; label: string; icon: LucideIcon };
 
 const ROOMS: Record<Section, RoomDef> = {
   gathering: { key: "gathering", label: "The Pulse", icon: Waypoints },
+  mirror: { key: "mirror", label: "Mirror Laboratory", icon: Sparkles },
   discover: { key: "discover", label: "Discover", icon: Compass },
   questions: { key: "questions", label: "Living Questions", icon: CircleQuestionMark },
   circles: { key: "circles", label: "Resonance Circles", icon: Users },
@@ -139,18 +194,22 @@ const ROOMS: Record<Section, RoomDef> = {
   guidelines: { key: "guidelines", label: "Guidelines", icon: ScrollText },
 };
 
-/* the rail reads in six quiet groups — the network's own streets */
+/* the rail reads in quiet groups — the four primary destinations
+   (Laboratory, Discover, Connections, My Space) lead the walk, the
+   pulse stays the arrival, and every other room keeps its door */
 const RAIL_GROUPS: Array<{ label: string; rooms: Section[] }> = [
   { label: "the pulse", rooms: ["gathering"] },
-  { label: "explore", rooms: ["discover", "questions", "laboratory"] },
+  { label: "the laboratory", rooms: ["mirror"] },
+  { label: "discover", rooms: ["discover", "questions", "laboratory"] },
   { label: "together", rooms: ["circles", "intentions", "live", "collaborate"] },
   { label: "creations", rooms: ["library"] },
   { label: "connect", rooms: ["encounters", "messages"] },
   { label: "you", rooms: ["saved", "myspace", "settings", "guidelines"] },
 ];
 
-/* the five streets that ride the palm's bottom */
-const BOTTOM_ROOMS: Section[] = ["gathering", "discover", "circles", "messages"];
+/* the five streets that ride the palm's bottom — the Laboratory
+   walks beside the pulse, discover and messages */
+const BOTTOM_ROOMS: Section[] = ["gathering", "mirror", "discover", "messages"];
 
 const SECTION_IDS = Object.keys(ROOMS) as Section[];
 
@@ -199,12 +258,12 @@ const GATH_STYLE = `
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-.gath-hall .bg-white\/45,
-.gath-hall .bg-white\/50,
-.gath-hall .bg-white\/55,
-.gath-hall .bg-white\/60,
-.gath-hall .bg-white\/70,
-.gath-hall .bg-white\/80 {
+.gath-hall .bg-white\\/45,
+.gath-hall .bg-white\\/50,
+.gath-hall .bg-white\\/55,
+.gath-hall .bg-white\\/60,
+.gath-hall .bg-white\\/70,
+.gath-hall .bg-white\\/80 {
   background-color: #fffdf8;
 }
 .gath-hall .bg-white {
@@ -402,9 +461,26 @@ export default function GatheringPortal() {
   /* the compose intent — the create sheet's labeled doors carry a
      beginning into the hall: the section arrives first, then the
      composer unfolds on top of it (never a dead end). The counter
-     makes every knock distinct, even the same door twice. */
-  const [composeIntent, setComposeIntent] = useState<{ kind: string; n: number } | null>(null);
+     makes every knock distinct, even the same door twice. A seed
+     (from the Mirror Laboratory) lays a beginning into the fields. */
+  const [composeIntent, setComposeIntent] = useState<{
+    kind: string;
+    n: number;
+    seed?: { title?: string; body?: string; tags?: string };
+  } | null>(null);
   const composeNRef = useRef(0);
+
+  /* the laboratory bench's own seed — a draft carried from the Mirror
+     Laboratory opens a real bench form pre-filled, the visitor's hand
+     still does the opening and the hanging */
+  const [benchSeed, setBenchSeed] = useState<{
+    title: string;
+    question: string;
+    hypothesis: string;
+    method: string;
+    n: number;
+  } | null>(null);
+  const benchSeedNRef = useRef(0);
 
   /* the publication picker — the hall's only creation-adjacent door, */
   /* and it creates nothing: it carries finished works in */
@@ -760,6 +836,26 @@ export default function GatheringPortal() {
                 }}
                 onGrown={(where) => goSection(where)}
               />
+            ) : section === "mirror" ? (
+              <MirrorLaboratory
+                active
+                onComposeIntent={(seed) => {
+                  composeNRef.current += 1;
+                  const { kind, title, body, tags } = seed;
+                  setComposeIntent({
+                    kind,
+                    n: composeNRef.current,
+                    ...(title || body || tags ? { seed: { title, body, tags } } : {}),
+                  });
+                  goSection("gathering");
+                }}
+                onBenchSeed={(seed) => {
+                  benchSeedNRef.current += 1;
+                  setBenchSeed({ ...seed, n: benchSeedNRef.current });
+                  goSection("laboratory");
+                }}
+                onNavigate={(next) => goSection(isSection(next) ? next : "discover")}
+              />
             ) : section === "discover" ? (
               <DiscoverSection
                 active
@@ -770,7 +866,11 @@ export default function GatheringPortal() {
             ) : section === "circles" ? (
               <CirclesSection active />
             ) : section === "laboratory" ? (
-              <LaboratorySection active />
+              <LaboratorySection
+                active
+                benchSeed={benchSeed}
+                onBenchSeedConsumed={() => setBenchSeed(null)}
+              />
             ) : section === "intentions" ? (
               <IntentionsSection active />
             ) : section === "live" ? (
