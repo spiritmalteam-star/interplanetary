@@ -20,6 +20,60 @@ type AssistantAction = "summarize" | "explain" | "find" | "suggest" | "draft" | 
 interface Turn {
   who: "me" | "mirror";
   text: string;
+  /** the panel's own welcome — never rides the memory sent to M.E. */
+  greeting?: boolean;
+  /** an honest error — shown verbatim, but never remembered */
+  transient?: boolean;
+}
+
+/* THE CONVERSATION'S OWN KEEP — the thread survives the tab's journeys
+   (sections, reloads, returns) in sessionStorage, and rides to M.E. as
+   the memory of the conversation being proceeded. One keep per hall;
+   each chat of the house keeps its own separate shelf. */
+const MEMORY_KEY = "mirror:gath-assistant-thread-v1";
+const MEMORY_MAX = 40;
+
+function loadThread(): Turn[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.sessionStorage.getItem(MEMORY_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (x): x is Turn =>
+        !!x &&
+        typeof x === "object" &&
+        ((x as Turn).who === "me" || (x as Turn).who === "mirror") &&
+        typeof (x as Turn).text === "string"
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveThread(turns: Turn[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(
+      MEMORY_KEY,
+      JSON.stringify(turns.slice(-MEMORY_MAX))
+    );
+  } catch {
+    /* the keep is full — the living thread still holds in memory */
+  }
+}
+
+/** the memory M.E. receives — the thread as it stands, minus the
+    welcome, oldest first, capped so the newest turns lead */
+function memoryOf(turns: Turn[]): { role: "user" | "assistant"; text: string }[] {
+  return turns
+    .filter((x) => !x.greeting && !x.transient)
+    .map((x) => ({
+      role: x.who === "me" ? ("user" as const) : ("assistant" as const),
+      text: x.text,
+    }))
+    .slice(-8);
 }
 
 const QUICK_HANDS: Array<{ action: AssistantAction; label: string }> = [
@@ -45,14 +99,19 @@ export default function MirrorAssistant({
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
-  const [turns, setTurns] = useState<Turn[]>(() => [
-    {
-      who: "mirror",
-      text: me?.name
-        ? `${me.name} — ${t("ask me anything about this room. I suggest; I never act without your hand.")}`
-        : t("Ask me anything about this room. I suggest; I never act without your hand."),
-    },
-  ]);
+  const [turns, setTurns] = useState<Turn[]>(() => {
+    const kept = loadThread();
+    if (kept.length > 0) return kept;
+    return [
+      {
+        who: "mirror",
+        greeting: true,
+        text: me?.name
+          ? `${me.name} — ${t("ask me anything about this room. I suggest; I never act without your hand.")}`
+          : t("Ask me anything about this room. I suggest; I never act without your hand."),
+      },
+    ];
+  });
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const [pendingAction, setPendingAction] = useState<AssistantAction | null>(null);
@@ -60,7 +119,11 @@ export default function MirrorAssistant({
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   /* one honest exchange — the question rides with the pending hand
-     when a quick hand sent it; errors are shown verbatim, prefixed */
+     when a quick hand sent it, and with the thread's own memory so
+     M.E. proceeds the conversation instead of starting it cold;
+     errors are shown verbatim, prefixed */
+  const turnsRef = useRef<Turn[]>([]);
+  turnsRef.current = turns;
   const ask = useCallback(
     async (question: string, action?: AssistantAction) => {
       if (thinking) return;
@@ -73,12 +136,20 @@ export default function MirrorAssistant({
       try {
         const data = await netFetch<{ answer: string }>("/api/network/assistant", {
           method: "POST",
-          body: { section, question: text, action: action ?? undefined },
+          body: {
+            section,
+            question: text,
+            action: action ?? undefined,
+            history: memoryOf(turnsRef.current),
+          },
         });
         setTurns((prev) => [...prev, { who: "mirror", text: data.answer }]);
       } catch (err) {
         const raw = err instanceof Error ? err.message : t("M.E. could not be reached just now.");
-        setTurns((prev) => [...prev, { who: "mirror", text: `(honest) ${raw}` }]);
+        setTurns((prev) => [
+          ...prev,
+          { who: "mirror", text: `(honest) ${raw}`, transient: true },
+        ]);
       } finally {
         setThinking(false);
       }
@@ -101,6 +172,14 @@ export default function MirrorAssistant({
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [turns, thinking, open]);
+
+  /* the keep — every finished exchange rests in the tab's session, so
+     a journey to another room (or a reload) finds the conversation
+     standing where it was left; the welcome and the honest errors
+     never take a shelf */
+  useEffect(() => {
+    saveThread(turns.filter((x) => !x.greeting && !x.transient));
+  }, [turns]);
 
   /* the input receives the visitor's hand when the mirror opens */
   useEffect(() => {

@@ -17,6 +17,34 @@ Your voice:
 - Your knowledge spans molecular biology, DNA and gene therapy, dermatology, biofield and energy medicine, mitochondria, toxicology and detox pathways, neuroscience, epigenetics, immunology, endocrinology, orthopedics and cardiology — as well as Ayurveda, TCM, herbalism, frequency therapy, peptides and NAD+ research.
 - No two of your replies open with the same phrase.`;
 
+/* THE CONVERSATION'S OWN MEMORY — the earlier exchanges of THIS chat,
+   sanitized: seeker and mirror voices only, each capped, the newest
+   kept. One chat never reads another's thread. */
+const HISTORY_MAX = 8;
+const HISTORY_TURN_MAX = 700;
+
+interface HistoryTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+function historyTurns(raw: unknown): HistoryTurn[] {
+  if (!Array.isArray(raw)) return [];
+  const out: HistoryTurn[] = [];
+  for (const item of raw.slice(-HISTORY_MAX)) {
+    if (!item || typeof item !== "object") continue;
+    const rec = item as { role?: unknown; text?: unknown };
+    const role = rec.role === "assistant" ? "assistant" : "user";
+    const text =
+      typeof rec.text === "string" ? rec.text.trim().slice(0, HISTORY_TURN_MAX) : "";
+    if (!text) continue;
+    out.push({ role, content: text });
+  }
+  /* a thread may only open with the seeker's own words */
+  while (out.length > 0 && out[0].role !== "user") out.shift();
+  return out;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
@@ -40,6 +68,10 @@ export async function POST(req: NextRequest) {
         ? body.boardState.trim().slice(0, 600)
         : "";
 
+    /* the conversation's own memory — the thread the seeker is
+       proceeding in, so the Mirror continues it instead of restarting */
+    const history = historyTurns(body?.history);
+
     /* --- context injection: active lab discipline, or the full board --- */
     let contextLine = "";
     if (category) {
@@ -58,12 +90,21 @@ export async function POST(req: NextRequest) {
 
     const zai = await ZAI.create();
 
+    const memoryLine =
+      history.length > 0
+        ? "\n\nCONVERSATION MEMORY: the earlier exchanges of THIS conversation are provided below. You remember them — continue naturally from what was already said, refer back when it helps, and never repeat or contradict a previous reply. When the seeker says 'it', 'that' or 'again', they mean something from this thread."
+        : "\n\nCONVERSATION MEMORY: none was provided — this is the conversation's first exchange.";
+
     const completion = await zai.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: SYSTEM_BASE + RELEVANCE_LAW + contextLine + languageLine,
+          content: SYSTEM_BASE + RELEVANCE_LAW + contextLine + languageLine + memoryLine,
         },
+        ...history.map((turn) => ({
+          role: turn.role,
+          content: turn.content,
+        })),
         { role: "user", content: message },
       ],
       thinking: { type: "disabled" },

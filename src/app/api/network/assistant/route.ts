@@ -18,8 +18,36 @@ import { wallIdsFor } from "@/lib/server/network";
 
 const SECTION_MAX = 24;
 const QUESTION_MAX = 600;
+/** the conversation's own memory — how many earlier exchanges ride along */
+const HISTORY_MAX = 8;
+const HISTORY_TURN_MAX = 700;
 
 const ASSISTANT_ACTIONS = ["summarize", "explain", "find", "suggest", "draft", "next"] as const;
+
+interface HistoryTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/** THE CONVERSATION'S OWN MEMORY — the earlier exchanges of THIS chat,
+ *  sanitized: user and mirror voices only, each capped, the newest
+ *  kept. One chat never reads another's thread; what arrives here is
+ *  the thread the visitor is proceeding in. */
+function historyTurns(raw: unknown): HistoryTurn[] {
+  if (!Array.isArray(raw)) return [];
+  const out: HistoryTurn[] = [];
+  for (const item of raw.slice(-HISTORY_MAX)) {
+    if (!item || typeof item !== "object") continue;
+    const rec = item as { role?: unknown; text?: unknown };
+    const role = rec.role === "assistant" ? "assistant" : "user";
+    const text = typeof rec.text === "string" ? rec.text.trim().slice(0, HISTORY_TURN_MAX) : "";
+    if (!text) continue;
+    out.push({ role, content: text });
+  }
+  /* a thread may only open with the visitor's own words */
+  while (out.length > 0 && out[0].role !== "user") out.shift();
+  return out;
+}
 
 /** the real context, read from the tables — never fabricated */
 async function gatherRealContext(
@@ -72,6 +100,7 @@ export async function POST(req: NextRequest) {
       question?: unknown;
       action?: unknown;
       postTitle?: unknown;
+      history?: unknown;
     } | null;
     if (!raw) {
       return NextResponse.json({ error: "The question arrived unreadable." }, { status: 400 });
@@ -115,6 +144,10 @@ export async function POST(req: NextRequest) {
         ? raw.postTitle.trim().slice(0, 160)
         : null;
 
+    /* the conversation's own memory — the exchanges of THIS chat, so
+       M.E. proceeds the thread instead of restarting it cold */
+    const history = historyTurns(raw.history);
+
     /* the real lists — fetched only when the hand asks for finding,
        suggesting, or the visitor's own words point at the questions
        and circles of the network */
@@ -148,13 +181,22 @@ export async function POST(req: NextRequest) {
 
     try {
       const zai = await ZAI.create();
+      const memoryLine =
+        history.length > 0
+          ? "\n\nCONVERSATION MEMORY: the earlier exchanges of THIS conversation are provided below. You remember them — continue naturally from what was already said, refer back when it helps, and never repeat or contradict a previous answer. When the visitor says 'it', 'that' or 'again', they mean something from this thread."
+          : "\n\nCONVERSATION MEMORY: none was provided — this is the conversation's first exchange.";
       const completion = await zai.chat.completions.create({
         messages: [
           {
             role: "system",
             content:
-              "You are M.E., the Mirror Entity: the warm, precise, honest facilitator of ReflectMe's Gathering. You suggest; you never act, never publish, never message anyone, and you never pretend you contacted people or did anything — you only offer words. You never claim things are scientifically verified; you speak of interpretation as interpretation. Speak in plain kind words, at most 180 words, no markdown headings, at most 4 short bullets. Mention only real titles and names you were given in the context — never invent people, circles, questions or features.",
+              "You are M.E., the Mirror Entity: the warm, precise, honest facilitator of ReflectMe's Gathering. You suggest; you never act, never publish, never message anyone, and you never pretend you contacted people or did anything — you only offer words. You never claim things are scientifically verified; you speak of interpretation as interpretation. Speak in plain kind words, at most 180 words, no markdown headings, at most 4 short bullets. Mention only real titles and names you were given in the context — never invent people, circles, questions or features." +
+              memoryLine,
           },
+          ...history.map((turn) => ({
+            role: turn.role,
+            content: turn.content,
+          })),
           {
             role: "user",
             content: contextLines.join("\n"),
