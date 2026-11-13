@@ -49,6 +49,12 @@ export async function GET(req: NextRequest) {
     }
 
     const visitor = await resolveVisitor(req).catch(() => null);
+    if (!visitor) {
+      return NextResponse.json(
+        { error: "The radio's shelf is momentarily quiet." },
+        { status: 500 }
+      );
+    }
     const viewerId = visitor && !visitor.user.anon ? visitor.user.id : null;
 
     /* THE HOUSE'S OWN HUNDRED — woven seeds, no files, sound born on

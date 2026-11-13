@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
         !targetId ||
         !reason ||
         typeof targetType !== "string" ||
-        !["post", "echo", "user", "message"].includes(targetType)
+        !["post", "echo", "user", "message", "conversation", "event"].includes(targetType)
       ) {
         return NextResponse.json({ error: "The request arrived unreadable." }, { status: 400 });
       }

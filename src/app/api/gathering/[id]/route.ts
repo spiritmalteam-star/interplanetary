@@ -78,6 +78,24 @@ export async function GET(
       select: { id: true },
     });
 
+    /* the reader's own shelf and the page's living attachments — read
+       once, straight from the tables, never guessed */
+    const [bookmarked, reposted, repostCount, hasQuestion, hasLab, hasIntentionSpace] =
+      await Promise.all([
+        db.gatheringBookmark.findFirst({
+          where: { postId: id, userId: visitor.user.id },
+          select: { id: true },
+        }),
+        db.gatheringRepost.findFirst({
+          where: { postId: id, userId: visitor.user.id },
+          select: { id: true },
+        }),
+        db.gatheringRepost.count({ where: { postId: id } }),
+        db.networkQuestion.findFirst({ where: { postId: id }, select: { id: true } }),
+        db.networkLabProject.findFirst({ where: { seedPostId: id }, select: { id: true } }),
+        db.networkIntention.findFirst({ where: { seedPostId: id }, select: { id: true } }),
+      ]);
+
     return withAnonCookie(
       NextResponse.json({
         post: {
@@ -98,6 +116,7 @@ export async function GET(
           mediaType: post.mediaType,
           mediaName: post.mediaName,
           visibility: post.visibility,
+          epistemic: post.epistemic,
           circle: post.circle ? { id: post.circle.id, name: post.circle.name } : null,
           resonanceCount: post.resonanceCount,
           echoCount: post.echoCount,
@@ -111,18 +130,27 @@ export async function GET(
           },
           mine: post.userId === visitor.user.id,
           resonated: Boolean(resonated),
+          repostCount,
+          bookmarked: Boolean(bookmarked),
+          reposted: Boolean(reposted),
+          hasQuestion: Boolean(hasQuestion),
+          hasLab: Boolean(hasLab),
+          hasIntentionSpace: Boolean(hasIntentionSpace),
         },
-        echoes: echoes.map((e) => ({
-          id: e.id,
-          body: e.body,
-          createdAt: e.createdAt.toISOString(),
-          author: {
-            name: gatheringName(e.user),
-            image: e.user.image ?? null,
-            anon: e.user.provider === "anon",
-          },
-          isMine: e.userId === visitor.user.id,
-        })),
+        echoes: echoes
+          .filter((e) => !walls.has(e.userId))
+          .map((e) => ({
+            id: e.id,
+            parentId: e.parentId,
+            body: e.body,
+            createdAt: e.createdAt.toISOString(),
+            author: {
+              name: gatheringName(e.user),
+              image: e.user.image ?? null,
+              anon: e.user.provider === "anon",
+            },
+            isMine: e.userId === visitor.user.id,
+          })),
       }),
       visitor
     );

@@ -70,6 +70,21 @@ model User {
   networkBlocking             NetworkBlock[] @relation("NetworkBlocking")
   networkBlockedBy            NetworkBlock[] @relation("NetworkBlockedBy")
   networkReports              NetworkReport[] @relation("NetworkReports")
+  gatheringBookmarks          GatheringBookmark[] @relation("GatheringBookmarks")
+  gatheringReposts            GatheringRepost[] @relation("GatheringReposts")
+  networkQuestionsOwned       NetworkQuestion[] @relation("NetworkQuestionsOwned")
+  networkQuestionBranches     NetworkQuestionBranch[] @relation("NetworkQuestionBranches")
+  networkLabsOwned            NetworkLabProject[] @relation("NetworkLabsOwned")
+  networkLabMemberships       NetworkLabMember[] @relation("NetworkLabMemberships")
+  networkLabEntries           NetworkLabEntry[] @relation("NetworkLabEntries")
+  networkLabReviews           NetworkLabReview[] @relation("NetworkLabReviews")
+  networkIntentionsOwned      NetworkIntention[] @relation("NetworkIntentionsOwned")
+  networkIntentionMemberships NetworkIntentionMember[] @relation("NetworkIntentionMemberships")
+  networkIntentionTasks       NetworkIntentionTask[] @relation("NetworkIntentionTasks")
+  networkIntentionUpdates     NetworkIntentionUpdate[] @relation("NetworkIntentionUpdates")
+  networkEventsOwned          NetworkEvent[] @relation("NetworkEventsOwned")
+  networkEventAttendances     NetworkEventAttendee[] @relation("NetworkEventAttendances")
+  networkEventMessages        NetworkEventMessage[] @relation("NetworkEventMessages")
   memoryItems                 MemoryItem[]
   networkMirrorSuggested      NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggested")
   agentTasks                  AgentTask[]
@@ -637,6 +652,9 @@ model GatheringPost {
   mirrorSuggestions NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggestions")
   resonances     GatheringResonance[]
   echoes         GatheringEcho[]
+  bookmarks      GatheringBookmark[] @relation("GatheringBookmarks")
+  reposts        GatheringRepost[] @relation("GatheringReposts")
+  question       NetworkQuestion? @relation("NetworkQuestion")
 
   /* CONTEXTUAL PUBLISHING — every offering remembers where it was born.
      sourceId + sourcePortal identify the original creation (LibraryEntry
@@ -652,7 +670,7 @@ model GatheringPost {
   mediaType    String? // image | video — how the hall shows the offering's media
   mediaName    String? // the file's own name, spoken gently beside the offering
   visibility   String  @default("public") // public | circle | connections | draft
-  epistemic    String? // established | hypothesis | interpretation | creative — the Knowledge distinction
+  epistemic    String? // established | preliminary | hypothesis | personal | philosophical | creative | disputed — the Knowledge distinction
   status       String  @default("published") // published | removed (moderation)
 
   @@unique([userId, sourcePortal, sourceId]) // publication idempotency — one source, one offering per maker
@@ -680,10 +698,43 @@ model GatheringEcho {
   post      GatheringPost @relation(fields: [postId], references: [id], onDelete: Cascade)
   userId    String
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String? // a reply may answer another echo — the thread breathes
+  parent    GatheringEcho?  @relation("EchoThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   GatheringEcho[] @relation("EchoThread")
   body      String
   createdAt DateTime      @default(now())
 
   @@index([postId, createdAt])
+  @@index([parentId])
+}
+
+// SAVED — the keeper's own private shelf: a bookmark is attention kept,
+// never a public signal, never a ranking
+model GatheringBookmark {
+  id        String        @id @default(cuid())
+  postId    String
+  post      GatheringPost @relation("GatheringBookmarks", fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation("GatheringBookmarks", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+}
+
+// REPRINTS — a repost walks another maker's work into new rooms and
+// always carries the original maker's name with it
+model GatheringRepost {
+  id        String        @id @default(cuid())
+  postId    String
+  post      GatheringPost @relation("GatheringReposts", fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation("GatheringReposts", fields: [userId], references: [id], onDelete: Cascade)
+  note      String? // the reposter's own words, optional
+  createdAt DateTime      @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -927,6 +978,236 @@ model NetworkMirrorSuggestion {
 
   @@unique([postId, userId])
   @@index([postId])
+}
+
+// ---------------------------------------------------------------------------
+// THE SECOND GENERATION — signature experiences of the directive:
+// Living Questions that grow like trees, the Laboratory where hypotheses
+// are tested together, Collective Intentions that move real steps,
+// and Gather Live where the community meets in time.
+// ---------------------------------------------------------------------------
+
+// LIVING QUESTIONS — a question is a space, not a post: it keeps its
+// context, its disciplines, and a tree of branches people grow together
+model NetworkQuestion {
+  id          String        @id @default(cuid())
+  postId      String  @unique // the seed post (kind "question") the space grew from
+  post        GatheringPost @relation("NetworkQuestion", fields: [postId], references: [id], onDelete: Cascade)
+  ownerId     String
+  owner       User          @relation("NetworkQuestionsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+  context     String? // the fuller framing beyond the seed's own body
+  disciplines String? // comma-separated fields of inquiry
+  status      String  @default("open") // open | settled
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  branches    NetworkQuestionBranch[]
+
+  @@index([ownerId, updatedAt])
+}
+
+model NetworkQuestionBranch {
+  id          String          @id @default(cuid())
+  questionId  String
+  question    NetworkQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  parentId    String? // the tree grows by branches on branches
+  parent      NetworkQuestionBranch?  @relation("QuestionBranchTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    NetworkQuestionBranch[] @relation("QuestionBranchTree")
+  authorId    String
+  author      User            @relation("NetworkQuestionBranches", fields: [authorId], references: [id], onDelete: Cascade)
+  kind        String // knowledge | hypothesis | uncertainty | experiment | finding | discussion
+  body        String
+  evidence    String  @default("hypothesis") // established | preliminary | hypothesis | personal | philosophical | creative | disputed
+  createdAt   DateTime        @default(now())
+
+  @@index([questionId, createdAt])
+  @@index([parentId])
+}
+
+// THE LABORATORY — structured collaborative research that stays
+// approachable: methodology, materials, safety, observations, results,
+// analysis, limitations, replication — and reviews that are clearly
+// distinct from community votes
+model NetworkLabProject {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation("NetworkLabsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+  title       String
+  question    String
+  hypothesis  String
+  background  String? // sources and prior work, the maker's own words
+  methodology String?
+  materials   String?
+  safety      String?
+  focus       String   @default("science")
+  status      String   @default("open") // open | active | concluded
+  seedPostId  String? // a hypothesis post may open a lab bench
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  members     NetworkLabMember[]
+  entries     NetworkLabEntry[]
+  reviews     NetworkLabReview[]
+
+  @@index([status, createdAt])
+}
+
+model NetworkLabMember {
+  id       String            @id @default(cuid())
+  labId    String
+  lab      NetworkLabProject @relation(fields: [labId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User              @relation("NetworkLabMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  role     String  @default("participant") // owner | reviewer | participant
+  createdAt DateTime          @default(now())
+
+  @@unique([labId, userId])
+  @@index([userId])
+}
+
+model NetworkLabEntry {
+  id       String            @id @default(cuid())
+  labId    String
+  lab      NetworkLabProject @relation(fields: [labId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User              @relation("NetworkLabEntries", fields: [authorId], references: [id], onDelete: Cascade)
+  kind     String // observation | result | analysis | limitation | replication
+  body     String
+  dataUrl  String? // an attachment resting in the gathering-media shelf
+  createdAt DateTime          @default(now())
+
+  @@index([labId, createdAt])
+}
+
+model NetworkLabReview {
+  id       String            @id @default(cuid())
+  labId    String
+  lab      NetworkLabProject @relation(fields: [labId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User              @relation("NetworkLabReviews", fields: [authorId], references: [id], onDelete: Cascade)
+  verdict  String // feedback | concerns | improvements — never a vote-as-proof
+  body     String
+  createdAt DateTime          @default(now())
+
+  @@index([labId, createdAt])
+}
+
+// COLLECTIVE INTENTIONS — shared goals with milestones, tasks and
+// honest, observable progress
+model NetworkIntention {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation("NetworkIntentionsOwned", fields: [ownerId], references: [id], onDelete: Cascade)
+  title     String
+  purpose   String
+  region    String? // an optional atlas shore the intention stands for
+  status    String   @default("open") // open | active | completed
+  seedPostId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members   NetworkIntentionMember[]
+  milestones NetworkIntentionMilestone[]
+  tasks     NetworkIntentionTask[]
+  updates   NetworkIntentionUpdate[]
+
+  @@index([status, createdAt])
+}
+
+model NetworkIntentionMember {
+  id          String            @id @default(cuid())
+  intentionId String
+  intention   NetworkIntention  @relation(fields: [intentionId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User              @relation("NetworkIntentionMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime          @default(now())
+
+  @@unique([intentionId, userId])
+  @@index([userId])
+}
+
+model NetworkIntentionMilestone {
+  id          String           @id @default(cuid())
+  intentionId String
+  intention   NetworkIntention @relation(fields: [intentionId], references: [id], onDelete: Cascade)
+  title       String
+  detail      String?
+  position    Int              @default(0)
+  doneAt      DateTime?
+  createdAt   DateTime         @default(now())
+
+  @@index([intentionId, position])
+}
+
+model NetworkIntentionTask {
+  id          String           @id @default(cuid())
+  intentionId String
+  intention   NetworkIntention @relation(fields: [intentionId], references: [id], onDelete: Cascade)
+  title       String
+  claimedBy   String? // a participant who took this step
+  claimant    User?            @relation("NetworkIntentionTasks", fields: [claimedBy], references: [id], onDelete: SetNull)
+  done        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  @@index([intentionId, createdAt])
+}
+
+model NetworkIntentionUpdate {
+  id          String           @id @default(cuid())
+  intentionId String
+  intention   NetworkIntention @relation(fields: [intentionId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User             @relation("NetworkIntentionUpdates", fields: [authorId], references: [id], onDelete: Cascade)
+  body        String
+  progress    Int              @default(0) // 0-100 — the visible measure of momentum
+  createdAt   DateTime         @default(now())
+
+  @@index([intentionId, createdAt])
+}
+
+// GATHER LIVE — scheduled text gatherings: hosts, registration, a live
+// room of words, and a post-event summary written with consent.
+// Audio and video wait until the moderation systems are ready.
+model NetworkEvent {
+  id           String   @id @default(cuid())
+  hostId       String
+  host         User     @relation("NetworkEventsOwned", fields: [hostId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  scheduledFor DateTime
+  durationMin  Int      @default(60)
+  format       String   @default("text") // text — richer rooms wait for readiness
+  status       String   @default("scheduled") // scheduled | live | ended
+  summary      String? // the post-event record, written with consent
+  endedAt      DateTime?
+  createdAt    DateTime @default(now())
+  attendees    NetworkEventAttendee[]
+  messages     NetworkEventMessage[]
+
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+model NetworkEventAttendee {
+  id       String       @id @default(cuid())
+  eventId  String
+  event    NetworkEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User         @relation("NetworkEventAttendances", fields: [userId], references: [id], onDelete: Cascade)
+  role     String       @default("participant") // host | participant
+  createdAt DateTime    @default(now())
+
+  @@unique([eventId, userId])
+  @@index([userId])
+}
+
+model NetworkEventMessage {
+  id       String       @id @default(cuid())
+  eventId  String
+  event    NetworkEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User         @relation("NetworkEventMessages", fields: [authorId], references: [id], onDelete: Cascade)
+  body     String
+  createdAt DateTime    @default(now())
+
+  @@index([eventId, createdAt])
 }
 
 /* ==================== AGENT INFRASTRUCTURE ====================

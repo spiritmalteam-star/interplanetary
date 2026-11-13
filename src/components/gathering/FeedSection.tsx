@@ -10,16 +10,26 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
+  Bookmark,
+  BookmarkCheck,
+  Clock,
+  CornerDownRight,
   Film,
+  FlaskConical,
+  Flame,
   LayoutGrid,
   Loader2,
   MessageCircle,
   Play,
   Plus,
+  Repeat2,
   Send,
+  Telescope,
   Trash2,
   User,
   Waves,
+  Waypoints,
+  X,
   Feather,
   Sparkles,
   Users,
@@ -38,13 +48,77 @@ import {
   type CircleCard,
   GP_HAND,
   GP_GHOST,
+  GP_INPUT,
+  EvidenceChip,
   EmptyRoom,
   RoomLabel,
   MakerMark,
+  isEvidenceLevel,
   netFetch,
   relativeTime,
   regionLabel,
 } from "./shared";
+
+/* ------------------------------------------------------------------ */
+/*  THE FOUR CURRENTS — the hall reads itself four ways: for you,      */
+/*  the ones you follow, the newest words, the discoveries.            */
+/* ------------------------------------------------------------------ */
+type FeedTab = "foryou" | "following" | "latest" | "discoveries";
+
+/* THE ROOMS A WORK CAN GROW INTO — expand into discovery: a question  */
+/* becomes a living question, a hypothesis a lab bench, an intention   */
+/* a gathered purpose. One sheet, three doors.                         */
+type GrowVariant = "questions" | "laboratory" | "intentions";
+
+const GROW_TESTID: Record<GrowVariant, string> = {
+  questions: "gath-grow-question",
+  laboratory: "gath-grow-lab",
+  intentions: "gath-grow-intention",
+};
+
+const GROW_ICON: Record<GrowVariant, LucideIcon> = {
+  questions: Waypoints,
+  laboratory: FlaskConical,
+  intentions: Flame,
+};
+
+const GROW_HAND_LABEL: Record<GrowVariant, string> = {
+  questions: "Grow a Living Question",
+  laboratory: "Open a lab bench",
+  intentions: "Gather it together",
+};
+
+const GROW_FLASH: Record<GrowVariant, string> = {
+  questions: "The question now lives among the living.",
+  laboratory: "The bench stands open.",
+  intentions: "The intention gathers.",
+};
+
+const GROWN_CHIP: Record<GrowVariant, string> = {
+  questions: "a living question grows here",
+  laboratory: "a lab bench stands here",
+  intentions: "an intention gathers here",
+};
+
+/* which room a post may still grow into */
+function growVariantFor(post: GatheringPost): GrowVariant | null {
+  if (post.kind === "question" && !post.hasQuestion) return "questions";
+  if ((post.kind === "hypothesis" || post.kind === "experiment") && !post.hasLab) {
+    return "laboratory";
+  }
+  if (post.kind === "intention" && !post.hasIntentionSpace) return "intentions";
+  return null;
+}
+
+/* which room already grew — the small muted chip that says so */
+function grownChipFor(post: GatheringPost): GrowVariant | null {
+  if (post.kind === "question" && post.hasQuestion) return "questions";
+  if ((post.kind === "hypothesis" || post.kind === "experiment") && post.hasLab) {
+    return "laboratory";
+  }
+  if (post.kind === "intention" && post.hasIntentionSpace) return "intentions";
+  return null;
+}
 
 /* ------------------------------------------------------------------ */
 /*  THE GATHERING HOME — the living community stream.                  */
@@ -64,7 +138,7 @@ import {
 /* ------------------------------------------------------------------ */
 
 /* =============== THE FEED READER — one honest reader =============== */
-function useGatheringFeed(mine: boolean, circleId: string | null) {
+function useGatheringFeed(mine: boolean, circleId: string | null, tab: FeedTab | null) {
   const [posts, setPosts] = useState<GatheringPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -74,8 +148,10 @@ function useGatheringFeed(mine: boolean, circleId: string | null) {
   const [hasMore, setHasMore] = useState(false);
   const mineRef = useRef(mine);
   const circleRef = useRef(circleId);
+  const tabRef = useRef<FeedTab | null>(tab);
   mineRef.current = mine;
   circleRef.current = circleId;
+  tabRef.current = tab;
   /* THE ONE BREATH LAW — the hall's first reading happens once, no
      matter how many times the reader object is handed back: an empty
      room is a still room, never a loop of knockings. */
@@ -96,6 +172,7 @@ function useGatheringFeed(mine: boolean, circleId: string | null) {
         const params = new URLSearchParams();
         if (mineRef.current) params.set("mine", "1");
         if (circleRef.current) params.set("circle", circleRef.current);
+        if (tabRef.current) params.set("tab", tabRef.current);
         if (opts.kind) params.set("kind", opts.kind);
         if (opts.q) params.set("q", opts.q);
         if (!fresh && cursorRef.current) params.set("cursor", cursorRef.current);
@@ -139,6 +216,9 @@ function OfferingTile({
   post,
   onOpen,
   onResonate,
+  onBookmark,
+  onRepost,
+  onGrow,
   onTakeBack,
   armedId,
   setArmedId,
@@ -146,6 +226,9 @@ function OfferingTile({
   post: GatheringPost;
   onOpen: () => void;
   onResonate: () => void;
+  onBookmark: () => void;
+  onRepost: () => void;
+  onGrow: () => void;
   onTakeBack: () => void;
   armedId: string | null;
   setArmedId: (id: string | null) => void;
@@ -157,6 +240,9 @@ function OfferingTile({
   const meta = KIND_META[kind];
   const Icon = meta.icon;
   const armed = armedId === post.id;
+  const grow = growVariantFor(post);
+  const grown = grownChipFor(post);
+  const GrowHand = grow ? GROW_ICON[grow] : null;
 
   return (
     <div
@@ -185,11 +271,19 @@ function OfferingTile({
         >
           <Icon className="size-4" style={{ color: meta.accent }} />
         </span>
-        {post.mine && (
-          <span className="mono-label rounded-full border border-[#e4d9bd] bg-[#faf5e6] px-2 py-0.5 text-[8px] uppercase tracking-[0.14em] text-[#8a6f46]">
-            {t("you")}
-          </span>
-        )}
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+          {post.epistemic && isEvidenceLevel(post.epistemic) && (
+            <EvidenceChip level={post.epistemic} />
+          )}
+          {grown && (
+            <span className="text-[9.5px] italic text-[#a2947c]">{t(GROWN_CHIP[grown])}</span>
+          )}
+          {post.mine && (
+            <span className="mono-label rounded-full border border-[#e4d9bd] bg-[#faf5e6] px-2 py-0.5 text-[8px] uppercase tracking-[0.14em] text-[#8a6f46]">
+              {t("you")}
+            </span>
+          )}
+        </div>
       </div>
 
       <h3 className="mt-3 font-[family-name:var(--font-literata)] text-[15px] font-semibold leading-snug text-[#3d3428] [overflow-wrap:anywhere]">
@@ -252,6 +346,27 @@ function OfferingTile({
             />
             {post.resonanceCount}
           </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onBookmark();
+            }}
+            aria-pressed={!!post.bookmarked}
+            aria-label={t(post.bookmarked ? "Take it off the shelf" : "Keep this on your shelf")}
+            title={t(post.bookmarked ? "Take it off the shelf" : "Keep this on your shelf")}
+            data-testid="gath-bookmark"
+            className={cn(
+              "focus-glow rounded-full p-1 transition-colors duration-300",
+              post.bookmarked ? "text-[#a16207]" : "hover:text-[#8a6f46]"
+            )}
+          >
+            {post.bookmarked ? (
+              <BookmarkCheck className="size-3.5 fill-[#a16207]/20" aria-hidden="true" />
+            ) : (
+              <Bookmark className="size-3.5" aria-hidden="true" />
+            )}
+          </button>
           <span
             aria-label={t("Echoes")}
             title={t("Echoes")}
@@ -260,6 +375,43 @@ function OfferingTile({
             <MessageCircle className="size-3.5" aria-hidden="true" />
             {post.echoCount}
           </span>
+          {!post.mine && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRepost();
+              }}
+              aria-label={t(post.reposted ? "Take the reprint back" : "Reprint this offering")}
+              title={t(post.reposted ? "Take the reprint back" : "Reprint this offering")}
+              data-testid="gath-repost"
+              className={cn(
+                "focus-glow flex items-center gap-1 rounded-full px-1 py-0.5 text-[11px] font-semibold transition-colors duration-300",
+                post.reposted ? "text-[#0d9488]" : "hover:text-[#8a6f46]"
+              )}
+            >
+              <Repeat2
+                className={cn("size-3.5", post.reposted && "fill-[#0d9488]/15")}
+                aria-hidden="true"
+              />
+              {post.repostCount}
+            </button>
+          )}
+          {grow && GrowHand && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onGrow();
+              }}
+              aria-label={t(GROW_HAND_LABEL[grow])}
+              title={t(GROW_HAND_LABEL[grow])}
+              data-testid={GROW_TESTID[grow]}
+              className="focus-glow rounded-full p-1 text-[#a2947c] transition-colors duration-300 hover:text-[#8a6f46]"
+            >
+              <GrowHand className="size-3.5" aria-hidden="true" />
+            </button>
+          )}
           {post.mine && (
             <button
               type="button"
@@ -301,7 +453,10 @@ function OfferingTile({
 function StreamSlide({
   post,
   onResonate,
+  onBookmark,
   onEcho,
+  onRepost,
+  onGrow,
   onTakeBack,
   strikeId,
   armedId,
@@ -311,7 +466,10 @@ function StreamSlide({
 }: {
   post: GatheringPost;
   onResonate: () => void;
+  onBookmark: () => void;
   onEcho: () => void;
+  onRepost: () => void;
+  onGrow: () => void;
   onTakeBack: () => void;
   strikeId: string | null;
   armedId: string | null;
@@ -326,6 +484,9 @@ function StreamSlide({
   const meta = KIND_META[kind];
   const Icon = meta.icon;
   const armed = armedId === post.id;
+  const grow = growVariantFor(post);
+  const grown = grownChipFor(post);
+  const GrowHand = grow ? GROW_ICON[grow] : null;
 
   return (
     <div className="gp-slide flex h-full w-full items-center justify-center px-4 py-6 sm:px-8 sm:py-10">
@@ -361,6 +522,9 @@ function StreamSlide({
               </div>
             </div>
           </div>
+          {post.epistemic && isEvidenceLevel(post.epistemic) && (
+            <EvidenceChip level={post.epistemic} />
+          )}
         </div>
 
         <div className="gp-scroll min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
@@ -430,6 +594,26 @@ function StreamSlide({
           </button>
           <button
             type="button"
+            onClick={onBookmark}
+            aria-pressed={!!post.bookmarked}
+            aria-label={t(post.bookmarked ? "Take it off the shelf" : "Keep this on your shelf")}
+            title={t(post.bookmarked ? "Take it off the shelf" : "Keep this on your shelf")}
+            data-testid="gath-bookmark"
+            className={cn(
+              "focus-glow flex items-center justify-center rounded-full border px-2.5 py-2 transition-all duration-300",
+              post.bookmarked
+                ? "border-[#a16207]/45 bg-[#a16207]/10 text-[#a16207]"
+                : "border-[#e4d9bd] bg-white/70 text-[#7c715f] hover:border-[#d3c39c] hover:text-[#8a6f46]"
+            )}
+          >
+            {post.bookmarked ? (
+              <BookmarkCheck className="size-4 fill-[#a16207]/20" aria-hidden="true" />
+            ) : (
+              <Bookmark className="size-4" aria-hidden="true" />
+            )}
+          </button>
+          <button
+            type="button"
             onClick={onEcho}
             aria-label={t("Echoes")}
             title={t("Echoes")}
@@ -438,6 +622,27 @@ function StreamSlide({
             <MessageCircle className="size-4" aria-hidden="true" />
             {post.echoCount}
           </button>
+          {!post.mine && (
+            <button
+              type="button"
+              onClick={onRepost}
+              aria-label={t(post.reposted ? "Take the reprint back" : "Reprint this offering")}
+              title={t(post.reposted ? "Take the reprint back" : "Reprint this offering")}
+              data-testid="gath-repost"
+              className={cn(
+                "focus-glow flex items-center gap-2 rounded-full border px-3.5 py-2 text-[12px] font-semibold transition-all duration-300",
+                post.reposted
+                  ? "border-[#0d9488]/45 bg-[#0d9488]/10 text-[#0d9488]"
+                  : "border-[#e4d9bd] bg-white/70 text-[#7c715f] hover:border-[#d3c39c] hover:text-[#0d9488]"
+              )}
+            >
+              <Repeat2
+                className={cn("size-4", post.reposted && "fill-[#0d9488]/15")}
+                aria-hidden="true"
+              />
+              {post.repostCount}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onWeave(post)}
@@ -457,6 +662,21 @@ function StreamSlide({
             >
               <Sparkles className="size-4" aria-hidden="true" />
             </button>
+          )}
+          {grow && GrowHand && (
+            <button
+              type="button"
+              onClick={onGrow}
+              aria-label={t(GROW_HAND_LABEL[grow])}
+              title={t(GROW_HAND_LABEL[grow])}
+              data-testid={GROW_TESTID[grow]}
+              className="focus-glow hidden items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 p-2 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#0d9488] sm:flex"
+            >
+              <GrowHand className="size-4" aria-hidden="true" />
+            </button>
+          )}
+          {grown && (
+            <span className="text-[10.5px] italic text-[#a2947c]">{t(GROWN_CHIP[grown])}</span>
           )}
           <div className="flex-1" />
           {post.mine && (
@@ -504,6 +724,7 @@ function EchoSheet({
   const [error, setError] = useState(false);
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
+  const [replyTo, setReplyTo] = useState<GatheringEcho | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -523,6 +744,18 @@ function EchoSheet({
     };
   }, [post.id]);
 
+  const refetchEchoes = useCallback(async () => {
+    try {
+      const data = await netFetch<{ echoes: GatheringEcho[] }>(
+        `/api/gathering/${post.id}/echoes`
+      );
+      setEchoes(data.echoes);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [post.id]);
+
   const speak = useCallback(async () => {
     const text = body.trim();
     if (text.length < 2 || sending) return;
@@ -531,18 +764,23 @@ function EchoSheet({
     try {
       const data = await netFetch<{ echo: GatheringEcho; echoCount: number }>(
         `/api/gathering/${post.id}/echoes`,
-        { method: "POST", body: { body: text } }
+        { method: "POST", body: { body: text, ...(replyTo ? { parentId: replyTo.id } : {}) } }
       );
-      setEchoes((prev) => [...(prev ?? []), data.echo]);
-      onCount(post.id, data.echoCount);
       setBody("");
+      setReplyTo(null);
+      onCount(post.id, data.echoCount);
+      const refetched = await refetchEchoes();
+      if (!refetched) setEchoes((prev) => [...(prev ?? []), data.echo]);
     } catch {
       setError(true);
     } finally {
       setSending(false);
       inputRef.current?.focus();
     }
-  }, [body, sending, post.id, onCount]);
+  }, [body, sending, replyTo, post.id, onCount, refetchEchoes]);
+
+  /* the echoes keep two honest levels — an answer lives under its answer */
+  const roots = echoes?.filter((e) => e.parentId === null) ?? [];
 
   return (
     <motion.div
@@ -550,7 +788,7 @@ function EchoSheet({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="absolute inset-0 z-20 flex flex-col justify-end"
+      className="absolute inset-0 z-[45] flex flex-col justify-end"
       role="dialog"
       aria-modal="true"
       aria-label={t("Echoes")}
@@ -592,18 +830,59 @@ function EchoSheet({
               {t("No echoes yet — speak the first response.")}
             </p>
           )}
-          {echoes?.map((e) => (
-            <div key={e.id} className="gp-card rounded-[18px] px-4 py-3">
-              <div className="flex items-center gap-2">
-                <MakerMark name={e.author.name} size={22} />
-                <p className="text-[11.5px] font-semibold text-[#5c5344]">{e.author.name}</p>
-                <p className="text-[10px] text-[#a2947c]">{relativeTime(e.createdAt, t)}</p>
+          {roots.map((root) => {
+            const replies = echoes?.filter((e) => e.parentId === root.id) ?? [];
+            return (
+              <div key={root.id} className="space-y-2.5">
+                <div className="gp-card rounded-[18px] px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <MakerMark name={root.author.name} size={22} />
+                    <p className="text-[11.5px] font-semibold text-[#5c5344]">{root.author.name}</p>
+                    <p className="text-[10px] text-[#a2947c]">{relativeTime(root.createdAt, t)}</p>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-[13px] leading-[1.7] text-[#4c4436] [overflow-wrap:anywhere]">
+                    {root.body}
+                  </p>
+                  <div className="mt-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setReplyTo(root)}
+                      data-testid="gath-echo-reply"
+                      aria-label={t("Answer this echo")}
+                      title={t("Answer this echo")}
+                      className="focus-glow rounded-full border border-[#e4d9bd] bg-white/60 px-2.5 py-1 text-[10.5px] font-semibold text-[#7c715f] transition-colors duration-300 hover:border-[#d3c39c] hover:text-[#3d3428]"
+                    >
+                      {t("Reply")}
+                    </button>
+                  </div>
+                </div>
+                {replies.length > 0 && (
+                  <div className="ml-6 space-y-2.5 border-l border-[#e4d9bd] pl-3">
+                    {replies.map((r) => (
+                      <div key={r.id} className="gp-card rounded-[18px] px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <CornerDownRight
+                            className="size-3 shrink-0 text-[#a2947c]"
+                            aria-hidden="true"
+                          />
+                          <MakerMark name={r.author.name} size={22} />
+                          <p className="text-[11.5px] font-semibold text-[#5c5344]">
+                            {r.author.name}
+                          </p>
+                          <p className="text-[10px] text-[#a2947c]">
+                            {relativeTime(r.createdAt, t)}
+                          </p>
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap text-[13px] leading-[1.7] text-[#4c4436] [overflow-wrap:anywhere]">
+                          {r.body}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-[13px] leading-[1.7] text-[#4c4436] [overflow-wrap:anywhere]">
-                {e.body}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="border-t border-[#eadfca]/70 px-4 py-3 sm:px-6">
@@ -611,6 +890,28 @@ function EchoSheet({
             <p className="pb-2 text-center text-[11.5px] text-[#b45309]">
               {t("The echo could not be spoken.")}
             </p>
+          )}
+          {replyTo && (
+            <div
+              className="mb-2 flex items-center gap-2 rounded-full border border-[#e4d9bd] bg-white/60 px-3 py-1.5"
+              data-testid="gath-echo-replying"
+            >
+              <CornerDownRight className="size-3 shrink-0 text-[#a2947c]" aria-hidden="true" />
+              <p className="min-w-0 truncate text-[11px] text-[#7c715f]">
+                {t("answering")} <span className="font-semibold text-[#5c5344]">{replyTo.author.name}</span>
+                {" — "}
+              </p>
+              <button
+                type="button"
+                onClick={() => setReplyTo(null)}
+                aria-label={t("Answer the offering itself")}
+                title={t("Answer the offering itself")}
+                data-testid="gath-echo-reply-clear"
+                className="focus-glow shrink-0 rounded-full p-0.5 text-[#a2947c] transition-colors duration-300 hover:text-[#b45309]"
+              >
+                <X className="size-3" aria-hidden="true" />
+              </button>
+            </div>
           )}
           <div className="flex items-end gap-2">
             <textarea
@@ -650,6 +951,483 @@ function EchoSheet({
   );
 }
 
+/* =============== THE REPRINT SHEET — walk it into the rooms =============== */
+function RepostSheet({
+  post,
+  onClose,
+  onReposted,
+}: {
+  post: GatheringPost;
+  onClose: () => void;
+  onReposted: (id: string, reposted: boolean, repostCount: number) => void;
+}) {
+  const t = useT();
+  const takingBack = !!post.reposted;
+  const [note, setNote] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const walk = useCallback(
+    async (withNote: boolean) => {
+      if (sending) return;
+      setSending(true);
+      setError(null);
+      try {
+        const data = await netFetch<{ reposted: boolean; repostCount: number }>(
+          "/api/network/reposts",
+          {
+            method: "POST",
+            body: {
+              postId: post.id,
+              ...(withNote && note.trim() ? { note: note.trim() } : {}),
+            },
+          }
+        );
+        onReposted(post.id, data.reposted, data.repostCount);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t("The rooms could not be reached."));
+        setSending(false);
+      }
+    },
+    [sending, post.id, note, onReposted, t]
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="absolute inset-0 z-[45] flex flex-col justify-end"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("Walk it into the rooms")}
+    >
+      <button
+        type="button"
+        aria-label={t("Keep it here")}
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-[#3d3428]/25"
+        tabIndex={-1}
+      />
+      <motion.div
+        initial={{ y: "40%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "30%", opacity: 0 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="gp-glass relative flex flex-col rounded-t-[28px] sm:mx-auto sm:w-full sm:max-w-[520px] sm:rounded-t-[32px]"
+      >
+        <div className="flex items-center justify-between px-5 pt-4 sm:px-7">
+          <RoomLabel>{t("Walk it into the rooms")}</RoomLabel>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("Keep it here")}
+            className="focus-glow rounded-full border border-[#e4d9bd] bg-white/70 p-1.5 text-[#7c715f] transition-colors duration-300 hover:text-[#3d3428]"
+          >
+            <ArrowLeft className="size-3.5 rotate-90" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="px-5 pb-5 pt-3 sm:px-7">
+          <p className="font-[family-name:var(--font-literata)] text-[14px] font-semibold leading-snug text-[#3d3428] [overflow-wrap:anywhere]">
+            {post.title}
+          </p>
+          {takingBack ? (
+            <p className="mt-2 text-[12.5px] leading-[1.7] text-[#7c715f]">
+              {t("This offering already walks the rooms — take the reprint back?")}
+            </p>
+          ) : (
+            <>
+              <textarea
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                maxLength={280}
+                placeholder={t("A word to carry with it — optional…")}
+                aria-label={t("A word to carry with it — optional…")}
+                data-testid="gath-repost-note"
+                className={cn(GP_INPUT, "gp-scroll mt-3 min-h-[44px] resize-none")}
+              />
+              <p className="mt-1 text-[10px] text-[#a2947c]">{t("280 letters at most")}</p>
+            </>
+          )}
+
+          {error && (
+            <p className="mt-2 text-center text-[11.5px] text-[#b45309]" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {takingBack ? (
+              <button
+                type="button"
+                onClick={() => void walk(false)}
+                disabled={sending}
+                data-testid="gath-repost-takeback"
+                className={GP_HAND}
+              >
+                {sending ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Repeat2 className="size-4" aria-hidden="true" />
+                )}
+                {t("Take it back")}
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void walk(true)}
+                  disabled={sending || note.trim().length === 0}
+                  data-testid="gath-repost-with-note"
+                  className={GP_HAND}
+                >
+                  {sending ? (
+                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Send className="size-4" aria-hidden="true" />
+                  )}
+                  {t("Reprint with a word")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void walk(false)}
+                  disabled={sending}
+                  data-testid="gath-repost-quiet"
+                  className={GP_GHOST}
+                >
+                  {t("Reprint quietly")}
+                </button>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={sending}
+              data-testid="gath-repost-cancel"
+              className={GP_GHOST}
+            >
+              {t("Not now")}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* =============== THE GROW SHEET — expand into discovery =============== */
+function GrowSheet({
+  post,
+  variant,
+  onClose,
+  onGrown,
+  onFlash,
+}: {
+  post: GatheringPost;
+  variant: GrowVariant;
+  onClose: () => void;
+  onGrown: (where: GrowVariant, postId: string) => void;
+  onFlash: (line: string) => void;
+}) {
+  const t = useT();
+  const [title, setTitle] = useState(post.title);
+  const [question, setQuestion] = useState(post.title);
+  const [hypothesis, setHypothesis] = useState(post.body);
+  const [purpose, setPurpose] = useState(post.body);
+  const [context, setContext] = useState("");
+  const [disciplines, setDisciplines] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const HandIcon = GROW_ICON[variant];
+
+  const canGrow =
+    variant === "questions" ||
+    (variant === "laboratory"
+      ? title.trim().length >= 2 &&
+        question.trim().length >= 2 &&
+        hypothesis.trim().length >= 2
+      : title.trim().length >= 2 && purpose.trim().length >= 2);
+
+  const grow = useCallback(async () => {
+    if (!canGrow || sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      if (variant === "questions") {
+        const list = disciplines
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        await netFetch<{ question: { id: string } }>("/api/network/questions", {
+          method: "POST",
+          body: {
+            postId: post.id,
+            ...(context.trim() ? { context: context.trim() } : {}),
+            ...(list.length ? { disciplines: list } : {}),
+          },
+        });
+      } else if (variant === "laboratory") {
+        await netFetch<{ lab: { id: string } }>("/api/network/laboratory", {
+          method: "POST",
+          body: {
+            title: title.trim(),
+            question: question.trim(),
+            hypothesis: hypothesis.trim(),
+            seedPostId: post.id,
+          },
+        });
+      } else {
+        await netFetch<{ intention: { id: string } }>("/api/network/intentions", {
+          method: "POST",
+          body: {
+            title: title.trim(),
+            purpose: purpose.trim(),
+            seedPostId: post.id,
+          },
+        });
+      }
+      onFlash(t(GROW_FLASH[variant]));
+      onGrown(variant, post.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("The room could not be reached."));
+      setSending(false);
+    }
+  }, [
+    canGrow,
+    sending,
+    variant,
+    disciplines,
+    context,
+    title,
+    question,
+    hypothesis,
+    purpose,
+    post.id,
+    onFlash,
+    onGrown,
+    t,
+  ]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="absolute inset-0 z-[45] flex flex-col justify-end"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t(GROW_HAND_LABEL[variant])}
+    >
+      <button
+        type="button"
+        aria-label={t("Not now")}
+        onClick={onClose}
+        className="absolute inset-0 cursor-default bg-[#3d3428]/25"
+        tabIndex={-1}
+      />
+      <motion.div
+        initial={{ y: "40%", opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: "30%", opacity: 0 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="gp-glass relative flex max-h-[85%] flex-col rounded-t-[28px] sm:mx-auto sm:w-full sm:max-w-[560px] sm:rounded-t-[32px]"
+      >
+        <div className="flex items-center justify-between px-5 pt-4 sm:px-7">
+          <RoomLabel>{t("Expand into discovery")}</RoomLabel>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("Not now")}
+            className="focus-glow rounded-full border border-[#e4d9bd] bg-white/70 p-1.5 text-[#7c715f] transition-colors duration-300 hover:text-[#3d3428]"
+          >
+            <ArrowLeft className="size-3.5 rotate-90" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="gp-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-7">
+          <div className="flex items-center gap-2">
+            <HandIcon className="size-4 text-[#0d9488]" aria-hidden="true" />
+            <p className="font-[family-name:var(--font-literata)] text-[14.5px] font-semibold text-[#3d3428] [overflow-wrap:anywhere]">
+              {t(GROW_HAND_LABEL[variant])}
+            </p>
+          </div>
+          <p className="mt-1 text-[11px] text-[#a2947c]">
+            {t("Grown from the offering:")} <span className="text-[#7c715f]">{post.title}</span>
+          </p>
+
+          {variant === "questions" && (
+            <div className="mt-4 space-y-3">
+              <div>
+                <label
+                  htmlFor="grow-context"
+                  className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]"
+                >
+                  {t("the framing")}
+                </label>
+                <textarea
+                  id="grow-context"
+                  value={context}
+                  onChange={(e) => setContext(e.target.value)}
+                  rows={3}
+                  maxLength={2000}
+                  placeholder={t("The fuller framing…")}
+                  data-testid="gath-grow-context"
+                  className={cn(GP_INPUT, "gp-scroll mt-1.5 resize-none")}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="grow-disciplines"
+                  className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]"
+                >
+                  {t("the disciplines")}
+                </label>
+                <input
+                  id="grow-disciplines"
+                  value={disciplines}
+                  onChange={(e) => setDisciplines(e.target.value)}
+                  maxLength={240}
+                  placeholder={t("Physics, poetry, mycology — comma-separated…")}
+                  data-testid="gath-grow-disciplines"
+                  className={cn(GP_INPUT, "mt-1.5")}
+                />
+              </div>
+            </div>
+          )}
+
+          {variant === "laboratory" && (
+            <div className="mt-4 space-y-3">
+              <div>
+                <label
+                  htmlFor="grow-title"
+                  className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]"
+                >
+                  {t("the bench's name")}
+                </label>
+                <input
+                  id="grow-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={120}
+                  data-testid="gath-grow-title"
+                  className={cn(GP_INPUT, "mt-1.5")}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="grow-lab-question"
+                  className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]"
+                >
+                  {t("the question")}
+                </label>
+                <input
+                  id="grow-lab-question"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  maxLength={200}
+                  data-testid="gath-grow-lab-question"
+                  className={cn(GP_INPUT, "mt-1.5")}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="grow-hypothesis"
+                  className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]"
+                >
+                  {t("the hypothesis")}
+                </label>
+                <textarea
+                  id="grow-hypothesis"
+                  value={hypothesis}
+                  onChange={(e) => setHypothesis(e.target.value)}
+                  rows={4}
+                  maxLength={2000}
+                  data-testid="gath-grow-hypothesis"
+                  className={cn(GP_INPUT, "gp-scroll mt-1.5 resize-none")}
+                />
+              </div>
+            </div>
+          )}
+
+          {variant === "intentions" && (
+            <div className="mt-4 space-y-3">
+              <div>
+                <label
+                  htmlFor="grow-title"
+                  className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]"
+                >
+                  {t("the intention's name")}
+                </label>
+                <input
+                  id="grow-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={120}
+                  data-testid="gath-grow-title"
+                  className={cn(GP_INPUT, "mt-1.5")}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="grow-purpose"
+                  className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]"
+                >
+                  {t("the purpose")}
+                </label>
+                <textarea
+                  id="grow-purpose"
+                  value={purpose}
+                  onChange={(e) => setPurpose(e.target.value)}
+                  rows={4}
+                  maxLength={2000}
+                  data-testid="gath-grow-purpose"
+                  className={cn(GP_INPUT, "gp-scroll mt-1.5 resize-none")}
+                />
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <p className="mt-3 text-center text-[11.5px] text-[#b45309]" role="alert">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-2 pb-1">
+            <button
+              type="button"
+              onClick={() => void grow()}
+              disabled={!canGrow || sending}
+              data-testid="gath-grow-submit"
+              className={GP_HAND}
+            >
+              {sending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <HandIcon className="size-4" aria-hidden="true" />
+              )}
+              {t(GROW_HAND_LABEL[variant])}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={sending}
+              data-testid="gath-grow-cancel"
+              className={GP_GHOST}
+            >
+              {t("Not now")}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 /* =============== THE COMPOSER SHEET — the offering line, worn as a sheet =============== */
 function ComposerSheet({
   initialKind,
@@ -669,7 +1447,7 @@ function ComposerSheet({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      className="absolute inset-0 z-20 flex flex-col justify-end sm:justify-center sm:px-6"
+      className="absolute inset-0 z-[45] flex flex-col justify-end sm:justify-center sm:px-6"
       role="dialog"
       aria-modal="true"
       aria-label={t("The offering line")}
@@ -715,6 +1493,7 @@ export default function FeedSection({
   onPublishWork,
   onWeaveFrom,
   onLibraryFrom,
+  onGrown,
 }: {
   active: boolean;
   circles: CircleCard[];
@@ -723,9 +1502,11 @@ export default function FeedSection({
   onPublishWork: () => void;
   onWeaveFrom: (post: GatheringPost) => void;
   onLibraryFrom: (post: GatheringPost) => void;
+  onGrown?: (where: GrowVariant) => void;
 }) {
   const t = useT();
   const [view, setView] = useState<"gallery" | "stream" | "mine">("gallery");
+  const [tab, setTab] = useState<FeedTab>("foryou");
   const [kind, setKind] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerKind, setComposerKind] = useState<string>("reflection");
@@ -733,9 +1514,14 @@ export default function FeedSection({
   const [armedId, setArmedId] = useState<string | null>(null);
   const [strikeId, setStrikeId] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [repostPost, setRepostPost] = useState<GatheringPost | null>(null);
+  const [growTarget, setGrowTarget] = useState<{
+    post: GatheringPost;
+    variant: GrowVariant;
+  } | null>(null);
 
-  const hall = useGatheringFeed(false, null);
-  const mine = useGatheringFeed(true, null);
+  const hall = useGatheringFeed(false, null, tab);
+  const mine = useGatheringFeed(true, null, null);
 
   /* the readers carry their own first breath — the section only
      answers the active gate; no effect ever re-reads an empty hall */
@@ -745,6 +1531,15 @@ export default function FeedSection({
     const id = window.setTimeout(() => setNote(null), 3200);
     return () => window.clearTimeout(id);
   }, [note]);
+
+  /* THE FOUR CURRENTS — turning a current re-reads the hall once, with
+     the rekindle the hall already trusts. Mine keeps its own wall. */
+  const lastTabRef = useRef<FeedTab>("foryou");
+  useEffect(() => {
+    if (lastTabRef.current === tab) return;
+    lastTabRef.current = tab;
+    hall.rekindle({ kind });
+  }, [tab, kind, hall]);
 
   /* THE ATLAS' OWN ECHO — when an intention is spoken at the map, the
      hall reads itself again (once per spoken vow, never on a loop):
@@ -805,6 +1600,67 @@ export default function FeedSection({
     [hall, mine]
   );
 
+  /* THE SHELF — an honest optimistic mark; a missed shelf puts the
+     bookmark back where it stood and speaks the error in the note. */
+  const toggleBookmark = useCallback(
+    async (post: GatheringPost) => {
+      const wasOn = !!post.bookmarked;
+      const write = (mutate: (p: GatheringPost) => GatheringPost) => {
+        hall.setPosts((prev) => prev.map((p) => (p.id === post.id ? mutate(p) : p)));
+        mine.setPosts((prev) => prev.map((p) => (p.id === post.id ? mutate(p) : p)));
+      };
+      write((p) => ({ ...p, bookmarked: !wasOn }));
+      try {
+        const data = await netFetch<{ bookmarked: boolean; savedCount: number }>(
+          "/api/network/bookmarks",
+          { method: "POST", body: { postId: post.id, on: !wasOn } }
+        );
+        write((p) => ({ ...p, bookmarked: data.bookmarked }));
+      } catch (err) {
+        write((p) => ({ ...p, bookmarked: wasOn }));
+        setNote(err instanceof Error ? err.message : t("The shelf could not be reached."));
+      }
+    },
+    [hall, mine, t]
+  );
+
+  const onReposted = useCallback(
+    (id: string, reposted: boolean, repostCount: number) => {
+      const bump = (prev: GatheringPost[]) =>
+        prev.map((p) => (p.id === id ? { ...p, reposted, repostCount } : p));
+      hall.setPosts(bump);
+      mine.setPosts(bump);
+      setRepostPost(null);
+    },
+    [hall, mine]
+  );
+
+  const handleGrown = useCallback(
+    (where: GrowVariant, postId: string) => {
+      const bump = (prev: GatheringPost[]) =>
+        prev.map((p) =>
+          p.id === postId
+            ? where === "questions"
+              ? { ...p, hasQuestion: true }
+              : where === "laboratory"
+                ? { ...p, hasLab: true }
+                : { ...p, hasIntentionSpace: true }
+            : p
+        );
+      hall.setPosts(bump);
+      mine.setPosts(bump);
+      setGrowTarget(null);
+      onGrown?.(where);
+    },
+    [hall, mine, onGrown]
+  );
+
+  const openGrow = useCallback((post: GatheringPost) => {
+    const variant = growVariantFor(post);
+    if (!variant) return;
+    setGrowTarget({ post, variant });
+  }, []);
+
   const onHung = useCallback(
     (post: GatheringPost) => {
       if (!post.circle) hall.setPosts((prev) => [post, ...prev]);
@@ -860,6 +1716,17 @@ export default function FeedSection({
       []
     );
 
+  /* THE FOUR CURRENTS — the hall reads itself four ways */
+  const currents: Array<{ key: FeedTab; label: string; icon: LucideIcon }> = useMemo(
+    () => [
+      { key: "foryou", label: "For you", icon: Sparkles },
+      { key: "following", label: "Following", icon: Users },
+      { key: "latest", label: "Latest", icon: Clock },
+      { key: "discoveries", label: "Discoveries", icon: Telescope },
+    ],
+    []
+  );
+
   /* THE THREE HANDS — the first screen's natural doors.
      The second hand publishes: creation itself stays in the house's
      rooms (ArtX, Music, Book, HyperX, a transmission's line) — the
@@ -891,6 +1758,47 @@ export default function FeedSection({
             </button>
           ))}
         </div>
+
+        {/* the four currents — above the views, gone when mine keeps its wall */}
+        {view !== "mine" && (
+          <div className="mt-4 flex items-center">
+            <div
+              role="tablist"
+              aria-label={t("The four currents")}
+              className="gp-seg flex shrink-0 items-center gap-0.5 rounded-full border border-white/80 bg-white/45 p-1"
+            >
+              {currents.map((c) => {
+                const CIcon = c.icon;
+                const on = tab === c.key;
+                return (
+                  <button
+                    key={c.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={on}
+                    onClick={() => setTab(c.key)}
+                    data-testid={`gath-feed-tab-${c.key}`}
+                    className={cn(
+                      "focus-glow relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-300 sm:px-3.5",
+                      on ? "text-[#5c5344]" : "text-[#a2947c] hover:text-[#7c715f]"
+                    )}
+                  >
+                    {on && (
+                      <motion.span
+                        layoutId="gp-currents-thumb"
+                        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                        className="gp-seg-thumb absolute inset-0 rounded-full"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <CIcon className="relative size-3.5" aria-hidden="true" />
+                    <span className="relative hidden sm:inline">{t(c.label)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* the hall's own segmented pill + intention chips */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
@@ -970,7 +1878,12 @@ export default function FeedSection({
       </div>
 
       {/* ---------- the rooms ---------- */}
-      <div className="gp-scroll h-[calc(100%-124px)] overflow-y-auto overscroll-y-contain px-3 pb-28 pt-4 sm:px-6 sm:pt-5">
+      <div
+        className={cn(
+          "gp-scroll overflow-y-auto overscroll-y-contain px-3 pb-28 pt-4 sm:px-6 sm:pt-5",
+          view === "mine" ? "h-[calc(100%-124px)]" : "h-[calc(100%-178px)]"
+        )}
+      >
         {view === "stream" ? (
           hall.loading ? (
             <p className="flex items-center justify-center gap-2 py-24 text-[13.5px] text-[#a2947c]">
@@ -991,7 +1904,10 @@ export default function FeedSection({
                   <StreamSlide
                     post={p}
                     onResonate={() => void resonate(p)}
+                    onBookmark={() => void toggleBookmark(p)}
                     onEcho={() => setEchoPost(p)}
+                    onRepost={() => setRepostPost(p)}
+                    onGrow={() => openGrow(p)}
                     onTakeBack={() => void takeBack(p)}
                     strikeId={strikeId}
                     armedId={armedId}
@@ -1054,6 +1970,9 @@ export default function FeedSection({
                         }
                       }}
                       onResonate={() => void resonate(p)}
+                      onBookmark={() => void toggleBookmark(p)}
+                      onRepost={() => setRepostPost(p)}
+                      onGrow={() => openGrow(p)}
                       onTakeBack={() => void takeBack(p)}
                       armedId={armedId}
                       setArmedId={setArmedId}
@@ -1122,6 +2041,26 @@ export default function FeedSection({
       <AnimatePresence>
         {echoPost && (
           <EchoSheet post={echoPost} onClose={() => setEchoPost(null)} onCount={onEchoCount} />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {repostPost && (
+          <RepostSheet
+            post={repostPost}
+            onClose={() => setRepostPost(null)}
+            onReposted={onReposted}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {growTarget && (
+          <GrowSheet
+            post={growTarget.post}
+            variant={growTarget.variant}
+            onClose={() => setGrowTarget(null)}
+            onGrown={handleGrown}
+            onFlash={setNote}
+          />
         )}
       </AnimatePresence>
       <AnimatePresence>

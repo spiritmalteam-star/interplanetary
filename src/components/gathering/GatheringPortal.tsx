@@ -1,21 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   Bell,
+  Bookmark,
+  CalendarClock,
+  CircleQuestionMark,
   Compass,
+  FlaskConical,
+  Flame,
   LayoutGrid,
   Library,
-  Loader2,
   Map as MapIcon,
   MessagesSquare,
   Music4,
+  PlusCircle,
+  ScrollText,
+  Settings2,
+  Sparkles,
+  UserRound,
   Users,
   Waypoints,
-  Sparkles,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
@@ -25,6 +34,8 @@ import {
   type CircleCard,
   type GatheringPost,
   type MeState,
+  GP_GHOST,
+  GP_ICON_BTN,
   MakerMark,
   netFetch,
 } from "./shared";
@@ -35,6 +46,16 @@ import EncountersSection from "./EncountersSection";
 import MessagesSection from "./MessagesSection";
 import CollaborateSection from "./CollaborateSection";
 import LibrarySection from "./LibrarySection";
+import QuestionsSection from "./QuestionsSection";
+import LaboratorySection from "./LaboratorySection";
+import IntentionsSection from "./IntentionsSection";
+import LiveSection from "./LiveSection";
+import SavedSection from "./SavedSection";
+import MySpaceSection from "./MySpaceSection";
+import SettingsSection from "./SettingsSection";
+import GuidelinesSection from "./GuidelinesSection";
+import MirrorAssistant from "./MirrorAssistant";
+import FirstVisitSheet from "./FirstVisitSheet";
 import ProfileSheet from "./ProfileSheet";
 import NotificationsSheet from "./NotificationsSheet";
 import PublishPickerSheet from "./PublishPickerSheet";
@@ -47,16 +68,27 @@ import { GatheringRadio } from "./GatheringRadio";
 /*  separate space with its own structure, its own light, its own      */
 /*  manners:                                                           */
 /*                                                                     */
-/*    GATHERING — the living community stream (the three natural       */
-/*      hands first: share a reflection, publish a work, meet          */
-/*      someone; the gallery wall and the vertical stream beneath);    */
+/*    THE PULSE — the living community stream, four currents:          */
+/*      for you, following, latest, discoveries;                       */
 /*    DISCOVER — six destinations: for you, people, creations,         */
 /*      circles, projects, knowledge; M.E. listens here;               */
-/*    CIRCLES — communities to join, or to found;                      */
-/*    ENCOUNTERS — meaningful introductions, consent always;           */
+/*    LIVING QUESTIONS — questions that grow like trees;               */
+/*    RESONANCE CIRCLES — communities to join, or to found;            */
+/*    THE LABORATORY — hypotheses tested together, evidence over votes;*/
+/*    CREATION COMMONS — the collective archive of finished work;      */
+/*    COLLECTIVE INTENTIONS — shared goals with real steps;            */
+/*    GATHER LIVE — scheduled conversations in real time;              */
+/*    WORKSHOPS — the weaving rooms of shared projects;                */
+/*    CONNECTIONS — meaningful introductions, consent always;          */
 /*    MESSAGES — private and group conversations;                      */
-/*    COLLABORATE — shared workshops and the evolution path;           */
-/*    LIBRARY — the collective archive of the community's work.        */
+/*    SAVED — the visitor's own quiet shelf;                           */
+/*    MY SPACE — the introduction, the counts, the offerings;          */
+/*    SETTINGS — the bell's manners, the visibility, the walls;        */
+/*    GUIDELINES — the trust this place runs on.                       */
+/*                                                                     */
+/*  THE RAIL AND THE BOTTOM — on wide desks the rooms read through a   */
+/*  quiet left rail; in the palm the five primary streets ride the     */
+/*  bottom and the crown's grid hand opens every room.                 */
 /*                                                                     */
 /*  CREATION LIVES IN THE HOUSE'S ROOMS — ArtX, Music, Book, HyperX,   */
 /*  a transmission's own line. The Gathering publishes finished work,  */
@@ -73,21 +105,58 @@ import { GatheringRadio } from "./GatheringRadio";
 type Section =
   | "gathering"
   | "discover"
+  | "questions"
   | "circles"
+  | "laboratory"
+  | "library"
+  | "collaborate"
+  | "intentions"
+  | "live"
   | "encounters"
   | "messages"
-  | "collaborate"
-  | "library";
+  | "saved"
+  | "myspace"
+  | "settings"
+  | "guidelines";
 
-const SECTIONS: Array<{ key: Section; label: string; icon: LucideIcon }> = [
-  { key: "gathering", label: "Gathering", icon: Waypoints },
-  { key: "discover", label: "Discover", icon: Compass },
-  { key: "circles", label: "Circles", icon: Users },
-  { key: "encounters", label: "Encounters", icon: Sparkles },
-  { key: "messages", label: "Messages", icon: MessagesSquare },
-  { key: "collaborate", label: "Collaborate", icon: LayoutGrid },
-  { key: "library", label: "Library", icon: Library },
+type RoomDef = { key: Section; label: string; icon: LucideIcon };
+
+const ROOMS: Record<Section, RoomDef> = {
+  gathering: { key: "gathering", label: "The Pulse", icon: Waypoints },
+  discover: { key: "discover", label: "Discover", icon: Compass },
+  questions: { key: "questions", label: "Living Questions", icon: CircleQuestionMark },
+  circles: { key: "circles", label: "Resonance Circles", icon: Users },
+  laboratory: { key: "laboratory", label: "The Laboratory", icon: FlaskConical },
+  library: { key: "library", label: "Creation Commons", icon: Library },
+  collaborate: { key: "collaborate", label: "Workshops", icon: LayoutGrid },
+  intentions: { key: "intentions", label: "Collective Intentions", icon: Flame },
+  live: { key: "live", label: "Gather Live", icon: CalendarClock },
+  encounters: { key: "encounters", label: "Connections", icon: Sparkles },
+  messages: { key: "messages", label: "Messages", icon: MessagesSquare },
+  saved: { key: "saved", label: "Saved", icon: Bookmark },
+  myspace: { key: "myspace", label: "My Space", icon: UserRound },
+  settings: { key: "settings", label: "Settings", icon: Settings2 },
+  guidelines: { key: "guidelines", label: "Guidelines", icon: ScrollText },
+};
+
+/* the rail reads in six quiet groups — the network's own streets */
+const RAIL_GROUPS: Array<{ label: string; rooms: Section[] }> = [
+  { label: "the pulse", rooms: ["gathering"] },
+  { label: "explore", rooms: ["discover", "questions", "laboratory"] },
+  { label: "together", rooms: ["circles", "intentions", "live", "collaborate"] },
+  { label: "creations", rooms: ["library"] },
+  { label: "connect", rooms: ["encounters", "messages"] },
+  { label: "you", rooms: ["saved", "myspace", "settings", "guidelines"] },
 ];
+
+/* the five streets that ride the palm's bottom */
+const BOTTOM_ROOMS: Section[] = ["gathering", "discover", "circles", "messages"];
+
+const SECTION_IDS = Object.keys(ROOMS) as Section[];
+
+function isSection(v: string | null): v is Section {
+  return typeof v === "string" && (SECTION_IDS as string[]).includes(v);
+}
 
 /* ================================================================== */
 /*  THE HALL'S VARS — porcelain by day; at night the hall's own vars   */
@@ -303,13 +372,26 @@ const GATH_STYLE = `
 
 export default function GatheringPortal() {
   const t = useT();
-  const [section, setSection] = useState<Section>("gathering");
+  /* the deep link's own room — ?section= names a street on arrival */
+  const [section, setSection] = useState<Section>(() => {
+    if (typeof window !== "undefined") {
+      const named = new URLSearchParams(window.location.search).get("section");
+      if (isSection(named)) return named;
+    }
+    return "gathering";
+  });
+  const sectionRef = useRef<Section>(section);
   const [me, setMe] = useState<MeState | null>(null);
   const [circles, setCircles] = useState<CircleCard[]>([]);
   const [unread, setUnread] = useState(0);
   const [overlay, setOverlay] = useState<
     "none" | "profile" | "notifications" | "atlas"
   >("none");
+  /* the mobile sheets — the crown's grid hand and the palm's create hand */
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  /* the first visit — one welcome, kept in the visitor's own browser */
+  const [firstVisit, setFirstVisit] = useState(false);
   /* carried between rooms — the weave and library hands of the stream */
   const [weaveSeed, setWeaveSeed] = useState<GatheringPost | null>(null);
   const [librarySeed, setLibrarySeed] = useState<GatheringPost | null>(null);
@@ -329,8 +411,24 @@ export default function GatheringPortal() {
     useMirror.getState().closeGatheringPortal();
   }, []);
 
+  const goSection = useCallback((next: Section) => {
+    setSection(next);
+    sectionRef.current = next;
+    setOverlay("none");
+    setMenuOpen(false);
+    setCreateOpen(false);
+    if (typeof window !== "undefined") {
+      const url =
+        next === "gathering"
+          ? "/?room=gathering"
+          : `/?room=gathering&section=${next}`;
+      window.history.replaceState(null, "", url);
+      document.title = `The Gathering · ${ROOMS[next].label} · ReflectMe`;
+    }
+  }, []);
+
   /* the portal's first breath: who the visitor is, which circles keep
-     their doors open for them */
+     their doors open for them — and whether a deep link names a room */
   useEffect(() => {
     void (async () => {
       try {
@@ -344,6 +442,16 @@ export default function GatheringPortal() {
         /* the rooms still open — identity arrives on the next breath */
       }
     })();
+    if (typeof window !== "undefined") {
+      document.title =
+        section === "gathering"
+          ? "The Gathering · ReflectMe"
+          : `The Gathering · ${ROOMS[section].label} · ReflectMe`;
+      if (!window.localStorage.getItem("gathering-intro-v1")) {
+        const id = window.setTimeout(() => setFirstVisit(true), 900);
+        return () => window.clearTimeout(id);
+      }
+    }
   }, []);
 
   /* the bell breathes quietly */
@@ -367,16 +475,52 @@ export default function GatheringPortal() {
     };
   }, []);
 
-  /* the escape hand — one breath of Escape folds the portal */
+  /* the escape hand — folds the topmost sheet first, then the portal */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && overlay === "none") closePortal();
+      if (e.key !== "Escape") return;
+      if (menuOpen) return setMenuOpen(false);
+      if (createOpen) return setCreateOpen(false);
+      if (firstVisit) return;
+      if (overlay === "none") closePortal();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [overlay, closePortal]);
+  }, [overlay, menuOpen, createOpen, firstVisit, closePortal]);
+
+  const firstVisitDone = useCallback(() => {
+    setFirstVisit(false);
+    try {
+      window.localStorage.setItem("gathering-intro-v1", "seen");
+    } catch {
+      /* a closed storage only means the welcome may return */
+    }
+  }, []);
 
   if (typeof document === "undefined") return null;
+
+  const railButton = (room: RoomDef) => {
+    const RIcon = room.icon;
+    const on = section === room.key;
+    return (
+      <button
+        key={room.key}
+        type="button"
+        onClick={() => goSection(room.key)}
+        aria-current={on ? "page" : undefined}
+        data-testid={`gath-rail-${room.key}`}
+        className={cn(
+          "focus-glow flex w-full items-center gap-2.5 rounded-[14px] border px-3 py-2 text-[12.5px] font-semibold transition-all duration-300",
+          on
+            ? "border-[#d3c39c] bg-white/80 text-[#5c5344] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_4px_10px_-6px_rgba(122,103,70,0.35)]"
+            : "border-transparent text-[#7c715f] hover:bg-white/50 hover:text-[#3d3428]"
+        )}
+      >
+        <RIcon className={cn("size-4 shrink-0", on ? "text-[#a16207]" : "text-[#a2947c]")} aria-hidden="true" />
+        <span className="truncate">{t(room.label)}</span>
+      </button>
+    );
+  };
 
   return createPortal(
     <motion.div
@@ -408,8 +552,49 @@ export default function GatheringPortal() {
         />
       </div>
 
+      {/* ---------- THE LEFT RAIL — every room of the network, on wide desks ---------- */}
+      <aside
+        aria-label={t("The Gathering rooms")}
+        className="gp-glass absolute bottom-0 left-0 top-0 z-20 hidden w-[248px] flex-col border-r border-[#e4d9bd]/60 lg:flex"
+      >
+        <div className="flex items-center gap-2.5 px-5 pb-3 pt-5">
+          <span
+            aria-hidden="true"
+            className="flex size-9 shrink-0 items-center justify-center rounded-[12px] border border-white/90"
+            style={{
+              background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",
+            }}
+          >
+            <span className="block size-4 rounded-[5px] border border-[#cbb98d] bg-[linear-gradient(150deg,#fefcf6,#e8dcbd)]" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate font-[family-name:var(--font-cinzel)] text-[14px] font-semibold tracking-wide text-[#3d3428]">
+              {t("The Gathering")}
+            </p>
+            <p className="mono-label text-[8px] uppercase tracking-[0.26em] text-[#a2947c]">
+              {t("explore with mirror")}
+            </p>
+          </div>
+        </div>
+
+        <nav aria-label={t("The Gathering rooms")} className="gp-scroll flex-1 overflow-y-auto px-3 pb-6">
+          {RAIL_GROUPS.map((group) => (
+            <div key={group.label} className="mb-3">
+              <p className="mono-label px-3 pb-1.5 pt-2 text-[8.5px] uppercase tracking-[0.24em] text-[#a2947c]">
+                {t(group.label)}
+              </p>
+              <div className="flex flex-col gap-0.5">
+                {group.rooms.map((key) => railButton(ROOMS[key]))}
+              </div>
+            </div>
+          ))}
+        </nav>
+      </aside>
+
       {/* ---------- the portal's crown ---------- */}
-      <header className="gp-glass absolute inset-x-0 top-0 z-10 border-x-0 border-t-0">
+      <header className="gp-glass absolute inset-x-0 top-0 z-10 border-x-0 border-t-0 lg:left-[248px]">
         <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-2.5 px-3 sm:h-16 sm:gap-3 sm:px-6">
           <button
             type="button"
@@ -436,7 +621,7 @@ export default function GatheringPortal() {
             </span>
             <div className="min-w-0">
               <p className="truncate font-[family-name:var(--font-cinzel)] text-[14px] font-semibold tracking-wide text-[#3d3428] sm:text-[15px]">
-                {t("The Gathering")}
+                {t(ROOMS[section].label)}
               </p>
               <p className="mono-label hidden text-[8px] uppercase tracking-[0.26em] text-[#a2947c] sm:block">
                 {t("the network of becoming")}
@@ -445,6 +630,19 @@ export default function GatheringPortal() {
           </div>
 
           <div className="flex-1" />
+
+          {/* THE EVERY-ROOM HAND — on the palm the rail is folded away,
+              so the crown's own grid hand opens all fifteen rooms */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label={t("Every room of the gathering")}
+            title={t("Every room of the gathering")}
+            data-testid="gathering-menu"
+            className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428] lg:hidden"
+          >
+            <LayoutGrid className="size-4" aria-hidden="true" />
+          </button>
 
           {/* THE ATLAS' OWN DOOR — the map stands only inside the hall:
               one small hand that opens the world's shores, where the
@@ -514,55 +712,10 @@ export default function GatheringPortal() {
             </span>
           </button>
         </div>
-
-        {/* ---------- the network's own streets ---------- */}
-        <nav
-          aria-label={t("The Gathering")}
-          className="mx-auto max-w-[1200px] px-3 pb-2.5 sm:px-6 sm:pb-3"
-        >
-          <div
-            role="tablist"
-            aria-label={t("The Gathering")}
-            className="gp-seg gp-scroll flex items-center gap-0.5 overflow-x-auto rounded-full border border-white/80 bg-white/45 p-1"
-          >
-            {SECTIONS.map((s) => {
-              const SIcon = s.icon;
-              const on = section === s.key;
-              return (
-                <button
-                  key={s.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={on}
-                  onClick={() => {
-                    setSection(s.key);
-                    setOverlay("none");
-                  }}
-                  data-testid={`gathering-nav-${s.key}`}
-                  className={cn(
-                    "focus-glow relative flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-300 sm:px-3.5",
-                    on ? "text-[#5c5344]" : "text-[#a2947c] hover:text-[#7c715f]"
-                  )}
-                >
-                  {on && (
-                    <motion.span
-                      layoutId="gp-nav-thumb"
-                      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                      className="gp-seg-thumb absolute inset-0 rounded-full"
-                      aria-hidden="true"
-                    />
-                  )}
-                  <SIcon className="relative size-3.5" aria-hidden="true" />
-                  <span className="relative">{t(s.label)}</span>
-                </button>
-              );
-            })}
-          </div>
-        </nav>
       </header>
 
       {/* ---------- the rooms ---------- */}
-      <div className="absolute inset-0 overflow-hidden pt-[104px] sm:pt-[120px]">
+      <div className="absolute inset-0 overflow-hidden pb-16 pt-[58px] sm:pt-[70px] lg:pb-0 lg:pl-[248px]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.section
             key={overlay !== "none" ? overlay : section}
@@ -586,26 +739,35 @@ export default function GatheringPortal() {
                 active
                 circles={circles}
                 refreshSignal={atlasSignal}
-                onMeetSomeone={() => setSection("encounters")}
+                onMeetSomeone={() => goSection("encounters")}
                 onPublishWork={() => setPickerOpen(true)}
                 onWeaveFrom={(post) => {
                   setWeaveSeed(post);
-                  setSection("collaborate");
+                  goSection("collaborate");
                 }}
                 onLibraryFrom={(post) => {
                   setLibrarySeed(post);
-                  setSection("library");
+                  goSection("library");
                 }}
+                onGrown={(where) => goSection(where)}
               />
             ) : section === "discover" ? (
               <DiscoverSection
                 active
-                onOpenMessages={() => setSection("messages")}
+                onOpenMessages={() => goSection("messages")}
               />
+            ) : section === "questions" ? (
+              <QuestionsSection active />
             ) : section === "circles" ? (
               <CirclesSection active />
+            ) : section === "laboratory" ? (
+              <LaboratorySection active />
+            ) : section === "intentions" ? (
+              <IntentionsSection active />
+            ) : section === "live" ? (
+              <LiveSection active />
             ) : section === "encounters" ? (
-              <EncountersSection active onOpenMessages={() => setSection("messages")} />
+              <EncountersSection active onOpenMessages={() => goSection("messages")} />
             ) : section === "messages" ? (
               <MessagesSection active />
             ) : section === "collaborate" ? (
@@ -614,19 +776,255 @@ export default function GatheringPortal() {
                 seedPost={weaveSeed}
                 onSeedConsumed={() => setWeaveSeed(null)}
               />
-            ) : (
+            ) : section === "library" ? (
               <LibrarySection
                 active
                 fromPost={librarySeed}
                 onSeedConsumed={() => setLibrarySeed(null)}
               />
+            ) : section === "saved" ? (
+              <SavedSection active />
+            ) : section === "myspace" ? (
+              <MySpaceSection active me={me} onEditProfile={() => setOverlay("profile")} />
+            ) : section === "settings" ? (
+              <SettingsSection active me={me} onSaved={setMe} />
+            ) : (
+              <GuidelinesSection active />
             )}
           </motion.section>
         </AnimatePresence>
       </div>
 
-      {/* the radio rides the hall's foot while it stands */}
-      {radioOpen && <GatheringRadio onClose={() => setRadioOpen(false)} />}
+      {/* ---------- the palm's own streets — five primary rooms on the bottom ---------- */}
+      <nav
+        aria-label={t("The Gathering")}
+        className="gp-glass absolute inset-x-0 bottom-0 z-30 border-x-0 border-b-0 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 lg:hidden"
+        data-testid="gathering-bottom-nav"
+      >
+        <div className="mx-auto flex max-w-md items-stretch justify-around px-2">
+          {BOTTOM_ROOMS.map((key) => {
+            const room = ROOMS[key];
+            const BIcon = room.icon;
+            const on = section === key && overlay === "none";
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => goSection(key)}
+                aria-current={on ? "page" : undefined}
+                data-testid={`gath-bottom-${key}`}
+                className="focus-glow relative flex min-w-[56px] flex-col items-center gap-0.5 rounded-[14px] px-2 py-1.5"
+              >
+                <BIcon
+                  className={cn("size-5", on ? "text-[#a16207]" : "text-[#a2947c]")}
+                  aria-hidden="true"
+                />
+                <span
+                  className={cn(
+                    "text-[9.5px] font-semibold",
+                    on ? "text-[#5c5344]" : "text-[#a2947c]"
+                  )}
+                >
+                  {t(key === "messages" ? "Inbox" : key === "gathering" ? "Pulse" : room.label)}
+                </span>
+                {key === "messages" && unread > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute right-1 top-0.5 size-2 rounded-full bg-[#a16207]"
+                  />
+                )}
+                {on && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-1.5 h-1 w-8 rounded-full bg-[#cbb98d]"
+                  />
+                )}
+              </button>
+            );
+          })}
+          {/* the create hand — the compact sheet of beginnings */}
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            aria-label={t("Create — begin something")}
+            data-testid="gath-bottom-create"
+            className="focus-glow relative flex min-w-[56px] flex-col items-center gap-0.5 rounded-[14px] px-2 py-1.5"
+          >
+            <PlusCircle
+              className={cn(
+                "size-5",
+                createOpen ? "text-[#a16207]" : "text-[#a2947c]"
+              )}
+              aria-hidden="true"
+            />
+            <span className={cn("text-[9.5px] font-semibold", createOpen ? "text-[#5c5344]" : "text-[#a2947c]")}>
+              {t("Create")}
+            </span>
+          </button>
+        </div>
+      </nav>
+
+      {/* ---------- the compact sheet of beginnings (the create hand) ---------- */}
+      <AnimatePresence>
+        {createOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("Create — begin something")}
+            data-testid="gath-create-sheet"
+            className="gp-glass absolute inset-x-2 bottom-[70px] z-40 rounded-[22px] border border-[#e4d9bd]/70 p-4 shadow-[0_24px_60px_-24px_rgba(46,38,24,0.4)] lg:hidden"
+          >
+            <div className="mb-2 flex items-center justify-between">
+              <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]">
+                {t("begin something")}
+              </p>
+              <button
+                type="button"
+                onClick={() => setCreateOpen(false)}
+                aria-label={t("Close")}
+                data-testid="gath-create-close"
+                className={cn(GP_ICON_BTN, "size-8")}
+              >
+                <X className="size-4" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => goSection("gathering")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
+                <Waypoints className="size-4 text-[#8a6f46]" aria-hidden="true" />
+                {t("Share a reflection")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCreateOpen(false);
+                  setPickerOpen(true);
+                }}
+                className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}
+              >
+                <Library className="size-4 text-[#a16207]" aria-hidden="true" />
+                {t("Publish a work")}
+              </button>
+              <button type="button" onClick={() => goSection("questions")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
+                <CircleQuestionMark className="size-4 text-[#9a6b8a]" aria-hidden="true" />
+                {t("Begin a question")}
+              </button>
+              <button type="button" onClick={() => goSection("laboratory")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
+                <FlaskConical className="size-4 text-[#7c5cad]" aria-hidden="true" />
+                {t("Open a lab bench")}
+              </button>
+              <button type="button" onClick={() => goSection("intentions")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
+                <Flame className="size-4 text-[#b45309]" aria-hidden="true" />
+                {t("Begin an intention")}
+              </button>
+              <button type="button" onClick={() => goSection("live")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
+                <CalendarClock className="size-4 text-[#0d9488]" aria-hidden="true" />
+                {t("Schedule a gathering")}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ---------- the every-room sheet (the crown's grid hand, on the palm) ---------- */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.24 }}
+            className="absolute inset-0 z-40 bg-[rgba(46,38,24,0.32)] lg:hidden"
+            onClick={() => setMenuOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 18 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("Every room of the gathering")}
+              data-testid="gath-menu-sheet"
+              className="gp-glass absolute inset-x-3 bottom-[70px] rounded-[22px] border border-[#e4d9bd]/70 p-4 shadow-[0_24px_60px_-24px_rgba(46,38,24,0.4)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-3 flex items-center justify-between">
+                <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]">
+                  {t("every room")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(false)}
+                  aria-label={t("Close")}
+                  data-testid="gath-menu-close"
+                  className={cn(GP_ICON_BTN, "size-8")}
+                >
+                  <X className="size-4" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="gp-scroll max-h-[52vh] overflow-y-auto">
+                {RAIL_GROUPS.map((group) => (
+                  <div key={group.label} className="mb-2.5">
+                    <p className="mono-label px-1 pb-1 text-[8.5px] uppercase tracking-[0.24em] text-[#a2947c]">
+                      {t(group.label)}
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {group.rooms.map((key) => {
+                        const room = ROOMS[key];
+                        const MIcon = room.icon;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => goSection(key)}
+                            data-testid={`gath-menu-${key}`}
+                            className={cn(
+                              "focus-glow flex items-center gap-2 rounded-[12px] border px-2.5 py-2 text-left text-[11.5px] font-semibold transition-all duration-300",
+                              section === key
+                                ? "border-[#d3c39c] bg-white/85 text-[#5c5344]"
+                                : "border-transparent bg-white/50 text-[#7c715f] hover:border-[#e4d9bd]"
+                            )}
+                          >
+                            <MIcon className="size-3.5 shrink-0 text-[#a16207]" aria-hidden="true" />
+                            <span className="truncate">{t(room.label)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* the radio rides the hall's foot while it stands — lifted above
+          the palm's own streets on small screens */}
+      {radioOpen && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-[64px] z-30 lg:bottom-0">
+          <GatheringRadio onClose={() => setRadioOpen(false)} />
+        </div>
+      )}
+
+      {/* M.E. listens in every room — it suggests, never acts */}
+      <MirrorAssistant section={section} me={me} />
+
+      {/* the first welcome — once, honestly, never again */}
+      <FirstVisitSheet
+        open={firstVisit}
+        onChoose={(a) => {
+          firstVisitDone();
+          if (a === "discover") goSection("discover");
+          else if (a === "circles") goSection("circles");
+          else goSection("gathering");
+        }}
+        onClose={firstVisitDone}
+      />
 
       {/* the picker stands above everything — it is not a room, it is a hand */}
       <PublishPickerSheet open={pickerOpen} onClose={() => setPickerOpen(false)} />

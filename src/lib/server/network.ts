@@ -156,14 +156,25 @@ export function readNetworkPrefs(raw: unknown): NetworkPrefs {
   };
 }
 
-/** which manners govern one bell ring */
+/** which manners govern one bell ring — resonance and echoes keep
+    their own switches; introductions and follows ride connections;
+    community updates ride the library switch */
 function prefsAllow(prefs: NetworkPrefs | null, type: string): boolean {
   if (!prefs) return true;
   if (type === "resonance") return prefs.resonance;
   if (type === "echo") return prefs.echoes;
-  if (type === "connection_request" || type === "connection_accepted" || type === "connection")
+  if (
+    type === "follow" ||
+    type === "connection" ||
+    type === "connection_request" ||
+    type === "connection_accepted"
+  )
     return prefs.connections;
-  return prefs.library; // circle_join, project, library and the rest
+  /* community updates — circle_join, project_*, question_branch,
+     lab_entry, lab_review, intention and event rings, and anything
+     the network grows later. Unknown types still ring (never
+     swallowed silently). */
+  return prefs.library;
 }
 
 /** the bell's own hand — a ring is written unless the visitor would

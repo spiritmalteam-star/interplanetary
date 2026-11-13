@@ -5,8 +5,12 @@ import {
   Atom,
   BookOpen,
   CircleQuestionMark,
+  FlaskConical,
   Feather,
   Flame,
+  Handshake,
+  MessagesSquare,
+  Microscope,
   MoonStar,
   Music,
   Sparkles,
@@ -30,6 +34,11 @@ export type GatheringKind =
   | "book"
   | "discovery"
   | "question"
+  | "hypothesis"
+  | "experiment"
+  | "finding"
+  | "collaboration"
+  | "discussion"
   | "intention";
 
 export const KIND_META: Record<GatheringKind, { icon: LucideIcon; accent: string }> = {
@@ -40,6 +49,11 @@ export const KIND_META: Record<GatheringKind, { icon: LucideIcon; accent: string
   book: { icon: BookOpen, accent: "#8a6d3b" },
   discovery: { icon: Atom, accent: "#0d9488" },
   question: { icon: CircleQuestionMark, accent: "#9a6b8a" },
+  hypothesis: { icon: FlaskConical, accent: "#7c5cad" },
+  experiment: { icon: Microscope, accent: "#0d9488" },
+  finding: { icon: Atom, accent: "#0f766e" },
+  collaboration: { icon: Handshake, accent: "#a16207" },
+  discussion: { icon: MessagesSquare, accent: "#8a6f46" },
   intention: { icon: Flame, accent: "#b45309" },
 };
 
@@ -49,13 +63,57 @@ export const KIND_META: Record<GatheringKind, { icon: LucideIcon; accent: string
    the rooms where they were born, never composed here. */
 export const KIND_ORDER: GatheringKind[] = [
   "reflection",
+  "question",
+  "hypothesis",
+  "discovery",
+  "finding",
+  "experiment",
+  "collaboration",
+  "discussion",
   "intention",
   "dream",
   "music",
   "book",
-  "discovery",
-  "question",
 ];
+
+/* THE EVIDENCE LADDER — seven honest steps between a hunch and a
+   settled truth. Nothing on the walls is called verified because
+   people agreed with it. */
+export const EVIDENCE_LEVELS = [
+  "established",
+  "preliminary",
+  "hypothesis",
+  "personal",
+  "philosophical",
+  "creative",
+  "disputed",
+] as const;
+
+export type EvidenceLevel = (typeof EVIDENCE_LEVELS)[number];
+
+export const EVIDENCE_LABEL: Record<EvidenceLevel, string> = {
+  established: "Established evidence",
+  preliminary: "Preliminary evidence",
+  hypothesis: "Hypothesis",
+  personal: "Personal experience",
+  philosophical: "Philosophical interpretation",
+  creative: "Creative speculation",
+  disputed: "Disputed claim",
+};
+
+export const EVIDENCE_STYLE: Record<EvidenceLevel, string> = {
+  established: "border-[#5f7a52]/40 text-[#4f6a44]",
+  preliminary: "border-[#0d9488]/40 text-[#0f766e]",
+  hypothesis: "border-[#7c5cad]/35 text-[#7c5cad]",
+  personal: "border-[#cbb98d]/60 text-[#8a6f46]",
+  philosophical: "border-[#9a6b8a]/35 text-[#9a6b8a]",
+  creative: "border-[#a16207]/40 text-[#a16207]",
+  disputed: "border-[#b45309]/45 text-[#b45309]",
+};
+
+export function isEvidenceLevel(v: unknown): v is EvidenceLevel {
+  return typeof v === "string" && (EVIDENCE_LEVELS as readonly string[]).includes(v);
+}
 
 export const KIND_OFFERING_LABEL: Record<GatheringKind, string> = {
   reflection: "A reflection",
@@ -65,6 +123,11 @@ export const KIND_OFFERING_LABEL: Record<GatheringKind, string> = {
   book: "A written work",
   discovery: "A discovery",
   question: "A question",
+  hypothesis: "A hypothesis",
+  experiment: "An experiment",
+  finding: "A research finding",
+  collaboration: "A collaboration request",
+  discussion: "A community discussion",
   intention: "An intention",
 };
 
@@ -76,6 +139,11 @@ export const KIND_FILTER_LABEL: Record<GatheringKind, string> = {
   book: "Books",
   discovery: "Discoveries",
   question: "Questions",
+  hypothesis: "Hypotheses",
+  experiment: "Experiments",
+  finding: "Findings",
+  collaboration: "Collaborations",
+  discussion: "Discussions",
   intention: "Intentions",
 };
 
@@ -112,12 +180,23 @@ export interface GatheringPost {
   mediaName?: string | null;
   tags: string[];
   circle: { id: string; name: string } | null;
+  epistemic?: string | null;
   resonanceCount: number;
   echoCount: number;
+  repostCount: number;
   createdAt: string;
   author: { name: string; image: string | null; anon: boolean };
   mine: boolean;
   resonated: boolean;
+  bookmarked?: boolean;
+  reposted?: boolean;
+  /* a repost's attribution — whose words walked into the room */
+  repostNote?: string | null;
+  repostAuthor?: string | null;
+  /* the rooms a work can grow into */
+  hasQuestion?: boolean;
+  hasLab?: boolean;
+  hasIntentionSpace?: boolean;
 }
 
 /* THE ATLAS' OWN SHORES — the seven regions the hall's map draws.
@@ -152,10 +231,142 @@ export function regionLabel(id: string | null | undefined): string | null {
 
 export interface GatheringEcho {
   id: string;
+  parentId: string | null;
   body: string;
   createdAt: string;
   author: { name: string; image: string | null; anon: boolean };
   isMine: boolean;
+}
+
+/* ---------- the second generation: signature rooms ---------- */
+
+export interface QuestionBranchRow {
+  id: string;
+  parentId: string | null;
+  kind: string;
+  body: string;
+  evidence: string;
+  createdAt: string;
+  author: { id: string; name: string; anon: boolean };
+}
+
+export interface QuestionDetail {
+  id: string;
+  postId: string;
+  title: string;
+  body: string;
+  context: string | null;
+  disciplines: string[];
+  status: string;
+  branchCount: number;
+  contributorCount: number;
+  mine: boolean;
+  createdAt: string;
+  updatedAt: string;
+  branches: QuestionBranchRow[];
+}
+
+export interface LabEntryRow {
+  id: string;
+  kind: string;
+  body: string;
+  dataUrl: string | null;
+  createdAt: string;
+  author: { id: string; name: string; anon: boolean };
+}
+
+export interface LabReviewRow {
+  id: string;
+  verdict: string;
+  body: string;
+  createdAt: string;
+  author: { id: string; name: string; anon: boolean };
+}
+
+export interface LabDetail {
+  id: string;
+  title: string;
+  question: string;
+  hypothesis: string;
+  background: string | null;
+  methodology: string | null;
+  materials: string | null;
+  safety: string | null;
+  focus: string;
+  status: string;
+  memberCount: number;
+  mine: boolean;
+  membership: string | null;
+  createdAt: string;
+  updatedAt: string;
+  owner: { id: string; name: string; anon: boolean };
+  entries: LabEntryRow[];
+  reviews: LabReviewRow[];
+}
+
+export interface MilestoneRow {
+  id: string;
+  title: string;
+  detail: string | null;
+  position: number;
+  done: boolean;
+}
+
+export interface TaskRow {
+  id: string;
+  title: string;
+  claimedBy: string | null;
+  done: boolean;
+}
+
+export interface IntentionUpdateRow {
+  id: string;
+  body: string;
+  progress: number;
+  createdAt: string;
+  author: { id: string; name: string; anon: boolean };
+}
+
+export interface IntentionDetail {
+  id: string;
+  title: string;
+  purpose: string;
+  region: string | null;
+  status: string;
+  memberCount: number;
+  mine: boolean;
+  joined: boolean;
+  progress: number;
+  createdAt: string;
+  owner: { id: string; name: string; anon: boolean };
+  milestones: MilestoneRow[];
+  tasks: TaskRow[];
+  updates: IntentionUpdateRow[];
+}
+
+export interface EventRow {
+  id: string;
+  title: string;
+  description: string | null;
+  scheduledFor: string;
+  durationMin: number;
+  format: string;
+  status: string;
+  attendeeCount: number;
+  joined: boolean;
+  mine: boolean;
+  host: { id: string; name: string; anon: boolean };
+}
+
+export interface EventDetail extends EventRow {
+  summary: string | null;
+  messages: Array<{
+    id: string;
+    body: string;
+    createdAt: string;
+    mine: boolean;
+    author: { id: string; name: string; anon: boolean };
+  }>;
 }
 
 export interface PersonCard {
@@ -350,6 +561,21 @@ export const GP_INPUT =
    through its title and its aria-label, not through long words */
 export const GP_ICON_BTN =
   "focus-glow flex shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428] disabled:opacity-50";
+
+/* the evidence label as a small wearable chip */
+export function EvidenceChip({ level }: { level: string }) {
+  if (!isEvidenceLevel(level)) return null;
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center rounded-full border bg-white/60 px-2 py-0.5 text-[9.5px] font-semibold uppercase tracking-[0.08em]",
+        EVIDENCE_STYLE[level]
+      )}
+    >
+      {EVIDENCE_LABEL[level]}
+    </span>
+  );
+}
 
 /* an empty room speaks honestly */
 export function EmptyRoom({

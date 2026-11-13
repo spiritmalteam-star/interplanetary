@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
+import { rateLimit } from "@/lib/server/rate-limit";
 import { networkName, notify, wallIdsFor } from "@/lib/server/network";
 
 /* ------------------------------------------------------------------ */
@@ -9,6 +10,7 @@ import { networkName, notify, wallIdsFor } from "@/lib/server/network";
 /*  Resonance is a tuning, not a trophy: one touch strikes it, the     */
 /*  same touch takes it back. No counter races — the hall's counts     */
 /*  are read from the truth (the resonance table) after the move.      */
+/*  The flood-gates stop bursts, not people.                           */
 /* ------------------------------------------------------------------ */
 export async function POST(
   req: NextRequest,
@@ -17,6 +19,17 @@ export async function POST(
   try {
     const { id } = await params;
     const visitor = await resolveVisitor(req);
+
+    const flood = rateLimit(`gathering:resonate:${visitor.user.id}`, {
+      limit: 40,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!flood.ok) {
+      return NextResponse.json(
+        { error: "The hall asks for a breath — tune again in a moment." },
+        { status: 429, headers: { "Retry-After": String(flood.retryAfterSec) } }
+      );
+    }
 
     const post = await db.gatheringPost.findUnique({
       where: { id },

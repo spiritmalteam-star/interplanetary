@@ -6,6 +6,8 @@ import { Eye, Film, ImagePlus, Loader2, Send, X } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
+  EVIDENCE_LABEL,
+  EVIDENCE_LEVELS,
   KIND_META,
   KIND_OFFERING_LABEL,
   KIND_ORDER,
@@ -27,6 +29,16 @@ import {
 
 const IMAGE_MAX = 8 * 1024 * 1024; // 8 MB
 const VIDEO_MAX = 48 * 1024 * 1024; // 48 MB
+
+/* the kinds that may honestly wear an evidence label */
+const EPISTEMIC_KINDS: string[] = [
+  "discovery",
+  "finding",
+  "hypothesis",
+  "experiment",
+  "question",
+  "discussion",
+];
 
 /* a large picture is woven down before the climb — smaller to carry,
    just as honest to look at; gifs keep their motion untouched */
@@ -69,6 +81,7 @@ export default function ComposerForm({
   const [body, setBody] = useState("");
   const [sector, setSector] = useState("");
   const [tags, setTags] = useState("");
+  const [epistemic, setEpistemic] = useState("");
   const [circleId, setCircleId] = useState<string>("");
   const [media, setMedia] = useState<{ url: string; type: string; name: string | null } | null>(
     null
@@ -136,6 +149,7 @@ export default function ComposerForm({
           kind,
           title: title.trim(),
           body: body.trim(),
+          ...(EPISTEMIC_KINDS.includes(kind) && epistemic ? { epistemic } : {}),
           ...(sector.trim() ? { sector: sector.trim() } : {}),
           ...(tags.trim() ? { tags: tags.trim() } : {}),
           ...(circleId ? { circleId } : {}),
@@ -146,6 +160,7 @@ export default function ComposerForm({
       setBody("");
       setSector("");
       setTags("");
+      setEpistemic("");
       setMedia(null);
       setPreview(false);
       onHung(data.post);
@@ -154,7 +169,7 @@ export default function ComposerForm({
     } finally {
       setSending(false);
     }
-  }, [canHang, kind, title, body, sector, tags, circleId, media, onHung, t]);
+  }, [canHang, kind, title, body, sector, tags, epistemic, circleId, media, onHung, t]);
 
   const meta =
     KIND_META[(kind as keyof typeof KIND_META) in KIND_META ? (kind as keyof typeof KIND_META) : "reflection"];
@@ -229,6 +244,35 @@ export default function ComposerForm({
           );
         })}
       </div>
+
+      {/* the knowledge distinction — only where an honest label can land */}
+      {EPISTEMIC_KINDS.includes(kind) && (
+        <div className="mt-3">
+          <label
+            htmlFor="composer-epistemic"
+            className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]"
+          >
+            {t("the knowledge distinction")}
+          </label>
+          <select
+            id="composer-epistemic"
+            value={epistemic}
+            onChange={(e) => setEpistemic(e.target.value)}
+            data-testid="gath-composer-epistemic"
+            className={cn(GP_INPUT, "mt-1.5")}
+          >
+            <option value="">{t("Label this honestly — optional")}</option>
+            {EVIDENCE_LEVELS.map((lv) => (
+              <option key={lv} value={lv}>
+                {t(EVIDENCE_LABEL[lv])}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-[10px] text-[#a2947c]">
+            {t("Nothing is called verified because people agreed with it.")}
+          </p>
+        </div>
+      )}
 
       <input
         value={title}
