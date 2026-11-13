@@ -156,7 +156,7 @@ export default function MirrorAssistant({
             data-testid="gath-assistant-panel"
             className={cn(
               GP_CARD,
-              "fixed right-4 z-40 flex max-h-[60vh] w-[min(92vw,380px)] flex-col overflow-hidden shadow-xl transition-[bottom] duration-300 sm:right-6",
+              "fixed right-4 z-40 flex max-h-[64vh] w-[min(92vw,380px)] flex-col overflow-hidden shadow-xl transition-[bottom] duration-300 sm:right-6",
               radioOpen ? "bottom-[260px] lg:bottom-[148px]" : "bottom-[148px]"
             )}
           >
@@ -181,15 +181,16 @@ export default function MirrorAssistant({
               </button>
             </div>
 
-            {/* the quick hands */}
-            <div className="grid grid-cols-2 gap-2 px-4 py-3">
+            {/* the quick hands — one quiet scrollable line, so the
+                conversation itself stays in sight */}
+            <div className="gp-scroll flex shrink-0 gap-1.5 overflow-x-auto px-4 py-2.5">
               {QUICK_HANDS.map((q) => (
                 <button
                   key={q.action}
                   type="button"
                   onClick={() => quick(q.action)}
                   disabled={thinking}
-                  className={cn(GP_GHOST, "px-2 py-1.5 text-[11px]")}
+                  className={cn(GP_GHOST, "shrink-0 whitespace-nowrap px-3 py-1.5 text-[11px]")}
                   data-testid={`gath-assistant-act-${q.action}`}
                 >
                   {t(q.label)}

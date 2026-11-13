@@ -577,16 +577,26 @@ export function EvidenceChip({ level }: { level: string }) {
   );
 }
 
-/* an empty room speaks honestly */
+/* an empty room speaks honestly — and, when the room can receive a
+   hand, it offers its labeled doors: actions appear where the eye
+   already rests, never as a permanent row of mute buttons */
 export function EmptyRoom({
   icon: Icon,
   line,
+  actions,
 }: {
   icon: LucideIcon;
   line: string;
+  actions?: Array<{
+    key?: string;
+    label: string;
+    icon: LucideIcon;
+    onClick: () => void;
+    primary?: boolean;
+  }>;
 }) {
   return (
-    <div className="flex flex-col items-center gap-3 py-16 text-center">
+    <div className="flex flex-col items-center gap-3 py-12 text-center">
       <span
         aria-hidden="true"
         className="gp-pearl flex size-12 items-center justify-center rounded-[16px] border border-white/90"
@@ -600,6 +610,28 @@ export function EmptyRoom({
       <p className="max-w-[420px] font-[family-name:var(--font-literata)] text-[13.5px] italic leading-[1.85] text-[#8a7c64]">
         {line}
       </p>
+      {actions && actions.length > 0 && (
+        <div className="mt-1 flex max-w-[460px] flex-wrap items-center justify-center gap-2">
+          {actions.map((a, i) => {
+            const AIcon = a.icon;
+            return (
+              <button
+                key={a.key ?? a.label}
+                type="button"
+                onClick={a.onClick}
+                data-testid={i === 0 ? "gath-empty-primary" : undefined}
+                className={cn(
+                  a.primary ? GP_HAND : GP_GHOST,
+                  "min-h-[40px] px-4 py-2 text-[12px]"
+                )}
+              >
+                <AIcon className="size-3.5" aria-hidden="true" />
+                {a.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

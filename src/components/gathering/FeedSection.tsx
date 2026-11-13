@@ -286,7 +286,7 @@ function OfferingTile({
         </div>
       </div>
 
-      <h3 className="mt-3 font-[family-name:var(--font-literata)] text-[15px] font-semibold leading-snug text-[#3d3428] [overflow-wrap:anywhere]">
+      <h3 className="mt-2.5 font-[family-name:var(--font-literata)] text-[15px] font-semibold leading-snug text-[#3d3428] [overflow-wrap:anywhere]">
         {post.title}
       </h3>
       <p className="mt-1.5 line-clamp-3 text-[12.5px] leading-[1.65] text-[#7c715f] [overflow-wrap:anywhere]">
@@ -312,7 +312,7 @@ function OfferingTile({
         </div>
       )}
 
-      <div className="mt-auto flex items-center justify-between gap-2 pt-4">
+      <div className="mt-auto flex items-center justify-between gap-2 pt-3.5">
         <div className="flex min-w-0 items-center gap-2">
           <MakerMark name={post.author.name} size={26} />
           <div className="min-w-0">
@@ -1489,6 +1489,8 @@ export default function FeedSection({
   active,
   circles,
   refreshSignal = 0,
+  composeIntent = null,
+  onComposeConsumed,
   onMeetSomeone,
   onPublishWork,
   onWeaveFrom,
@@ -1498,6 +1500,8 @@ export default function FeedSection({
   active: boolean;
   circles: CircleCard[];
   refreshSignal?: number;
+  composeIntent?: { kind: string; n: number } | null;
+  onComposeConsumed?: () => void;
   onMeetSomeone: () => void;
   onPublishWork: () => void;
   onWeaveFrom: (post: GatheringPost) => void;
@@ -1688,6 +1692,24 @@ export default function FeedSection({
     setComposerOpen(true);
   }, []);
 
+  /* the create sheet's hand — a beginning carried from the crown:
+     the composer unfolds once, then the intent is consumed. The
+     update is deferred out of the effect body so renders never
+     cascade. */
+  const lastComposeRef = useRef(0);
+  useEffect(() => {
+    const n = composeIntent?.n ?? 0;
+    if (!composeIntent || n <= lastComposeRef.current) return;
+    lastComposeRef.current = n;
+    const kind = composeIntent.kind;
+    const consume = onComposeConsumed;
+    const id = window.setTimeout(() => {
+      openComposer(kind);
+      consume?.();
+    }, 0);
+    return () => window.clearTimeout(id);
+  }, [composeIntent, openComposer, onComposeConsumed]);
+
   const streamIndexRef = useRef(0);
   const streamRef = useRef<HTMLDivElement>(null);
   const openInStream = useCallback((index: number) => {
@@ -1727,40 +1749,76 @@ export default function FeedSection({
     []
   );
 
-  /* THE THREE HANDS — the first screen's natural doors.
-     The second hand publishes: creation itself stays in the house's
-     rooms (ArtX, Music, Book, HyperX, a transmission's line) — the
-     hall carries finished works, it does not make them. */
-  const threeHands: Array<{ key: string; label: string; icon: LucideIcon; run: () => void }> = [
-    { key: "reflection", label: "Share a reflection", icon: Feather, run: () => openComposer("reflection") },
+  /* THE THREE DOORS OF THE EMPTY HALL — the first screen's natural
+     openings. They stand where the eye already rests: in the quiet
+     room itself, as labeled words a hand can trust — never as a
+     permanent row of mute buttons crowding the stream. */
+  const hallDoors: Array<{
+    key: string;
+    label: string;
+    icon: LucideIcon;
+    run: () => void;
+    primary?: boolean;
+  }> = [
+    { key: "reflection", label: "Share a reflection", icon: Feather, run: () => openComposer("reflection"), primary: true },
     { key: "creation", label: "Publish a work", icon: Sparkles, run: onPublishWork },
     { key: "meet", label: "Meet someone", icon: Users, run: onMeetSomeone },
   ];
+
+  const emptyDoors = hallDoors.map(({ key, label, icon, run, primary }) => ({
+    key,
+    label: t(label),
+    icon,
+    onClick: run,
+    primary,
+  }));
 
   const feedList = view === "mine" ? mine : hall;
 
   return (
     <div className="relative flex h-full flex-col">
-      {/* ---------- the three hands and the four currents, one quiet crown ---------- */}
-      <div className="mx-auto w-full max-w-[1200px] shrink-0 px-3 pt-2.5 sm:px-6 sm:pt-3" data-testid="gathering-three-hands">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {threeHands.map(({ key, label, icon: Icon, run }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={run}
-                aria-label={t(label)}
-                title={t(label)}
-                data-testid={`gathering-hand-${key}`}
-                className="gp-card gp-card-hover focus-glow flex size-10 items-center justify-center rounded-full outline-none"
-              >
-                <Icon className="size-4 text-[#a16207]" aria-hidden="true" />
-              </button>
-            ))}
+      {/* ---------- one quiet crown: the three walls and the four currents ---------- */}
+      {/* Every word readable on the palm — no mute icon rows; the whole
+          line scrolls sideways when the screen is narrow. */}
+      <div className="mx-auto w-full max-w-[1200px] shrink-0 px-3 pt-2 sm:px-6 sm:pt-3" data-testid="gathering-three-hands">
+        <div className="gp-scroll flex items-center gap-2 overflow-x-auto pb-0.5">
+          <div
+            role="tablist"
+            aria-label={t("The Gathering")}
+            className="gp-seg flex shrink-0 items-center gap-0.5 rounded-full border border-white/80 bg-white/45 p-1"
+          >
+            {views.map((v) => {
+              const VIcon = v.icon;
+              const on = view === v.key;
+              return (
+                <button
+                  key={v.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => setView(v.key)}
+                  data-testid={`gp-view-${v.key}`}
+                  className={cn(
+                    "focus-glow relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-300 sm:px-3.5",
+                    on ? "text-[#5c5344]" : "text-[#a2947c] hover:text-[#7c715f]"
+                  )}
+                >
+                  {on && (
+                    <motion.span
+                      layoutId="gp-seg-thumb"
+                      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                      className="gp-seg-thumb absolute inset-0 rounded-full"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <VIcon className="relative size-3.5" aria-hidden="true" />
+                  <span className="relative whitespace-nowrap">{t(v.label)}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* the four currents — beside the hands, gone when mine keeps its wall */}
+          {/* the four currents — gone when mine keeps its own wall */}
           {view !== "mine" && (
             <div
               role="tablist"
@@ -1792,7 +1850,7 @@ export default function FeedSection({
                       />
                     )}
                     <CIcon className="relative size-3.5" aria-hidden="true" />
-                    <span className="relative hidden sm:inline">{t(c.label)}</span>
+                    <span className="relative whitespace-nowrap">{t(c.label)}</span>
                   </button>
                 );
               })}
@@ -1800,44 +1858,8 @@ export default function FeedSection({
           )}
         </div>
 
-        {/* the hall's own segmented pill + intention chips */}
-        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
-          <div
-            role="tablist"
-            aria-label={t("The Gathering")}
-            className="gp-seg flex shrink-0 items-center gap-0.5 rounded-full border border-white/80 bg-white/45 p-1"
-          >
-            {views.map((v) => {
-              const VIcon = v.icon;
-              const on = view === v.key;
-              return (
-                <button
-                  key={v.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={on}
-                  onClick={() => setView(v.key)}
-                  data-testid={`gp-view-${v.key}`}
-                  className={cn(
-                    "focus-glow relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-300 sm:px-3.5",
-                    on ? "text-[#5c5344]" : "text-[#a2947c] hover:text-[#7c715f]"
-                  )}
-                >
-                  {on && (
-                    <motion.span
-                      layoutId="gp-seg-thumb"
-                      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                      className="gp-seg-thumb absolute inset-0 rounded-full"
-                      aria-hidden="true"
-                    />
-                  )}
-                  <VIcon className="relative size-3.5" aria-hidden="true" />
-                  <span className="relative hidden sm:inline">{t(v.label)}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="gp-scroll flex max-w-full items-center gap-1.5 overflow-x-auto pb-0.5">
+        {/* the hall's intention chips — one scrollable line */}
+        <div className="gp-scroll mt-2 flex max-w-full items-center gap-1.5 overflow-x-auto pb-0.5">
             <button
               type="button"
               onClick={() => chooseKind(null)}
@@ -1873,7 +1895,6 @@ export default function FeedSection({
                 </button>
               );
             })}
-          </div>
         </div>
       </div>
 
@@ -1894,6 +1915,7 @@ export default function FeedSection({
                 line={t(
                   "The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question."
                 )}
+                actions={emptyDoors}
               />
             </div>
           ) : (
@@ -1944,9 +1966,10 @@ export default function FeedSection({
                   icon={LayoutGrid}
                   line={
                     view === "mine"
-                      ? t("You have not hung anything yet — the offering line above waits for your first stone.")
+                      ? t("You have not hung anything yet — the quiet walls below wait for your first stone.")
                       : t("The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question.")
                   }
+                  actions={view === "mine" ? emptyDoors.slice(0, 2) : emptyDoors}
                 />
               </div>
             ) : (

@@ -183,11 +183,18 @@ const TYPE_META: Record<string, { icon: LucideIcon; accent: string }> = {
   invention: { icon: Compass, accent: "#a16207" },
 };
 
+/* the epistemic dress — every honest label of the evidence ladder
+   finds a garment here; unknown labels fall back to interpretation
+   so no card can ever fail to clothe itself */
 const EPISTEMIC_DRESS: Record<string, { label: string; color: string; bg: string; edge: string }> = {
   established: { label: "Established", color: "#0f766e", bg: "#eef7f4", edge: "#bcdcd6" },
+  preliminary: { label: "Preliminary", color: "#0d9488", bg: "#eff8f6", edge: "#c2e0da" },
   hypothesis: { label: "Hypothesis", color: "#9a5b21", bg: "#faf1e4", edge: "#e5d2b4" },
+  personal: { label: "Personal", color: "#8a6f46", bg: "#faf5e6", edge: "#e3d4ae" },
+  philosophical: { label: "Philosophical", color: "#9a6b8a", bg: "#f7f1f5", edge: "#dfc9d6" },
   interpretation: { label: "Interpretation", color: "#7c5cad", bg: "#f3eef9", edge: "#d6c8e8" },
   creative: { label: "Creative", color: "#a16207", bg: "#faf5e6", edge: "#e3d4ae" },
+  disputed: { label: "Disputed", color: "#b45309", bg: "#fdf1e7", edge: "#e8c9b4" },
 };
 
 const CONTENT_TYPES = ["", "artwork", "music", "book", "research", "transmission", "invention"];
@@ -891,7 +898,7 @@ export default function DiscoverSection({
   /* the knowledge card stands apart — its label is the point, and it
      too opens whole in the reader */
   function knowledgeCard(k: DiscoverKnowledge) {
-    const dress = EPISTEMIC_DRESS[k.epistemicLabel ?? "interpretation"];
+    const dress = EPISTEMIC_DRESS[k.epistemicLabel ?? "interpretation"] ?? EPISTEMIC_DRESS.interpretation;
     return (
       <article
         key={k.id}

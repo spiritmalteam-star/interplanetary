@@ -22,6 +22,19 @@ import { networkName, wallIdsFor } from "@/lib/server/network";
 
 const TAKE_MAX = 48;
 
+/* the knowledge filter accepts every honest label of the evidence
+   ladder — the same vocabulary the hall's own walls speak */
+const EPISTEMIC_FILTERS = [
+  "established",
+  "preliminary",
+  "hypothesis",
+  "personal",
+  "philosophical",
+  "interpretation",
+  "creative",
+  "disputed",
+];
+
 function cleanTake(url: URL): number {
   const n = Number(url.searchParams.get("take") ?? 18);
   return Math.min(TAKE_MAX, Math.max(3, Number.isFinite(n) ? Math.floor(n) : 18));
@@ -410,7 +423,7 @@ export async function GET(req: NextRequest) {
         where: {
           status: "published",
           epistemic: { not: null },
-          ...(epistemic && ["established", "hypothesis", "interpretation", "creative"].includes(epistemic) ? { epistemic } : {}),
+          ...(epistemic && EPISTEMIC_FILTERS.includes(epistemic) ? { epistemic } : {}),
           OR: [
             { visibility: "public" },
             { visibility: "connections", userId: { in: [userId, ...connIds] } },

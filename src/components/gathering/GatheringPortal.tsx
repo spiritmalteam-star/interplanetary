@@ -399,6 +399,13 @@ export default function GatheringPortal() {
      stream to read itself again, so the hall and the map agree */
   const [atlasSignal, setAtlasSignal] = useState(0);
 
+  /* the compose intent — the create sheet's labeled doors carry a
+     beginning into the hall: the section arrives first, then the
+     composer unfolds on top of it (never a dead end). The counter
+     makes every knock distinct, even the same door twice. */
+  const [composeIntent, setComposeIntent] = useState<{ kind: string; n: number } | null>(null);
+  const composeNRef = useRef(0);
+
   /* the publication picker — the hall's only creation-adjacent door, */
   /* and it creates nothing: it carries finished works in */
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -739,6 +746,8 @@ export default function GatheringPortal() {
                 active
                 circles={circles}
                 refreshSignal={atlasSignal}
+                composeIntent={composeIntent}
+                onComposeConsumed={() => setComposeIntent(null)}
                 onMeetSomeone={() => goSection("encounters")}
                 onPublishWork={() => setPickerOpen(true)}
                 onWeaveFrom={(post) => {
@@ -821,7 +830,7 @@ export default function GatheringPortal() {
                 />
                 <span
                   className={cn(
-                    "text-[9.5px] font-semibold",
+                    "whitespace-nowrap text-[9.5px] font-semibold",
                     on ? "text-[#5c5344]" : "text-[#a2947c]"
                   )}
                 >
@@ -857,7 +866,7 @@ export default function GatheringPortal() {
               )}
               aria-hidden="true"
             />
-            <span className={cn("text-[9.5px] font-semibold", createOpen ? "text-[#5c5344]" : "text-[#a2947c]")}>
+            <span className={cn("whitespace-nowrap text-[9.5px] font-semibold", createOpen ? "text-[#5c5344]" : "text-[#a2947c]")}>
               {t("Create")}
             </span>
           </button>
@@ -893,7 +902,15 @@ export default function GatheringPortal() {
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => goSection("gathering")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
+              <button
+                type="button"
+                onClick={() => {
+                  goSection("gathering");
+                  composeNRef.current += 1;
+                  setComposeIntent({ kind: "reflection", n: composeNRef.current });
+                }}
+                className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}
+              >
                 <Waypoints className="size-4 text-[#8a6f46]" aria-hidden="true" />
                 {t("Share a reflection")}
               </button>
