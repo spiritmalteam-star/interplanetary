@@ -92,6 +92,21 @@ const nextConfig: NextConfig = {
         source: "/(.*)",
         headers: securityHeaders,
       },
+      {
+        /* THE FRESH DOCUMENT LAW — the page's own shell never rests in
+           a cache: every visit re-fetches the one document, so a wrapped
+           webview (Instagram and its siblings) or a stubborn phone cache
+           can never serve a stale house again. The paintings and chunks
+           keep their own immutable names — only the shell is told to
+           always come home fresh. */
+        source: "/",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "no-store, max-age=0, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 };
