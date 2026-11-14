@@ -3,21 +3,34 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Atom,
+  Bookmark,
   BookOpen,
+  CalendarClock,
   ChevronDown,
+  CircleQuestionMark,
   Compass,
   Feather,
+  FlaskConical,
+  Flame,
   Globe2,
   Handshake,
+  LayoutGrid,
   Library,
   Loader2,
+  Map as MapIcon,
+  MessagesSquare,
   Music,
+  Play,
+  ScrollText,
   Search,
+  Settings2,
   SlidersHorizontal,
   Sparkles,
   UserPlus,
+  UserRound,
   Users,
   UserCheck,
+  Waypoints,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -199,12 +212,39 @@ const EPISTEMIC_DRESS: Record<string, { label: string; color: string; bg: string
 
 const CONTENT_TYPES = ["", "artwork", "music", "book", "research", "transmission", "invention"];
 
+/* THE ROOMS' OWN NAMES — a quiet local map so the every-room grid
+   reads its labels without reaching into the portal (no circular
+   imports between rooms). */
+const ROOMS: Record<string, { label: string; icon: LucideIcon }> = {
+  gathering: { label: "The Pulse", icon: Waypoints },
+  possibilities: { label: "Possibilities", icon: Play },
+  mirror: { label: "Mirror Laboratory", icon: Sparkles },
+  questions: { label: "Living Questions", icon: CircleQuestionMark },
+  circles: { label: "Resonance Circles", icon: Users },
+  laboratory: { label: "The Laboratory", icon: FlaskConical },
+  library: { label: "Creation Commons", icon: Library },
+  collaborate: { label: "Workshops", icon: LayoutGrid },
+  intentions: { label: "Collective Intentions", icon: Flame },
+  live: { label: "Gather Live", icon: CalendarClock },
+  encounters: { label: "Connections", icon: Sparkles },
+  messages: { label: "Messages", icon: MessagesSquare },
+  saved: { label: "Saved", icon: Bookmark },
+  myspace: { label: "My Space", icon: UserRound },
+  settings: { label: "Settings", icon: Settings2 },
+  guidelines: { label: "Guidelines", icon: ScrollText },
+};
+type RoomDef = { label: string; icon: LucideIcon };
+
 export default function DiscoverSection({
   active,
   onOpenMessages: _onOpenMessages,
+  onOpenAtlas,
+  onOpenRoom,
 }: {
   active: boolean;
   onOpenMessages: () => void;
+  onOpenAtlas: () => void;
+  onOpenRoom: (section: string) => void;
 }) {
   const t = useT();
   const [dest, setDest] = useState<Dest>("for-you");
@@ -557,6 +597,69 @@ export default function DiscoverSection({
     if (dest === "for-you" && forYou) {
       return (
         <div className="space-y-8" data-testid="discover-for-you">
+          {/* THE EVERY ROOM GRID — the crown carries no buttons, so
+              Discover keeps every room's door: one labeled grid where
+              the whole network is a touch away. The atlas stands
+              beside it — the world's shores, where an intention is
+              spoken for a specific region. */}
+          <section aria-label={t("Every room of the gathering")} data-testid="discover-rooms">
+            <SectionHead label="Every room of the gathering" />
+            <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              {[
+                "gathering",
+                "possibilities",
+                "mirror",
+                "questions",
+                "laboratory",
+                "circles",
+                "intentions",
+                "live",
+                "collaborate",
+                "library",
+                "encounters",
+                "messages",
+                "saved",
+                "myspace",
+                "settings",
+                "guidelines",
+              ].map((key) => {
+                const room = (ROOMS as Record<string, RoomDef>)[key];
+                if (!room) return null;
+                const RIcon = room.icon;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => onOpenRoom(key)}
+                    data-testid={`discover-room-${key}`}
+                    className="focus-glow flex items-center gap-2 rounded-[14px] border border-[#e8dfc9] bg-white/55 px-2.5 py-2 text-left transition-all duration-300 hover:border-[#d3c39c] hover:bg-white/75"
+                  >
+                    <RIcon className="size-3.5 shrink-0 text-[#a16207]" aria-hidden="true" />
+                    <span className="truncate text-[11px] font-semibold text-[#5c5344]">
+                      {t(room.label)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={onOpenAtlas}
+              data-testid="discover-atlas-row"
+              className="focus-glow mt-1.5 flex w-full items-center gap-2.5 rounded-[14px] border border-[#e8dfc9] bg-white/55 px-3 py-2.5 text-left transition-all duration-300 hover:border-[#d3c39c] hover:bg-white/75"
+            >
+              <MapIcon className="size-4 shrink-0 text-[#0d9488]" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[12px] font-semibold text-[#5c5344]">
+                  {t("The region atlas — localize an intention")}
+                </span>
+                <span className="mono-label block text-[8px] uppercase tracking-[0.18em] text-[#a2947c]">
+                  {t("seven shores of the living earth")}
+                </span>
+              </span>
+            </button>
+          </section>
+
           {/* the tuning hand */}
           <div className="gp-card flex flex-wrap items-center gap-2 rounded-[18px] p-3.5">
             <SlidersHorizontal className="size-4 shrink-0 text-[#8a6f46]" aria-hidden="true" />

@@ -18,6 +18,7 @@ import {
   FlaskConical,
   Flame,
   LayoutGrid,
+  Library,
   Loader2,
   MessageCircle,
   Play,
@@ -1737,16 +1738,6 @@ export default function FeedSection({
     streamIndexRef.current = 0;
   }, [view]);
 
-  const views: Array<{ key: "gallery" | "stream" | "mine"; label: string; icon: LucideIcon }> =
-    useMemo(
-      () => [
-        { key: "gallery", label: "Gallery", icon: LayoutGrid },
-        { key: "stream", label: "Stream", icon: Play },
-        { key: "mine", label: "My offerings", icon: User },
-      ],
-      []
-    );
-
   /* THE FOUR CURRENTS — the hall reads itself four ways */
   const currents: Array<{ key: FeedTab; label: string; icon: LucideIcon }> = useMemo(
     () => [
@@ -1786,46 +1777,13 @@ export default function FeedSection({
 
   return (
     <div className="relative flex h-full flex-col">
-      {/* ---------- one quiet crown: the three walls and the four currents ---------- */}
-      {/* Every word readable on the palm — no mute icon rows; the whole
-          line scrolls sideways when the screen is narrow. */}
+      {/* ---------- one quiet crown: the four currents, one row ---------- */}
+      {/* THE CLEAN SOCIAL LAW — the hall's top carries only the currents:
+          the views have left the crown (the possibilities realm is the
+          middle street at the foot, my offerings live in My Space), and
+          the intention chips ride beneath as the feed's own filter strip. */}
       <div className="mx-auto w-full max-w-[1200px] shrink-0 px-3 pt-2 sm:px-6 sm:pt-3" data-testid="gathering-three-hands">
-        <div className="gp-scroll flex items-center gap-2 overflow-x-auto pb-0.5">
-          <div
-            role="tablist"
-            aria-label={t("The Gathering")}
-            className="gp-seg flex shrink-0 items-center gap-0.5 rounded-full border border-white/80 bg-white/45 p-1"
-          >
-            {views.map((v) => {
-              const VIcon = v.icon;
-              const on = view === v.key;
-              return (
-                <button
-                  key={v.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={on}
-                  onClick={() => setView(v.key)}
-                  data-testid={`gp-view-${v.key}`}
-                  className={cn(
-                    "focus-glow relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-300 sm:px-3.5",
-                    on ? "text-[#5c5344]" : "text-[#a2947c] hover:text-[#7c715f]"
-                  )}
-                >
-                  {on && (
-                    <motion.span
-                      layoutId="gp-seg-thumb"
-                      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                      className="gp-seg-thumb absolute inset-0 rounded-full"
-                      aria-hidden="true"
-                    />
-                  )}
-                  <VIcon className="relative size-3.5" aria-hidden="true" />
-                  <span className="relative whitespace-nowrap">{t(v.label)}</span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="gp-scroll flex items-center justify-center gap-2 overflow-x-auto pb-0.5">
 
           {/* the four currents — gone when mine keeps its own wall */}
           {view !== "mine" && (
@@ -1951,6 +1909,32 @@ export default function FeedSection({
           )
         ) : (
           <>
+            {/* THE FEED'S OWN BEGINNINGS — two labeled words riding the
+                content, not the crown: one opens the composer, one
+                carries a finished work in. */}
+            <div className="mx-auto w-full max-w-[1200px] px-0 pt-3" data-testid="gath-begin-row">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openComposer("reflection")}
+                  data-testid="gath-begin-reflection"
+                  className={cn(GP_GHOST, "min-w-0 flex-1 justify-start py-2.5 text-[12.5px] font-medium")}
+                >
+                  <Feather className="size-4 shrink-0 text-[#8a6f46]" aria-hidden="true" />
+                  <span className="truncate">{t("Share a reflection…")}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onPublishWork}
+                  data-testid="gath-begin-publish"
+                  aria-label={t("Publish a work")}
+                  title={t("Publish a work")}
+                  className={cn(GP_GHOST, "shrink-0 px-3 py-2.5")}
+                >
+                  <Library className="size-4 text-[#a16207]" aria-hidden="true" />
+                </button>
+              </div>
+            </div>
             {feedList.loading ? (
               <div className="mx-auto max-w-[1200px]">
                 <p className="flex items-center justify-center gap-2 py-24 text-[13.5px] text-[#a2947c]">

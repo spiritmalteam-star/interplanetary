@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Feather, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  Bell,
+  Bookmark,
+  Feather,
+  Flame,
+  Library,
+  Loader2,
+  Music4,
+  ScrollText,
+  Settings2,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import {
@@ -30,11 +43,31 @@ import {
 export default function MySpaceSection({
   active,
   me,
+  unread = 0,
   onEditProfile,
+  onOpenNotifications,
+  onOpenSaved,
+  onOpenSettings,
+  onOpenGuidelines,
+  onOpenLibrary,
+  onPublishWork,
+  onToggleRadio,
+  radioOpen = false,
+  onReturnHome,
 }: {
   active: boolean;
   me: MeState | null;
+  unread?: number;
   onEditProfile: () => void;
+  onOpenNotifications: () => void;
+  onOpenSaved: () => void;
+  onOpenSettings: () => void;
+  onOpenGuidelines: () => void;
+  onOpenLibrary: () => void;
+  onPublishWork: () => void;
+  onToggleRadio: () => void;
+  radioOpen?: boolean;
+  onReturnHome: () => void;
 }) {
   const t = useT();
   const [posts, setPosts] = useState<GatheringPost[] | null>(null);
@@ -118,6 +151,72 @@ export default function MySpaceSection({
     <div className="gp-scroll h-full overflow-y-auto overscroll-y-contain pb-24">
       <div className="mx-auto max-w-[860px] px-4 pt-4 sm:px-6 sm:pt-6">
         <RoomLabel>{t("the gathering · my space")}</RoomLabel>
+
+        {/* ---------- the quiet hands — every room function, one labeled
+            row each: the crown carries no buttons, so My Space keeps
+            the house's small doors. Each row reads its own name; no
+            mute icons, no guesswork. ---------- */}
+        <div
+          className={cn(GP_CARD, "mt-2.5 overflow-hidden")}
+          data-testid="gath-me-hands"
+        >
+          <HandRow
+            icon={<Bell className="size-4" aria-hidden="true" />}
+            label={t("The bell — every ring a real row")}
+            testId="gath-me-bell"
+            onClick={onOpenNotifications}
+            badge={unread > 0 ? (unread > 9 ? "9+" : String(unread)) : null}
+          />
+          <HandRow
+            icon={<Bookmark className="size-4" aria-hidden="true" />}
+            label={t("Saved — your quiet shelf")}
+            testId="gath-me-saved"
+            onClick={onOpenSaved}
+          />
+          <HandRow
+            icon={<Sparkles className="size-4" aria-hidden="true" />}
+            label={t("Publish a finished work")}
+            testId="gath-me-publish"
+            onClick={onPublishWork}
+          />
+          <HandRow
+            icon={<Library className="size-4" aria-hidden="true" />}
+            label={t("Creation Commons — the archive of finished work")}
+            testId="gath-me-library"
+            onClick={onOpenLibrary}
+          />
+          <HandRow
+            icon={<Music4 className="size-4" aria-hidden="true" />}
+            label={radioOpen ? t("The frequency radio — playing") : t("The frequency radio")}
+            testId="gath-me-radio"
+            onClick={onToggleRadio}
+            active={radioOpen}
+          />
+          <HandRow
+            icon={<UserRound className="size-4" aria-hidden="true" />}
+            label={t("Edit your introduction")}
+            testId="gath-me-edit"
+            onClick={onEditProfile}
+          />
+          <HandRow
+            icon={<Settings2 className="size-4" aria-hidden="true" />}
+            label={t("Settings — the bell's manners, the visibility")}
+            testId="gath-me-settings"
+            onClick={onOpenSettings}
+          />
+          <HandRow
+            icon={<ScrollText className="size-4" aria-hidden="true" />}
+            label={t("Guidelines — the trust this place runs on")}
+            testId="gath-me-guidelines"
+            onClick={onOpenGuidelines}
+          />
+          <HandRow
+            icon={<ArrowLeft className="size-4" aria-hidden="true" />}
+            label={t("Return to the house")}
+            testId="gath-me-return"
+            onClick={onReturnHome}
+          />
+        </div>
 
         {/* ---------- the presence ---------- */}
         <div className={cn(GP_CARD, "mt-2.5 p-6 text-center")} data-testid="gath-me-identity">
@@ -296,5 +395,55 @@ export default function MySpaceSection({
         )}
       </div>
     </div>
+  );
+}
+
+/* ---------- the quiet hand — one labeled row of My Space ---------- */
+function HandRow({
+  icon,
+  label,
+  onClick,
+  testId,
+  badge = null,
+  active = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  testId: string;
+  badge?: string | null;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-testid={testId}
+      className={cn(
+        "focus-glow flex w-full items-center gap-3 border-b border-[#e4d9bd]/55 px-4 py-3 text-left transition-colors duration-300 last:border-b-0 hover:bg-white/60",
+        active && "bg-white/70"
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "flex size-8 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/75",
+          active ? "text-[#a16207]" : "text-[#8a6f46]"
+        )}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-[#5c5344]">
+        {label}
+      </span>
+      {badge && (
+        <span
+          aria-hidden="true"
+          className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[#a16207] text-[9.5px] font-bold text-white"
+        >
+          {badge}
+        </span>
+      )}
+    </button>
   );
 }

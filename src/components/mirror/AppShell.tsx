@@ -278,12 +278,23 @@ function AppShellViews({
   useEffect(() => {
     const vv = window.visualViewport;
     if (!vv) return;
+    /* THE SANITY CLAMP — some wrapped browsers (Instagram's and other
+       in-app webviews) report absurd visual-viewport values: a zero or
+       near-zero height, or a scroll offset larger than the screen. A
+       trustful frame would collapse or drift off the screen — the
+       visitor sees the page open and never a working word of it. So
+       the frame only accepts sane numbers: the height never below 200
+       px (a real keyboard never takes more than that), and the lift
+       never more than the keyboard's own measure. The whole application
+       stays on the screen in every weather, and the keyboard still
+       buries nothing. */
     const apply = () => {
-      document.documentElement.style.setProperty("--app-h", `${vv.height}px`);
-      document.documentElement.style.setProperty(
-        "--app-shift",
-        `${vv.offsetTop}px`
-      );
+      const inner = window.innerHeight || vv.height;
+      const keyboard = Math.max(0, inner - vv.height);
+      const height = vv.height >= 200 ? vv.height : inner;
+      const shift = Math.min(Math.max(0, vv.offsetTop), Math.min(keyboard, 260));
+      document.documentElement.style.setProperty("--app-h", `${height}px`);
+      document.documentElement.style.setProperty("--app-shift", `${shift}px`);
     };
     apply();
     vv.addEventListener("resize", apply);

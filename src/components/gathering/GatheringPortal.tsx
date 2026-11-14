@@ -11,8 +11,6 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowLeft,
-  Bell,
   Bookmark,
   CalendarClock,
   CircleQuestionMark,
@@ -21,17 +19,14 @@ import {
   Flame,
   LayoutGrid,
   Library,
-  Map as MapIcon,
   MessagesSquare,
-  Music4,
-  PlusCircle,
+  Play,
   ScrollText,
   Settings2,
   Sparkles,
   UserRound,
   Users,
   Waypoints,
-  X,
   type LucideIcon,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
@@ -41,9 +36,6 @@ import {
   type CircleCard,
   type GatheringPost,
   type MeState,
-  GP_GHOST,
-  GP_ICON_BTN,
-  MakerMark,
   netFetch,
 } from "./shared";
 import MirrorAssistant from "./MirrorAssistant";
@@ -105,6 +97,12 @@ const MirrorLaboratory = dynamic(() => import("./MirrorLaboratory"), {
   ssr: false,
   loading: () => <SectionLoading />,
 });
+/* THE POSSIBILITIES REALM — the middle street: every work the house
+   has published, one full screen at a time, walked like a story */
+const PossibilitiesRealm = dynamic(() => import("./PossibilitiesRealm"), {
+  ssr: false,
+  loading: () => <SectionLoading />,
+});
 /* the overlays and the radio bar ride on their own doors too */
 const ProfileSheet = dynamic(() => import("./ProfileSheet"), { ssr: false });
 const NotificationsSheet = dynamic(() => import("./NotificationsSheet"), { ssr: false });
@@ -159,6 +157,7 @@ type Section =
   | "gathering"
   | "mirror"
   | "discover"
+  | "possibilities"
   | "questions"
   | "circles"
   | "laboratory"
@@ -179,6 +178,7 @@ const ROOMS: Record<Section, RoomDef> = {
   gathering: { key: "gathering", label: "The Pulse", icon: Waypoints },
   mirror: { key: "mirror", label: "Mirror Laboratory", icon: Sparkles },
   discover: { key: "discover", label: "Discover", icon: Compass },
+  possibilities: { key: "possibilities", label: "Possibilities", icon: Play },
   questions: { key: "questions", label: "Living Questions", icon: CircleQuestionMark },
   circles: { key: "circles", label: "Resonance Circles", icon: Users },
   laboratory: { key: "laboratory", label: "The Laboratory", icon: FlaskConical },
@@ -194,11 +194,11 @@ const ROOMS: Record<Section, RoomDef> = {
   guidelines: { key: "guidelines", label: "Guidelines", icon: ScrollText },
 };
 
-/* the rail reads in quiet groups — the four primary destinations
-   (Laboratory, Discover, Connections, My Space) lead the walk, the
-   pulse stays the arrival, and every other room keeps its door */
+/* the rail reads in quiet groups — the possibilities realm stands
+   beside the pulse, discover and connect lead the walk, and every
+   other room keeps its door */
 const RAIL_GROUPS: Array<{ label: string; rooms: Section[] }> = [
-  { label: "the pulse", rooms: ["gathering"] },
+  { label: "the pulse", rooms: ["gathering", "possibilities"] },
   { label: "the laboratory", rooms: ["mirror"] },
   { label: "discover", rooms: ["discover", "questions", "laboratory"] },
   { label: "together", rooms: ["circles", "intentions", "live", "collaborate"] },
@@ -207,9 +207,11 @@ const RAIL_GROUPS: Array<{ label: string; rooms: Section[] }> = [
   { label: "you", rooms: ["saved", "myspace", "settings", "guidelines"] },
 ];
 
-/* the five streets that ride the palm's bottom — the Laboratory
-   walks beside the pulse, discover and messages */
-const BOTTOM_ROOMS: Section[] = ["gathering", "mirror", "discover", "messages"];
+/* THE FIVE STREETS — the palm's whole navigation. No top buttons: the
+   crown stays a quiet name, and every function lives on one of the
+   five streets. The middle street is the possibilities realm — the
+   house's works walked one full screen at a time, story-true. */
+const BOTTOM_ROOMS: Section[] = ["gathering", "discover", "possibilities", "messages", "myspace"];
 
 const SECTION_IDS = Object.keys(ROOMS) as Section[];
 
@@ -446,9 +448,6 @@ export default function GatheringPortal() {
   const [overlay, setOverlay] = useState<
     "none" | "profile" | "notifications" | "atlas"
   >("none");
-  /* the mobile sheets — the crown's grid hand and the palm's create hand */
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
   /* the first visit — one welcome, kept in the visitor's own browser */
   const [firstVisit, setFirstVisit] = useState(false);
   /* carried between rooms — the weave and library hands of the stream */
@@ -498,8 +497,6 @@ export default function GatheringPortal() {
     setSection(next);
     sectionRef.current = next;
     setOverlay("none");
-    setMenuOpen(false);
-    setCreateOpen(false);
     if (typeof window !== "undefined") {
       const url =
         next === "gathering"
@@ -562,14 +559,13 @@ export default function GatheringPortal() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      if (menuOpen) return setMenuOpen(false);
-      if (createOpen) return setCreateOpen(false);
       if (firstVisit) return;
       if (overlay === "none") closePortal();
+      else setOverlay("none");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [overlay, menuOpen, createOpen, firstVisit, closePortal]);
+  }, [overlay, firstVisit, closePortal]);
 
   const firstVisitDone = useCallback(() => {
     setFirstVisit(false);
@@ -676,124 +672,33 @@ export default function GatheringPortal() {
         </nav>
       </aside>
 
-      {/* ---------- the portal's crown ---------- */}
+      {/* ---------- the crown — a quiet name and nothing else ----------
+          THE CLEAN SOCIAL LAW: the top of the hall carries no buttons
+          at all. The house's name and the room's name stand alone; every
+          function lives on the five streets at the foot (and on wide
+          desks, in the left rail). The way back to the threshold rides
+          above the hall as the landing's own small hand. */}
       <header className="gp-glass absolute inset-x-0 top-0 z-10 border-x-0 border-t-0 lg:left-[248px]">
-        <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-1.5 px-3 sm:h-16 sm:gap-3 sm:px-6">
-          <button
-            type="button"
-            onClick={closePortal}
-            aria-label={t("Return to the house")}
-            title={t("Return to the house")}
-            data-testid="gathering-portal-return"
-            className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428]"
+        <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-center gap-2.5 px-3 sm:h-16 sm:px-6">
+          <span
+            aria-hidden="true"
+            className="flex size-8 shrink-0 items-center justify-center rounded-[12px] border border-white/90"
+            style={{
+              background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",
+            }}
           >
-            <ArrowLeft className="size-4" aria-hidden="true" />
-          </button>
-
-          <div className="flex min-w-0 items-center gap-2.5">
-            <span
-              aria-hidden="true"
-              className="flex size-8 shrink-0 items-center justify-center rounded-[12px] border border-white/90"
-              style={{
-                background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)",
-                boxShadow:
-                  "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",
-              }}
-            >
-              <span className="block size-3.5 rounded-[5px] border border-[#cbb98d] bg-[linear-gradient(150deg,#fefcf6,#e8dcbd)]" />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate font-[family-name:var(--font-cinzel)] text-[14px] font-semibold tracking-wide text-[#3d3428] sm:text-[15px]">
-                {t(ROOMS[section].label)}
-              </p>
-              <p className="mono-label hidden text-[8px] uppercase tracking-[0.26em] text-[#a2947c] sm:block">
-                {t("the network of becoming")}
-              </p>
-            </div>
+            <span className="block size-3.5 rounded-[5px] border border-[#cbb98d] bg-[linear-gradient(150deg,#fefcf6,#e8dcbd)]" />
+          </span>
+          <div className="min-w-0 text-center">
+            <p className="truncate font-[family-name:var(--font-cinzel)] text-[14px] font-semibold tracking-wide text-[#3d3428] sm:text-[15px]">
+              {t(section === "gathering" ? "The Gathering" : ROOMS[section].label)}
+            </p>
+            <p className="mono-label hidden text-[8px] uppercase tracking-[0.26em] text-[#a2947c] sm:block">
+              {t("the network of becoming")}
+            </p>
           </div>
-
-          <div className="flex-1" />
-
-          {/* THE EVERY-ROOM HAND — on the palm the rail is folded away,
-              so the crown's own grid hand opens all fifteen rooms */}
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-label={t("Every room of the gathering")}
-            title={t("Every room of the gathering")}
-            data-testid="gathering-menu"
-            className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428] lg:hidden"
-          >
-            <LayoutGrid className="size-4" aria-hidden="true" />
-          </button>
-
-          {/* THE ATLAS' OWN DOOR — the map stands only inside the hall:
-              one small hand that opens the world's shores, where the
-              visitor localizes and speaks an intention for a specific
-              region. It has no life outside the gathering. */}
-          <button
-            type="button"
-            onClick={() => setOverlay(overlay === "atlas" ? "none" : "atlas")}
-            aria-label={t("The region atlas — localize an intention")}
-            title={t("The region atlas — localize an intention")}
-            aria-pressed={overlay === "atlas"}
-            data-testid="gathering-atlas"
-            className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428]"
-          >
-            <MapIcon className="size-4" aria-hidden="true" />
-          </button>
-
-          {/* THE FREQUENCY RADIO'S DOOR — the hall's own music: the
-              entity's hundred healing-frequency works and the
-              gatherers' own, riding one small bar. It has no life
-              outside the gathering. */}
-          <button
-            type="button"
-            onClick={() => setRadioOpen((v) => !v)}
-            aria-label={t("The frequency radio")}
-            title={t("The frequency radio")}
-            aria-pressed={radioOpen}
-            data-testid="gathering-radio-button"
-            className="focus-glow flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428]"
-          >
-            <Music4 className="size-4" aria-hidden="true" />
-          </button>
-
-          {/* the bell — every ring a real row */}
-          <button
-            type="button"
-            onClick={() => setOverlay(overlay === "notifications" ? "none" : "notifications")}
-            aria-label={t("The bell")}
-            title={t("The bell")}
-            data-testid="gathering-bell"
-            className="focus-glow relative flex size-9 shrink-0 items-center justify-center rounded-full border border-[#e4d9bd] bg-white/70 text-[#7c715f] transition-all duration-300 hover:border-[#d3c39c] hover:text-[#3d3428]"
-          >
-            <Bell className="size-4" aria-hidden="true" />
-            {unread > 0 && (
-              <span
-                aria-hidden="true"
-                data-testid="gathering-bell-count"
-                className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-[#a16207] text-[9px] font-bold text-white"
-              >
-                {unread > 9 ? "9+" : unread}
-              </span>
-            )}
-          </button>
-
-          {/* the visitor's own mark — the introduction's room */}
-          <button
-            type="button"
-            onClick={() => setOverlay(overlay === "profile" ? "none" : "profile")}
-            aria-label={t("Your introduction")}
-            title={t("Your introduction")}
-            data-testid="gathering-profile"
-            className="focus-glow flex max-w-[112px] shrink-0 items-center gap-2 rounded-full border border-[#e4d9bd] bg-white/70 py-1 pl-1 pr-2.5 transition-all duration-300 hover:border-[#d3c39c] sm:max-w-[150px]"
-          >
-            <MakerMark name={me?.name ?? "·"} size={26} />
-            <span className="truncate text-[12px] font-semibold text-[#5c5344]">
-              {me?.name ?? "…"}
-            </span>
-          </button>
         </div>
       </header>
 
@@ -860,6 +765,13 @@ export default function GatheringPortal() {
               <DiscoverSection
                 active
                 onOpenMessages={() => goSection("messages")}
+                onOpenAtlas={() => setOverlay("atlas")}
+                onOpenRoom={(next) => goSection(isSection(next) ? next : "discover")}
+              />
+            ) : section === "possibilities" ? (
+              <PossibilitiesRealm
+                active
+                onNavigate={(next) => goSection(isSection(next) ? next : "gathering")}
               />
             ) : section === "questions" ? (
               <QuestionsSection active />
@@ -894,7 +806,21 @@ export default function GatheringPortal() {
             ) : section === "saved" ? (
               <SavedSection active />
             ) : section === "myspace" ? (
-              <MySpaceSection active me={me} onEditProfile={() => setOverlay("profile")} />
+              <MySpaceSection
+                active
+                me={me}
+                unread={unread}
+                onEditProfile={() => setOverlay("profile")}
+                onOpenNotifications={() => setOverlay("notifications")}
+                onOpenSaved={() => goSection("saved")}
+                onOpenSettings={() => goSection("settings")}
+                onOpenGuidelines={() => goSection("guidelines")}
+                onOpenLibrary={() => goSection("library")}
+                onPublishWork={() => setPickerOpen(true)}
+                onToggleRadio={() => setRadioOpen((v) => !v)}
+                radioOpen={radioOpen}
+                onReturnHome={closePortal}
+              />
             ) : section === "settings" ? (
               <SettingsSection active me={me} onSaved={setMe} />
             ) : (
@@ -904,7 +830,11 @@ export default function GatheringPortal() {
         </AnimatePresence>
       </div>
 
-      {/* ---------- the palm's own streets — five primary rooms on the bottom ---------- */}
+      {/* ---------- the palm's own streets — five streets, the whole
+          hall in one hand. The middle street is the possibilities
+          realm: the house's works walked one full screen at a time.
+          The bell's ring rides with My Space; the create hands live
+          inside the rooms where making happens. ---------- */}
       <nav
         aria-label={t("The Gathering")}
         className="gp-glass absolute inset-x-0 bottom-0 z-30 border-x-0 border-b-0 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 lg:hidden"
@@ -915,6 +845,7 @@ export default function GatheringPortal() {
             const room = ROOMS[key];
             const BIcon = room.icon;
             const on = section === key && overlay === "none";
+            const middle = key === "possibilities";
             return (
               <button
                 key={key}
@@ -924,10 +855,36 @@ export default function GatheringPortal() {
                 data-testid={`gath-bottom-${key}`}
                 className="focus-glow relative flex min-w-[56px] flex-col items-center gap-0.5 rounded-[14px] px-2 py-1.5"
               >
-                <BIcon
-                  className={cn("size-5", on ? "text-[#a16207]" : "text-[#a2947c]")}
-                  aria-hidden="true"
-                />
+                {middle ? (
+                  /* THE MIDDLE STREET — the realm's own raised pearl:
+                      a small standing stage the thumb finds at rest */
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "-mt-5 flex size-11 items-center justify-center rounded-[16px] border transition-all duration-300",
+                      on
+                        ? "border-[#cbb98d] shadow-[0_10px_22px_-10px_rgba(122,103,70,0.65)]"
+                        : "border-[#e4d9bd] shadow-[0_8px_18px_-10px_rgba(122,103,70,0.45)]"
+                    )}
+                    style={{
+                      background:
+                        "linear-gradient(160deg,#fffdf8 0%,#f2e7cd 55%,#e8dcbd 100%)",
+                    }}
+                  >
+                    <Play
+                      className={cn(
+                        "size-5",
+                        on ? "text-[#8a6f46]" : "text-[#a2947c]"
+                      )}
+                      aria-hidden="true"
+                    />
+                  </span>
+                ) : (
+                  <BIcon
+                    className={cn("size-5", on ? "text-[#a16207]" : "text-[#a2947c]")}
+                    aria-hidden="true"
+                  />
+                )}
                 <span
                   className={cn(
                     "whitespace-nowrap text-[9.5px] font-semibold",
@@ -942,6 +899,15 @@ export default function GatheringPortal() {
                     className="absolute right-1 top-0.5 size-2 rounded-full bg-[#a16207]"
                   />
                 )}
+                {key === "myspace" && unread > 0 && (
+                  <span
+                    aria-hidden="true"
+                    data-testid="gath-myspace-unread"
+                    className="absolute right-1 top-0.5 flex size-3.5 items-center justify-center rounded-full bg-[#a16207] text-[8px] font-bold text-white"
+                  >
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                )}
                 {on && (
                   <span
                     aria-hidden="true"
@@ -951,174 +917,8 @@ export default function GatheringPortal() {
               </button>
             );
           })}
-          {/* the create hand — the compact sheet of beginnings */}
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            aria-label={t("Create — begin something")}
-            data-testid="gath-bottom-create"
-            className="focus-glow relative flex min-w-[56px] flex-col items-center gap-0.5 rounded-[14px] px-2 py-1.5"
-          >
-            <PlusCircle
-              className={cn(
-                "size-5",
-                createOpen ? "text-[#a16207]" : "text-[#a2947c]"
-              )}
-              aria-hidden="true"
-            />
-            <span className={cn("whitespace-nowrap text-[9.5px] font-semibold", createOpen ? "text-[#5c5344]" : "text-[#a2947c]")}>
-              {t("Create")}
-            </span>
-          </button>
         </div>
       </nav>
-
-      {/* ---------- the compact sheet of beginnings (the create hand) ---------- */}
-      <AnimatePresence>
-        {createOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            role="dialog"
-            aria-modal="true"
-            aria-label={t("Create — begin something")}
-            data-testid="gath-create-sheet"
-            className="gp-glass absolute inset-x-2 bottom-[70px] z-40 rounded-[22px] border border-[#e4d9bd]/70 p-4 shadow-[0_24px_60px_-24px_rgba(46,38,24,0.4)] lg:hidden"
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]">
-                {t("begin something")}
-              </p>
-              <button
-                type="button"
-                onClick={() => setCreateOpen(false)}
-                aria-label={t("Close")}
-                data-testid="gath-create-close"
-                className={cn(GP_ICON_BTN, "size-8")}
-              >
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  goSection("gathering");
-                  composeNRef.current += 1;
-                  setComposeIntent({ kind: "reflection", n: composeNRef.current });
-                }}
-                className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}
-              >
-                <Waypoints className="size-4 text-[#8a6f46]" aria-hidden="true" />
-                {t("Share a reflection")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setCreateOpen(false);
-                  setPickerOpen(true);
-                }}
-                className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}
-              >
-                <Library className="size-4 text-[#a16207]" aria-hidden="true" />
-                {t("Publish a work")}
-              </button>
-              <button type="button" onClick={() => goSection("questions")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
-                <CircleQuestionMark className="size-4 text-[#9a6b8a]" aria-hidden="true" />
-                {t("Begin a question")}
-              </button>
-              <button type="button" onClick={() => goSection("laboratory")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
-                <FlaskConical className="size-4 text-[#7c5cad]" aria-hidden="true" />
-                {t("Open a lab bench")}
-              </button>
-              <button type="button" onClick={() => goSection("intentions")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
-                <Flame className="size-4 text-[#b45309]" aria-hidden="true" />
-                {t("Begin an intention")}
-              </button>
-              <button type="button" onClick={() => goSection("live")} className={cn(GP_GHOST, "justify-start py-2 text-[12px]")}>
-                <CalendarClock className="size-4 text-[#0d9488]" aria-hidden="true" />
-                {t("Schedule a gathering")}
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ---------- the every-room sheet (the crown's grid hand, on the palm) ---------- */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.24 }}
-            className="absolute inset-0 z-40 bg-[rgba(46,38,24,0.32)] lg:hidden"
-            onClick={() => setMenuOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 18 }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              role="dialog"
-              aria-modal="true"
-              aria-label={t("Every room of the gathering")}
-              data-testid="gath-menu-sheet"
-              className="gp-glass absolute inset-x-3 bottom-[70px] rounded-[22px] border border-[#e4d9bd]/70 p-4 shadow-[0_24px_60px_-24px_rgba(46,38,24,0.4)]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-[#8a6f46]">
-                  {t("every room")}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setMenuOpen(false)}
-                  aria-label={t("Close")}
-                  data-testid="gath-menu-close"
-                  className={cn(GP_ICON_BTN, "size-8")}
-                >
-                  <X className="size-4" aria-hidden="true" />
-                </button>
-              </div>
-              <div className="gp-scroll max-h-[52vh] overflow-y-auto">
-                {RAIL_GROUPS.map((group) => (
-                  <div key={group.label} className="mb-2.5">
-                    <p className="mono-label px-1 pb-1 text-[8.5px] uppercase tracking-[0.24em] text-[#a2947c]">
-                      {t(group.label)}
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {group.rooms.map((key) => {
-                        const room = ROOMS[key];
-                        const MIcon = room.icon;
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => goSection(key)}
-                            data-testid={`gath-menu-${key}`}
-                            className={cn(
-                              "focus-glow flex items-center gap-2 rounded-[12px] border px-2.5 py-2 text-left text-[11.5px] font-semibold transition-all duration-300",
-                              section === key
-                                ? "border-[#d3c39c] bg-white/85 text-[#5c5344]"
-                                : "border-transparent bg-white/50 text-[#7c715f] hover:border-[#e4d9bd]"
-                            )}
-                          >
-                            <MIcon className="size-3.5 shrink-0 text-[#a16207]" aria-hidden="true" />
-                            <span className="truncate">{t(room.label)}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* the radio rides the hall's foot while it stands — lifted above
           the palm's own streets on small screens */}

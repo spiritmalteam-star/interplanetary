@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { useTheme } from "next-themes";
-import { bootUiLanguage, useDocumentLang } from "@/lib/i18n";
+import { X } from "lucide-react";
+import { bootUiLanguage, useDocumentLang, useT } from "@/lib/i18n";
 import { toast } from "sonner";
 import { useMirror, LANDING_SCOPES } from "@/lib/mirror-store";
 import { SCOPE_META } from "@/lib/mirror/workspaces";
@@ -197,6 +198,7 @@ export default function LandingGate() {
     bootUiLanguage();
   }, []);
   useDocumentLang();
+  const t = useT();
   const [phase, setPhase] = useState<Phase>("landing");
   const [Chamber, setChamber] = useState<ComponentType<
     { bare?: boolean; onExpand?: () => void; onMinimize?: () => void }
@@ -264,6 +266,29 @@ export default function LandingGate() {
       /* the keepings stay closed — the realm's own state carries */
     }
   }, [setTheme]);
+
+  /* THE WRAPPED BROWSER'S OWN WORD — Instagram (and its sibling apps)
+     opens links inside a small webview where some hands answer
+     differently. The house says so honestly, once per visit, and
+     offers the address: the visitor copies it and opens the full
+     browser, where every door answers. */
+  const [wrappedNote, setWrappedNote] = useState(() => {
+    /* read once at birth, on the client only: the wrapped webviews
+       (Instagram and its siblings) hear the note the first time and
+       keep it in the session's own keeping */
+    try {
+      if (typeof window === "undefined") return false;
+      const ua = navigator.userAgent || "";
+      const wrapped = /Instagram|FBAN|FBAV|FB_IAB|Line\u002f|Snapchat/i.test(ua);
+      if (!wrapped) return false;
+      if (window.sessionStorage.getItem("mirror-wrapped-note-v1")) return false;
+      window.sessionStorage.setItem("mirror-wrapped-note-v1", "seen");
+      return true;
+    } catch {
+      return false;
+    }
+  });
+  const [copiedNote, setCopiedNote] = useState(false);
 
   /* THE INSTANT FLOOR — the chunk rides the idle prefetch (laid after
      the landing's first breath, never racing the hero): this effect
@@ -822,6 +847,49 @@ export default function LandingGate() {
                 centred in 560×560, so the declared box is honest */}
             <img src="/images/landing/sigils/sigil-09.png" alt="" width={560} height={560} decoding="async" />
           </span>
+        </div>
+      )}
+
+      {/* THE WRAPPED BROWSER'S NOTE — one honest line at the foot:
+          the visitor in an in-app browser hears the truth about this
+          small webview and takes the address with them. */}
+      {wrappedNote && (
+        <div
+          role="status"
+          data-testid="wrapped-browser-note"
+          className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[96] flex flex-col items-center gap-2 rounded-2xl border border-[rgba(232,217,176,0.4)] bg-[rgba(9,13,21,0.94)] px-4 py-3 text-center shadow-[0_18px_48px_-20px_rgba(0,0,0,0.85)] sm:flex-row sm:text-left"
+        >
+          <p className="min-w-0 flex-1 text-[12px] leading-relaxed text-[#f0e7cd]">
+            {t(
+              "You are reading from an in-app browser — some answers may rest. Open reflectme.space in your browser (menu, then “Open in browser”) for the fullest experience."
+            )}
+          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              type="button"
+              data-testid="wrapped-copy-address"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(window.location.origin);
+                  setCopiedNote(true);
+                  window.setTimeout(() => setCopiedNote(false), 2200);
+                } catch {
+                  /* a refused clipboard keeps the note standing */
+                }
+              }}
+              className="rounded-full border border-[rgba(232,217,176,0.5)] px-3 py-1.5 text-[11px] font-semibold text-[#f0e7cd] transition-colors duration-300 hover:border-[rgba(232,217,176,0.9)]"
+            >
+              {copiedNote ? t("Address copied") : t("Copy the address")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setWrappedNote(false)}
+              aria-label={t("Close")}
+              className="flex size-7 items-center justify-center rounded-full border border-[rgba(232,217,176,0.4)] text-[#cbb98d]"
+            >
+              <X className="size-3.5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
       )}
     </>
