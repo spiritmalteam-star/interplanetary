@@ -31,6 +31,7 @@ const TAB_ROOMS: Record<ToolTabKey, string> = {
   library: "library",
   mirroros: "mirroros",
   scopes: "scopes",
+  spatial: "spatial",
 };
 
 const OVERLAY_ROOMS = {
@@ -96,6 +97,16 @@ function openRoom(room: RoomName | null) {
   const s = useMirror.getState();
   switch (room) {
     case null:
+      /* THE WALK HOME — Back below every room folds whatever still
+         stands (the hall, the overlays): the visit returns to the
+         plain landing, the house's own default face. The address
+         already tells the truth — nothing is pushed for it. */
+      if (s.gatheringPortalOpen) s.closeGatheringPortal();
+      if (s.profilePageOpen) s.closeProfilePage();
+      if (s.aboutOpen) s.closeAbout();
+      if (s.tourOpen) s.closeTour();
+      if (s.authOpen) s.closeAuth();
+      if (s.walletModalOpen) s.closeWalletModal();
       return;
     case OVERLAY_ROOMS.profile:
       s.openProfilePage();

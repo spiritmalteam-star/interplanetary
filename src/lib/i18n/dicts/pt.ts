@@ -249,6 +249,7 @@ export const pt: TranslationDict = {
 
   /* ——— THE GATHERING'S PORTAL — the independent hall ——— */
   "Return to the house": "Voltar à casa",
+  "Return to the landing": "Voltar à página inicial",
   "Gallery": "Galeria",
   "Stream": "O fluxo",
   "Offer": "Oferecer",

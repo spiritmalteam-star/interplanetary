@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowLeft,
   Bookmark,
   CalendarClock,
   CircleQuestionMark,
@@ -672,14 +673,37 @@ export default function GatheringPortal() {
         </nav>
       </aside>
 
-      {/* ---------- the crown — a quiet name and nothing else ----------
-          THE CLEAN SOCIAL LAW: the top of the hall carries no buttons
-          at all. The house's name and the room's name stand alone; every
-          function lives on the five streets at the foot (and on wide
-          desks, in the left rail). The way back to the threshold rides
-          above the hall as the landing's own small hand. */}
+      {/* ---------- the crown — a quiet name and one hand back ----------
+          THE CLEAN SOCIAL LAW: the top of the hall stays a quiet name —
+          every function lives on the five streets at the foot (and on
+          wide desks, in the left rail). THE ONE HAND the crown carries
+          is the way home: a small pearl at its edge folds the hall and
+          the threshold stands again — the landing is the house's
+          default face, and the way back is always one touch away. */}
       <header className="gp-glass absolute inset-x-0 top-0 z-10 border-x-0 border-t-0 lg:left-[248px]">
-        <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-center gap-2.5 px-3 sm:h-16 sm:px-6">
+        <div className="relative mx-auto flex h-14 max-w-[1200px] items-center justify-center gap-2.5 px-3 sm:h-16 sm:px-6">
+          {/* THE WAY BACK — one quiet pearl at the crown's edge. It
+              carries no room's work: one touch folds the whole hall
+              (store truth — every street, sheet and sound rests with
+              it) and the landing greets the visitor again. */}
+          <button
+            type="button"
+            onClick={closePortal}
+            aria-label={t("Return to the landing")}
+            title={t("Return to the landing")}
+            data-testid="gath-back"
+            className="focus-glow absolute left-2 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/90 transition-all duration-300 hover:shadow-[0_4px_16px_-6px_rgba(122,103,70,0.6)] sm:left-4"
+            style={{
+              background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",
+            }}
+          >
+            <ArrowLeft
+              className="gp-pearl size-[18px] text-[#7c715f]"
+              aria-hidden="true"
+            />
+          </button>
           <span
             aria-hidden="true"
             className="flex size-8 shrink-0 items-center justify-center rounded-[12px] border border-white/90"

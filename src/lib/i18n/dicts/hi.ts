@@ -157,6 +157,7 @@ export const hi: TranslationDict = {
 
   /* ——— THE GATHERING'S PORTAL — the independent hall ——— */
   "Return to the house": "घर लौटें",
+  "Return to the landing": "लैंडिंग पर लौटें",
   "Gallery": "गैलरी",
   "Stream": "प्रवाह",
   "Offer": "अर्पित करें",

@@ -850,6 +850,7 @@ export const zh: TranslationDict = {
 
   /* ——— THE GATHERING'S PORTAL — the independent hall ——— */
   "Return to the house": "回到屋中",
+  "Return to the landing": "返回首页",
   "Gallery": "画廊",
   "Stream": "长河",
   "Offer": "呈献",
