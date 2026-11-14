@@ -604,6 +604,36 @@ export default function DiscoverSection({
               spoken for a specific region. */}
           <section aria-label={t("Every room of the gathering")} data-testid="discover-rooms">
             <SectionHead label="Every room of the gathering" />
+            {/* THE IMMERSIVE DOOR — the possibilities realm, walked one
+                full screen at a time: explore's own front room */}
+            <button
+              type="button"
+              onClick={() => onOpenRoom("possibilities")}
+              data-testid="discover-possibilities-door"
+              className="focus-glow mt-2.5 flex w-full items-center gap-3 rounded-[18px] border border-[#cbb98d]/60 bg-[linear-gradient(150deg,#fffdf8_0%,#f6efdd_100%)] px-4 py-3.5 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_10px_24px_-14px_rgba(122,103,70,0.5)] transition-all duration-300 hover:brightness-[1.02]"
+            >
+              <span
+                aria-hidden="true"
+                className="flex size-10 shrink-0 items-center justify-center rounded-[14px] border border-white/90"
+                style={{ background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)" }}
+              >
+                <Play className="size-5 text-[#8a6f46]" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-[family-name:var(--font-literata)] text-[13px] font-semibold text-[#3d3428]">
+                  {t("The Possibilities Realm")}
+                </span>
+                <span className="block text-[11px] leading-snug text-[#8a7c64]">
+                  {t("The house's works, one full screen at a time — walk them like a story.")}
+                </span>
+              </span>
+              <span
+                aria-hidden="true"
+                className="mono-label shrink-0 text-[8px] uppercase tracking-[0.2em] text-[#a16207]"
+              >
+                {t("immersive")}
+              </span>
+            </button>
             <div className="mt-2.5 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
               {[
                 "gathering",

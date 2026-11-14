@@ -35,7 +35,8 @@ export async function GET(
     /* the visibility law — the server decides, never the visitor's politeness */
     let visible = false;
     if (post.visibility === "public") visible = true;
-    else if (post.userId === visitor.user.id) visible = true;
+    else if (post.visibility === "unlisted") visible = true; // the quiet link — anyone who holds it
+    else if (post.userId === visitor.user.id) visible = true; // the maker's own house, always
     else if (post.visibility === "circle" && post.circleId) {
       const membership = await db.networkCircleMember.findUnique({
         where: { circleId_userId: { circleId: post.circleId, userId: visitor.user.id } },

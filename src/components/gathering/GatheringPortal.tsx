@@ -16,6 +16,7 @@ import {
   CalendarClock,
   CircleQuestionMark,
   Compass,
+  Feather,
   FlaskConical,
   Flame,
   LayoutGrid,
@@ -79,6 +80,7 @@ const lazyRoom = <P extends { active: boolean }>(
 ) => dynamic(loader, { ssr: false, loading: () => <SectionLoading /> });
 
 const FeedSection = dynamic(() => import("./FeedSection"), { ssr: false, loading: () => <SectionLoading /> });
+const CreateRoom = dynamic(() => import("./CreateRoom"), { ssr: false, loading: () => <SectionLoading /> });
 const DiscoverSection = lazyRoom(() => import("./DiscoverSection"));
 const CirclesSection = lazyRoom(() => import("./CirclesSection"));
 const EncountersSection = lazyRoom(() => import("./EncountersSection"));
@@ -120,10 +122,14 @@ const GatheringRadio = dynamic(
 /*  separate space with its own structure, its own light, its own      */
 /*  manners:                                                           */
 /*                                                                     */
-/*    THE PULSE — the living community stream, four currents:          */
-/*      for you, following, latest, discoveries;                       */
-/*    DISCOVER — six destinations: for you, people, creations,         */
-/*      circles, projects, knowledge; M.E. listens here;               */
+/*    THE GATHER — the community stream: for you, following, latest;     */
+/*    EXPLORE — six destinations and the possibilities realm: the        */
+/*      immersive walk through the house's works;                        */
+/*    CREATE — the universal composer: a reflection, a question, a       */
+/*      hypothesis, an experiment, a discovery — words, threads, an      */
+/*      optional matching picture, a draft that survives journeys;       */
+/*    INBOX — messages, notifications and the house's own words;         */
+/*    MY SPACE — the introduction, the works, the shelf, the manners.    */
 /*    LIVING QUESTIONS — questions that grow like trees;               */
 /*    RESONANCE CIRCLES — communities to join, or to found;            */
 /*    THE LABORATORY — hypotheses tested together, evidence over votes;*/
@@ -157,6 +163,7 @@ const GatheringRadio = dynamic(
 type Section =
   | "gathering"
   | "mirror"
+  | "create"
   | "discover"
   | "possibilities"
   | "questions"
@@ -176,9 +183,10 @@ type Section =
 type RoomDef = { key: Section; label: string; icon: LucideIcon };
 
 const ROOMS: Record<Section, RoomDef> = {
-  gathering: { key: "gathering", label: "The Pulse", icon: Waypoints },
+  gathering: { key: "gathering", label: "Gather", icon: Waypoints },
   mirror: { key: "mirror", label: "Mirror Laboratory", icon: Sparkles },
-  discover: { key: "discover", label: "Discover", icon: Compass },
+  create: { key: "create", label: "Create", icon: Feather },
+  discover: { key: "discover", label: "Explore", icon: Compass },
   possibilities: { key: "possibilities", label: "Possibilities", icon: Play },
   questions: { key: "questions", label: "Living Questions", icon: CircleQuestionMark },
   circles: { key: "circles", label: "Resonance Circles", icon: Users },
@@ -188,7 +196,7 @@ const ROOMS: Record<Section, RoomDef> = {
   intentions: { key: "intentions", label: "Collective Intentions", icon: Flame },
   live: { key: "live", label: "Gather Live", icon: CalendarClock },
   encounters: { key: "encounters", label: "Connections", icon: Sparkles },
-  messages: { key: "messages", label: "Messages", icon: MessagesSquare },
+  messages: { key: "messages", label: "Inbox", icon: MessagesSquare },
   saved: { key: "saved", label: "Saved", icon: Bookmark },
   myspace: { key: "myspace", label: "My Space", icon: UserRound },
   settings: { key: "settings", label: "Settings", icon: Settings2 },
@@ -196,23 +204,24 @@ const ROOMS: Record<Section, RoomDef> = {
 };
 
 /* the rail reads in quiet groups — the possibilities realm stands
-   beside the pulse, discover and connect lead the walk, and every
+   beside the gather and the composer's own street, and every
    other room keeps its door */
 const RAIL_GROUPS: Array<{ label: string; rooms: Section[] }> = [
-  { label: "the pulse", rooms: ["gathering", "possibilities"] },
+  { label: "the gather", rooms: ["gathering", "possibilities"] },
+  { label: "create", rooms: ["create"] },
   { label: "the laboratory", rooms: ["mirror"] },
-  { label: "discover", rooms: ["discover", "questions", "laboratory"] },
+  { label: "explore", rooms: ["discover", "questions", "laboratory"] },
   { label: "together", rooms: ["circles", "intentions", "live", "collaborate"] },
   { label: "creations", rooms: ["library"] },
   { label: "connect", rooms: ["encounters", "messages"] },
   { label: "you", rooms: ["saved", "myspace", "settings", "guidelines"] },
 ];
 
-/* THE FIVE STREETS — the palm's whole navigation. No top buttons: the
-   crown stays a quiet name, and every function lives on one of the
-   five streets. The middle street is the possibilities realm — the
-   house's works walked one full screen at a time, story-true. */
-const BOTTOM_ROOMS: Section[] = ["gathering", "discover", "possibilities", "messages", "myspace"];
+/* THE FIVE STREETS — the palm's whole navigation: gather, explore,
+   create, inbox, my space. The middle street is the composer's own
+   door — the one primary act a network of makers asks for. The
+   possibilities realm keeps its street in explore and the rail. */
+const BOTTOM_ROOMS: Section[] = ["gathering", "discover", "create", "messages", "myspace"];
 
 const SECTION_IDS = Object.keys(ROOMS) as Section[];
 
@@ -785,6 +794,14 @@ export default function GatheringPortal() {
                 }}
                 onNavigate={(next) => goSection(isSection(next) ? next : "discover")}
               />
+            ) : section === "create" ? (
+              <CreateRoom
+                active
+                me={me}
+                circles={circles}
+                onOpenHall={() => goSection("gathering")}
+                onPublishWork={() => setPickerOpen(true)}
+              />
             ) : section === "discover" ? (
               <DiscoverSection
                 active
@@ -834,6 +851,7 @@ export default function GatheringPortal() {
                 active
                 me={me}
                 unread={unread}
+                onSaved={setMe}
                 onEditProfile={() => setOverlay("profile")}
                 onOpenNotifications={() => setOverlay("notifications")}
                 onOpenSaved={() => goSection("saved")}
@@ -869,7 +887,7 @@ export default function GatheringPortal() {
             const room = ROOMS[key];
             const BIcon = room.icon;
             const on = section === key && overlay === "none";
-            const middle = key === "possibilities";
+            const middle = key === "create";
             return (
               <button
                 key={key}
@@ -880,8 +898,8 @@ export default function GatheringPortal() {
                 className="focus-glow relative flex min-w-[56px] flex-col items-center gap-0.5 rounded-[14px] px-2 py-1.5"
               >
                 {middle ? (
-                  /* THE MIDDLE STREET — the realm's own raised pearl:
-                      a small standing stage the thumb finds at rest */
+                  /* THE MIDDLE STREET — the composer's own raised pearl:
+                      the one primary act, where the thumb rests */
                   <span
                     aria-hidden="true"
                     className={cn(
@@ -895,7 +913,7 @@ export default function GatheringPortal() {
                         "linear-gradient(160deg,#fffdf8 0%,#f2e7cd 55%,#e8dcbd 100%)",
                     }}
                   >
-                    <Play
+                    <Feather
                       className={cn(
                         "size-5",
                         on ? "text-[#8a6f46]" : "text-[#a2947c]"
@@ -915,7 +933,7 @@ export default function GatheringPortal() {
                     on ? "text-[#5c5344]" : "text-[#a2947c]"
                   )}
                 >
-                  {t(key === "messages" ? "Inbox" : key === "gathering" ? "Pulse" : room.label)}
+                  {t(room.label)}
                 </span>
                 {key === "messages" && unread > 0 && (
                   <span

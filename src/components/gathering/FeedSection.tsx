@@ -15,17 +15,20 @@ import {
   Clock,
   CornerDownRight,
   Film,
+  Flag,
   FlaskConical,
   Flame,
   LayoutGrid,
   Library,
   Loader2,
   MessageCircle,
+  MoreHorizontal,
   Play,
   Plus,
   Repeat2,
   Send,
-  Telescope,
+  Share,
+  SlidersHorizontal,
   Trash2,
   User,
   Waves,
@@ -40,15 +43,20 @@ import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import ComposerForm from "./ComposerForm";
 import {
+  EVIDENCE_LABEL,
+  EVIDENCE_LEVELS,
+  EVIDENCE_STYLE,
   KIND_META,
-  KIND_OFFERING_LABEL,
   KIND_FILTER_LABEL,
+  KIND_OFFERING_LABEL,
   KIND_ORDER,
   type GatheringPost,
   type GatheringEcho,
   type CircleCard,
+  GP_CARD,
   GP_HAND,
   GP_GHOST,
+  GP_ICON_BTN,
   GP_INPUT,
   EvidenceChip,
   EmptyRoom,
@@ -61,8 +69,8 @@ import {
 } from "./shared";
 
 /* ------------------------------------------------------------------ */
-/*  THE FOUR CURRENTS — the hall reads itself four ways: for you,      */
-/*  the ones you follow, the newest words, the discoveries.            */
+/*  THE THREE CURRENTS — the hall reads itself three ways: for you,    */
+/*  the ones you follow, the newest words.                             */
 /* ------------------------------------------------------------------ */
 type FeedTab = "foryou" | "following" | "latest" | "discoveries";
 
@@ -144,6 +152,7 @@ function useGatheringFeed(mine: boolean, circleId: string | null, tab: FeedTab |
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
+  const [foldedTwins, setFoldedTwins] = useState(0);
   const cursorRef = useRef<string | null>(null);
   const hasMoreRef = useRef(false);
   const [hasMore, setHasMore] = useState(false);
@@ -159,7 +168,14 @@ function useGatheringFeed(mine: boolean, circleId: string | null, tab: FeedTab |
   const bootedRef = useRef(false);
 
   const read = useCallback(
-    async (opts: { fresh?: boolean; kind?: string | null; q?: string | null } = {}) => {
+    async (
+      opts: {
+        fresh?: boolean;
+        kind?: string | null;
+        q?: string | null;
+        epistemic?: string | null;
+      } = {}
+    ) => {
       const fresh = opts.fresh ?? false;
       if (!fresh && !hasMoreRef.current) return;
       if (fresh) {
@@ -176,13 +192,19 @@ function useGatheringFeed(mine: boolean, circleId: string | null, tab: FeedTab |
         if (tabRef.current) params.set("tab", tabRef.current);
         if (opts.kind) params.set("kind", opts.kind);
         if (opts.q) params.set("q", opts.q);
+        if (opts.epistemic) params.set("epistemic", opts.epistemic);
         if (!fresh && cursorRef.current) params.set("cursor", cursorRef.current);
-        const data = await netFetch<{ posts: GatheringPost[]; nextCursor: string | null }>(
-          `/api/gathering?${params.toString()}`
-        );
+        const data = await netFetch<{
+          posts: GatheringPost[];
+          nextCursor: string | null;
+          foldedTwins?: number;
+        }>(`/api/gathering?${params.toString()}`);
         cursorRef.current = data.nextCursor;
         hasMoreRef.current = data.nextCursor !== null;
         setHasMore(hasMoreRef.current);
+        if (fresh && typeof data.foldedTwins === "number") {
+          setFoldedTwins(data.foldedTwins);
+        }
         setPosts((prev) => (fresh ? data.posts : [...prev, ...data.posts]));
       } catch {
         setError(true);
@@ -201,15 +223,24 @@ function useGatheringFeed(mine: boolean, circleId: string | null, tab: FeedTab |
   }, [read]);
 
   const rekindle = useCallback(
-    (opts?: { kind?: string | null; q?: string | null }) => {
+    (opts?: {
+      kind?: string | null;
+      q?: string | null;
+      epistemic?: string | null;
+    }) => {
       cursorRef.current = null;
       hasMoreRef.current = false;
-      void read({ fresh: true, kind: opts?.kind ?? null, q: opts?.q ?? null });
+      void read({
+        fresh: true,
+        kind: opts?.kind ?? null,
+        q: opts?.q ?? null,
+        epistemic: opts?.epistemic ?? null,
+      });
     },
     [read]
   );
 
-  return { posts, setPosts, loading, loadingMore, error, hasMore, read, rekindle };
+  return { posts, setPosts, loading, loadingMore, error, hasMore, foldedTwins, read, rekindle };
 }
 
 /* =============== THE OFFERING TILE — the gallery's card =============== */
@@ -221,6 +252,9 @@ function OfferingTile({
   onRepost,
   onGrow,
   onTakeBack,
+  onShare,
+  onAskMe,
+  onReport,
   armedId,
   setArmedId,
 }: {
@@ -231,6 +265,9 @@ function OfferingTile({
   onRepost: () => void;
   onGrow: () => void;
   onTakeBack: () => void;
+  onShare: () => void;
+  onAskMe: () => void;
+  onReport: () => void;
   armedId: string | null;
   setArmedId: (id: string | null) => void;
 }) {
@@ -244,6 +281,7 @@ function OfferingTile({
   const grow = growVariantFor(post);
   const grown = grownChipFor(post);
   const GrowHand = grow ? GROW_ICON[grow] : null;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
@@ -275,6 +313,11 @@ function OfferingTile({
         <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
           {post.epistemic && isEvidenceLevel(post.epistemic) && (
             <EvidenceChip level={post.epistemic} />
+          )}
+          {post.aiMedia && (
+            <span className="mono-label rounded-full border border-[#e4d9bd] bg-[#faf5e6] px-2 py-0.5 text-[8px] uppercase tracking-[0.14em] text-[#8a6f46]">
+              {t("AI-made")}
+            </span>
           )}
           {grown && (
             <span className="text-[9.5px] italic text-[#a2947c]">{t(GROWN_CHIP[grown])}</span>
@@ -430,6 +473,77 @@ function OfferingTile({
               <Trash2 className="size-3.5" aria-hidden="true" />
             </button>
           )}
+          {/* the overflow hands — share, ask M.E., and the honest report,
+              folded where they never crowd the stream */}
+          <div className="relative">
+            {menuOpen && (
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-hidden="true"
+                className="fixed inset-0 z-10 cursor-default"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen(false);
+                }}
+              />
+            )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen((v) => !v);
+              }}
+              aria-label={t("More ways to hold this offering")}
+              title={t("More ways to hold this offering")}
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
+              data-testid="gp-tile-menu"
+              className="focus-glow rounded-full p-1 text-[#a2947c] transition-colors duration-300 hover:text-[#8a6f46]"
+            >
+              <MoreHorizontal className="size-3.5" aria-hidden="true" />
+            </button>
+            {menuOpen && (
+              <div
+                role="menu"
+                aria-label={t("More ways to hold this offering")}
+                className="absolute bottom-8 right-0 z-20 w-[160px] overflow-hidden rounded-[14px] border border-[#e4d9bd] bg-white shadow-[0_12px_28px_-12px_rgba(122,103,70,0.5)]"
+              >
+                <TileMenuItem
+                  icon={Share}
+                  label="Share"
+                  testid="gp-tile-share"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen(false);
+                    onShare();
+                  }}
+                />
+                <TileMenuItem
+                  icon={Sparkles}
+                  label="Ask M.E."
+                  testid="gp-tile-askme"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen(false);
+                    onAskMe();
+                  }}
+                />
+                {!post.mine && (
+                  <TileMenuItem
+                    icon={Flag}
+                    label="Report"
+                    testid="gp-tile-report"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      onReport();
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -447,6 +561,149 @@ function OfferingTile({
         </button>
       )}
     </div>
+  );
+}
+
+/* =============== THE TILE'S OWN MENU ITEM =============== */
+function TileMenuItem({
+  icon: Icon,
+  label,
+  testid,
+  onClick,
+}: {
+  icon: LucideIcon;
+  label: string;
+  testid: string;
+  onClick: (e: React.MouseEvent) => void;
+}) {
+  const t = useT();
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      data-testid={testid}
+      className="focus-glow flex w-full items-center gap-2.5 border-b border-[#f2ead8] px-3.5 py-2.5 text-left text-[12px] font-semibold text-[#5c5344] transition-colors duration-300 last:border-b-0 hover:bg-[#faf5e6]"
+    >
+      <Icon className="size-3.5 shrink-0 text-[#8a6f46]" aria-hidden="true" />
+      {t(label)}
+    </button>
+  );
+}
+
+/* =============== THE HONEST REPORT — a word to the house =============== */
+function ReportSheet({
+  post,
+  onClose,
+  onFlash,
+}: {
+  post: GatheringPost;
+  onClose: () => void;
+  onFlash: (line: string) => void;
+}) {
+  const t = useT();
+  const [reason, setReason] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const send = useCallback(async () => {
+    if (reason.trim().length < 3 || sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      await netFetch("/api/network/safety", {
+        method: "POST",
+        body: {
+          action: "report",
+          targetType: "post",
+          targetId: post.id,
+          reason: reason.trim(),
+        },
+      });
+      onFlash(t("The house has received your word."));
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("The report could not be sent."));
+    } finally {
+      setSending(false);
+    }
+  }, [reason, sending, post.id, onFlash, onClose, t]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-[62] flex items-end justify-center bg-[rgba(46,38,24,0.32)] sm:items-center"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: 24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 16, opacity: 0 }}
+        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t("Report this offering")}
+        data-testid="gath-report-sheet"
+        className={cn(GP_CARD, "w-full max-w-[460px] rounded-t-[24px] p-5 sm:rounded-[24px]")}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-[family-name:var(--font-literata)] text-[14.5px] font-semibold text-[#3d3428]">
+            {t("Report this offering")}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t("Close the report")}
+            className={cn(GP_ICON_BTN, "size-8")}
+          >
+            <X className="size-3.5" aria-hidden="true" />
+          </button>
+        </div>
+        <p className="mt-2 text-[12px] leading-relaxed text-[#8a7c64]">
+          {t("A word to the house about ")}
+          <strong className="font-semibold text-[#5c5344]">{post.title}</strong>
+          {t(" — a human hand reads it, never a machine verdict.")}
+        </p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          maxLength={600}
+          rows={3}
+          placeholder={t("Say what troubles you — plainly, in your own words.")}
+          aria-label={t("Say what troubles you — plainly, in your own words.")}
+          data-testid="gath-report-reason"
+          className={cn(GP_INPUT, "gp-scroll mt-3 resize-none")}
+        />
+        {error && (
+          <p className="mt-2 text-[12px] font-medium text-[#b45309]" role="alert">
+            {error}
+          </p>
+        )}
+        <div className="mt-4 flex justify-end gap-2.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className={cn(GP_GHOST, "min-h-[44px] px-4 text-[12px]")}
+          >
+            {t("Never mind")}
+          </button>
+          <button
+            type="button"
+            onClick={() => void send()}
+            disabled={reason.trim().length < 3 || sending}
+            className={cn(GP_HAND, "min-h-[44px] px-5 text-[12px]")}
+            data-testid="gath-report-send"
+          >
+            {sending && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}
+            {t("Send to the house")}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -1531,6 +1788,10 @@ export default function FeedSection({
     post: GatheringPost;
     variant: GrowVariant;
   } | null>(null);
+  /* THE HONEST LABEL'S OWN SIEVE and the filter's own drawer */
+  const [epistemic, setEpistemic] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [reportPost, setReportPost] = useState<GatheringPost | null>(null);
 
   const hall = useGatheringFeed(false, null, tab);
   const mine = useGatheringFeed(true, null, null);
@@ -1544,14 +1805,14 @@ export default function FeedSection({
     return () => window.clearTimeout(id);
   }, [note]);
 
-  /* THE FOUR CURRENTS — turning a current re-reads the hall once, with
+  /* THE THREE CURRENTS — turning a current re-reads the hall once, with
      the rekindle the hall already trusts. Mine keeps its own wall. */
   const lastTabRef = useRef<FeedTab>("foryou");
   useEffect(() => {
     if (lastTabRef.current === tab) return;
     lastTabRef.current = tab;
-    hall.rekindle({ kind });
-  }, [tab, kind, hall]);
+    hall.rekindle({ kind, epistemic });
+  }, [tab, kind, epistemic, hall]);
 
   /* THE ATLAS' OWN ECHO — when an intention is spoken at the map, the
      hall reads itself again (once per spoken vow, never on a loop):
@@ -1567,10 +1828,25 @@ export default function FeedSection({
   const chooseKind = useCallback(
     (k: string | null) => {
       setKind(k);
-      hall.rekindle({ kind: k });
+      hall.rekindle({ kind: k, epistemic });
     },
-    [hall]
+    [hall, epistemic]
   );
+
+  const chooseEpistemic = useCallback(
+    (lv: string | null) => {
+      setEpistemic(lv);
+      hall.rekindle({ kind, epistemic: lv });
+    },
+    [hall, kind]
+  );
+
+  /* the filters' own reset — every sieve lifted at once */
+  const clearFilters = useCallback(() => {
+    setKind(null);
+    setEpistemic(null);
+    hall.rekindle({ kind: null, epistemic: null });
+  }, [hall]);
 
   const resonate = useCallback(
     async (post: GatheringPost) => {
@@ -1684,6 +1960,35 @@ export default function FeedSection({
     [hall, mine, t]
   );
 
+  /* THE CARD'S OWN HANDS — share, ask M.E., and the honest report */
+  const sharePost = useCallback(
+    async (post: GatheringPost) => {
+      const url = `${window.location.origin}/?room=gathering&post=${post.id}`;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: post.title, url });
+          return;
+        }
+        await navigator.clipboard.writeText(url);
+        setNote(t("The offering's link rests in your clipboard."));
+      } catch {
+        /* the visitor may hold the link another way */
+      }
+    },
+    [t]
+  );
+
+  const askMeAbout = useCallback((post: GatheringPost) => {
+    window.dispatchEvent(
+      new CustomEvent("gath-me-open", {
+        detail: {
+          postTitle: post.title,
+          postExcerpt: post.body.slice(0, 160),
+        },
+      })
+    );
+  }, []);
+
   const onEchoCount = useCallback(
     (id: string, n: number) => {
       const bump = (prev: GatheringPost[]) =>
@@ -1738,13 +2043,15 @@ export default function FeedSection({
     streamIndexRef.current = 0;
   }, [view]);
 
-  /* THE FOUR CURRENTS — the hall reads itself four ways */
+  /* THE THREE CURRENTS — the hall reads itself the three honest ways:
+     for you, the ones you follow, the newest words. Discoveries live
+     in Explore; the kinds and the knowledge distinction live in the
+     filter's own drawer. */
   const currents: Array<{ key: FeedTab; label: string; icon: LucideIcon }> = useMemo(
     () => [
       { key: "foryou", label: "For you", icon: Sparkles },
       { key: "following", label: "Following", icon: Users },
       { key: "latest", label: "Latest", icon: Clock },
-      { key: "discoveries", label: "Discoveries", icon: Telescope },
     ],
     []
   );
@@ -1775,93 +2082,83 @@ export default function FeedSection({
 
   const feedList = view === "mine" ? mine : hall;
 
+  const filtersOn = kind !== null || epistemic !== null;
+  const filterCount = (kind !== null ? 1 : 0) + (epistemic !== null ? 1 : 0);
+
   return (
     <div className="relative flex h-full flex-col">
-      {/* ---------- one quiet crown: the four currents, one row ---------- */}
-      {/* THE CLEAN SOCIAL LAW — the hall's top carries only the currents:
-          the views have left the crown (the possibilities realm is the
-          middle street at the foot, my offerings live in My Space), and
-          the intention chips ride beneath as the feed's own filter strip. */}
+      {/* ---------- one quiet crown: the three currents and the filter's
+          own hand, one compact row — the crowded chip rows have left ---------- */}
+      {/* THE ONE ROW LAW — the hall's top carries the three currents and
+          one filter pearl. The kinds and the knowledge distinction live
+          in the filter's drawer, wrapped where every hand reaches them. */}
       <div className="mx-auto w-full max-w-[1200px] shrink-0 px-3 pt-2 sm:px-6 sm:pt-3" data-testid="gathering-three-hands">
         <div className="gp-scroll flex items-center justify-center gap-2 overflow-x-auto pb-0.5">
-
-          {/* the four currents — gone when mine keeps its own wall */}
           {view !== "mine" && (
-            <div
-              role="tablist"
-              aria-label={t("The four currents")}
-              className="gp-seg flex shrink-0 items-center gap-0.5 rounded-full border border-white/80 bg-white/45 p-1"
-            >
-              {currents.map((c) => {
-                const CIcon = c.icon;
-                const on = tab === c.key;
-                return (
-                  <button
-                    key={c.key}
-                    type="button"
-                    role="tab"
-                    aria-selected={on}
-                    onClick={() => setTab(c.key)}
-                    data-testid={`gath-feed-tab-${c.key}`}
-                    className={cn(
-                      "focus-glow relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-300 sm:px-3.5",
-                      on ? "text-[#5c5344]" : "text-[#a2947c] hover:text-[#7c715f]"
-                    )}
+            <>
+              <div
+                role="tablist"
+                aria-label={t("The gathering's currents")}
+                className="gp-seg flex shrink-0 items-center gap-0.5 rounded-full border border-white/80 bg-white/45 p-1"
+              >
+                {currents.map((c) => {
+                  const CIcon = c.icon;
+                  const on = tab === c.key;
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={on}
+                      onClick={() => setTab(c.key)}
+                      data-testid={`gath-feed-tab-${c.key}`}
+                      className={cn(
+                        "focus-glow relative flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-300 sm:px-3.5",
+                        on ? "text-[#5c5344]" : "text-[#a2947c] hover:text-[#7c715f]"
+                      )}
+                    >
+                      {on && (
+                        <motion.span
+                          layoutId="gp-currents-thumb"
+                          transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                          className="gp-seg-thumb absolute inset-0 rounded-full"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <CIcon className="relative size-3.5" aria-hidden="true" />
+                      <span className="relative whitespace-nowrap">{t(c.label)}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => setFilterOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={filterOpen}
+                aria-label={t("Filter the hall")}
+                title={t("Filter the hall")}
+                data-testid="gath-feed-filter"
+                className={cn(
+                  "focus-glow relative flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-[11px] font-semibold transition-all duration-300",
+                  filtersOn
+                    ? "border-[#cbb98d] bg-white text-[#5c5344]"
+                    : "border-[#e8dfc9] bg-white/55 text-[#7c715f] hover:border-[#d3c39c]"
+                )}
+              >
+                <SlidersHorizontal className="size-3.5" aria-hidden="true" />
+                {t("Filter")}
+                {filtersOn && (
+                  <span
+                    aria-hidden="true"
+                    className="flex size-4 items-center justify-center rounded-full bg-[#a16207] text-[8px] font-bold text-white"
                   >
-                    {on && (
-                      <motion.span
-                        layoutId="gp-currents-thumb"
-                        transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                        className="gp-seg-thumb absolute inset-0 rounded-full"
-                        aria-hidden="true"
-                      />
-                    )}
-                    <CIcon className="relative size-3.5" aria-hidden="true" />
-                    <span className="relative whitespace-nowrap">{t(c.label)}</span>
-                  </button>
-                );
-              })}
-            </div>
+                    {filterCount}
+                  </span>
+                )}
+              </button>
+            </>
           )}
-        </div>
-
-        {/* the hall's intention chips — one scrollable line */}
-        <div className="gp-scroll mt-2 flex max-w-full items-center gap-1.5 overflow-x-auto pb-0.5">
-            <button
-              type="button"
-              onClick={() => chooseKind(null)}
-              aria-pressed={kind === null}
-              className={cn(
-                "focus-glow shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-all duration-300",
-                kind === null
-                  ? "border-[#cbb98d] bg-white text-[#5c5344]"
-                  : "border-[#e8dfc9] bg-white/55 text-[#a2947c] hover:border-[#d3c39c]"
-              )}
-            >
-              {t("All intentions")}
-            </button>
-            {KIND_ORDER.map((k) => {
-              const m = KIND_META[k];
-              const KIcon = m.icon;
-              const on = kind === k;
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => chooseKind(k)}
-                  aria-pressed={on}
-                  className={cn(
-                    "focus-glow flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-all duration-300",
-                    on
-                      ? "border-[#cbb98d] bg-white text-[#5c5344]"
-                      : "border-[#e8dfc9] bg-white/55 text-[#a2947c] hover:border-[#d3c39c]"
-                  )}
-                >
-                  <KIcon className="size-3" style={{ color: m.accent }} aria-hidden="true" />
-                  {t(KIND_FILTER_LABEL[k])}
-                </button>
-              );
-            })}
         </div>
       </div>
 
@@ -1878,11 +2175,22 @@ export default function FeedSection({
           ) : hall.posts.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center">
               <EmptyRoom
-                icon={Play}
-                line={t(
-                  "The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question."
-                )}
-                actions={emptyDoors}
+                icon={filtersOn ? SlidersHorizontal : Play}
+                line={
+                  filtersOn
+                    ? t("Nothing hangs here under the filters you hold — loosen them, or bring what is missing yourself.")
+                    : t(
+                        "The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question."
+                      )
+                }
+                actions={
+                  filtersOn
+                    ? [
+                        { key: "clear", label: t("Clear the filters"), icon: X, onClick: clearFilters, primary: true },
+                        ...emptyDoors.slice(0, 1),
+                      ]
+                    : emptyDoors
+                }
               />
             </div>
           ) : (
@@ -1956,17 +2264,48 @@ export default function FeedSection({
             ) : feedList.posts.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center">
                 <EmptyRoom
-                  icon={LayoutGrid}
+                  icon={
+                    view === "mine" ? LayoutGrid : filtersOn ? SlidersHorizontal : tab === "following" ? Users : LayoutGrid
+                  }
                   line={
                     view === "mine"
                       ? t("You have not hung anything yet — the quiet walls below wait for your first stone.")
-                      : t("The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question.")
+                      : filtersOn
+                        ? t("Nothing hangs here under the filters you hold — loosen them, or bring what is missing yourself.")
+                        : tab === "following"
+                          ? t("The paths you follow are quiet — find makers in Explore, or speak first.")
+                          : t(
+                              "The hall rests quiet — be the first to hang a reflection, a dream, a discovery or a question."
+                            )
                   }
-                  actions={view === "mine" ? emptyDoors.slice(0, 2) : emptyDoors}
+                  actions={
+                    view === "mine"
+                      ? emptyDoors.slice(0, 2)
+                      : filtersOn
+                        ? [
+                            {
+                              key: "clear",
+                              label: t("Clear the filters"),
+                              icon: X,
+                              onClick: clearFilters,
+                              primary: true,
+                            },
+                            ...emptyDoors.slice(0, 1),
+                          ]
+                        : emptyDoors
+                  }
                 />
               </div>
             ) : (
               <div className="mx-auto max-w-[1200px]">
+                {view !== "mine" && hall.foldedTwins > 0 && (
+                  <p
+                    className="pb-2 text-center text-[11px] italic text-[#a2947c]"
+                    data-testid="gath-folded-note"
+                  >
+                    {t("Twin offerings folded together")}: {hall.foldedTwins}
+                  </p>
+                )}
                 <div
                   className={cn(
                     "grid grid-cols-1 gap-4 sm:grid-cols-2",
@@ -1991,6 +2330,9 @@ export default function FeedSection({
                       onRepost={() => setRepostPost(p)}
                       onGrow={() => openGrow(p)}
                       onTakeBack={() => void takeBack(p)}
+                      onShare={() => void sharePost(p)}
+                      onAskMe={() => askMeAbout(p)}
+                      onReport={() => setReportPost(p)}
                       armedId={armedId}
                       setArmedId={setArmedId}
                     />
@@ -2056,7 +2398,159 @@ export default function FeedSection({
         )}
       </AnimatePresence>
 
+      {/* ---------- the filter's own drawer — the kinds and the honest
+          labels, wrapped where every hand reaches them ---------- */}
+      <AnimatePresence>
+        {filterOpen && (
+          <motion.div
+            key="filter-drawer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[62] flex items-end justify-center bg-[rgba(46,38,24,0.32)] sm:items-center"
+            onClick={() => setFilterOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 16, opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={t("Filter the hall")}
+              data-testid="gath-filter-drawer"
+              className="gp-card gp-scroll max-h-[78vh] w-full max-w-[540px] overflow-y-auto rounded-t-[24px] p-5 sm:rounded-[24px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="font-[family-name:var(--font-literata)] text-[14.5px] font-semibold text-[#3d3428]">
+                  {t("Filter the hall")}
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setFilterOpen(false)}
+                  aria-label={t("Close the filter")}
+                  data-testid="gath-filter-close"
+                  className={cn(GP_ICON_BTN, "size-8")}
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <div className="mt-4">
+                <RoomLabel>{t("the offering's kind")}</RoomLabel>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => chooseKind(null)}
+                    aria-pressed={kind === null}
+                    className={cn(
+                      "focus-glow rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-all duration-300",
+                      kind === null
+                        ? "border-[#cbb98d] bg-white text-[#5c5344]"
+                        : "border-[#e8dfc9] bg-white/55 text-[#a2947c] hover:border-[#d3c39c]"
+                    )}
+                    data-testid="gath-filter-kind-all"
+                  >
+                    {t("All intentions")}
+                  </button>
+                  {KIND_ORDER.map((k) => {
+                    const m = KIND_META[k];
+                    const KIcon = m.icon;
+                    const on = kind === k;
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => chooseKind(k)}
+                        aria-pressed={on}
+                        data-testid={`gath-filter-kind-${k}`}
+                        className={cn(
+                          "focus-glow flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-all duration-300",
+                          on
+                            ? "border-[#cbb98d] bg-white text-[#5c5344]"
+                            : "border-[#e8dfc9] bg-white/55 text-[#a2947c] hover:border-[#d3c39c]"
+                        )}
+                      >
+                        <KIcon className="size-3" style={{ color: m.accent }} aria-hidden="true" />
+                        {t(KIND_FILTER_LABEL[k])}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <RoomLabel>{t("the knowledge distinction")}</RoomLabel>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => chooseEpistemic(null)}
+                    aria-pressed={epistemic === null}
+                    className={cn(
+                      "focus-glow rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-all duration-300",
+                      epistemic === null
+                        ? "border-[#cbb98d] bg-white text-[#5c5344]"
+                        : "border-[#e8dfc9] bg-white/55 text-[#a2947c] hover:border-[#d3c39c]"
+                    )}
+                    data-testid="gath-filter-ev-all"
+                  >
+                    {t("Every honesty")}
+                  </button>
+                  {EVIDENCE_LEVELS.map((lv) => {
+                    const on = epistemic === lv;
+                    return (
+                      <button
+                        key={lv}
+                        type="button"
+                        onClick={() => chooseEpistemic(on ? null : lv)}
+                        aria-pressed={on}
+                        data-testid={`gath-filter-ev-${lv}`}
+                        className={cn(
+                          "focus-glow rounded-full border bg-white/60 px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] transition-all duration-300",
+                          isEvidenceLevel(lv) ? EVIDENCE_STYLE[lv] : "",
+                          on
+                            ? "border-[#cbb98d] bg-white text-[#5c5344]"
+                            : "border-[#e8dfc9]"
+                        )}
+                      >
+                        {t(EVIDENCE_LABEL[lv])}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-5 flex items-center justify-between gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearFilters();
+                  }}
+                  className={cn(GP_GHOST, "min-h-[44px] px-4 text-[12px]")}
+                  data-testid="gath-filter-reset"
+                >
+                  {t("Clear the filters")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterOpen(false)}
+                  className={cn(GP_HAND, "min-h-[44px] px-5 text-[12px]")}
+                  data-testid="gath-filter-done"
+                >
+                  {t("Done")}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ---------- the sheets ---------- */}
+      <AnimatePresence>
+        {reportPost && <ReportSheet post={reportPost} onClose={() => setReportPost(null)} onFlash={setNote} />}
+      </AnimatePresence>
       <AnimatePresence>
         {echoPost && (
           <EchoSheet post={echoPost} onClose={() => setEchoPost(null)} onCount={onEchoCount} />

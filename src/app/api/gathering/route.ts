@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
 import { networkName, notify, wallIdsFor } from "@/lib/server/network";
+import { isCoverStyle } from "./cover/route";
 
 /* ------------------------------------------------------------------ */
 /*  THE GATHERING'S DOORS — the shared hall's own API.                 */
@@ -105,6 +106,22 @@ export function isGatheringTab(v: unknown): v is GatheringTab {
 
 const TITLE_MAX = 120;
 const BODY_MAX = 4000;
+
+/* THE OFFERING'S OWN VISIBILITIES — who may read it once it hangs:
+   the open hall, a circle's wall, accepted connections, anyone with
+   the quiet link, or the maker alone. The server decides — never the
+   visitor's politeness. */
+export const POST_VISIBILITIES = [
+  "public",
+  "circle",
+  "connections",
+  "unlisted",
+  "private",
+] as const;
+
+export function isPostVisibility(v: unknown): v is (typeof POST_VISIBILITIES)[number] {
+  return typeof v === "string" && (POST_VISIBILITIES as readonly string[]).includes(v);
+}
 
 /** the display name a post's maker wears in the hall — the landing
     profile's own name for the signed-in; the minted astral name for
@@ -222,6 +239,30 @@ function rankForYou(pool: PostRow[], followedIds: Set<string>, tokens: string[])
   return ordered;
 }
 
+/* ---------------- the twin-fold ----------------
+   One maker, one name, twice on the walls — a work and its echo
+   hanging as strangers. The fold keeps the most-resonated of the
+   twins in its original place and counts the rest honestly. */
+function foldTwins(rows: PostRow[]): { rows: PostRow[]; folded: number } {
+  const byKey = new Map<string, PostRow>();
+  let folded = 0;
+  for (const p of rows) {
+    const key = `${p.userId}::${p.title.trim().toLowerCase()}`;
+    const held = byKey.get(key);
+    if (!held) {
+      byKey.set(key, p);
+      continue;
+    }
+    folded += 1;
+    const better =
+      p._count.resonances > held._count.resonances ||
+      (p._count.resonances === held._count.resonances && p.createdAt > held.createdAt);
+    if (better) byKey.set(key, p);
+  }
+  const kept = rows.filter((p) => byKey.get(`${p.userId}::${p.title.trim().toLowerCase()}`)?.id === p.id);
+  return { rows: kept, folded };
+}
+
 /* ---------------- GET /api/gathering — the living exhibition ---------------- */
 export async function GET(req: NextRequest) {
   try {
@@ -233,6 +274,8 @@ export async function GET(req: NextRequest) {
     const region = url.searchParams.get("region");
     const q = (url.searchParams.get("q") ?? "").trim().toLowerCase().slice(0, 60);
     const cursor = url.searchParams.get("cursor");
+    const epistemicRaw = url.searchParams.get("epistemic");
+    const epistemicLevel = isGatheringEpistemic(epistemicRaw) ? epistemicRaw : null;
     const take = Math.min(30, Math.max(5, Number(url.searchParams.get("take") ?? 15)));
 
     /* a tab only steers the open hall — a maker's own shelf, a circle's
@@ -253,6 +296,7 @@ export async function GET(req: NextRequest) {
 
     let rows: PostRow[];
     let nextCursor: string | null = null;
+    let foldedTwins = 0;
 
     if (tab === "foryou") {
       /* the weaver's pools: the open hall's newest words, and the
@@ -304,12 +348,22 @@ export async function GET(req: NextRequest) {
       });
       const ranked = rankForYou(Array.from(merged.values()), followedIds, interestTokensOf(profile));
 
+      /* the twin-fold and the honest label's own sieve — applied before
+         the page is cut, so a page never shows two of one offering */
+      const folded = foldTwins(ranked);
+      const sieved = epistemicLevel
+        ? folded.rows.filter((p) => p.epistemic === epistemicLevel)
+        : folded.rows;
+
       /* the numeric cursor — an offset spoken as a string */
       const offset = Math.max(0, Number.parseInt(cursor ?? "0", 10) || 0);
-      rows = ranked.slice(offset, offset + take);
-      nextCursor = offset + take < ranked.length ? String(offset + take) : null;
+      rows = sieved.slice(offset, offset + take);
+      nextCursor = offset + take < sieved.length ? String(offset + take) : null;
+      foldedTwins = folded.folded;
     } else {
       const where: Prisma.GatheringPostWhereInput = {
+        /* the honesty law — only offerings still standing are read */
+        status: "published",
         ...(mine ? { userId: visitor.user.id } : {}),
         ...(tab === "discoveries"
           ? {
@@ -321,6 +375,7 @@ export async function GET(req: NextRequest) {
             ? { kind }
             : {}),
         ...(isGatheringRegion(region) ? { region } : {}),
+        ...(epistemicLevel ? { epistemic: epistemicLevel } : {}),
         ...(circleId ? { circleId } : { circleId: mine ? undefined : null }),
         ...(q
           ? {
@@ -335,13 +390,23 @@ export async function GET(req: NextRequest) {
 
       if (tab === "following") {
         /* the paths the visitor chose — their makers' words, and the
-           visitor's own, one quiet river */
+           visitor's own, one quiet river; the visitor's own quieter
+           rooms stay theirs alone, the hall reads the public words */
         const follows = await db.networkFollow.findMany({
           where: { followerId: visitor.user.id },
           select: { followingId: true },
         });
         where.userId = { in: [...follows.map((f) => f.followingId), visitor.user.id] };
         where.circleId = null;
+        where.OR = [{ visibility: "public" }, { userId: visitor.user.id }];
+      } else if (mine) {
+        /* the maker reads every room of their own house */
+      } else if (circleId) {
+        /* a circle's wall reads its own and the public words */
+        where.visibility = { in: ["public", "circle"] };
+      } else {
+        /* the open hall reads only what was spoken to it */
+        where.visibility = "public";
       }
 
       const fetched = await db.gatheringPost.findMany({
@@ -352,7 +417,10 @@ export async function GET(req: NextRequest) {
         include,
       });
 
-      const safe = fetched.filter((p) => !walls.has(p.userId)).slice(0, take + 1);
+      const walled = fetched.filter((p) => !walls.has(p.userId));
+      const folded = foldTwins(walled);
+      foldedTwins = folded.folded;
+      const safe = folded.rows.slice(0, take + 1);
       const hasMore = safe.length > take;
       const page = safe.slice(0, take);
       rows = page;
@@ -432,6 +500,11 @@ export async function GET(req: NextRequest) {
       bookmarked: bookmarkedIds.has(p.id),
       reposted: myRepostIds.has(p.id),
       epistemic: p.epistemic,
+      visibility: p.visibility,
+      language: p.language,
+      altText: p.altText,
+      aiMedia: p.aiMedia,
+      aiStyle: p.aiStyle,
       hasQuestion: questionPostIds.has(p.id),
       hasLab: labPostIds.has(p.id),
       hasIntentionSpace: intentionPostIds.has(p.id),
@@ -441,6 +514,7 @@ export async function GET(req: NextRequest) {
       NextResponse.json({
         posts,
         nextCursor,
+        foldedTwins,
       }),
       visitor
     );
@@ -478,9 +552,92 @@ export async function POST(req: NextRequest) {
       mediaType?: unknown;
       mediaName?: unknown;
       epistemic?: unknown;
+      visibility?: unknown;
+      language?: unknown;
+      altText?: unknown;
+      aiMedia?: unknown;
+      aiStyle?: unknown;
+      publishKey?: unknown;
     } | null;
     if (!raw) {
       return NextResponse.json({ error: "The offering arrived unreadable." }, { status: 400 });
+    }
+
+    /* THE ONE KEY, ONE OFFERING LAW — the composer speaks with an
+       idempotency key; a shaky hand, a lost reply or a retry can
+       never hang the same offering twice. The first pressing hangs;
+       every later pressing reads the very same offering back. */
+    const publishKey =
+      typeof raw.publishKey === "string" &&
+      raw.publishKey.length >= 10 &&
+      raw.publishKey.length <= 64 &&
+      /^[A-Za-z0-9_-]+$/.test(raw.publishKey)
+        ? raw.publishKey
+        : null;
+    if (publishKey) {
+      const existing = await db.gatheringPost.findUnique({
+        where: { publishKey },
+        include: {
+          user: { select: { name: true, email: true, provider: true, image: true } },
+          circle: { select: { id: true, name: true } },
+          resonances: { where: { userId: visitor.user.id }, select: { id: true } },
+          _count: { select: { resonances: true, echoes: true } },
+        },
+      });
+      if (existing && existing.userId !== visitor.user.id) {
+        return NextResponse.json(
+          { error: "This offering's key is already spoken for." },
+          { status: 409 }
+        );
+      }
+      if (existing) {
+        return withAnonCookie(
+          NextResponse.json({
+            existing: true,
+            post: {
+              id: existing.id,
+              kind: existing.kind,
+              title: existing.title,
+              body: existing.body,
+              sector: existing.sector,
+              region: existing.region,
+              mediaUrl: existing.mediaUrl,
+              mediaType: existing.mediaType,
+              mediaName: existing.mediaName,
+              tags: (existing.tags ?? "")
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean),
+              circle: existing.circle
+                ? { id: existing.circle.id, name: existing.circle.name }
+                : null,
+              resonanceCount: existing._count.resonances,
+              echoCount: existing._count.echoes,
+              createdAt: existing.createdAt.toISOString(),
+              author: {
+                name: gatheringName(existing.user),
+                image: existing.user.image ?? null,
+                anon: existing.user.provider === "anon",
+              },
+              mine: true,
+              resonated: existing.resonances.length > 0,
+              repostCount: 0,
+              bookmarked: false,
+              reposted: false,
+              epistemic: existing.epistemic,
+              visibility: existing.visibility,
+              language: existing.language,
+              altText: existing.altText,
+              aiMedia: existing.aiMedia,
+              aiStyle: existing.aiStyle,
+              hasQuestion: false,
+              hasLab: false,
+              hasIntentionSpace: false,
+            },
+          }),
+          visitor
+        );
+      }
     }
 
     if (!isGatheringKind(raw.kind)) {
@@ -537,9 +694,13 @@ export async function POST(req: NextRequest) {
     const region = isGatheringRegion(raw.region) ? raw.region : null;
 
     /* the offering's own picture or film — only the house's shelf may
-       be named; a foreign address never enters the hall */
+       be named: a gathering upload or an atelier painting; a foreign
+       address never enters the hall */
     let media: { url: string; type: string; name: string | null } | null = null;
-    if (typeof raw.mediaUrl === "string" && raw.mediaUrl.startsWith("/gathering-media/")) {
+    if (
+      typeof raw.mediaUrl === "string" &&
+      (raw.mediaUrl.startsWith("/gathering-media/") || raw.mediaUrl.startsWith("/api/visual/"))
+    ) {
       if (!isGatheringMediaType(raw.mediaType)) {
         return NextResponse.json(
           { error: "The offering's media wears an unknown shape." },
@@ -572,6 +733,26 @@ export async function POST(req: NextRequest) {
       circleId = raw.circleId;
     }
 
+    /* THE VISIBILITY LAW — the maker chooses who may read; inside a
+       circle the circle's own wall decides. The server enforces this
+       at every read; the feed never trusts a hidden room. */
+    const asked = isPostVisibility(raw.visibility) ? raw.visibility : "public";
+    const visibility = circleId ? "circle" : asked;
+
+    /* the offering's own tongue — recorded, never translated */
+    const language =
+      typeof raw.language === "string" && raw.language.trim().length >= 2
+        ? raw.language.trim().slice(0, 8).toLowerCase()
+        : null;
+
+    /* the picture's honest description and its engine's truth */
+    const altText =
+      typeof raw.altText === "string" && raw.altText.trim().length >= 1
+        ? raw.altText.trim().slice(0, 300)
+        : null;
+    const aiMedia = raw.aiMedia === true;
+    const aiStyle = isCoverStyle(raw.aiStyle) ? raw.aiStyle : null;
+
     const created = await db.gatheringPost.create({
       data: {
         userId: visitor.user.id,
@@ -583,11 +764,24 @@ export async function POST(req: NextRequest) {
         region,
         circleId,
         epistemic,
+        visibility,
+        language,
+        altText,
+        aiMedia,
+        aiStyle,
+        ...(publishKey ? { publishKey } : {}),
         ...(media
           ? { mediaUrl: media.url, mediaType: media.type, mediaName: media.name }
           : {}),
       },
     });
+
+    /* the bench retires — the words found their wall */
+    try {
+      await db.gatheringDraft.deleteMany({ where: { userId: visitor.user.id } });
+    } catch {
+      /* a resting bench never blocks a hung offering */
+    }
 
     /* the circle's bells ring softly — a new offering arrived */
     if (circleId) {
@@ -641,6 +835,11 @@ export async function POST(req: NextRequest) {
           bookmarked: false,
           reposted: false,
           epistemic: created.epistemic,
+          visibility: created.visibility,
+          language: created.language,
+          altText: created.altText,
+          aiMedia: created.aiMedia,
+          aiStyle: created.aiStyle,
           hasQuestion: false,
           hasLab: false,
           hasIntentionSpace: false,

@@ -193,6 +193,13 @@ export interface GatheringPost {
   /* a repost's attribution — whose words walked into the room */
   repostNote?: string | null;
   repostAuthor?: string | null;
+  /* the honest rooms — who may read, in what tongue, and whether the
+     picture beside the words was painted by an engine */
+  visibility?: string;
+  language?: string | null;
+  altText?: string | null;
+  aiMedia?: boolean;
+  aiStyle?: string | null;
   /* the rooms a work can grow into */
   hasQuestion?: boolean;
   hasLab?: boolean;

@@ -100,6 +100,7 @@ export async function POST(req: NextRequest) {
       question?: unknown;
       action?: unknown;
       postTitle?: unknown;
+      postExcerpt?: unknown;
       history?: unknown;
     } | null;
     if (!raw) {
@@ -143,6 +144,10 @@ export async function POST(req: NextRequest) {
       typeof raw.postTitle === "string" && raw.postTitle.trim().length >= 1
         ? raw.postTitle.trim().slice(0, 160)
         : null;
+    const postExcerpt =
+      typeof raw.postExcerpt === "string" && raw.postExcerpt.trim().length >= 1
+        ? raw.postExcerpt.trim().slice(0, 200)
+        : null;
 
     /* the conversation's own memory — the exchanges of THIS chat, so
        M.E. proceeds the thread instead of restarting it cold */
@@ -159,6 +164,7 @@ export async function POST(req: NextRequest) {
     contextLines.push(`Section: ${section}`);
     if (action) contextLines.push(`Requested hand: ${action}`);
     if (postTitle) contextLines.push(`The offering at hand: "${postTitle}"`);
+    if (postExcerpt) contextLines.push(`Its opening words, the maker's own: "${postExcerpt}"`);
     contextLines.push(
       `The visitor asks: ${question.length > 0 ? question : `(no words — they chose the "${action}" hand)`}`
     );

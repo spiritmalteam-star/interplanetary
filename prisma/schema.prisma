@@ -88,6 +88,7 @@ model User {
   memoryItems                 MemoryItem[]
   networkMirrorSuggested      NetworkMirrorSuggestion[] @relation("NetworkMirrorSuggested")
   agentTasks                  AgentTask[]
+  gatheringDrafts             GatheringDraft[]
   media           MediaAsset[]
 }
 
@@ -669,9 +670,14 @@ model GatheringPost {
   mediaUrl     String? // the offering's own picture or film, hung beside the words (asset path)
   mediaType    String? // image | video — how the hall shows the offering's media
   mediaName    String? // the file's own name, spoken gently beside the offering
-  visibility   String  @default("public") // public | circle | connections | draft
+  visibility   String  @default("public") // public | circle | connections | unlisted | private
   epistemic    String? // established | preliminary | hypothesis | personal | philosophical | creative | disputed — the Knowledge distinction
   status       String  @default("published") // published | removed (moderation)
+  language     String? // the offering's own tongue (en, sq, …) — the maker's own words stay untouched
+  altText      String? // the picture's honest description — the maker may correct the draft
+  aiMedia      Boolean @default(false) // the picture was painted by an engine — the hall says so, always
+  aiStyle      String? // which style the maker chose (editorial | ethereal-pearl | observatory | diagram | book-cover | music-atmosphere | custom)
+  publishKey   String? @unique // the offering's own idempotency key — one key hangs one offering, however many times the hand retries
 
   @@unique([userId, sourcePortal, sourceId]) // publication idempotency — one source, one offering per maker
   @@index([createdAt])
@@ -679,6 +685,38 @@ model GatheringPost {
   @@index([visibility])
   @@index([sourceId])
   @@index([region])
+}
+
+// THE COMPOSER'S OWN BENCH — the maker's unsent offering. One bench
+//  per maker: autosaved as the words grow, every save a new revision,
+//  survivors of refreshes and journeys. Discarding clears the bench;
+//  publishing retires it.
+model GatheringDraft {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        String        @default("reflection")
+  title       String        @default("")
+  body        String        @default("")
+  tags        String? // comma-separated threads of meaning
+  sector      String?
+  epistemic   String?
+  circleId    String?
+  region      String?
+  language    String?
+  visibility  String        @default("public") // public | circle | connections | unlisted | private
+  mediaUrl    String?
+  mediaType   String? // image | video
+  mediaName   String?
+  altText     String?
+  aiMedia     Boolean       @default(false)
+  aiStyle     String?
+  revision    Int           @default(0) // every honest save counts one
+  discardedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([userId])
 }
 
 model GatheringResonance {
