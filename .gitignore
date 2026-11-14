@@ -85,3 +85,10 @@ public/gathering-media/
 .media/
 .zshots/
 qa/
+
+# sandbox pre-reset snapshots and replication traces — never ride with the repo
+/backups/
+/.pdfbuild/
+/--batch=25
+/live2.html
+/public/reflectme-full-replication-prompt.pdf
