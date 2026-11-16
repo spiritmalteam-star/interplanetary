@@ -4225,6 +4225,18 @@ export function BranchCanopy({
             >
               <BookOpen className="size-3" aria-hidden="true" />
             </button>
+            {/* THE MUSIC DOOR — the chamber where intention becomes song
+                (Music Engine 2.0: any genre the visitor asks for) */}
+            <button
+              type="button"
+              onClick={() => openLightCodes()}
+              aria-label={t("Music Room")}
+              title={t("Music Room")}
+              data-testid={`${testIdPrefix}-door-music`}
+              className="focus-glow flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+            >
+              <AudioLines className="size-3" aria-hidden="true" />
+            </button>
             <button
               type="button"
               onClick={openAbout}

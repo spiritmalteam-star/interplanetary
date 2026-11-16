@@ -62,10 +62,16 @@ import { emVectors } from "@/lib/data/evolvemed";
 import type {
   LcTrack,
   LcShape,
+  LcStudio,
+  LcSync,
   LightCodesMode,
 } from "@/lib/data/light-codes";
-import { LC_DEFAULT_SHAPE } from "@/lib/data/light-codes";
+import { LC_DEFAULT_SHAPE, LC_DEFAULT_STUDIO } from "@/lib/data/light-codes";
+import type { QualityReport } from "@/lib/audio/analyze";
+import { estimateSync } from "@/lib/audio/analyze";
+import { effectsTolerant } from "@/lib/data/music-genres";
 import { journeyDepth } from "@/lib/learning-branches";
+import { usePlayerStore } from "@/lib/player-store";
 
 export type ModalState =
   | { type: "federation" }
@@ -665,6 +671,13 @@ interface MirrorState {
   lcTrack: LcTrack | null; // the finished, playable transmission
   lcError: string | null;
   lcHistory: LcTrack[];
+  /* MUSIC ENGINE 2.0 — the studio's creative contract */
+  lcGenres: string[]; // the chosen genre fusion (the binding contract)
+  lcStudio: LcStudio; // advanced controls (bpm, key, moods, vocal, …)
+  lcSync: LcSync | null; // karaoke timing for the current track
+  lcSyncEditing: boolean; // the visitor is stamping real timings
+  lcQuality: QualityReport | null; // the chamber's audio QA report
+  lcPublishedNonce: number; // bumped on every successful publish — the shelf listens
   openLightCodes: (prefill?: LcPrefill) => void;
   exitLightCodes: () => void;
   setLcMode: (mode: LightCodesMode) => void;
@@ -672,6 +685,11 @@ interface MirrorState {
   setLcIntention: (v: string) => void;
   setLcUserLyrics: (v: string) => void;
   setLcShape: (shape: Partial<LcShape>) => void;
+  setLcGenres: (ids: string[]) => void;
+  setLcStudio: (patch: Partial<LcStudio>) => void;
+  setLcSync: (sync: LcSync | null) => void;
+  setLcSyncEditing: (editing: boolean) => void;
+  publishLc: (trackId: string, caption?: string) => Promise<boolean>;
   /** Mirror translation → generation → poll → player. When called
       with interpretOnly, only the Mirror's interpretation is asked. */
   generateLightCode: (opts?: {
@@ -679,7 +697,13 @@ interface MirrorState {
     context?: string;
     intention?: string;
     attachments?: ChatAttachment[];
+    styleOverride?: { title?: string; style?: string; lyrics?: string | null };
   }) => Promise<void>;
+  /** The chamber's audio QA — analyze, judge, remember. */
+  runLcQuality: () => Promise<void>;
+  favoriteLc: (trackId: string, favorite: boolean) => Promise<void>;
+  publishLc: (trackId: string, caption?: string) => Promise<boolean>;
+  refreshLcLibrary: () => Promise<void>;
   reshapeLc: (track: LcTrack) => void;
   clearLcPlayer: () => void;
   forgetLc: (id: string) => void;
@@ -1063,7 +1087,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   axScope: null,
 
   /* LIGHT CODES — the musical chamber */
-  lcMode: "light-transmission" as LightCodesMode,
+  lcMode: "freestyle" as LightCodesMode,
   lcCivilization: null,
   lcIntention: "",
   lcUserLyrics: "",
@@ -1073,6 +1097,12 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcTrack: null,
   lcError: null,
   lcHistory: [],
+  lcGenres: [] as string[],
+  lcStudio: { ...LC_DEFAULT_STUDIO },
+  lcSync: null,
+  lcSyncEditing: false,
+  lcQuality: null,
+  lcPublishedNonce: 0,
 
   me: null,
   googleConfigured: false,
@@ -1182,7 +1212,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
 
   /* -------- LIGHT CODES — the musical chamber --------
      Its own quiet world: intention in, transmission out. The Mirror
-     interprets; the sound engine renders; the visitor listens. */
+     interprets; the sound engine renders; the visitor listens.
+     MUSIC ENGINE 2.0: the visitor's genre fusion and studio controls
+     ride along as the binding contract; the finished transmission is
+     persisted server-side and the karaoke clock always follows the
+     player's own time. */
   openLightCodes: (prefill) => {
     const hydrate: Partial<MirrorState> = {
       view: "lightcodes",
@@ -1214,7 +1248,52 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         : get().lcInterpretation;
     }
     set(hydrate);
+    /* the server's truth joins the mirror — the library hydrates from
+       the vault, so a transmission never dies with a cleared browser */
+    void get().refreshLcLibrary();
     if (prefill?.autoGenerate) void get().generateLightCode({ context: prefill.context });
+  },
+  refreshLcLibrary: async () => {
+    try {
+      const res = await fetch("/api/tracks", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as { tracks?: Array<Record<string, unknown>> };
+      if (!data.tracks || !Array.isArray(data.tracks)) return;
+      const serverTracks: LcTrack[] = data.tracks
+        .filter((row) => row.status === "ready" && typeof row.audioUrl === "string")
+        .map((row) => ({
+          id: String(row.id),
+          trackId: String(row.id),
+          title: String(row.title),
+          mode: (String(row.mode) as LightCodesMode) ?? "freestyle",
+          intention: String(row.intention ?? ""),
+          audioUrl: String(row.audioUrl),
+          duration: typeof row.duration === "number" ? row.duration : undefined,
+          engineId: row.audioId ? String(row.audioId) : undefined,
+          style: typeof row.style === "string" ? row.style : undefined,
+          lyrics: typeof row.lyrics === "string" ? row.lyrics : null,
+          notes: typeof row.notes === "string" ? row.notes : undefined,
+          genres: Array.isArray(row.genres) ? (row.genres as string[]) : [],
+          spec: (row.spec as LcTrack["spec"]) ?? null,
+          qualityVerdict: typeof row.quality === "object" && row.quality !== null && "verdict" in (row.quality as object) ? String((row.quality as { verdict: string }).verdict) : undefined,
+          createdAt: new Date(String(row.createdAt)).getTime(),
+        }));
+      /* the newest of both worlds — localStorage rows the vault may not
+         know yet (fresh renders) survive beside the server truth */
+      const local = get().lcHistory;
+      const seen = new Set(serverTracks.map((t) => t.trackId));
+      const merged = [...serverTracks, ...local.filter((t) => !t.trackId || !seen.has(t.trackId))]
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, 60);
+      set({ lcHistory: merged });
+      try {
+        localStorage.setItem("mirror-lc-history", JSON.stringify(merged));
+      } catch {
+        /* storage unavailable */
+      }
+    } catch {
+      /* the vault rests — the mirror keeps its own memory */
+    }
   },
   exitLightCodes: () => set({ view: "observatory" }),
   setLcMode: (mode) =>
@@ -1226,10 +1305,18 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLcIntention: (v) => set({ lcIntention: v }),
   setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
   setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
+  setLcGenres: (ids) => set({ lcGenres: ids.slice(0, 4) }),
+  setLcStudio: (patch) => set((s) => ({ lcStudio: { ...s.lcStudio, ...patch } })),
+  setLcSync: (sync) => set({ lcSync: sync }),
+  setLcSyncEditing: (editing) => set({ lcSyncEditing: editing }),
   generateLightCode: async (opts) => {
     const s = get();
     if (s.lcStatus === "interpreting" || s.lcStatus === "polling") return;
     const intention = (opts?.intention ?? s.lcIntention).trim();
+    const idempotencyKey =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `lc-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     set({ lcStatus: "interpreting", lcError: null });
     try {
       const res = await fetch("/api/light-codes/generate", {
@@ -1239,15 +1326,20 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           mode: s.lcMode,
           intention,
           civilization: s.lcCivilization ?? undefined,
+          genres: s.lcGenres.length > 0 ? s.lcGenres : undefined,
           shape: s.lcShape,
+          studio: s.lcStudio,
           userLyrics:
-            s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
+            (s.lcShape.lyricsMode === "USER WRITES" || s.lcStudio.lyricsMode === "I write") &&
+            s.lcUserLyrics.trim()
               ? s.lcUserLyrics.trim()
               : undefined,
-          instrumental: s.lcShape.voice === "None",
+          instrumental: s.lcShape.voice === "None" || s.lcStudio.vocalMode === "Instrumental",
           language: s.language,
           context: opts?.context,
           interpretOnly: opts?.interpretOnly === true,
+          styleOverride: opts?.styleOverride,
+          idempotencyKey,
           ...(opts?.attachments ? attachmentsToPayload(opts.attachments) : {}),
         }),
       });
@@ -1266,6 +1358,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
               style: data.style ?? undefined,
               lyrics: data.lyrics ?? null,
               notes: data.notes ?? undefined,
+              spec: data.spec ?? null,
+              genres: s.lcGenres.length > 0 ? [...s.lcGenres] : undefined,
               createdAt: Date.now(),
             },
           });
@@ -1284,6 +1378,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         style: data.style ?? undefined,
         lyrics: data.lyrics ?? null,
         notes: data.notes ?? undefined,
+        spec: data.spec ?? null,
+        genres: s.lcGenres.length > 0 ? [...s.lcGenres] : undefined,
         createdAt: Date.now(),
       };
       set({ lcInterpretation: interpretation });
@@ -1296,18 +1392,13 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         const track: LcTrack = {
           ...interpretation,
           id: String(data.id ?? `lc-${Date.now()}`),
+          trackId: data.trackId ? String(data.trackId) : undefined,
           audioUrl: String(data.audioUrl),
           duration: typeof data.duration === "number" ? data.duration : undefined,
-          engineId: data.engineId ? String(data.engineId) : undefined,
+          engineId: data.id ? String(data.id) : undefined,
           createdAt: Date.now(),
         };
-        const history = [track, ...get().lcHistory.filter((t) => t.id !== track.id)].slice(0, 40);
-        try {
-          localStorage.setItem("mirror-lc-history", JSON.stringify(history));
-        } catch {
-          /* storage unavailable */
-        }
-        set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
+        admitTrack(track);
         return;
       }
       const taskId = data.taskId ? String(data.taskId) : null;
@@ -1318,7 +1409,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       for (;;) {
         await new Promise((r) => setTimeout(r, 5000));
         if (get().lcStatus !== "polling") return; // the visitor left or reset
-        if (Date.now() - started > 5 * 60 * 1000) {
+        if (Date.now() - started > 6 * 60 * 1000) {
           throw new Error("The transmission is taking longer than the chamber can wait. Try again in a breath.");
         }
         const poll = await fetch(`/api/light-codes/status?taskId=${encodeURIComponent(taskId)}`);
@@ -1328,21 +1419,19 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           const track: LcTrack = {
             ...interpretation,
             id: String(pdata.id ?? `lc-${Date.now()}`),
+            trackId: pdata.trackId ? String(pdata.trackId) : interpretation.trackId,
             audioUrl: String(pdata.audioUrl),
             duration: typeof pdata.duration === "number" ? pdata.duration : undefined,
             engineId: taskId,
             createdAt: Date.now(),
           };
-          const history = [track, ...get().lcHistory.filter((t) => t.id !== track.id)].slice(0, 40);
-          try {
-            localStorage.setItem("mirror-lc-history", JSON.stringify(history));
-          } catch {
-            /* storage unavailable */
-          }
-          set({ lcTrack: track, lcStatus: "ready", lcHistory: history });
+          admitTrack(track);
           return;
         }
         if (pdata.status === "error") {
+          /* the wallet's draw is refunded server-side through the track's
+             ledger linkage — the chamber only speaks the truth */
+          void get().refreshLcLibrary();
           throw new Error(pdata.error || "The sound engine fell silent mid-render. Try again.");
         }
       }
@@ -1356,6 +1445,63 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       });
     }
   },
+  runLcQuality: async () => {
+    const track = get().lcTrack;
+    if (!track?.audioUrl || typeof window === "undefined") return;
+    try {
+      const { analyzeTrackAudio } = await import("@/lib/audio/analyze");
+      const report = await analyzeTrackAudio(track.audioUrl, {
+        effectsTolerant: effectsTolerant(track.genres ?? []),
+        durationLimitSec: 480,
+      });
+      set({ lcQuality: report });
+      if (track.trackId) {
+        void fetch(`/api/tracks/${encodeURIComponent(track.trackId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quality: report }),
+        }).catch(() => undefined);
+      }
+    } catch {
+      /* analysis is a luxury — playback never depends on it */
+    }
+  },
+  favoriteLc: async (trackId, favorite) => {
+    set((s) => ({
+      lcHistory: s.lcHistory.map((t) =>
+        t.trackId === trackId ? { ...t, ...{} } : t
+      ),
+    }));
+    try {
+      await fetch(`/api/tracks/${encodeURIComponent(trackId)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ favorite }),
+      });
+    } catch {
+      /* the heart rests until the vault wakes */
+    }
+  },
+  publishLc: async (trackId, caption) => {
+    try {
+      const res = await fetch("/api/gathering/music", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ trackId, caption: caption?.slice(0, 280) }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error || "The Gathering did not receive the transmission.");
+      }
+      set((s) => ({ lcPublishedNonce: s.lcPublishedNonce + 1 }));
+      return true;
+    } catch (err) {
+      set({
+        lcError: err instanceof Error ? err.message : "The Gathering rests. Try again.",
+      });
+      return false;
+    }
+  },
   reshapeLc: (track) =>
     set({
       lcMode: track.mode,
@@ -1364,8 +1510,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       lcInterpretation: null,
       lcStatus: "idle",
       lcError: null,
+      lcSync: null,
+      lcQuality: null,
+      lcGenres: track.genres ? [...track.genres] : get().lcGenres,
     }),
-  clearLcPlayer: () => set({ lcTrack: null, lcStatus: "idle" }),
+  clearLcPlayer: () => set({ lcTrack: null, lcStatus: "idle", lcSync: null, lcQuality: null }),
   forgetLc: (id) =>
     set((s) => {
       const history = s.lcHistory.filter((t) => t.id !== id);
@@ -3619,6 +3768,35 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 }));
+
+/* ------------------------------------------------------------------ */
+/*  THE ADMITTANCE — a finished transmission joins everything in one   */
+/*  breath: the chamber's history (localStorage mirror), the player's   */
+/*  one voice, and the karaoke clock's honest estimates.                */
+/* ------------------------------------------------------------------ */
+function admitTrack(track: LcTrack): void {
+  const s = useMirror.getState();
+  const history = [track, ...s.lcHistory.filter((t) => t.id !== track.id)].slice(0, 60);
+  try {
+    localStorage.setItem("mirror-lc-history", JSON.stringify(history));
+  } catch {
+    /* storage unavailable */
+  }
+  useMirror.setState({
+    lcTrack: track,
+    lcStatus: "ready",
+    lcHistory: history,
+    lcSync:
+      track.lyrics && (track.duration ?? 0) > 30
+        ? estimateSync(track.lyrics, track.duration as number)
+        : null,
+    lcQuality: null,
+  });
+  /* the one voice — playback rides the global player */
+  usePlayerStore.getState().playTrack(track, history);
+  /* the chamber listens to what was born — QA runs quietly */
+  void useMirror.getState().runLcQuality();
+}
 
 /* Archive totals for labels — always the exact, derived-from-data numbers */
 export const archiveTotals = {

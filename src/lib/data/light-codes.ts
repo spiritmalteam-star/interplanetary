@@ -13,6 +13,7 @@
 /* ------------------------------------------------------------------ */
 
 export type LightCodesMode =
+  | "freestyle"
   | "light-transmission"
   | "calming-frequencies"
   | "other-stars"
@@ -37,6 +38,16 @@ export interface LcMode {
 }
 
 export const LC_MODES: LcMode[] = [
+  {
+    id: "freestyle",
+    n: "00",
+    name: "Free Studio",
+    tagline: "Any genre, any energy — your musical direction is the law.",
+    placeholder:
+      'Describe your music — e.g. "commercial reggaeton, 96 BPM, Spanish vocals, romantic, energetic percussion".',
+    vocabulary:
+      "the visitor's written intention and chosen genres are the complete musical contract — render exactly that direction with professional production quality, whatever the genre.",
+  },
   {
     id: "light-transmission",
     n: "01",
@@ -203,6 +214,77 @@ export const LC_DEFAULT_SHAPE: LcShape = {
   lyricsMode: "NO LYRICS",
 };
 
+/* ------------------------------------------------------------------ */
+/*  THE STUDIO CONTROLS — Music Engine 2.0's advanced creative panel.  */
+/*  Progressive disclosure: the primary flow stays                     */
+/*  describe → select style → generate. These ride hidden until asked. */
+/* ------------------------------------------------------------------ */
+
+export const LC_STUDIO = {
+  keys: [
+    "Auto", "C major", "G major", "D major", "A major", "E major", "F major", "Bb major",
+    "A minor", "E minor", "B minor", "F# minor", "C# minor", "D minor", "G minor", "C minor", "F minor",
+  ] as const,
+  moods: [
+    "Euphoric", "Romantic", "Melancholic", "Aggressive", "Dreamy", "Triumphant",
+    "Intimate", "Mysterious", "Playful", "Nostalgic", "Angry", "Serene",
+    "Hypnotic", "Anthemic", "Sad", "Hopeful",
+  ] as const,
+  vocalModes: [
+    "Auto", "Instrumental", "Male", "Female", "Duet", "Choir", "Synthetic",
+  ] as const,
+  languages: [
+    "Auto", "English", "Albanian", "Italian", "Spanish", "German", "French",
+    "Greek", "Turkish", "Portuguese", "Arabic", "Hindi", "Japanese", "Korean",
+  ] as const,
+  durations: [
+    "Auto", "~1 minute", "~2 minutes", "~3 minutes", "~4 minutes", "5+ minutes",
+  ] as const,
+  structures: [
+    "Intro", "Verse", "Chorus", "Bridge", "Drop", "Outro", "Freeform",
+  ] as const,
+  textures: [
+    "Auto", "Analog warmth", "Clean digital", "Tape saturation", "Lo-fi grit",
+    "Polished studio", "Raw live", "Cinematic wide",
+  ] as const,
+  lyricsModes: ["Auto", "Mirror writes", "I write", "Instrumental"] as const,
+} as const;
+
+/** The full studio specification a visitor can shape — every field optional. */
+export interface LcStudio {
+  bpm: number | null; // null = auto
+  key: string;
+  moods: string[];
+  energy: number; // 1..5 (kept aligned with the chamber's energy dial)
+  vocalMode: string;
+  vocalLanguage: string;
+  duration: string;
+  structure: string[]; // ordered section choices
+  instruments: string; // free text
+  texture: string;
+  acousticBalance: number; // 0 = fully electronic, 100 = fully acoustic
+  experimental: number; // 0..100
+  exclusions: string; // free text — explicitly excluded sounds
+  lyricsMode: string; // Auto | Mirror writes | I write | Instrumental
+}
+
+export const LC_DEFAULT_STUDIO: LcStudio = {
+  bpm: null,
+  key: "Auto",
+  moods: [],
+  energy: 3,
+  vocalMode: "Auto",
+  vocalLanguage: "Auto",
+  duration: "Auto",
+  structure: [],
+  instruments: "",
+  texture: "Auto",
+  acousticBalance: 50,
+  experimental: 20,
+  exclusions: "",
+  lyricsMode: "Auto",
+};
+
 /** A finished transmission as the visitor keeps it. */
 export interface LcTrack {
   id: string;
@@ -218,5 +300,33 @@ export interface LcTrack {
   lyrics?: string | null;
   /** The Mirror's interpretation — why it sounds the way it sounds. */
   notes?: string;
+  /** The chosen genre ids — the visitor's musical contract. */
+  genres?: string[];
+  /** The Mirror's structured specification (bpm, key, arc, negative). */
+  spec?: LcSpec | null;
+  /** The server-side Track id — the transmission's permanent home. */
+  trackId?: string;
+  /** The audio QA verdict — pass | warn | fail | unknown. */
+  qualityVerdict?: string;
   createdAt: number;
+}
+
+/** The Mirror's interpreted specification — separated from the prompt law. */
+export interface LcSpec {
+  bpm: number | null;
+  key: string | null;
+  structure: string | null; // e.g. "intro — verse — chorus — verse — chorus — outro"
+  arc: string | null; // the emotional/musical arc in one line
+  negative: string | null; // exclusions the engine must honor
+}
+
+/** Karaoke timing — line-level always, word-level only when verified. */
+export interface LcSyncLine {
+  text: string;
+  start: number; // seconds
+  end: number; // seconds
+}
+export interface LcSync {
+  level: "estimated" | "manual";
+  lines: LcSyncLine[];
 }

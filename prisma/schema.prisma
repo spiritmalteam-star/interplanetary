@@ -32,6 +32,7 @@ model User {
   provider        String   @default("email") // email | google | anon
   tier            String   @default("crystalline") // kept for gentle history; every world is free
   settings        Json? // the visitor's own tuning: language, voice, pace, theme, fields of expansion
+  // (music relations: tracks + musicPosts, see Music Engine 2.0 section below)
   emailVerifiedAt DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -42,6 +43,8 @@ model User {
   ledger          CreditLedger[]
   expansion       ExpansionProfile?
   expansionEvents ExpansionEvent[]
+  tracks          Track[]          @relation("MusicTracks")
+  musicPosts      MusicPost[]      @relation("MusicPosts")
 }
 
 model LibraryEntry {
@@ -280,4 +283,73 @@ model ExpansionEvent {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+}
+
+// ------------------------- music engine 2.0 -------------------------------
+// The Music Room's server-side truth. Tracks are persisted so a transmission
+// never dies with a CDN link or a localStorage clear; karaoke timing is kept
+// per audio version; publishing lays a real playable post into The Gathering.
+//
+//  Track.status : pending | ready | failed
+//  Track.provider : suno (the engine behind the veil)
+//  Track.quality  : JSON { verdict, checks[], measuredAt } — the QA pipeline
+//  Track.sync     : JSON { level: estimated | manual, lines: [{text,start,end}] }
+// ---------------------------------------------------------------------------
+
+model Track {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("MusicTracks", fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  mode      String // the chamber mode it was born in (freestyle, light-transmission, …)
+  intention String // the visitor's original written prompt — never overwritten
+  genres    String   @default("[]") // JSON array of chosen genre ids
+  shape     Json? // the studio controls used (bpm, key, moods, energy, vocal, …)
+  spec      Json? // the Mirror's interpreted music specification (structured)
+  style     String? // the provider-compatible style line actually rendered
+  negative  String? // exclusions appended as negative constraints
+  lyrics    String?
+  notes     String?
+  audioUrl  String?
+  audioId   String? // the provider's own clip id
+  taskId    String? // the provider's async task id
+  duration  Int? // seconds
+  quality   Json? // the audio QA report
+  sync      Json? // karaoke line timing for this audio version
+  status    String   @default("pending") // pending | ready | failed
+  provider  String   @default("suno")
+  ledgerId  String? // the wallet ledger row that paid for this render
+  error     String?
+  favorite  Boolean  @default(false)
+  post      MusicPost?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([taskId])
+}
+
+model MusicPost {
+  id        String   @id @default(cuid())
+  trackId   String   @unique // one publication per track — never a duplicate
+  track     Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation("MusicPosts", fields: [userId], references: [id], onDelete: Cascade)
+  caption   String?
+  createdAt DateTime @default(now())
+
+  reactions MusicReaction[]
+  @@index([userId, createdAt])
+}
+
+model MusicReaction {
+  id       String    @id @default(cuid())
+  postId   String
+  post     MusicPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId   String
+  kind     String // resonance | gratitude | awe
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId, kind])
+  @@index([postId])
 }
