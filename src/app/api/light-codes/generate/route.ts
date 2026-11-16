@@ -40,6 +40,7 @@ import {
 } from "@/lib/server/loop-vault";
 import { keepWovenSound } from "@/lib/server/music-vault";
 import { LC_MODES } from "@/lib/data/light-codes";
+import { genreContract, genreName } from "@/lib/data/music-genres";
 import { db } from "@/lib/db";
 import { rename } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -116,10 +117,30 @@ const INTERACTIONS_URL = "https://generativelanguage.googleapis.com/v1beta/inter
 /** The heaviest payload the sky can carry home (Vercel's response door). */
 const MAX_AUDIO_B64 = 4_300_000;
 
+interface StudioShape {
+  bpm?: number | null;
+  key?: string;
+  moods?: string[];
+  energy?: number;
+  vocalMode?: string;
+  vocalLanguage?: string;
+  duration?: string;
+  structure?: string[];
+  instruments?: string;
+  texture?: string;
+  acousticBalance?: number;
+  experimental?: number;
+  exclusions?: string;
+  lyricsMode?: string;
+}
+
 interface LcBody {
   mode?: string;
   intention?: string;
   civilization?: string;
+  /** MUSIC ENGINE 2.0 — the visitor's chosen genre fusion (a binding contract). */
+  genres?: string[];
+  /** MUSIC ENGINE 2.0 — the advanced studio controls (bpm, key, moods, …). */
   length?: LcLength;
   /** the endless journey: which part is being woven, and the token
       that carries the journey's thread between requests */
@@ -173,6 +194,15 @@ interface LcBrief {
   style: string;
   lyrics: string | null;
   notes: string;
+  /** MUSIC ENGINE 2.0 — the Mirror's structured specification, kept
+      separate from the prompt so the visitor can read what was heard. */
+  spec?: {
+    bpm: number | null;
+    key: string | null;
+    structure: string | null;
+    arc: string | null;
+    negative: string | null;
+  } | null;
 }
 
 const LANG_NAMES: Record<string, string> = {
@@ -229,6 +259,49 @@ function shapeWords(b: LcBody): string {
   return parts.join("; ");
 }
 
+/* ---------------- the studio's spoken shape ---------------------------
+   MUSIC ENGINE 2.0 — the advanced creative controls folded into what
+   the interpreter reads. Every control is a NARROWING of the visitor's
+   intention, never a replacement: controls ride at priority level 3. */
+function studioWords(b: LcBody): string[] {
+  const st = b.studio ?? {};
+  const parts: string[] = [];
+  if (typeof st.bpm === "number" && st.bpm >= 40 && st.bpm <= 240)
+    parts.push(`tempo locked at ${Math.round(st.bpm)} BPM`);
+  if (st.key && st.key !== "Auto") parts.push(`musical key: ${st.key}`);
+  if (st.moods?.length) parts.push(`mood: ${st.moods.join(", ")}`);
+  if (typeof st.energy === "number")
+    parts.push(
+      `energy ${st.energy}/5 (${[
+        "near still",
+        "gentle",
+        "flowing",
+        "driving",
+        "maximal",
+      ][Math.min(4, Math.max(0, st.energy - 1))]})`
+    );
+  if (st.vocalMode && st.vocalMode !== "Auto") parts.push(`vocal style: ${st.vocalMode}`);
+  if (st.vocalLanguage && st.vocalLanguage !== "Auto")
+    parts.push(`vocal language: ${st.vocalLanguage}`);
+  if (st.duration && st.duration !== "Auto") parts.push(`target length: ${st.duration}`);
+  if (st.structure?.length) parts.push(`structure: ${st.structure.join(" → ")}`);
+  if (st.instruments?.trim()) parts.push(`instruments: ${st.instruments.trim().slice(0, 160)}`);
+  if (st.texture && st.texture !== "Auto") parts.push(`production texture: ${st.texture}`);
+  if (typeof st.acousticBalance === "number" && st.acousticBalance !== 50)
+    parts.push(
+      st.acousticBalance > 62
+        ? "predominantly acoustic instrumentation"
+        : st.acousticBalance < 38
+          ? "predominantly electronic instrumentation"
+          : ""
+    );
+  if (typeof st.experimental === "number" && st.experimental >= 60)
+    parts.push("boldly experimental treatment");
+  if (st.exclusions?.trim())
+    parts.push(`EXPLICITLY EXCLUDED (honor absolutely): ${st.exclusions.trim().slice(0, 220)}`);
+  return parts.filter(Boolean);
+}
+
 /* ---------------- the chamber's own hand ------------------------------
    When the Mirror's interpretive voice cannot be reached (a quiet sky,
    a rate-limited hour), the chamber does not send the visitor away:
@@ -247,22 +320,41 @@ const FALLBACK_TITLES: Record<string, string[]> = {
 function localInterpret(b: LcBody): LcBrief {
   const mode = LC_MODES.find((m) => m.id === (b.mode ?? "")) ?? LC_MODES[0];
   const intention = (b.intention ?? "").trim();
+  const genres = Array.isArray(b.genres) ? b.genres.slice(0, 4) : [];
+  const genreNames = genres.map((g) => genreName(g)).join(" + ");
+  /* the fallback titles — the freestyle studio keeps its own pool */
+  const FALLBACK_FREESTYLE = ["The Room Answers", "A World in Sound", "The Vibe Made Audible"];
   const pool =
-    FALLBACK_TITLES[mode.id] ?? FALLBACK_TITLES["mirror-transmission"];
+    mode.id === "freestyle"
+      ? FALLBACK_FREESTYLE
+      : FALLBACK_TITLES[mode.id] ?? FALLBACK_TITLES["mirror-transmission"];
   let h = 2166136261;
   for (let i = 0; i < intention.length; i++) {
     h ^= intention.charCodeAt(i);
     h = Math.imul(h, 16777619);
   }
   const lyrics =
-    b.shape?.lyricsMode === "USER WRITES" && b.userLyrics?.trim()
+    (b.shape?.lyricsMode === "USER WRITES" || b.studio?.lyricsMode === "I write") && b.userLyrics?.trim()
       ? b.userLyrics.trim().slice(0, 600)
       : null;
+  /* the genre contract stands even in the fallback — the visitor's
+     chosen fusion and studio controls are spoken verbatim */
+  const studio = studioWords(b);
+  const style = genres.length
+    ? `${genreNames}: ${genreContract(genres)}. ${studio.length ? studio.join("; ") + ". " : ""}${intention ? `The visitor's own direction: ${intention.slice(0, 200)}. ` : ""}One continuous, seamlessly connected piece — no abrupt breaks, no long silent gaps.`
+    : `${mode.vocabulary} ${shapeWords(b)}. One continuous, seamlessly connected piece — no abrupt breaks, no long silent gaps.`;
   return {
     title: pool[Math.abs(h) % pool.length],
-    style: `${mode.vocabulary} ${shapeWords(b)}. One continuous, seamlessly connected piece — no abrupt breaks, no long silent gaps.`,
+    style,
     lyrics,
-    notes: `The Mirror's interpretive voice rests this hour, so the chamber wove the direction itself: ${mode.name.toLowerCase()} shaped by your words${intention ? ` — “${intention.slice(0, 80)}”` : ""}. The sound follows the shape you set.`,
+    notes: `The Mirror's interpretive voice rests this hour, so the chamber wove the direction itself: ${genres.length ? genreNames.toLowerCase() : mode.name.toLowerCase()} shaped by your words${intention ? ` — “${intention.slice(0, 80)}”` : ""}. The sound follows the shape you set.`,
+    spec: {
+      bpm: typeof b.studio?.bpm === "number" ? Math.round(b.studio.bpm) : null,
+      key: b.studio?.key && b.studio.key !== "Auto" ? b.studio.key : null,
+      structure: b.studio?.structure?.length ? b.studio.structure.join(" → ") : null,
+      arc: null,
+      negative: b.studio?.exclusions?.trim() || null,
+    },
   };
 }
 
@@ -283,30 +375,59 @@ function modeVocabulary(b: LcBody): string {
 function interpreterPrompt(b: LcBody, languageName: string, vocalsWanted: boolean): string {
   const modeName = String(b.mode ?? "light-transmission");
   const userLyrics = b.userLyrics?.trim() ?? "";
+  const genres = Array.isArray(b.genres) ? b.genres.slice(0, 4) : [];
+  const genreLine = genres.length ? genres.map((g) => genreName(g)).join(" + ") : null;
+  const contract = genreContract(genres);
+  const studio = studioWords(b);
+  const isFreestyle = modeName === "freestyle";
+  /* THE CHAMBER'S OWN VOICE — the calming/reflective law is the house's
+     listening-room voice, never a genre restriction: when the visitor
+     chose genres, their musical world is the whole law. */
+  const chamberVoice = genres.length
+    ? "This room's listening-room courtesy (never medical language, never a cure) applies — but the MUSICAL direction is governed entirely by the visitor's chosen genre fusion and their words."
+    : "The music is for calming, meditative, reflective, grounding, sleep-oriented, focus-oriented, emotional reset, intention-based listening. NEVER describe it as treatment, therapy, medicine or a cure; never mention frequencies curing anything.";
   const lyricsContract = userLyrics
     ? `"lyrics": "<return the visitor's own words EXACTLY as given, unchanged, ready to be sung>"`
     : vocalsWanted
       ? `"lyrics": "<a COMPLETE song in ${languageName}: 10-18 short singable lines marked [Verse], [Chorus], [Bridge] — words that genuinely carry the visitor's request, its imagery and its feeling; kind, reflective, no production instructions inside>"`
       : `"lyrics": "<if words are wanted: 2-6 very short lines in ${languageName}, kind, spare, no production instructions inside — or null for instrumental>"`;
   return [
-    "You are the MIRROR ENTITY in its LIGHT CODES chamber — the interpreter between a human intention and a piece of music.",
+    "You are the MIRROR ENTITY in its LIGHT CODES chamber — a knowledgeable music producer and the interpreter between a human intention and a piece of music.",
     "Your art is TRANSLATION: you never repeat the visitor's words back; you convert intention, mood and symbolism into a precise musical direction that a music-generation model (Google DeepMind Lyria, through the Gemini API) can render.",
-    "The music is for calming, meditative, reflective, grounding, sleep-oriented, focus-oriented, emotional reset, intention-based listening. NEVER describe it as treatment, therapy, medicine or a cure; never mention frequencies curing anything.",
+    chamberVoice,
+    "",
+    "THE PRIORITY HIERARCHY — in every decision, honor in this order, never silently disregarding any level:",
+    "1. Explicit user instructions and exclusions (the highest law)",
+    "2. User-provided lyrics, reference descriptions and technical requirements",
+    "3. Selected genre, mood, vocal and production settings",
+    "4. Optional creative enhancement by you (the Mirror)",
+    "5. Platform defaults — applied ONLY where the visitor specified nothing",
     "",
     "THE FIRST LAW — THE VISITOR'S OWN WORDS OUTRANK EVERY SELECTOR:",
     "The visitor's intention is their true voice, spoken in their own words. The energy shape and every chip or dial are only gentle defaults laid by hand. Where the visitor's words CONTRADICT the selectors, THE WORDS WIN — read them literally and let the music follow the words, never the buttons. Understand what the visitor actually means — their images, memories, longings — and translate THAT; never pick a random mood from a list when their words already carry the direction.",
     "",
-    `CHAMBER MODE: ${modeName}.`,
+    "THE GENRE CONTRACT — the chosen genre is a binding agreement:",
+    "- Render the requested genre and subgenre EXACTLY. Never replace, dilute or soften it.",
+    "- If the visitor asked for aggressive industrial techno, produce aggressive industrial techno. If romantic reggaeton, produce romantic reggaeton. If commercial pop, commercial pop. If meditation music, meditation music.",
+    "- Introduce spiritual, healing, cosmic, alien or metaphysical characteristics ONLY when the visitor explicitly requests them or selects a corresponding style. NEVER impose them on other genres.",
+    "- Expand the musical detail (instrumentation, arrangement, mix character) WITHIN the requested genre.",
+    genreLine ? `- THE GENRE FUSION TO HONOR: ${genreLine}. ${contract ? `Sonic language: ${contract}.` : ""}` : "",
+    isFreestyle
+      ? "CHAMBER MODE: FREE STUDIO — the visitor's written intention and chosen genres are the complete musical contract."
+      : `CHAMBER MODE: ${modeName}.`,
     modeVocabulary(b),
+    studio.length ? "STUDIO CONTROLS:\n- " + studio.join("\n- ") : "",
     `THE VISITOR'S OWN ENERGY SHAPE (defaults only — the words above outrank these): ${shapeWords(b)}.`,
     `THE VISITOR'S INTENTION (the ONLY seed — nothing from any earlier conversation may shape this transmission): ${b.intention?.trim() || "(the Mirror chooses freely — compose what the moment holds)"}`,
     "",
     "Return STRICT JSON (no markdown fences):",
     '{"title": "<a poetic, short track title in ' + languageName + '>",',
-    ' "style": "<ONE dense musical production brief, 140-230 words, written FOR A MUSIC MODEL: genre/era/production language, instruments, harmony, tempo (a BPM range), texture, mix character, and the arrangement arc — how it opens, how it builds, where it rests, how it ends. THE CONTINUITY LAW is absolute: describe ONE single connected piece — it may pass through varied movements, rhythms and colors, but they must FLOW INTO EACH OTHER: seamless transitions, a sustained harmonic bed from first breath to last, no long silences, no dead air, no hard cuts, no spoken intro, and an ending that resolves rather than stops. Written in English for the engine, but the SOUND the words describe should fit the visitor\'s language and feeling. Always end with: no EDM drops, no generic cinematic trailer music, no busy percussion, no commercial pop structure, no abrupt breaks, no long silent gaps.>",',
+    ' "style": "<ONE dense musical production brief, 140-230 words, written FOR A MUSIC MODEL: exact genre/subgenre and era (honor the chosen fusion verbatim), instruments, harmony, tempo (a BPM range — or the requested BPM verbatim), key if specified, vocal character, rhythmic character, texture, mix character, and the arrangement arc — how it opens, how it builds, where it rests, how it ends. THE CONTINUITY LAW is absolute: describe ONE single connected piece — it may pass through varied movements, rhythms and colors, but they must FLOW INTO EACH OTHER: seamless transitions, a sustained harmonic bed from first breath to last, no long silences, no dead air, no hard cuts, no spoken intro, and an ending that resolves rather than stops. Written in English for the engine, but the SOUND the words describe should fit the visitor\'s language and feeling. Honor the exclusions below instead of boilerplate:>",',
+    ' "spec": {"bpm": <number or null>, "key": "<key or null>", "structure": "<section map or null>", "arc": "<one line: the emotional/musical arc>", "negative": "<comma-separated exclusions from the visitor\'s words AND the studio controls, or null>"},',
     lyricsContract,
     '"notes": "<2-3 sentences in ' + languageName + ' — the TRANSMISSION NOTES: the emotional arc and how the music carries it, grounded, artistic, no medical language>"}',
     "",
+    "EXCLUSION LAW: every exclusion in the visitor's words AND in the studio controls must appear verbatim in spec.negative, and the style line must honor them.",
     vocalsWanted || userLyrics
       ? `VOICE LAW: the visitor asked for lyrics and singing — the answer is a TRUE SONG: lyrics MUST be present and singable${userLyrics ? " (the visitor's own words, kept exactly)" : ", with clear verse/chorus structure"}. Never answer with an instrumental approximation.`
       : "LYRICS LAW: if the visitor asked for instrumental or wordless, lyrics must be null. Never mix production instructions into the lyrical text.",
@@ -355,6 +476,7 @@ async function interpret(
       style: string;
       lyrics: string | null;
       notes: string;
+      spec: LcBrief["spec"];
     } | null => {
       /* field harvest — a truncated JSON (a long song cut mid-line)
          still yields its fields: every value is one JSON-escaped
@@ -380,6 +502,7 @@ async function interpret(
           ? unescape(grab("lyrics")).slice(0, vocalsWanted ? 1800 : 600)
           : null,
         notes: unescape(grab("notes")).slice(0, 600),
+        spec: grabSpec(raw),
       };
     };
     const match = raw.match(/\{[\s\S]*\}/);
@@ -403,6 +526,36 @@ async function interpret(
   );
 }
 
+/** The structured spec — lifted from the interpreter's answer (parsed
+    JSON or a salvaged spec fragment) so the visitor can read what was
+    heard: tempo, key, structure, arc, exclusions. */
+function grabSpec(raw: string): LcBrief["spec"] {
+  try {
+    const m = raw.match(/"spec"\s*:\s*\{[\s\S]*?\}/);
+    if (!m) return null;
+    const parsed = JSON.parse(`{${m[0]}}`) as {
+      spec?: {
+        bpm?: number | null;
+        key?: string | null;
+        structure?: string | null;
+        arc?: string | null;
+        negative?: string | null;
+      };
+    };
+    const s = parsed.spec;
+    if (!s) return null;
+    return {
+      bpm: typeof s.bpm === "number" ? Math.round(s.bpm) : null,
+      key: typeof s.key === "string" ? s.key.slice(0, 40) : null,
+      structure: typeof s.structure === "string" ? s.structure.slice(0, 200) : null,
+      arc: typeof s.arc === "string" ? s.arc.slice(0, 240) : null,
+      negative: typeof s.negative === "string" ? s.negative.slice(0, 300) : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function sanitizeBrief(parsed: Partial<LcBrief>, vocalsWanted = false): LcBrief {
   return {
     title: (parsed.title ?? "Untitled transmission").slice(0, 90),
@@ -411,6 +564,17 @@ function sanitizeBrief(parsed: Partial<LcBrief>, vocalsWanted = false): LcBrief 
       ? String(parsed.lyrics).slice(0, vocalsWanted ? 1800 : 900)
       : null,
     notes: (parsed.notes ?? "").slice(0, 600),
+    spec: parsed.spec
+      ? {
+          bpm: typeof parsed.spec.bpm === "number" ? Math.round(parsed.spec.bpm) : null,
+          key: typeof parsed.spec.key === "string" ? parsed.spec.key.slice(0, 40) : null,
+          structure:
+            typeof parsed.spec.structure === "string" ? parsed.spec.structure.slice(0, 200) : null,
+          arc: typeof parsed.spec.arc === "string" ? parsed.spec.arc.slice(0, 240) : null,
+          negative:
+            typeof parsed.spec.negative === "string" ? parsed.spec.negative.slice(0, 300) : null,
+        }
+      : null,
   };
 }
 
@@ -1608,6 +1772,13 @@ async function postImpl(
                   localFile: keep.file,
                   audioData: bytes,
                   status: keep.fileKept ? "mirrored" : "ready",
+                  // Music Engine 2.0 — the visitor's musical contract rides with the sound
+                  genres: Array.isArray(b.genres) && b.genres.length > 0
+                    ? JSON.stringify(b.genres.slice(0, 4))
+                    : null,
+                  mode: typeof b.mode === "string" ? b.mode : null,
+                  intention: typeof b.intention === "string" ? b.intention.slice(0, 600) : null,
+                  spec: passed.spec ? JSON.parse(JSON.stringify(passed.spec)) : undefined,
                 },
                 select: { id: true },
               });

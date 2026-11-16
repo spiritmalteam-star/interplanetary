@@ -149,15 +149,17 @@ export async function PATCH(req: NextRequest) {
     const body = (await req.json().catch(() => null)) as {
       id?: string;
       favorite?: boolean;
+      /* MUSIC ENGINE 2.0 — the QA ear's honest report rides with the row */
+      quality?: unknown;
     } | null;
     if (
       !body ||
       typeof body.id !== "string" ||
       !body.id ||
-      typeof body.favorite !== "boolean"
+      (typeof body.favorite !== "boolean" && body.quality === undefined)
     ) {
       return NextResponse.json(
-        { error: "The ask must carry a row's id and a favorite heart." },
+        { error: "The ask must carry a row's id and a favorite heart (or a QA report)." },
         { status: 400 }
       );
     }
@@ -171,12 +173,17 @@ export async function PATCH(req: NextRequest) {
         { status: 404 }
       );
     }
+    const data: { favorite?: boolean; quality?: object } = {};
+    if (typeof body.favorite === "boolean") data.favorite = body.favorite;
+    if (body.quality !== undefined && body.quality !== null && typeof body.quality === "object") {
+      data.quality = body.quality as object;
+    }
     await db.musicTrack.update({
       where: { id: row.id },
-      data: { favorite: body.favorite },
+      data,
     });
     return withAnonCookie(
-      NextResponse.json({ ok: true, id: row.id, favorite: body.favorite }),
+      NextResponse.json({ ok: true, id: row.id }),
       visitor
     );
   } catch (err) {

@@ -6,18 +6,11 @@
 /*  Ten families, one hundred voices. Search, multi-select, fusion.    */
 /*  The selected genres are displayed prominently; the full taxonomy   */
 /*  rests inside the dropdown — mobile screens stay uncluttered.       */
+/*  Built on the house's own popover: no new dependencies.             */
 /* ------------------------------------------------------------------ */
 
 import { useMemo, useState } from "react";
 import { ChevronsUpDown, Music2, X } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -37,6 +30,7 @@ interface Props {
 export default function GenreSelector({ selected, onChange, testId }: Props) {
   const t = useT();
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
   const toggle = (id: string) => {
     if (selected.includes(id)) {
@@ -50,6 +44,17 @@ export default function GenreSelector({ selected, onChange, testId }: Props) {
     if (selected.length === 0) return null;
     return selected.map((id) => genreName(id)).join(" + ");
   }, [selected]);
+
+  const q = query.trim().toLowerCase();
+  const families = useMemo(() => {
+    if (!q) return MUSIC_GENRE_FAMILIES;
+    return MUSIC_GENRE_FAMILIES.map((family) => ({
+      ...family,
+      genres: family.genres.filter(
+        (g) => g.name.toLowerCase().includes(q) || family.name.toLowerCase().includes(q)
+      ),
+    })).filter((family) => family.genres.length > 0);
+  }, [q]);
 
   return (
     <div className="w-full">
@@ -76,36 +81,51 @@ export default function GenreSelector({ selected, onChange, testId }: Props) {
             </button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-[min(92vw,420px)] p-0"
+            className="w-[min(92vw,420px)] overflow-hidden p-0"
             align="start"
             sideOffset={6}
           >
-            <Command>
-              <CommandInput
-                placeholder={t("Search genres — techno, bachata, K-pop…")}
-                data-testid="genre-search"
-              />
-              <CommandList className="nice-scroll max-h-[300px]">
-                <CommandEmpty>{t("No genre by that name — describe it in your words instead.")}</CommandEmpty>
-                {MUSIC_GENRE_FAMILIES.map((family) => (
-                  <CommandGroup
-                    key={family.id}
-                    heading={t(family.name)}
-                    className="[&_[cmdk-group-heading]]:mono-label [&_[cmdk-group-heading]]:text-[8.5px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.18em] [&_[cmdk-group-heading]]:text-muted-foreground/70"
-                  >
+            <div data-testid="genre-picker">
+              {/* the search line */}
+              <div className="border-b hairline">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t("Search genres — techno, bachata, K-pop…")}
+                  data-testid="genre-search"
+                  aria-label={t("Search genres")}
+                  className="focus-glow h-10 w-full bg-transparent px-3.5 text-[13px] text-foreground outline-none placeholder:text-muted-foreground/60"
+                />
+              </div>
+              {/* the taxonomy — families and their voices */}
+              <div className="nice-scroll max-h-[300px] overflow-y-auto" role="listbox" aria-label={t("Musical Style")}>
+                {families.length === 0 && (
+                  <p className="px-3.5 py-4 text-[12.5px] text-muted-foreground">
+                    {t("No genre by that name — describe it in your words instead.")}
+                  </p>
+                )}
+                {families.map((family) => (
+                  <div key={family.id} className="px-1.5 py-1.5">
+                    <p className="mono-label px-2 pb-1 pt-1.5 text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                      {t(family.name)}
+                    </p>
                     {family.genres.map((genre) => {
                       const active = selected.includes(genre.id);
+                      const full = selected.length >= MUSIC_GENRE_LIMIT && !active;
                       return (
-                        <CommandItem
+                        <button
                           key={genre.id}
-                          value={`${genre.name} ${family.name}`}
-                          onSelect={() => toggle(genre.id)}
-                          className="cursor-pointer"
+                          type="button"
+                          role="option"
+                          aria-selected={active}
+                          disabled={full}
+                          onClick={() => toggle(genre.id)}
+                          className="focus-glow flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-foreground/90 transition-colors hover:bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)] disabled:opacity-40"
                         >
                           <span
                             aria-hidden="true"
                             className={cn(
-                              "mr-2 flex size-4 items-center justify-center rounded-full border text-[8px]",
+                              "flex size-4 items-center justify-center rounded-full border text-[8px]",
                               active
                                 ? "border-transparent bg-[var(--scope-a)] text-white"
                                 : "border-[var(--hairline)]"
@@ -115,17 +135,15 @@ export default function GenreSelector({ selected, onChange, testId }: Props) {
                           </span>
                           {t(genre.name)}
                           <span className="ml-auto text-[10px] text-muted-foreground/50">
-                            {selected.length >= MUSIC_GENRE_LIMIT && !active
-                              ? t("fusion full")
-                              : ""}
+                            {full ? t("fusion full") : ""}
                           </span>
-                        </CommandItem>
+                        </button>
                       );
                     })}
-                  </CommandGroup>
+                  </div>
                 ))}
-              </CommandList>
-            </Command>
+              </div>
+            </div>
           </PopoverContent>
         </Popover>
 

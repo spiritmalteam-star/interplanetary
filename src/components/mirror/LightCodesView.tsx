@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AudioLines,
@@ -44,6 +44,14 @@ import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
 import { EthermixDeck } from "./living/EthermixDeck";
 import { LcKaraoke } from "./LcKaraoke";
 import PublishToGathering from "@/components/gathering/PublishToGathering";
+import GenreSelector from "./music/GenreSelector";
+import StudioControls from "./music/StudioControls";
+import VisualizerCanvas, {
+  VISUALIZER_STYLES,
+  type VisualizerStyle,
+} from "./music/VisualizerCanvas";
+import { attachPlayerAnalyser } from "@/lib/audio/analyser";
+import { suggestedVisual } from "@/lib/data/music-genres";
 import {
   LC_MODES,
   LC_SHAPE,
@@ -581,6 +589,24 @@ function PlayerBar() {
   const [moreOpen, setMoreOpen] = useState(false);
   /* THE PUBLICATION HAND — the finished composition carried to the hall */
   const [publishTrack, setPublishTrack] = useState<LcTrack | null>(null);
+  /* MUSIC ENGINE 2.0 — the real-audio visualizer and the QA ear:
+     the art listens to the ONE player through the shared analyser;
+     the ear measures what was born and speaks honestly. */
+  const [vizOpen, setVizOpen] = useState(false);
+  const [vizPicked, setVizPicked] = useState<VisualizerStyle | null>(null);
+  const [showQuality, setShowQuality] = useState(false);
+  const suggestedViz = useMemo(
+    () => (suggestedVisual(track?.genres ?? []) as VisualizerStyle | null) ?? null,
+    [track?.genres]
+  );
+  const vizStyle: VisualizerStyle = vizPicked ?? suggestedViz ?? "pearl-gold";
+  const runLcQuality = useMirror((s) => s.runLcQuality);
+  const lcQuality = useMirror((s) => s.lcQuality);
+  useEffect(() => {
+    /* the shared ear clips onto the ONE audio element — every play
+       wakes it; playback itself never depends on the analysis */
+    attachPlayerAnalyser(audioEl);
+  }, [audioEl]);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const seenTrack = useRef<string | null>(null);
   const live = status === "ready" && track !== null;
@@ -798,6 +824,49 @@ function PlayerBar() {
               </button>
             </div>
 
+            {/* MUSIC ENGINE 2.0 — the visualizer: real frequency data,
+                seven styles, genre-aware suggestion only. Halts when
+                hidden; the audio never depends on it. */}
+            <AnimatePresence>
+              {vizOpen && live && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 space-y-2">
+                    <div className="nice-scroll flex gap-1.5 overflow-x-auto pb-0.5">
+                      {VISUALIZER_STYLES.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => setVizPicked(s.id)}
+                          aria-pressed={vizStyle === s.id}
+                          data-testid={`viz-style-${s.id}`}
+                          className={cn(
+                            "focus-glow shrink-0 rounded-full border px-2.5 py-1 text-[11px] transition-all duration-300",
+                            vizStyle === s.id
+                              ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
+                              : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {t(s.name)}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="overflow-hidden rounded-xl" data-testid="lc-visualizer">
+                      <VisualizerCanvas style={vizStyle} className="h-44 w-full sm:h-56" />
+                    </div>
+                    <p className="text-center text-[10px] text-muted-foreground/60">
+                      {t("The art listens to the real audio — nothing here is decoration.")}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* the wave — the sound's own peaks, or the honest line */}
             <div className="mt-1">
               {realWaveAllowed ? (
@@ -1009,6 +1078,51 @@ function PlayerBar() {
                           {t("Translation")}
                         </button>
                       )}
+                      {/* MUSIC ENGINE 2.0 — the visualizer's own hand */}
+                      <button
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={vizOpen}
+                        onClick={() => setVizOpen((v) => !v)}
+                        data-testid="lc-visualizer-toggle"
+                        className="focus-glow flex items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] text-foreground transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)]"
+                      >
+                        <Music4
+                          className={cn(
+                            "size-3.5 text-[var(--scope-a)]",
+                            vizOpen && "fill-current"
+                          )}
+                          aria-hidden="true"
+                        />
+                        {t("Visualizer")}
+                      </button>
+                      {/* MUSIC ENGINE 2.0 — the chamber's listening ear */}
+                      <button
+                        type="button"
+                        role="menuitemradio"
+                        aria-checked={showQuality}
+                        onClick={() => {
+                          setShowQuality((v) => !v);
+                          if (!lcQuality) void runLcQuality();
+                        }}
+                        data-testid="lc-quality"
+                        className="focus-glow flex items-center gap-2 rounded-xl px-2 py-1.5 text-left text-[12.5px] text-foreground transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)]"
+                      >
+                        <Gauge
+                          className={cn(
+                            "size-3.5 text-[var(--scope-a)]",
+                            showQuality && "fill-current"
+                          )}
+                          aria-hidden="true"
+                        />
+                        {lcQuality?.verdict === "pass"
+                          ? t("Studio pass")
+                          : lcQuality?.verdict === "warn"
+                            ? t("Studio note")
+                            : lcQuality?.verdict === "fail"
+                              ? t("Studio flag")
+                              : t("The listening ear")}
+                      </button>
                     </span>
                   </>
                 )}
@@ -1043,6 +1157,58 @@ function PlayerBar() {
                 />
               </span>
             </div>
+
+            {/* MUSIC ENGINE 2.0 — THE QA REPORT: the chamber's listening
+                ear speaks honestly about what was born; a failed render
+                is asked for anew, never silently filtered. */}
+            <AnimatePresence>
+              {showQuality && lcQuality && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div
+                    className="mt-2 space-y-1.5 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_4%,transparent)] p-3"
+                    data-testid="lc-quality-report"
+                  >
+                    <p className="mono-label text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+                      {t("The chamber's listening ear")} ·{" "}
+                      {lcQuality.verdict === "pass"
+                        ? t("studio pass")
+                        : lcQuality.verdict === "warn"
+                          ? t("notes to consider")
+                          : lcQuality.verdict === "fail"
+                            ? t("flags raised")
+                            : t("unknown")}
+                    </p>
+                    {lcQuality.checks.map((check) => (
+                      <p key={check.id} className="flex gap-2 text-[12px] leading-relaxed">
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "mt-1.5 size-1.5 shrink-0 rounded-full",
+                            check.severity === "ok"
+                              ? "bg-emerald-500/70"
+                              : check.severity === "info"
+                                ? "bg-muted-foreground/50"
+                                : check.severity === "warn"
+                                  ? "bg-amber-500/80"
+                                  : "bg-red-500/80"
+                          )}
+                        />
+                        <span className="text-muted-foreground">
+                          <span className="text-foreground/80">{t(check.label)}:</span>{" "}
+                          {check.detail}
+                        </span>
+                      </p>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* THE CHANNELING STRIP — a sound already holds the stage,
                 so the weaving breathes quietly beneath the transport */}
@@ -1564,6 +1730,50 @@ function BriefCard() {
         </p>
       )}
 
+      {/* MUSIC ENGINE 2.0 — THE STRUCTURED SPEC: what the Mirror heard,
+          separated from the prose — tempo, key, structure, arc, and the
+          exclusions it promised to honor. Never medical, never imposed. */}
+      {brief.spec && (brief.spec.bpm || brief.spec.key || brief.spec.structure || brief.spec.arc || brief.spec.negative) && (
+        <div
+          className="mt-2.5 space-y-1 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_4%,transparent)] p-3 text-[12.5px] text-muted-foreground"
+          data-testid="lc-brief-spec"
+        >
+          {(brief.spec.bpm || brief.spec.key) && (
+            <p>
+              <span className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.18em]">
+                {t("Tempo")}
+              </span>
+              {brief.spec.bpm ? `${brief.spec.bpm} BPM` : ""}
+              {brief.spec.key ? `${brief.spec.bpm ? " · " : ""}${brief.spec.key}` : ""}
+            </p>
+          )}
+          {brief.spec.structure && (
+            <p>
+              <span className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.18em]">
+                {t("Structure")}
+              </span>
+              {brief.spec.structure}
+            </p>
+          )}
+          {brief.spec.arc && (
+            <p>
+              <span className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.18em]">
+                {t("Arc")}
+              </span>
+              {brief.spec.arc}
+            </p>
+          )}
+          {brief.spec.negative && (
+            <p>
+              <span className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.18em]">
+                {t("Exclusions honored")}
+              </span>
+              {brief.spec.negative}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* ---------- THE LYRICS LABORATORY ---------- */}
       {brief.lyrics !== null && (
         <div className="mt-3 rounded-xl border hairline bg-[color-mix(in_srgb,var(--scope-a)_5%,transparent)] p-3">
@@ -1990,6 +2200,10 @@ export function LightCodesView() {
   const lcIntention = useMirror((s) => s.lcIntention);
   const lcUserLyrics = useMirror((s) => s.lcUserLyrics);
   const lcShape = useMirror((s) => s.lcShape);
+  const lcGenres = useMirror((s) => s.lcGenres);
+  const lcStudio = useMirror((s) => s.lcStudio);
+  const setLcGenres = useMirror((s) => s.setLcGenres);
+  const setLcStudio = useMirror((s) => s.setLcStudio);
   const lcStatus = useMirror((s) => s.lcStatus);
   const lcBrief = useMirror((s) => s.lcBrief);
   const lcTrack = useMirror((s) => s.lcTrack);
@@ -2547,6 +2761,23 @@ export function LightCodesView() {
                                             onChange={(v) => setLcShape({ lyricsMode: v })}
                                           />
                                         </div>
+
+                                        {/* MUSIC ENGINE 2.0 — THE STUDIO CONTROLS:
+                                            BPM, key, moods, energy, vocal mode and
+                                            language, duration, structure, instruments,
+                                            texture, acoustic balance, experimental
+                                            intensity, exclusions, lyrics authorship.
+                                            Narrowing of the intention — never a
+                                            replacement of it. */}
+                                        <div className="border-t hairline pt-3">
+                                          <p className="mono-label mb-2.5 text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
+                                            {t("The studio controls")}
+                                          </p>
+                                          <StudioControls
+                                            studio={lcStudio}
+                                            onChange={setLcStudio}
+                                          />
+                                        </div>
                                       </div>
                                     </motion.div>
                                   )}
@@ -2610,6 +2841,16 @@ export function LightCodesView() {
           }}
         >
           <div className="mx-auto w-full max-w-[1020px] px-4 pb-[max(0.625rem,env(safe-area-inset-bottom))] pt-2.5 sm:px-6">
+            {/* MUSIC ENGINE 2.0 — THE MUSICAL STYLE: the searchable genre
+                contract. The chosen fusion is the binding agreement; the
+                spiritual family is optional, never the default. */}
+            <div className="mb-1.5">
+              <GenreSelector
+                selected={lcGenres}
+                onChange={setLcGenres}
+                testId="lc-genre-selector"
+              />
+            </div>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();

@@ -65,11 +65,14 @@ import { emVectors } from "@/lib/data/evolvemed";
 import type {
   LcTrack,
   LcShape,
+  LcStudio,
   LcBrief,
   LcLyricOp,
   LightCodesMode,
 } from "@/lib/data/light-codes";
-import { LC_DEFAULT_SHAPE } from "@/lib/data/light-codes";
+import { LC_DEFAULT_SHAPE, LC_DEFAULT_STUDIO } from "@/lib/data/light-codes";
+import type { QualityReport } from "@/lib/audio/analyze";
+import { effectsTolerant } from "@/lib/data/music-genres";
 import {
   base64ToBytes,
   lcAudioDelete,
@@ -964,6 +967,20 @@ interface MirrorState {
       ask, in the compose or in the weave. */
   lcRaw: boolean;
   setLcRaw: (v: boolean) => void;
+  /* MUSIC ENGINE 2.0 — the studio's creative contract. The genre fusion
+     is a binding agreement (spiritual color only when it is asked for);
+     the studio controls narrow the intention, never replace it. */
+  lcGenres: string[];
+  lcStudio: LcStudio;
+  setLcGenres: (ids: string[]) => void;
+  setLcStudio: (patch: Partial<LcStudio>) => void;
+  /** The chamber's audio QA — the ear that measures what was born. */
+  lcQuality: QualityReport | null;
+  runLcQuality: () => Promise<void>;
+  favoriteLc: (trackId: string, favorite: boolean) => Promise<void>;
+  publishLc: (trackId: string, caption?: string) => Promise<boolean>;
+  /** Bumped on every successful publish — the hall's shelf listens. */
+  lcPublishedNonce: number;
   openLightCodes: (prefill?: LcPrefill, opts?: { bare?: boolean }) => void;
   exitLightCodes: () => void;
   /* THE VIDEO STUDIO — the motion picture's own room: a seed (the
@@ -1891,6 +1908,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcIntention: "",
   lcUserLyrics: "",
   lcShape: { ...LC_DEFAULT_SHAPE },
+  lcGenres: [] as string[],
+  lcStudio: { ...LC_DEFAULT_STUDIO },
+  lcQuality: null,
+  lcPublishedNonce: 0,
   lcLength: "preview" as "preview" | "full" | "loop",
   lcLyricsLength: "auto" as "auto" | 150 | 400 | 700 | 1000,
   visualStyle: null,
@@ -2227,6 +2248,8 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   setLcIntention: (v) => set({ lcIntention: v }),
   setLcUserLyrics: (v) => set({ lcUserLyrics: v }),
   setLcShape: (shape) => set((s) => ({ lcShape: { ...s.lcShape, ...shape } })),
+  setLcGenres: (ids) => set({ lcGenres: ids.slice(0, 4) }),
+  setLcStudio: (patch) => set((s) => ({ lcStudio: { ...s.lcStudio, ...patch } })),
   setLcLength: (length) => set({ lcLength: length }),
   setLcLyricsLength: (v) => set({ lcLyricsLength: v }),
   setVisualStyle: (style) => set({ visualStyle: style }),
@@ -2273,11 +2296,16 @@ export const useMirror = create<MirrorState>()((set, get) => ({
                 mode: s.lcMode,
                 civilization: s.lcCivilization ?? undefined,
                 shape: s.lcShape,
+                /* MUSIC ENGINE 2.0 — the genre fusion and the studio
+                   controls ride as the visitor's own binding choices */
+                genres: s.lcGenres.length > 0 ? s.lcGenres : undefined,
+                studio: s.lcStudio,
                 userLyrics:
-                  s.lcShape.lyricsMode === "USER WRITES" && s.lcUserLyrics.trim()
+                  (s.lcShape.lyricsMode === "USER WRITES" || s.lcStudio.lyricsMode === "I write") &&
+                  s.lcUserLyrics.trim()
                     ? s.lcUserLyrics.trim()
                     : undefined,
-                instrumental: s.lcShape.voice === "None",
+                instrumental: s.lcShape.voice === "None" || s.lcStudio.vocalMode === "Instrumental",
               }),
           intention,
           language: s.language,
@@ -2302,7 +2330,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         style: String(data.style ?? ""),
         lyrics:
           !s.lcRaw &&
-          s.lcShape.lyricsMode === "USER WRITES" &&
+          (s.lcShape.lyricsMode === "USER WRITES" || s.lcStudio.lyricsMode === "I write") &&
           s.lcUserLyrics.trim()
             ? s.lcUserLyrics.trim()
             : data.lyrics
@@ -2311,6 +2339,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
         notes: String(data.notes ?? ""),
         intention,
         mode: s.lcMode,
+        spec: (data.spec as LcBrief["spec"]) ?? null,
       };
       set({ lcBrief: brief, lcStatus: "idle", lcLyricsDrafts: [] });
       return true;
@@ -2358,7 +2387,11 @@ export const useMirror = create<MirrorState>()((set, get) => ({
           intention: brief.intention,
           civilization: !raw && brief.mode === "other-stars" ? (s.lcCivilization ?? undefined) : undefined,
           shape: raw ? undefined : s.lcShape,
-          instrumental: raw ? !brief.lyrics : s.lcShape.voice === "None" || !brief.lyrics,
+          /* MUSIC ENGINE 2.0 — the contract rides into the weave so the
+             vault row carries the visitor's genre fusion and studio */
+          genres: !raw && s.lcGenres.length > 0 ? s.lcGenres : undefined,
+          studio: raw ? undefined : s.lcStudio,
+          instrumental: raw ? !brief.lyrics : s.lcShape.voice === "None" || s.lcStudio.vocalMode === "Instrumental" || !brief.lyrics,
           language: s.language,
           compose: true,
           length: s.lcLength,
@@ -2799,10 +2832,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       });
       set({ lcQuality: report });
       if (track.trackId) {
-        void fetch(`/api/tracks/${encodeURIComponent(track.trackId)}`, {
+        void fetch("/api/music-library", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quality: report }),
+          body: JSON.stringify({ id: track.trackId, quality: report }),
         }).catch(() => undefined);
       }
     } catch {
@@ -2810,27 +2843,30 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
   favoriteLc: async (trackId, favorite) => {
-    set((s) => ({
-      lcHistory: s.lcHistory.map((t) =>
-        t.trackId === trackId ? { ...t, ...{} } : t
-      ),
-    }));
     try {
-      await fetch(`/api/tracks/${encodeURIComponent(trackId)}`, {
+      await fetch("/api/music-library", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ favorite }),
+        body: JSON.stringify({ id: trackId, favorite }),
       });
     } catch {
       /* the heart rests until the vault wakes */
     }
   },
   publishLc: async (trackId, caption) => {
+    const track = get().lcTrack;
     try {
-      const res = await fetch("/api/gathering/music", {
+      const res = await fetch("/api/publications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trackId, caption: caption?.slice(0, 280) }),
+        body: JSON.stringify({
+          sourcePortal: "music",
+          visibility: "public",
+          title: track?.title ?? "",
+          introduction: caption?.slice(0, 600) || undefined,
+          sourceId: trackId,
+          refKind: "music",
+        }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -2858,7 +2894,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
       lcLyricsDrafts: [],
       lcStatus: "idle",
       lcError: null,
-      lcSync: null,
       lcQuality: null,
       lcGenres: track.genres ? [...track.genres] : get().lcGenres,
     }),
@@ -5548,35 +5583,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
     }
   },
 }));
-
-/* ------------------------------------------------------------------ */
-/*  THE ADMITTANCE — a finished transmission joins everything in one   */
-/*  breath: the chamber's history (localStorage mirror), the player's   */
-/*  one voice, and the karaoke clock's honest estimates.                */
-/* ------------------------------------------------------------------ */
-function admitTrack(track: LcTrack): void {
-  const s = useMirror.getState();
-  const history = [track, ...s.lcHistory.filter((t) => t.id !== track.id)].slice(0, 60);
-  try {
-    localStorage.setItem("mirror-lc-history", JSON.stringify(history));
-  } catch {
-    /* storage unavailable */
-  }
-  useMirror.setState({
-    lcTrack: track,
-    lcStatus: "ready",
-    lcHistory: history,
-    lcSync:
-      track.lyrics && (track.duration ?? 0) > 30
-        ? estimateSync(track.lyrics, track.duration as number)
-        : null,
-    lcQuality: null,
-  });
-  /* the one voice — playback rides the global player */
-  usePlayerStore.getState().playTrack(track, history);
-  /* the chamber listens to what was born — QA runs quietly */
-  void useMirror.getState().runLcQuality();
-}
 
 /* Archive totals for labels — always the exact, derived-from-data numbers */
 export const archiveTotals = {

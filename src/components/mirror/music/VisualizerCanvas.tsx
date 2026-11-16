@@ -15,7 +15,7 @@
 /* ------------------------------------------------------------------ */
 
 import { useEffect, useRef } from "react";
-import { getPlayerAnalyser } from "@/lib/player-store";
+import { getActiveAnalyser } from "@/lib/audio/analyser";
 
 export const VISUALIZER_STYLES = [
   { id: "pearl-gold", name: "Pearl & Gold" },
@@ -90,7 +90,7 @@ export default function VisualizerCanvas({ style, className, dark = true }: Prop
 
     const bands = () => {
       /* read the shared analyser — real frequency data of the ONE player */
-      const analyser = getPlayerAnalyser();
+      const analyser = getActiveAnalyser();
       if (!analyser) return { bass: 0, mid: 0, high: 0, beat: false, time };
       analyser.getByteFrequencyData(freq as Uint8Array<ArrayBuffer>);
       analyser.getByteTimeDomainData(time as Uint8Array<ArrayBuffer>);

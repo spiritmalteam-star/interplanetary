@@ -320,6 +320,16 @@ export interface LcBrief {
   intention: string;
   /** The chamber the brief belongs to. */
   mode: LightCodesMode;
+  /** MUSIC ENGINE 2.0 — the Mirror's structured specification (bpm,
+      key, structure, arc, negative), kept separate from the prose so
+      the visitor can read exactly what was heard. */
+  spec?: {
+    bpm: number | null;
+    key: string | null;
+    structure: string | null;
+    arc: string | null;
+    negative: string | null;
+  } | null;
 }
 
 /** The Lyrics Laboratory's craft hands. */
@@ -362,6 +372,9 @@ export interface LcTrack {
       refreshes and devices, its sound served from the house's audio
       vault (owner-checked). libraryId is the row's own id. */
   libraryId?: string;
+  /** MUSIC ENGINE 2.0 — the vault row's own id when the weave was kept
+      (the QA ear and the publication house speak through it). */
+  trackId?: string;
   /** The owner's heart on a vault-kept transmission. */
   favorite?: boolean;
   /** True when the shelf may replay this sound from the house's serve
