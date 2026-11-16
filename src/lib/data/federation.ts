@@ -385,7 +385,7 @@ export const federationPrinciples: FederationCard[] = [
     label: "Wisdom before speed",
     imageKey: "principle-12",
     description:
-      "An answer that cannot wait a full turning probably was not an answer. Councils that must reply quickly attach their haste to the reply, like a stain they cannot remove. Wisdom before speed is not slowness — it is the discipline of letting a question finish.",
+      "An answer that cannot wait a full turning was never an answer. Councils that must reply quickly attach their haste to the reply, like a stain they cannot remove. Wisdom before speed is not slowness — it is the discipline of letting a question finish.",
     footer: "Held by all signatories",
   },
   {

@@ -7,6 +7,7 @@
 
 export interface BookTextPage {
   n: number;
+  part?: string;
   chapter?: string;
   paragraphs: string[];
 }
@@ -18,24 +19,30 @@ export interface BookTextPage {
  * title carry the chapter (and with it the drop cap), so the volume
  * reads like a book — most pages begin as plain, clean prose, and a
  * great letter rises only when a new chapter truly begins.
+ * THE COHERENT PART — the same law for the book's parts: a part is
+ * announced once, on the page that opens it, and never again.
  */
 export function dedupeChapters<T extends BookTextPage>(pages: T[]): T[] {
   const seen = new Set<string>();
+  const seenParts = new Set<string>();
   let out: T[] | null = null;
   pages.forEach((p, i) => {
     const raw = (p.chapter ?? "").trim().toLowerCase();
-    if (!raw || seen.has(raw)) {
-      if (p.chapter !== undefined) {
-        if (!out) out = pages.slice(0, i);
-        out.push({ ...p, chapter: undefined });
-      }
-      /* keep the chapter-title memory even when this page already
-         hides it — a title seen once is the chapter's own page */
-      if (raw) seen.add(raw);
+    const rawPart = (p.part ?? "").trim().toLowerCase();
+    const keepChapter = raw && !seen.has(raw);
+    const keepPart = rawPart && !seenParts.has(rawPart);
+    if (raw) seen.add(raw);
+    if (rawPart) seenParts.add(rawPart);
+    if (keepChapter && keepPart) {
+      if (out) out.push(p);
       return;
     }
-    seen.add(raw);
-    if (out) out.push(p);
+    if (!out) out = pages.slice(0, i);
+    out.push({
+      ...p,
+      ...(keepChapter ? {} : { chapter: undefined }),
+      ...(keepPart ? {} : { part: undefined }),
+    });
   });
   return out ?? pages;
 }
@@ -64,6 +71,7 @@ export function bookToText(
 
   const body = pages.map((p) => {
     const parts: string[] = [];
+    if (p.part) parts.push(p.part);
     if (p.chapter) parts.push(p.chapter);
     parts.push(...p.paragraphs);
     return parts.join("\n\n");

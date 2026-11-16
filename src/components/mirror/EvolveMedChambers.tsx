@@ -36,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useMirror } from "@/lib/mirror-store";
+import { cleanCopyText } from "@/lib/copy-clean";
 import { useT } from "@/lib/i18n";
 import {
   emDesigns,
@@ -99,7 +100,7 @@ export function EmVectorsTab({
 
   return (
     <div className="space-y-8">
-      <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
+      <p className="mx-auto max-w-[560px] text-center text-[15.5px] leading-relaxed text-muted-foreground">
         {t(
           "Four vector windows, one facility. Open one and the engine compiles from inside it — genomics, then folding, then scale and delivery, then the tissue's answer."
         )}
@@ -137,15 +138,15 @@ export function EmVectorsTab({
                   <Icon className="size-4 text-[var(--scope-a)]" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h4 className="scope-gradient-text text-[16px] font-semibold">
+                  <h4 className="scope-gradient-text text-[17px] font-semibold">
                     {t(vector.name)}
                   </h4>
-                  <p className="mt-0.5 text-[13.5px] italic text-muted-foreground">
+                  <p className="mt-0.5 text-[14.5px] italic text-muted-foreground">
                     {t(vector.tagline)}
                   </p>
                 </div>
               </div>
-              <p className="mt-3.5 text-[14px] leading-[1.75] text-foreground/85">
+              <p className="mt-3.5 text-[15px] leading-[1.75] text-foreground/85">
                 {t(vector.reveals)}
               </p>
               <div className="mt-4 flex items-center justify-between gap-2">
@@ -153,7 +154,7 @@ export function EmVectorsTab({
                   type="button"
                   onClick={() => onOpenInNexus(vector.id)}
                   data-testid={`em-open-${vector.id}`}
-                  className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px"
+                  className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--scope-a) 38%, transparent)",
@@ -164,12 +165,12 @@ export function EmVectorsTab({
                 </button>
                 <div className="flex items-center gap-1.5">
                   {active && (
-                    <span className="mono-label text-[9px] uppercase tracking-[0.18em] text-[var(--scope-a)]">
+                    <span className="mono-label text-[10px] uppercase tracking-[0.18em] text-[var(--scope-a)]">
                       {t("speaking from here")}
                     </span>
                   )}
                   {fused && (
-                    <span className="mono-label text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                    <span className="mono-label text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                       {t("fused")}
                     </span>
                   )}
@@ -182,11 +183,11 @@ export function EmVectorsTab({
 
       {/* the fusion instrument */}
       <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6">
-        <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+        <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
           <Sparkles className="size-3.5" aria-hidden="true" />
           {t("Vector Fusion")}
         </h3>
-        <p className="mt-2 max-w-[560px] text-[14px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 max-w-[560px] text-[15px] leading-relaxed text-muted-foreground">
           {t(
             "Choose two windows and let them melt into one architecture — the engine then compiles through both territories at once."
           )}
@@ -202,7 +203,7 @@ export function EmVectorsTab({
                 onClick={() => toggleFusion(vector.id)}
                 data-testid={`em-fuse-${vector.id}`}
                 className={cn(
-                  "focus-glow rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
+                  "focus-glow rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
                   chosen
                     ? "font-semibold text-foreground"
                     : "hairline text-muted-foreground hover:text-foreground"
@@ -237,17 +238,17 @@ export function EmVectorsTab({
             }}
             data-testid="em-fusion-card"
           >
-            <p className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Fused field")}
             </p>
-            <p className="scope-gradient-text mt-1.5 font-serif text-[18px] italic leading-snug">
+            <p className="scope-gradient-text mt-1.5 font-serif text-[19px] italic leading-snug">
               {t(fusionPair[0].name)} × {t(fusionPair[1].name)}
             </p>
             <button
               type="button"
               onClick={() => onOpenInNexus(null)}
               data-testid="em-fuse-open"
-              className="dream-btn focus-glow mt-3 flex mx-auto h-9 items-center gap-2 rounded-full px-4 text-[13.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
+              className="dream-btn focus-glow mt-3 flex mx-auto h-9 items-center gap-2 rounded-full px-4 text-[14.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
             >
               <Atom className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
               {t("Fuse in the Nexus")}
@@ -351,9 +352,9 @@ function EmToolCard({
           <Icon className="size-4 text-[var(--scope-a)]" />
         </span>
         <div className="min-w-0">
-          <h4 className="scope-gradient-text text-[15.5px] font-semibold">{typeof title === "string" ? t(title) : title}</h4>
+          <h4 className="scope-gradient-text text-[16.5px] font-semibold">{typeof title === "string" ? t(title) : title}</h4>
           {description ? (
-            <p className="text-[13px] leading-snug text-muted-foreground">{t(description)}</p>
+            <p className="text-[14px] leading-snug text-muted-foreground">{t(description)}</p>
           ) : null}
         </div>
       </div>
@@ -366,7 +367,7 @@ function EmToolCard({
               type="button"
               onClick={() => void run(chip)}
               disabled={busy}
-              className="focus-glow rounded-full border hairline px-2.5 py-1 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              className="focus-glow rounded-full border hairline px-2.5 py-1 text-[13.5px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t(chip)}
             </button>
@@ -390,13 +391,13 @@ function EmToolCard({
           onChange={(e) => setValue(e.target.value)}
           placeholder={t(placeholder)}
           disabled={busy}
-          className="h-9 min-w-0 flex-1 rounded-full border hairline bg-transparent px-3.5 text-[13.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-[var(--hairline-active)] disabled:opacity-50"
+          className="h-9 min-w-0 flex-1 rounded-full border hairline bg-transparent px-3.5 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-[var(--hairline-active)] disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={busy || !value.trim()}
           data-testid={`${testId}-run`}
-          className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[12.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+          className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[13.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy ? (
             <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -408,21 +409,21 @@ function EmToolCard({
       </form>
 
       {state === "busy" && (
-        <p className="mt-3.5 flex items-center gap-2 text-[13px] italic text-muted-foreground" aria-live="polite">
-          <span className="animate-dot-pulse size-1.5 rounded-full bg-[var(--scope-a)]" aria-hidden="true" />
+        <p className="mt-3.5 flex items-center gap-2 text-[14px] italic text-muted-foreground" aria-live="polite">
+          <span className="size-1.5 rounded-full bg-[var(--scope-a)]" aria-hidden="true" />
           {t(busyPhrase)}
         </p>
       )}
 
       {state === "error" && (
         <div className="mt-3.5 rounded-xl border px-3.5 py-3" data-testid={`${testId}-error`}>
-          <p className="text-[13.5px] leading-relaxed text-foreground/85">
+          <p className="text-[14.5px] leading-relaxed text-foreground/85">
             {t("The instrument stayed quiet — rest, then try again.")}
           </p>
           <button
             type="button"
             onClick={() => void run()}
-            className="focus-glow mt-2 flex h-8 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] text-foreground/85 transition-all duration-300 hover:text-foreground"
+            className="focus-glow mt-2 flex h-8 items-center gap-1.5 rounded-full border hairline px-3 text-[13.5px] text-foreground/85 transition-all duration-300 hover:text-foreground"
           >
             <RefreshCw className="size-3" aria-hidden="true" />
             {t("Try again")}
@@ -442,20 +443,20 @@ function EmToolCard({
           <RevelationSections sections={result.sections} size="sm" />
           {result.formulas.length > 0 && (
             <div className="px-formula rounded-xl px-4 py-3">
-              <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+              <p className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 <Sigma className="size-3" aria-hidden="true" />
                 {t("The mechanisms that run it")}
               </p>
               <div className="mt-2 space-y-1.5">
                 {result.formulas.map((f, i) => (
-                  <p key={i} className="px-formula-line text-center font-serif text-[15px] italic leading-relaxed text-foreground/90">
+                  <p key={i} className="px-formula-line text-center font-serif text-[16px] italic leading-relaxed text-foreground/90">
                     {f}
                   </p>
                 ))}
               </div>
             </div>
           )}
-          <p className="ink-soft text-center font-serif text-[13.5px] italic">{result.seal}</p>
+          <p className="ink-soft text-center font-serif text-[14.5px] italic">{result.seal}</p>
           <div className="flex items-center justify-between gap-2">
             <ListenButton
               text={`${result.revelation}. ${result.formulas.join(". ")}`}
@@ -479,7 +480,7 @@ export function EmCopyButton({ text }: { text: string }) {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(cleanCopyText(text));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -495,7 +496,7 @@ export function EmCopyButton({ text }: { text: string }) {
       aria-label={copied ? t("Copied") : t("Copy the revelation")}
       title={copied ? t("Copied") : t("Copy the revelation")}
       data-testid="em-copy"
-      className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] transition-all duration-300"
+      className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[12px] transition-all duration-300"
       style={{
         borderColor: copied
           ? "color-mix(in srgb, var(--scope-a) 55%, transparent)"
@@ -594,7 +595,7 @@ export function EmPdfButton() {
         aria-label={t("Press a transmission into a PDF")}
         title={t("Press a transmission into a PDF")}
         data-testid="em-pdf"
-        className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] transition-all duration-300"
+        className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[12px] transition-all duration-300"
         style={{ borderColor: "var(--hairline)" }}
       >
         <FileDown className="size-3" aria-hidden="true" />
@@ -609,13 +610,13 @@ export function EmPdfButton() {
       >
         <DialogContent
           data-testid="em-pdf-dialog"
-          className="max-w-[430px] gap-0 rounded-2xl border hairline bg-[var(--glass-bg)] p-5 backdrop-blur-xl"
+          className="max-w-[430px] gap-0 rounded-2xl border hairline bg-[var(--glass-bg)] p-5 backdrop-blur-md"
         >
           <DialogHeader>
-            <DialogTitle className="font-[family-name(var(--font-literata))] text-[19px] font-semibold text-foreground">
+            <DialogTitle className="font-[family-name(var(--font-literata))] text-[20px] font-semibold text-foreground">
               {t("The Evolve Med Transmission")}
             </DialogTitle>
-            <DialogDescription className="pt-1 text-[13.5px] leading-relaxed">
+            <DialogDescription className="pt-1 text-[14.5px] leading-relaxed">
               {t(
                 "The whole conversation pressed into ink — one channeled transmission to keep, not a lecture."
               )}
@@ -626,7 +627,7 @@ export function EmPdfButton() {
           <div className="mt-4">
             <label
               htmlFor="em-pdf-focus"
-              className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground"
+              className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground"
             >
               {t("Carry a focus")}
             </label>
@@ -639,7 +640,7 @@ export function EmPdfButton() {
                 "Lean the transmission toward something — or leave it silent and let the thread choose."
               )}
               data-testid="em-pdf-focus"
-              className="nice-scroll mt-1.5 w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:border-[var(--hairline-active)] focus:outline-none"
+              className="nice-scroll mt-1.5 w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:border-[var(--hairline-active)] focus:outline-none"
             />
             {/* what the transmission carries — chips and the paperclip/camera */}
             <div className="mt-2 flex items-center gap-2">
@@ -662,7 +663,7 @@ export function EmPdfButton() {
 
           {/* the gear of depth */}
           <div className="mt-4">
-            <span className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Gear of depth")}
             </span>
             <div
@@ -679,7 +680,7 @@ export function EmPdfButton() {
                   aria-label={`${t("Gear of depth")} ${g}`}
                   data-testid={`em-pdf-depth-${g}`}
                   className={cn(
-                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[13px] transition-all duration-300",
+                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[14px] transition-all duration-300",
                     depth === g
                       ? "border-transparent bg-foreground text-background"
                       : "hairline text-muted-foreground hover:text-foreground"
@@ -689,14 +690,14 @@ export function EmPdfButton() {
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 font-[family-name(var(--font-literata))] text-[12.5px] italic text-muted-foreground">
+            <p className="mt-1.5 font-[family-name(var(--font-literata))] text-[13.5px] italic text-muted-foreground">
               {t(EM_GEAR_DESCRIPTIONS[depth - 1])}
             </p>
           </div>
 
           {/* the length of the material */}
           <div className="mt-4">
-            <span className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Length of the material")}
             </span>
             <div
@@ -713,7 +714,7 @@ export function EmPdfButton() {
                   aria-label={`${n} ${t("PDF pages")}`}
                   data-testid={`em-pdf-pages-${n}`}
                   className={cn(
-                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[13px] transition-all duration-300",
+                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[14px] transition-all duration-300",
                     pages === n
                       ? "border-transparent bg-foreground text-background"
                       : "hairline text-muted-foreground hover:text-foreground"
@@ -723,7 +724,7 @@ export function EmPdfButton() {
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-[12px] text-muted-foreground">
+            <p className="mt-1.5 text-[13px] text-muted-foreground">
               {t("{n} PDF pages", { n: pages })}
             </p>
           </div>
@@ -734,7 +735,7 @@ export function EmPdfButton() {
               type="button"
               onClick={() => setOpen(false)}
               disabled={busy}
-              className="focus-glow h-9 rounded-full border hairline px-4 text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-50"
+              className="focus-glow h-9 rounded-full border hairline px-4 text-[14px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-50"
             >
               {t("Cancel")}
             </button>
@@ -743,7 +744,7 @@ export function EmPdfButton() {
               onClick={() => void press()}
               disabled={busy}
               data-testid="em-pdf-press"
-              className="focus-glow inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+              className="focus-glow inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[14px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
             >
               {busy ? (
                 <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -767,7 +768,7 @@ export function EmInstrumentsTab() {
 
   return (
     <div className="space-y-5">
-      <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
+      <p className="mx-auto max-w-[560px] text-center text-[15.5px] leading-relaxed text-muted-foreground">
         {t(
           "The instruments of the foundry — each one a different door into the living machine; the pages beyond are the deep laboratory."
         )}
@@ -780,7 +781,7 @@ export function EmInstrumentsTab() {
           onClick={() => setPage((p) => Math.max(0, p - 1))}
           disabled={page === 0}
           aria-label={t("The page before")}
-          className="focus-glow mono-label size-8 rounded-full border hairline text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
+          className="focus-glow mono-label size-8 rounded-full border hairline text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
         >
           ‹
         </button>
@@ -793,7 +794,7 @@ export function EmInstrumentsTab() {
             aria-label={`${t("Page")} ${i + 1} ${t("of")} ${pageCount}`}
             data-testid={`em-lab-pip-${i + 1}`}
             className={cn(
-              "focus-glow mono-label size-8 rounded-full border text-[12px] transition-all duration-300",
+              "focus-glow mono-label size-8 rounded-full border text-[13px] transition-all duration-300",
               page === i
                 ? "border-transparent bg-foreground text-background"
                 : "hairline text-muted-foreground hover:text-foreground"
@@ -807,7 +808,7 @@ export function EmInstrumentsTab() {
           onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
           disabled={page === pageCount - 1}
           aria-label={t("The page after")}
-          className="focus-glow mono-label size-8 rounded-full border hairline text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
+          className="focus-glow mono-label size-8 rounded-full border hairline text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
         >
           ›
         </button>
@@ -820,7 +821,7 @@ export function EmInstrumentsTab() {
             icon={Crosshair}
             title="The Target Engine"
             description="Name a target — receive its degradation route."
-            placeholder="Name a protein or disease target…"
+            placeholder={t("Name a protein or disease target…")}
             buttonLabel="Weave the route"
             chips={emTargets}
             testId="em-tool-target"
@@ -831,7 +832,7 @@ export function EmInstrumentsTab() {
             icon={PenLine}
             title="The Editing Loom"
             description="Name a fault in the living code — receive the rewriting strategy."
-            placeholder="Name the fault…"
+            placeholder={t("Name the fault…")}
             buttonLabel="Loom the rewrite"
             chips={emFaults}
             testId="em-tool-edit"
@@ -842,7 +843,7 @@ export function EmInstrumentsTab() {
             icon={Boxes}
             title="The Living Foundry"
             description="Name a tissue or organ — receive its printed architecture and the chip that tests it alive."
-            placeholder="Name a tissue or organ…"
+            placeholder={t("Name a tissue or organ…")}
             buttonLabel="Print the architecture"
             chips={emTissues}
             testId="em-tool-fabric"
@@ -853,7 +854,7 @@ export function EmInstrumentsTab() {
             icon={ArrowLeftRight}
             title="The Bridge"
             description="Name a signal of mind or body — receive its translation between digital and living."
-            placeholder="Name a signal…"
+            placeholder={t("Name a signal…")}
             buttonLabel="Open the bridge"
             chips={emSignals}
             testId="em-tool-bridge"
@@ -864,7 +865,7 @@ export function EmInstrumentsTab() {
             icon={CircuitBoard}
             title="The Circuit Compiler"
             description="Name a condition to compute — receive the genetic circuit that computes it, caged."
-            placeholder="Name a condition or a behavior…"
+            placeholder={t("Name a condition or a behavior…")}
             buttonLabel="Compile the circuit"
             chips={emInputs}
             testId="em-tool-circuit"
@@ -875,7 +876,7 @@ export function EmInstrumentsTab() {
             icon={ShieldCheck}
             title="The Biosecurity Engine"
             description="Name a design — receive it screened, caged and made revocable."
-            placeholder="Name a design to screen…"
+            placeholder={t("Name a design to screen…")}
             buttonLabel="Screen the design"
             chips={emDesigns}
             testId="em-tool-containment"
@@ -892,8 +893,8 @@ export function EmInstrumentsTab() {
           data-testid={`em-lab-page-${page + 1}`}
         >
           <div className="text-center">
-            <h3 className="scope-gradient-text text-[18px] font-semibold">{t(labPage.subject)}</h3>
-            <p className="mx-auto mt-1.5 max-w-[520px] text-[13.5px] leading-relaxed text-muted-foreground">
+            <h3 className="scope-gradient-text text-[19px] font-semibold">{t(labPage.subject)}</h3>
+            <p className="mx-auto mt-1.5 max-w-[520px] text-[14.5px] leading-relaxed text-muted-foreground">
               {t(labPage.blurb)}
             </p>
           </div>
@@ -940,22 +941,36 @@ function EmCodexCard({
   paragraphs,
   icon: Icon,
   testId,
+  compact = false,
 }: {
   title: string;
   paragraphs: string[];
   icon: LucideIcon;
   testId: string;
+  compact?: boolean;
 }) {
   const t = useT();
   return (
-    <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6" data-testid={testId}>
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+    <div
+      className={cn(
+        "scope-frame-card relative overflow-hidden rounded-2xl glass",
+        compact ? "p-4 sm:p-5" : "p-5 sm:p-6"
+      )}
+      data-testid={testId}
+    >
+      <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
         <Icon className="size-3.5" aria-hidden="true" />
         {t(title)}
       </h3>
-      <div className="mt-3 space-y-3">
+      <div className={cn("mt-3 space-y-3", compact && "mt-2 space-y-2.5")}>
         {paragraphs.map((p, i) => (
-          <p key={i} className="text-[14.5px] leading-[1.85] text-foreground/88">
+          <p
+            key={i}
+            className={cn(
+              "leading-[1.85] text-foreground/88",
+              compact ? "text-[14px] leading-[1.7]" : "text-[15.5px]"
+            )}
+          >
             {t(p)}
           </p>
         ))}
@@ -964,9 +979,11 @@ function EmCodexCard({
   );
 }
 
-export function EmCodexTab() {
+export function EmCodexTab({ compact = false }: { compact?: boolean }) {
+  const t = useT();
+
   return (
-    <div className="space-y-5">
+    <div className={compact ? "grid gap-3.5 sm:grid-cols-2" : "space-y-5"}>
       <EmCodexCard
         title="The Routing Matrix"
         icon={Compass}
@@ -986,7 +1003,7 @@ export function EmCodexTab() {
         ]}
       />
       <EmCodexCard
-        title="How to read the mechanisms"
+        title={t("How to read the mechanisms")}
         icon={Sigma}
         testId="em-codex-mechanisms"
         paragraphs={[

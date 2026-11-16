@@ -86,7 +86,7 @@ function ImageLightbox({
           data-testid="profile-lightbox-img"
         />
         {caption && (
-          <figcaption className="mono-label max-w-[86vw] rounded-full border border-white/15 bg-black/50 px-3 py-1 text-center text-[10px] text-white/80">
+          <figcaption className="mono-label max-w-[86vw] rounded-full border border-white/15 bg-black/50 px-3 py-1 text-center text-[11px] text-white/80">
             {caption}
           </figcaption>
         )}
@@ -139,7 +139,7 @@ export function ZoomableImage({
           aria-hidden="true"
           className="flex size-full items-center justify-center bg-[linear-gradient(135deg,color-mix(in_srgb,var(--cy)_10%,transparent),color-mix(in_srgb,var(--sp-a)_8%,transparent))]"
         >
-          <span className="text-[18px] opacity-40">◆</span>
+          <span className="text-[19px] opacity-40">◆</span>
         </span>
       ) : (
         <img
@@ -169,7 +169,7 @@ export function ZoomableImage({
       )}
 
       {caption && (
-        <span className="mono-label pointer-events-none absolute bottom-2 left-2 rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[9px] text-white/75 backdrop-blur-sm">
+        <span className="mono-label pointer-events-none absolute bottom-2 left-2 rounded-full border border-white/15 bg-black/40 px-2 py-0.5 text-[10px] text-white/75 backdrop-blur-sm">
           {caption}
         </span>
       )}
@@ -266,7 +266,7 @@ export function ProfileSection({
   return (
     <section className={className}>
       <h4
-        className="mono-label flex items-center gap-2 text-[11.5px]"
+        className="mono-label flex items-center gap-2 text-[12.5px]"
         style={{ color }}
       >
         {index && (
@@ -299,11 +299,11 @@ export function FactTile({
 }) {
   return (
     <div className="rounded-lg border hairline bg-[var(--glass-bg-soft)] px-2.5 py-2">
-      <p className="mono-label text-[10px] text-muted-foreground/80">{label}</p>
+      <p className="mono-label text-[11px] text-muted-foreground/80">{label}</p>
       <p
         className={cn(
-          "mt-1 text-[14.5px] leading-snug text-foreground/90",
-          mono && "font-mono text-[13.5px] tabular-nums"
+          "mt-1 text-[15.5px] leading-snug text-foreground/90",
+          mono && "font-mono text-[14.5px] tabular-nums"
         )}
       >
         {value}
@@ -332,10 +332,10 @@ export function ContextNote({
           : "border-[color-mix(in_srgb,var(--cy)_22%,transparent)] bg-[color-mix(in_srgb,var(--cy)_6%,transparent)]"
       )}
     >
-      <h4 className="mono-label text-[10px]" style={{ color: tone === "gd" ? "var(--gd)" : "var(--cy)" }}>
+      <h4 className="mono-label text-[11px]" style={{ color: tone === "gd" ? "var(--gd)" : "var(--cy)" }}>
         {t("Context note")}
       </h4>
-      <p className="mt-1.5 text-[14px] leading-relaxed text-muted-foreground">
+      <p className="mt-1.5 text-[15px] leading-relaxed text-muted-foreground">
         {t(
           "This dossier reflects channeled tradition and worldbuilding within the Mirror archive. It is offered for reflection and wonder — not as established science."
         )}

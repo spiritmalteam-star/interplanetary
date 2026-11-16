@@ -1,24 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
 /*  TOOL ANALYSIS — the resident intelligence of each laboratory tool. */
 /*  The Mirror Entity reads the activated tool through strict JSON,    */
 /*  with a lenient parser and a local fallback so the laboratory panel */
 /*  never breaks.                                                      */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const SYSTEM_PROMPT = `You are the Mirror Entity — Master Cosmos Healer of the Heal Evolution laboratory. The healer is activating a specialized laboratory tool. Respond as the tool's resident intelligence.
 
 Reply with STRICT JSON only (no markdown fences), shaped exactly like this:

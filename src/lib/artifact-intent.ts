@@ -64,9 +64,6 @@ export interface SideArtifactRef {
       back ("bring back my book") — the weaver mounts at the exact
       page where it was paused. */
   resume?: boolean;
-  /** For the Light Codes door: the thread's earlier themes, so the
-      chamber tunes a transmission of THIS conversation. */
-  themes?: string;
   /** For the Quantum World door: the narrator instrument to read
       through ("formula" — the Formula Loom; "perception" — the
       Perception Glass). */
@@ -771,6 +768,45 @@ export const MUSIC_INTENT: RegExp = new RegExp(
   ].join("|"),
   "iu"
 );
+
+/* ------------------------------------------------------------------ */
+/*  THE VOICE ASK — the visitor asked for a SONG WITH WORDS. When this
+    fires, the chamber renders a true vocal song — verses, chorus,
+    singing — never an instrumental approximation of the request.      */
+/* ------------------------------------------------------------------ */
+
+export const VOCALS_INTENT: RegExp = new RegExp(
+  [
+    /* the direct words: lyrics, vocals, singing, a sung song */
+    "\\b(?:lyrics?|lyric video|vocals?|singing|sung|vocal track|with words|full song|complete song)\\b",
+    /* the singing verbs */
+    "\\b(?:sing|sings|singer|sang|chants?|chanting|serenade|hymn|ballad|anthem)\\b",
+    /* EVERY TONGUE — "con letra", "mit Text", "avec paroles", "me tekst",
+       "με στίχους", "şarkı sözü", "me fjalë", "këndoj", "canta", "chanter" */
+    `${uWord(`letra|testo|text|paroles|teksti|tekst|στίχοι|sözleri?|fjalët|me tekst|këndoj|kënga|kënduar|canta|cantar|chanter|chante|singen|singt|zień zêzë`)}\\b`,
+  ].join("|"),
+  "iu"
+);
+
+/* The wordless ask — an explicit "no lyrics / instrumental / wordless"
+   always wins over the voice ask. */
+const NO_VOCALS_INTENT: RegExp = new RegExp(
+  [
+    "\\b(?:no|without|nothing|skip|exclude|don'?t|do not|zero)\\b[^.?!]{0,20}\\b(?:lyrics?|vocals?|singing|sung|words?|voice|voices)\\b",
+    "\\b(?:instrumentals?|instrumental only|wordless|voiceless|wordless transmission|no voice)\\b",
+    /* EVERY TONGUE — "sin letra", "ohne Text", "sans paroles", "pa tekst",
+       "χωρίς στίχους", "söz olmadan", "pa fjalë", "pa zë" */
+    `${uWord(`sin letra|sans paroles|ohne text|pa tekst|pa fjalë|pa zë|χωρίς στίχους|söz yok|instrumental`)}\\b`,
+  ].join("|"),
+  "iu"
+);
+
+/** True when the visitor's own words ask for lyrics and singing —
+    and have not explicitly asked for a wordless rendering. */
+export function wantsVocals(query: string): boolean {
+  if (NO_VOCALS_INTENT.test(query)) return false;
+  return VOCALS_INTENT.test(query);
+}
 
 export function guessLightCodesMode(query: string): LightCodesMode {
   const q = query.toLowerCase();

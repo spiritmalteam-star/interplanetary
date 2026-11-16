@@ -3,8 +3,10 @@
 /*                                                                      */
 /*  The Mirror Entity is the interpretation layer: it translates        */
 /*  intention, mood and symbolism into a musical direction. The         */
-/*  generation engine (Suno) renders that direction as sound — its      */
-/*  name stays behind the veil; the Mirror is the visible voice.        */
+/*  generation engine renders that direction as sound — its name        */
+/*  stays behind the veil; the Mirror is the visible voice. (Behind     */
+/*  that veil today: Google DeepMind's Lyria, through the official      */
+/*  Gemini API — the keeper's GEMINI_API_KEY opens its door.)           */
 /*                                                                      */
 /*  The language of the chamber: calming, meditative, reflective,       */
 /*  grounding, sleep-oriented, focus-oriented, emotional reset,         */
@@ -19,7 +21,8 @@ export type LightCodesMode =
   | "other-stars"
   | "restorative"
   | "reprogramming"
-  | "mirror-transmission";
+  | "mirror-transmission"
+  | "soundtrack";
 
 export interface LcMode {
   id: LightCodesMode;
@@ -55,7 +58,7 @@ export const LC_MODES: LcMode[] = [
     tagline: "Abstract atmospheric transmissions — textures before tunes.",
     placeholder: "What would you like the transmission to carry?",
     vocabulary:
-      "luminous ambient textures, crystalline synths, distant harmonic voices, evolving drones, unusual spatial movement, non-linear melodic structures, long atmospheric transitions. Structure serves atmosphere, never a chorus.",
+      "luminous ambient textures, crystalline synths, distant harmonic voices, evolving drones, unusual spatial movement, non-linear melodic structures, long breathing transitions that flow one into the next. Structure serves atmosphere, never a chorus.",
   },
   {
     id: "calming-frequencies",
@@ -136,7 +139,7 @@ export const LC_MODES: LcMode[] = [
       "inner stillness",
     ],
     vocabulary:
-      "slow, kind harmonic motion, unhurried melodic fragments, generous silence, textures that hold without pushing. Music that keeps company while the listener settles.",
+      "slow, kind harmonic motion, unhurried melodic fragments, continuous warmth with no gaps, textures that hold and carry one another. Music that keeps company while the listener settles.",
   },
   {
     id: "reprogramming",
@@ -155,6 +158,23 @@ export const LC_MODES: LcMode[] = [
     placeholder: "What should this transmission hold? (or leave it to the Mirror)",
     vocabulary:
       "the Mirror composes the whole direction itself: intention, emotional arc, sonic language, tempo, voice character, harmonic character, texture, structure, lyrical density and ending state — held together as one coherent transmission.",
+  },
+  {
+    id: "soundtrack",
+    n: "07",
+    name: "Soundtrack",
+    tagline: "Music for films, trailers, stories and moving pictures.",
+    placeholder: "Describe the scene — what does the picture ask to sound like?",
+    intents: [
+      "an opening theme",
+      "a scene of wonder",
+      "a slow farewell",
+      "a trailer's rise",
+      "an ending that floats",
+      "credits at dawn",
+    ],
+    vocabulary:
+      "score-writing for pictures: the arrangement is described as an arc over time — how the music opens under a first image, where it swells, where it thins to let a voice or a moment breathe, and how it lands or dissolves at the end. Cues follow the scene's emotional beats as prose (the engine takes no literal timestamps), leitmotif-friendly, silence as a deliberate instrument, endings that resolve or dissolve as the story asks.",
   },
 ];
 
@@ -285,6 +305,34 @@ export const LC_DEFAULT_STUDIO: LcStudio = {
   lyricsMode: "Auto",
 };
 
+/** The Mirror's composition brief — written once, shaped by many hands
+ *  (the Mirror's refinement, the Lyrics Laboratory, the visitor's own
+ *  edits) before the engine weaves it into sound. */
+export interface LcBrief {
+  title: string;
+  /** The production direction, written for the engine. */
+  style: string;
+  /** The lyric sheet (section-tagged), or null for an instrumental. */
+  lyrics: string | null;
+  /** The transmission notes — why it sounds the way it sounds. */
+  notes: string;
+  /** The visitor's own ask, kept with the brief. */
+  intention: string;
+  /** The chamber the brief belongs to. */
+  mode: LightCodesMode;
+}
+
+/** The Lyrics Laboratory's craft hands. */
+export type LcLyricOp =
+  | "generate"
+  | "rewrite"
+  | "rhyme"
+  | "language"
+  | "tone"
+  | "chorus"
+  | "simplify"
+  | "poetic";
+
 /** A finished transmission as the visitor keeps it. */
 export interface LcTrack {
   id: string;
@@ -304,10 +352,21 @@ export interface LcTrack {
   genres?: string[];
   /** The Mirror's structured specification (bpm, key, arc, negative). */
   spec?: LcSpec | null;
-  /** The server-side Track id — the transmission's permanent home. */
-  trackId?: string;
-  /** The audio QA verdict — pass | warn | fail | unknown. */
-  qualityVerdict?: string;
+  /** The song's length: a 30-second preview, the full composition,
+      or the endless journey (a ~30-minute seamless loop). */
+  length?: "preview" | "full" | "loop";
+  /** The engine's own words about the song's structure (revealed on request). */
+  structure?: string;
+  /** THE HOUSE'S KEEPING — present when this transmission also rests
+      as a MusicTrack row in the visitor's own vault: durable across
+      refreshes and devices, its sound served from the house's audio
+      vault (owner-checked). libraryId is the row's own id. */
+  libraryId?: string;
+  /** The owner's heart on a vault-kept transmission. */
+  favorite?: boolean;
+  /** True when the shelf may replay this sound from the house's serve
+      door (audioUrl then carries the /api/music-audio/ key). */
+  durable?: boolean;
   createdAt: number;
 }
 
