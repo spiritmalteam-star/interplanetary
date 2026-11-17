@@ -63,5 +63,32 @@ tool-results/
 # the keyless template may travel
 !.env.example
 skills/
-upload/
+/upload/
 scripts/
+
+# runtime state
+.zscripts/dev.pid
+.zscripts/mini-service-*.log
+.zscripts/*.png
+
+# one-off QA screenshots and session artifacts — never ride with the repo
+/verify-*.png
+/.verify-*.png
+/download/*.png
+/dev.log.*
+/server.log.*
+agent-ctx/
+.zscripts/lh/
+
+# the gathering’s own media shelf — visitor uploads never enter the repository
+public/gathering-media/
+.media/
+.zshots/
+qa/
+
+# sandbox pre-reset snapshots and replication traces — never ride with the repo
+/backups/
+/.pdfbuild/
+/--batch=25
+/live2.html
+/public/reflectme-full-replication-prompt.pdf
