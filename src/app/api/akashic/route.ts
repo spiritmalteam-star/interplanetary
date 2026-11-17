@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
+import { ENERGY_CODE, ENERGY_NOTICE, isEnergyError } from "@/lib/server/energy";
 import { REMEMBRANCE_LAW } from "@/lib/remembrance-law";
+import { RELEVANCE_LAW } from "@/lib/relevance-law";
 import {
   describeImage,
   documentBlock,
@@ -294,7 +296,9 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         ? LIVE_SYSTEM_PROMPT
         : isContinuation
           ? CONTINUATION_PROMPT
-          : SYSTEM_PROMPT) + REMEMBRANCE_LAW;
+          : SYSTEM_PROMPT) +
+        RELEVANCE_LAW +
+        REMEMBRANCE_LAW;
     if (isContinuation) {
       const replyLine = resonance
         ? `The visitor sets down this reply beside the open record: "${resonance}".`
@@ -338,11 +342,14 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
           },
           {
             role: "user",
-            content: `${resonanceLine}${deskLine}\n\nDraw out the one record now, and read it in your hand.${languageLine}`,
+            content: `${resonanceLine}${deskLine}\n\nDraw out the one record now, and read it in your hand.`,
           },
           {
             role: "user",
-            content: `${entranceLine}${recentLine}${openingsLine}`,
+            /* THE TONGUE'S OWN SEAT — the language law rides the LAST
+               message, after the entrance machinery, so it is the final
+               instruction the scribe reads before the hand moves. */
+            content: `${entranceLine}${recentLine}${openingsLine}${languageLine}`,
           },
         ],
         thinking: { type: "disabled" },
@@ -366,6 +373,13 @@ ${replyLine} Write the next page of this same record now, in your hand.${deskLin
     });
   } catch (err) {
     console.error("[api/akashic]", err);
+    /* THE ENERGY'S OWN NAME — a spent sky says so plainly */
+    if (isEnergyError(err)) {
+      return NextResponse.json(
+        { error: ENERGY_NOTICE, code: ENERGY_CODE },
+        { status: 503, headers: { "retry-after": "120" } }
+      );
+    }
     return NextResponse.json(
       { error: "The shelf is momentarily quiet. Rest, then ask again." },
       { status: 500 }

@@ -1,94 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isAdminRequest } from "@/lib/server/admin";
+import { getLcEngineStatus } from "@/lib/server/lc-engine";
 
 export const maxDuration = 30;
+export const dynamic = "force-dynamic";
 
 /* ------------------------------------------------------------------ */
-/*  LIGHT CODES — status of a rendering transmission. The sound        */
-/*  engine's key never leaves the server.                              */
+/*  LIGHT CODES — the keeper's diagnostic. The chamber's engine        */
+/*  state, spoken plainly: is the key placed, which doors have been    */
+/*  proven, what the engine last said, what the day has spent.         */
+/*                                                                      */
+/*  THE KEEPING LAW: this door opens only for the keeper's own signed  */
+/*  session (ADMIN_EMAIL). No secret ever rides home — only the shape  */
+/*  of the truth around it. An ordinary visitor receives silence       */
+/*  (403), and the chamber shows them nothing at all.                  */
 /* ------------------------------------------------------------------ */
-
-const SUNO_BASE = (
-  process.env.SUNO_API_URL || "https://api.sunoapi.org"
-).replace(/\/+$/, "");
-
-interface SunoClip {
-  id?: string;
-  audio_url?: string;
-  audioUrl?: string;
-  source_audio_url?: string;
-  duration?: number;
-  status?: string;
-  title?: string;
-}
-
-function extract(data: unknown): {
-  status: "pending" | "ready" | "error";
-  audioUrl?: string;
-  id?: string;
-  duration?: number;
-  error?: string;
-} {
-  const d = data as {
-    status?: string;
-    data?: {
-      status?: string;
-      task_status?: string;
-      response?: { suno_data?: SunoClip[]; clips?: SunoClip[] };
-      suno_data?: SunoClip[];
-      clips?: SunoClip[];
-    };
-  };
-  const clips: SunoClip[] =
-    d?.data?.response?.suno_data ??
-    d?.data?.response?.clips ??
-    d?.data?.suno_data ??
-    d?.data?.clips ??
-    [];
-  const first = clips.find((c) => c && (c.audio_url || c.audioUrl));
-  const rawStatus = String(
-    d?.data?.status ?? d?.data?.task_status ?? d?.status ?? ""
-  ).toLowerCase();
-
-  if (first && (first.audio_url || first.audioUrl)) {
-    return {
-      status: "ready",
-      audioUrl: (first.audio_url ?? first.audioUrl) as string,
-      id: first.id,
-      duration: first.duration,
-    };
-  }
-  if (/error|failed/.test(rawStatus)) {
-    return { status: "error", error: "The rendering met a silence it could not cross." };
-  }
-  if (/complete|success|finished|done/.test(rawStatus) && !first) {
-    return { status: "error", error: "The rendering finished without a sound." };
-  }
-  return { status: "pending" };
-}
 
 export async function GET(req: NextRequest) {
-  const taskId = req.nextUrl.searchParams.get("taskId");
-  if (!taskId) {
-    return NextResponse.json({ status: "error", error: "No task was named." }, { status: 400 });
+  if (!(await isAdminRequest(req))) {
+    return NextResponse.json({ error: "The keeper's door only." }, { status: 403 });
   }
-  const key = process.env.SUNO_API_KEY;
-  if (!key) {
-    return NextResponse.json(
-      { status: "error", error: "The sound engine's key is not placed yet." },
-      { status: 501 }
-    );
-  }
-  try {
-    const res = await fetch(
-      `${SUNO_BASE}/api/v1/generate/record-info?taskId=${encodeURIComponent(taskId)}`,
-      { headers: { "x-api-key": key }, cache: "no-store" }
-    );
-    const data = await res.json().catch(() => null);
-    if (!res.ok || !data) {
-      return NextResponse.json({ status: "pending" });
-    }
-    return NextResponse.json(extract(data));
-  } catch {
-    return NextResponse.json({ status: "pending" });
-  }
+
+  const engine = getLcEngineStatus();
+
+  return NextResponse.json({
+    provider: "Google DeepMind Lyria",
+    via: "official Gemini API (@google/genai) · Interactions",
+    keyConfigured: Boolean(process.env.GEMINI_API_KEY),
+    models: {
+      preview: {
+        id: process.env.LYRIA_MODEL || "lyria-3.5",
+        purpose: "previews — the piece finds its own natural length",
+      },
+      full: {
+        id: process.env.LYRIA_MODEL || "lyria-3.5",
+        purpose: "full compositions",
+      },
+    },
+    limits: engine.limits,
+    weavingNow: engine.weavingNow,
+    generationsToday: engine.globalToday,
+    lastSuccess: engine.lastSuccess,
+    lastError: engine.lastError,
+    instanceNote: engine.instanceNote,
+  });
 }

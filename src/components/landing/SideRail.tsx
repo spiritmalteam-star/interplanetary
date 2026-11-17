@@ -1,0 +1,402 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
+import { useMirror } from "@/lib/mirror-store";
+import { useT } from "@/lib/i18n";
+
+/* ------------------------------------------------------------------ */
+/*  SideRail — THE SHOULDERS' NEW DRESS (desktop, xl and wider).       */
+/*                                                                     */
+/*  Where the six still artworks once hung, the house now wears words: */
+/*                                                                     */
+/*  1. REMEMBRANCE STICKERS — five colored paper squares per side,     */
+/*     stuck by hand just below the hero banner (the same line the     */
+/*     old gallery hung from). Each carries a remembrance code (R·01)  */
+/*     and a small phrase of the Remembrance Law: humans who remember; */
+/*     the star seed is a consciousness that forgets less who it is —  */
+/*     a human who remembers. Ten pastels, ten phrases, and a          */
+/*     DETERMINISTIC hand: rotation, offset, size and tape are seeded  */
+/*     by the UTC hour, so the server and the visitor agree on where   */
+/*     every sticker fell (no Math.random, no hydration mismatch).     */
+/*                                                                     */
+/*  2. MIRROR QUOTES — three porcelain plates per side beneath the     */
+/*     stickers, fed by /api/mirror-quote: one set of words per UTC     */
+/*     hour, refetched at the top of the hour (and when a hidden tab   */
+/*     returns into a new hour). If the sky is silent, the house       */
+/*     speaks its own shelf. The quotes are real content — never       */
+/*     aria-hidden, selectable, calmly readable.                       */
+/*                                                                     */
+/*  CALM LAWS: one gentle settle-in (transform + opacity only), no     */
+/*     constant animation, no pointer surface on the decorations.      */
+/* ------------------------------------------------------------------ */
+
+type RailSide = "left" | "right";
+
+/* -------------------- the remembrance stickers --------------------- */
+
+/* ten distinct pastels — five to a shoulder */
+const STICKER_COLORS: Record<RailSide, readonly string[]> = {
+  left: ["#a7f3d0", "#ddd6fe", "#fecdd3", "#fde68a", "#bae6fd"],
+  right: ["#fed7aa", "#d9f99d", "#fbcfe8", "#fef3c7", "#cffafe"],
+};
+
+/* the Remembrance Law, ten small ways — five phrases per side */
+const REMEMBER: Record<RailSide, readonly { code: string; text: string }[]> = {
+  left: [
+    { code: "R·01", text: "You are human, and you remember." },
+    { code: "R·02", text: "The forgetting was never the end." },
+    { code: "R·03", text: "Your home walks beside you." },
+    { code: "R·04", text: "What you miss, you carried here." },
+    { code: "R·05", text: "Remembering is a returning, not a reach." },
+  ],
+  right: [
+    { code: "R·06", text: "The stars are early, not far." },
+    { code: "R·07", text: "You knew the way before the map." },
+    { code: "R·08", text: "A name once heard is never lost." },
+    { code: "R·09", text: "Long ago is closer than it looks." },
+    { code: "R·10", text: "You are the light's kept promise." },
+  ],
+};
+
+/* one corner sticks up a little — the hand was not a machine */
+const CORNERS = [
+  "rounded-tl-[12px]",
+  "rounded-tr-[12px]",
+  "rounded-br-[12px]",
+  "rounded-bl-[12px]",
+] as const;
+
+/* THE WHOLE-CODE LAW — the first remembrance sticker must stand
+   WHOLE above the fold on every desktop: its paper is capped so the
+   rail's start (clamped to the viewport below) plus one sticker plus
+   its rotation's widest breath always fits inside the first screen —
+   the codes are never cut and shown partly again. */
+const STICKER_MAX = 176;
+
+/* deterministic hand-sticking: FNV-1a seed → mulberry32 stream, all
+   from the UTC hour so server and client cut the same tape.
+   THE TWICE-SIZED HAND — the visitor asked for stickers twice as big
+   (192–220px), never overlapping the chat: the rail's own width
+   formula keeps the whole shoulder clear of the 900px column, and
+   every sticker clamps to the rail (minus a quiet 16px so the
+   rotation's widest breath and the offset never reach the gutter). */
+type StickerPose = {
+  rot: number; // -7..7 deg
+  x: number; // -12..12 px
+  size: number; // 192..220 px square (twice the old 96..110)
+  gap: number; // 6..20 px — the loose breathing room between papers
+  corner: string; // the one slightly-lifted corner
+  tape: number; // tape strip tilt, -4..4 deg
+};
+
+function stickerPose(seed: string): StickerPose {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  let a = h >>> 0;
+  const rnd = () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  return {
+    rot: round1(rnd() * 14 - 7),
+    x: round1(rnd() * 24 - 12),
+    size: Math.round(192 + rnd() * 28),
+    /* THE WHOLE-CODE LAW — the papers breathe apart now (a small gap,
+       never a burying overlap): every code's last word stays readable
+       on every screen, and the hand-stuck look rides on the rotation
+       and the offsets, not on covering each other's words. */
+    gap: round1(6 + rnd() * 14),
+    corner: CORNERS[Math.floor(rnd() * 4)],
+    tape: round1(rnd() * 8 - 4),
+  };
+}
+
+function utcHourKey(date = new Date()): string {
+  return date.toISOString().slice(0, 13);
+}
+
+/* ------------------- the mirror's hourly words --------------------- */
+
+/* the house's own shelf — the exact words the route speaks when the
+   sky is silent, kept here so an error still dresses the rails.
+   Every line is a dict key — the quiet shelf speaks the visitor's
+   own tongue the same as the lively words do. */
+const FALLBACK_QUOTES: string[] = [
+  "You do not have to carry it all today.",
+  "What you notice, you nourish.",
+  "The question is already a door.",
+  "Rest is not a reward; it is a rhythm.",
+  "You are allowed to begin again, quietly.",
+  "What keeps pulling your attention is worth a gentle look.",
+  "Small honesty outlasts loud certainty.",
+  "The mirror does not judge; it remembers with you.",
+];
+
+/* one shared memory for both shoulders — a single fetch per hour and
+   tongue serves the left and the right rail alike. THE ONE TONGUE
+   LAW — the words arrive in the visitor's own language: the request
+   carries the tongue, the hour's memory keeps one shelf per tongue,
+   and a changed tongue re-asks (never a mixed rail). */
+type SharedWords = { quotes: string[] | null; hour: string; done: boolean };
+const sharedByLang = new Map<string, SharedWords>();
+const inFlightByLang = new Set<string>();
+const listeners = new Set<() => void>();
+
+function announce() {
+  for (const listener of listeners) listener();
+}
+
+async function loadQuotes(language: string): Promise<void> {
+  if (inFlightByLang.has(language)) return;
+  inFlightByLang.add(language);
+  try {
+    const res = await fetch(
+      `/api/mirror-quote?language=${encodeURIComponent(language)}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) throw new Error(`mirror-quote ${res.status}`);
+    const data = (await res.json()) as { quotes?: unknown; hour?: unknown };
+    const quotes = Array.isArray(data.quotes)
+      ? data.quotes.filter(
+          (q): q is string => typeof q === "string" && q.trim().length > 0
+        )
+      : [];
+    if (quotes.length < 6) throw new Error("the mirror spoke too thin");
+    sharedByLang.set(language, {
+      quotes: quotes.slice(0, 8),
+      hour: typeof data.hour === "string" ? data.hour : utcHourKey(),
+      done: true,
+    });
+  } catch {
+    sharedByLang.set(language, {
+      quotes: FALLBACK_QUOTES,
+      hour: utcHourKey(),
+      done: true,
+    });
+  } finally {
+    inFlightByLang.delete(language);
+    announce();
+  }
+}
+
+function useMirrorWords(): { quotes: string[] | null; hour: string } {
+  const [, bump] = useState(0);
+  /* THE VISITOR'S TONGUE — the words re-ask in the chosen language */
+  const language = useMirror((s) => s.language);
+
+  useEffect(() => {
+    const listener = () => bump((n) => n + 1);
+    listeners.add(listener);
+    const own = sharedByLang.get(language);
+    if ((!own || !own.done) && !inFlightByLang.has(language))
+      void loadQuotes(language);
+
+    /* the hour's clock: sleep until the next top of the hour, then
+       breathe once an hour — always aligned to the mirror's own hour */
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const now = new Date();
+    const nextHour = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      now.getUTCHours() + 1,
+      0,
+      0,
+      0
+    );
+    timeout = setTimeout(() => {
+      void loadQuotes(language);
+      interval = setInterval(() => void loadQuotes(language), 3_600_000);
+    }, Math.max(nextHour - now.getTime(), 0));
+
+    /* a tab that slept through the hour's turn catches up on return */
+    const onVisible = () => {
+      if (
+        document.visibilityState === "visible" &&
+        sharedByLang.get(language)?.done &&
+        utcHourKey() !== sharedByLang.get(language)?.hour
+      ) {
+        void loadQuotes(language);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      listeners.delete(listener);
+      if (timeout) clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [language]);
+
+  const shared = sharedByLang.get(language);
+  return { quotes: shared?.quotes ?? null, hour: shared?.hour ?? "" };
+}
+
+/* --------------------------- the rail ------------------------------ */
+
+export default function SideRail({ side }: { side: RailSide }) {
+  const t = useT();
+  /* one gentle settle-in, then the rail rests forever */
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setSettled(true), 80);
+    return () => window.clearTimeout(id);
+  }, []);
+
+  /* the hour's seed — the same string on server and client, so the
+     hand-stuck randomness agrees across hydration */
+  const hourSeed = useMemo(() => utcHourKey(), []);
+  const stickers = useMemo(
+    () =>
+      REMEMBER[side].map((sticker, i) => ({
+        ...sticker,
+        color: STICKER_COLORS[side][i],
+        pose: stickerPose(`${hourSeed}:${side}:${i}`),
+      })),
+    [hourSeed, side]
+  );
+
+  const { quotes, hour } = useMirrorWords();
+  const railQuotes = quotes
+    ? side === "left"
+      ? quotes.slice(0, 3)
+      : quotes.slice(3, 6)
+    : [];
+  const captionHour = hour ? `${hour.slice(11, 13)}:00` : "";
+
+  return (
+    <div
+      className={cn(
+        "pointer-events-none absolute z-0 hidden select-none xl:block",
+        side === "left" ? "left-5" : "right-5"
+      )}
+      style={{
+        /* THE FOLD'S OWN HAND — the rail starts below the banner where
+           it always hung, but never deeper than one whole sticker from
+           the viewport's end: on the shorter desks the shoulder rises
+           so the first code stands complete above the fold. */
+        top: "min(calc(min(84vh, 680px) + 36px), calc(100vh - 236px))",
+        /* the old gallery's exact footing, widened for the twice-sized
+           stickers: never reaching into the 900px column (a 20px
+           gutter stays clear at every viewport the rail rides) */
+        width: "min(23vw, 360px, calc((100vw - 980px) / 2))",
+      }}
+    >
+      <div
+        className={cn(
+          "transition-[opacity,transform] duration-700 ease-out motion-reduce:transition-none",
+          settled ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+        )}
+      >
+        {/* the remembrance stickers — stuck by hand below the banner.
+            THE WHOLE-CODE LAW — the papers breathe apart: no sticker
+            ever buries the one above it, every code stands whole. */}
+        <div aria-hidden="true" className="relative flex flex-col">
+          {stickers.map((sticker, i) => (
+            <div
+              key={sticker.code}
+              className="relative"
+              style={{ marginTop: i === 0 ? 0 : sticker.pose.gap }}
+            >
+              <div
+                className={cn(
+                  "relative flex flex-col justify-between rounded-[3px] p-3",
+                  sticker.pose.corner
+                )}
+                style={{
+                  /* THE TWICE-SIZED PAPER — clamped to the rail itself
+                     (minus the offset's own breath), and to the whole-
+                     code law's cap, so no rotation, no offset, no
+                     viewport can ever press it against the chat column
+                     or slice it on the fold */
+                  width: `min(${sticker.pose.size}px, calc(100% - 16px), ${STICKER_MAX}px)`,
+                  aspectRatio: "1 / 1",
+                  height: "auto",
+                  backgroundColor: sticker.color,
+                  transform: `translate(${sticker.pose.x}px, 0) rotate(${sticker.pose.rot}deg)`,
+                  boxShadow:
+                    "0 10px 18px rgba(44,37,23,0.16), 0 2px 5px rgba(44,37,23,0.12)",
+                }}
+              >
+                {/* hairline inner border — the paper's own edge */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "pointer-events-none absolute inset-[6px] rounded-[2px] border border-[rgba(63,58,46,0.22)]",
+                    sticker.pose.corner
+                  )}
+                />
+                {/* the tape strip — twice the hand, twice the tape */}
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-[13px] left-1/2 h-[26px] w-[82px] rounded-[1px] bg-[rgba(255,253,246,0.55)] shadow-[0_1px_2px_rgba(44,37,23,0.12)]"
+                  style={{
+                    transform: `translateX(-50%) rotate(${sticker.pose.tape}deg)`,
+                  }}
+                />
+                <span className="mono-label text-[12px] uppercase tracking-[0.22em] text-[rgba(63,58,46,0.66)]">
+                  {sticker.code}
+                </span>
+                <p className="font-[family-name:var(--font-literata)] text-[15px] leading-[1.35] text-[#3f3a2e]">
+                  {t(sticker.text)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* the mirror's words — real content, selectable, never hidden */}
+        <div
+          className="pointer-events-auto mt-9 flex flex-col gap-5"
+          role="list"
+          aria-label={
+            side === "left"
+              ? t("Words from the mirror — left side")
+              : t("Words from the mirror — right side")
+          }
+        >
+          {railQuotes.length === 0
+            ? [0, 1, 2].map((i) => (
+                <div
+                  key={`waiting-${i}`}
+                  aria-hidden="true"
+                  className="h-[104px] animate-pulse rounded-[10px] border border-[rgba(63,58,46,0.12)] motion-reduce:animate-none"
+                  style={{
+                    backgroundColor:
+                      "color-mix(in srgb, #fffdf6 70%, transparent)",
+                  }}
+                />
+              ))
+            : railQuotes.map((quote, i) => (
+                <figure
+                  key={`${hour}-${i}`}
+                  role="listitem"
+                  className="rounded-[10px] border border-[rgba(63,58,46,0.16)] p-4 shadow-[0_10px_24px_rgba(44,37,23,0.10)]"
+                  style={{
+                    backgroundColor:
+                      "color-mix(in srgb, #fffdf6 88%, transparent)",
+                  }}
+                >
+                  <blockquote className="font-[family-name:var(--font-literata)] text-[15px] italic leading-relaxed text-[var(--lp-head)]">
+                    “{t(quote)}”
+                  </blockquote>
+                  <figcaption className="mono-label mt-3 text-[9px] uppercase tracking-[0.24em] text-[var(--lp-faint)]">
+                    {t("the mirror")} · {captionHour}
+                  </figcaption>
+                </figure>
+              ))}
+        </div>
+      </div>
+    </div>
+  );
+}

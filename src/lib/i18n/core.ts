@@ -1,18 +1,24 @@
-import { sq } from "./dicts/sq";
-import { it } from "./dicts/it";
-import { el } from "./dicts/el";
-import { de } from "./dicts/de";
-import { fr } from "./dicts/fr";
-import { es } from "./dicts/es";
-import { tr } from "./dicts/tr";
-
 /* ------------------------------------------------------------------ */
 /*  MIRROR ENTITY DIGITAL CHAMBER — universal translation layer             */
 /*  Keys are the English source strings themselves. A missing entry    */
 /*  gracefully falls back to English, so the app never breaks.         */
 /* ------------------------------------------------------------------ */
 
-export type LanguageCode = "en" | "sq" | "it" | "el" | "de" | "fr" | "es" | "tr";
+export type LanguageCode =
+  | "en"
+  | "sq"
+  | "ar"
+  | "zh"
+  | "fr"
+  | "hi"
+  | "pt"
+  | "ru"
+  | "es"
+  | "it"
+  | "el"
+  | "de"
+  | "nl"
+  | "tr";
 
 export interface LanguageMeta {
   code: LanguageCode;
@@ -20,26 +26,59 @@ export interface LanguageMeta {
   english: string;
 }
 
-/** The eight voices of the laboratory — Albanian included. */
+/** The laboratory's full registry of tongues — every dict that exists.
+    The picker (PICKER_LANGUAGES) shows the nine the keeper chose;
+    the older tongues stay valid here so a saved setting never breaks. */
 export const LANGUAGES: LanguageMeta[] = [
   { code: "en", native: "English", english: "English" },
   { code: "sq", native: "Shqip", english: "Albanian" },
+  { code: "ar", native: "العربية", english: "Arabic" },
+  { code: "zh", native: "中文", english: "Chinese" },
+  { code: "fr", native: "Français", english: "French" },
+  { code: "hi", native: "हिन्दी", english: "Hindi" },
+  { code: "pt", native: "Português", english: "Portuguese" },
+  { code: "ru", native: "Русский", english: "Russian" },
+  { code: "es", native: "Español", english: "Spanish" },
   { code: "it", native: "Italiano", english: "Italian" },
   { code: "el", native: "Ελληνικά", english: "Greek" },
   { code: "de", native: "Deutsch", english: "German" },
-  { code: "fr", native: "Français", english: "French" },
-  { code: "es", native: "Español", english: "Spanish" },
+  { code: "nl", native: "Nederlands", english: "Dutch" },
   { code: "tr", native: "Türkçe", english: "Turkish" },
+];
+
+/* THE VOICES OF THE BUTTON — Albanian first (the keeper's own tongue
+   leads), then the world's tongues in alphabetical order. German and
+   Dutch stand in the open picker at the keeper's word. English is the
+   default; this exact order is the law of every language button in
+   the house. */
+export const PICKER_LANGUAGES: LanguageMeta[] = [
+  { code: "sq", native: "Shqip", english: "Albanian" },
+  { code: "ar", native: "العربية", english: "Arabic" },
+  { code: "zh", native: "中文", english: "Chinese" },
+  { code: "de", native: "Deutsch", english: "German" },
+  { code: "nl", native: "Nederlands", english: "Dutch" },
+  { code: "en", native: "English", english: "English" },
+  { code: "fr", native: "Français", english: "French" },
+  { code: "hi", native: "हिन्दी", english: "Hindi" },
+  { code: "pt", native: "Português", english: "Portuguese" },
+  { code: "ru", native: "Русский", english: "Russian" },
+  { code: "es", native: "Español", english: "Spanish" },
 ];
 
 export const LANGUAGE_NAMES: Record<LanguageCode, string> = {
   en: "English",
   sq: "Albanian",
+  ar: "Arabic",
+  zh: "Chinese",
+  fr: "French",
+  hi: "Hindi",
+  pt: "Portuguese",
+  ru: "Russian",
+  es: "Spanish",
   it: "Italian",
   el: "Greek",
   de: "German",
-  fr: "French",
-  es: "Spanish",
+  nl: "Dutch",
   tr: "Turkish",
 };
 
@@ -51,11 +90,17 @@ export function isLanguageCode(v: unknown): v is LanguageCode {
 export const LOCALES: Record<LanguageCode, string> = {
   en: "en-US",
   sq: "sq-AL",
+  ar: "ar-SA",
+  zh: "zh-CN",
+  fr: "fr-FR",
+  hi: "hi-IN",
+  pt: "pt-BR",
+  ru: "ru-RU",
+  es: "es-ES",
   it: "it-IT",
   el: "el-GR",
   de: "de-DE",
-  fr: "fr-FR",
-  es: "es-ES",
+  nl: "nl-NL",
   tr: "tr-TR",
 };
 
@@ -64,9 +109,77 @@ export function formatArchiveNumber(n: number, language: LanguageCode): string {
   return n.toLocaleString(LOCALES[language] ?? "en-US");
 }
 
-const DICTS: Record<Exclude<LanguageCode, "en">, Record<string, string>> = {
-  sq, it, el, de, fr, es, tr,
-};
+/* THE LAZY VOICES — the seven dictionaries are no longer carried in
+   the first breath of the app: each tongue travels only when it is
+   spoken (one dynamic import per language, deduped), and until it
+   arrives every key falls back to its English source (the law the
+   translation layer was born with). The app's first paint sheds
+   megabytes of parsed words, and the whole house breathes lighter —
+   the lag was the luggage. */
+type Dict = Record<string, string>;
+
+const DICTS: Partial<Record<Exclude<LanguageCode, "en">, Dict>> = {};
+const DICTS_PENDING = new Set<Exclude<LanguageCode, "en">>();
+
+let dictVersion = 0;
+const dictListeners = new Set<() => void>();
+
+/** React's subscription — translators wake when a tongue arrives. */
+export function subscribeDicts(onChange: () => void): () => void {
+  dictListeners.add(onChange);
+  return () => dictListeners.delete(onChange);
+}
+
+/** Snapshot for useSyncExternalStore — the version alone. */
+export function getDictVersion(): number {
+  return dictVersion;
+}
+
+/** Load one tongue on demand (idempotent, safe to call anywhere). */
+export async function ensureDict(language: LanguageCode): Promise<void> {
+  if (language === "en") return;
+  const lang = language as Exclude<LanguageCode, "en">;
+  if (DICTS[lang] || DICTS_PENDING.has(lang)) return;
+  DICTS_PENDING.add(lang);
+  try {
+    const mod =
+      lang === "sq" ? await import("./dicts/sq")
+      : lang === "ar" ? await import("./dicts/ar")
+      : lang === "zh" ? await import("./dicts/zh")
+      : lang === "fr" ? await import("./dicts/fr")
+      : lang === "hi" ? await import("./dicts/hi")
+      : lang === "pt" ? await import("./dicts/pt")
+      : lang === "ru" ? await import("./dicts/ru")
+      : lang === "es" ? await import("./dicts/es")
+      : lang === "it" ? await import("./dicts/it")
+      : lang === "el" ? await import("./dicts/el")
+      : lang === "de" ? await import("./dicts/de")
+      : lang === "nl" ? await import("./dicts/nl")
+      : await import("./dicts/tr");
+    DICTS[lang] = (mod as unknown as { [k: string]: Dict })[lang];
+    dictVersion += 1;
+    for (const wake of dictListeners) wake();
+  } catch {
+    /* the tongue stayed home — the English source keeps speaking */
+  } finally {
+    DICTS_PENDING.delete(lang);
+  }
+}
+
+/* MISSING-KEY DETECTION — in development every key a dictionary does
+   not yet carry is named once (and only once) in the console, so gaps
+   are found while working and never in front of a visitor. In
+   production a missing key silently falls back to the English source. */
+const warnedMissing = new Set<string>();
+function warnMissing(language: LanguageCode, key: string) {
+  if (process.env.NODE_ENV === "production") return;
+  const tag = `${language}::${key}`;
+  if (warnedMissing.has(tag)) return;
+  warnedMissing.add(tag);
+  console.warn(
+    `[i18n] missing key in "${language}": ${JSON.stringify(key)} — English shown`
+  );
+}
 
 /** Pure translation — usable outside React (API helpers, tests). */
 export function translate(
@@ -74,8 +187,12 @@ export function translate(
   key: string,
   params?: Record<string, string | number>
 ): string {
-  let out: string =
-    language !== "en" ? (DICTS[language]?.[key] ?? key) : key;
+  let out: string = key;
+  if (language !== "en") {
+    const found = DICTS[language as Exclude<LanguageCode, "en">]?.[key];
+    if (found) out = found;
+    else warnMissing(language, key);
+  }
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       out = out.replaceAll(`{${k}}`, String(v));

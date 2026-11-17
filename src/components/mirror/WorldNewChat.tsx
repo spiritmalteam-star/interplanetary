@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import type { ChatSurface } from "@/lib/chat-archive";
@@ -33,8 +33,7 @@ export function WorldNewChat({ world }: { world: WorldChat }) {
       title={t("New chat")}
       onClick={() => {
         useMirror.getState().newChat(WORLD_SURFACE[world]);
-        toast({
-          title: t("New chat"),
+        toast(t("New chat"), {
           description: t(
             "The old conversation rests on your shelf — reopen it anytime."
           ),

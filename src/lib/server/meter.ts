@@ -1,16 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-import { ANON_COOKIE, resolveVisitor, withAnonCookie, type Visitor } from "@/lib/server/access";
+import { NextRequest, NextResponse, after } from "next/server";
+import {
+  ANON_COOKIE,
+  emailGateRequired,
+  isKeeperFree,
+  resolveVisitor,
+  withAnonCookie,
+  type Visitor,
+} from "@/lib/server/access";
 import { costOf } from "@/lib/server/costs";
 import { creditsEnforced, spendCredits } from "@/lib/server/credits";
 import { GATES, rateLimit } from "@/lib/server/rate-limit";
 import { recordUsage } from "@/lib/server/usage";
+import { depthKeyOf, perPageCredits } from "@/lib/book-pricing";
 import {
   WALLET_COSTS,
   WALLET_OPERATIONS,
   ensureWallet,
   refundWalletCredits,
+  servicePrices,
   spendWalletCredits,
   walletEnforced,
+  type WalletActionType,
 } from "@/lib/server/wallet";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
 
@@ -29,8 +39,10 @@ import { ensureVisitorProvisions } from "@/lib/server/workspace";
 /*    - the legacy ledger (atomic deduction AFTER a successful answer, */
 /*      only while CREDITS_ENFORCED=true)                              */
 /*                                                                     */
-/*  The wallet's law stands by default (WALLET_ENFORCED=false rests    */
-/*  it); the legacy ledger only witnesses until CREDITS_ENFORCED=true. */
+/*  The wallet's law RESTS by default — THE FREE LAW: the whole house  */
+/*  stands free, and WALLET_ENFORCED=true in the vault stands the      */
+/*  purse up again; the legacy ledger only witnesses until             */
+/*  CREDITS_ENFORCED=true.                                             */
 /* ------------------------------------------------------------------ */
 
 export interface MeterContext {
@@ -48,6 +60,85 @@ export type MeteredHandler = (
   req: NextRequest,
   ctx: MeterContext
 ) => Promise<Response>;
+
+/* ----------------- the dynamic weigh (per-ask prices) ----------------
+   Two doors carry their own per-ask price instead of a flat one:
+   - the MUSIC CHAMBER: only the weave (compose) is weighed — preview
+     2 · full song 5 · the endless loop 15. The brief, its refinement
+     and the Lyrics Laboratory are free — the conversation of making.
+     The loop's continuation parts (2..n) ride free: the journey was
+     weighed once when its first part began.
+   - the BOOK LOOM: only a book's birth (phase "open") is weighed —
+     short 15 · extended 40. The turning of pages and every closing
+     ride free: the volume was weighed when it was conjured. */
+interface BodyWeigh {
+  actionType: WalletActionType;
+  cost: number;
+  description: string;
+}
+
+async function bodyWeighFor(operation: string, req: NextRequest): Promise<BodyWeigh | null> {
+  if (operation === "light_codes") {
+    const b = (await req.clone().json().catch(() => null)) as {
+      compose?: boolean;
+      length?: string;
+      loopPart?: { index?: number } | null;
+    } | null;
+    if (!b?.compose) return null;
+    /* THE JOURNEY'S CONTINUATION PARTS RIDE FREE — for the endless
+       journey AND for the full song's own two movements (both carry
+       the journey's loopPart): the weave was weighed once, at its
+       first part. */
+    if (b.loopPart && Number(b.loopPart.index) > 1) return null;
+    const prices = await servicePrices();
+    const kind =
+      b.length === "loop" ? "endless loop" : b.length === "full" ? "full song" : "preview";
+    const cost =
+      b.length === "loop" ? prices.musicLoop : b.length === "full" ? prices.musicFull : prices.musicPreview;
+    return { actionType: "LIGHT_CODES", cost, description: `the music weave — ${kind}` };
+  }
+  if (operation === "dream_book") {
+    const b = (await req.clone().json().catch(() => null)) as {
+      phase?: string;
+      span?: number;
+      config?: {
+        volume?: string;
+        level?: string;
+        age?: string;
+        tale?: string;
+        topic?: string;
+        wishes?: string;
+        pages?: number;
+      };
+    } | null;
+    if (!b) return null;
+    /* THE PRESS ROOM RIDES FREE — the studio phases (bible, edit,
+       repair, art, plate, seal) are the editorial workshop around the
+       volume; only the WEAVING itself is weighed. */
+    const phase = String(b.phase ?? "next");
+    if (!(phase === "open" || phase === "next" || phase === "extend" || phase === "close"))
+      return null;
+    /* THE HONEST WEIGH — page by page, at the telling's own depth and
+       the reader's own page measure. The loom charges stride by
+       stride as it weaves: what a pause or a cancel leaves unwoven
+       was never drawn from the purse. */
+    const spanRaw = Number(b.span);
+    const span =
+      phase === "open"
+        ? Math.min(2, Math.max(1, Number.isFinite(spanRaw) ? Math.round(spanRaw) : 2))
+        : phase === "next"
+          ? Math.min(8, Math.max(2, Number.isFinite(spanRaw) ? Math.round(spanRaw) : 4))
+          : 2;
+    const perPage = perPageCredits(b.config?.level, b.config?.age);
+    const cost = Math.max(1, Math.ceil(span * perPage));
+    return {
+      actionType: "DREAM_BOOK",
+      cost,
+      description: `the book loom — ${span} ${span === 1 ? "page" : "pages"} woven (${phase}, depth ${depthKeyOf(b.config?.level)})`,
+    };
+  }
+  return null;
+}
 
 export function meterRoute(operation: string, handler: MeteredHandler) {
   return async (req: NextRequest): Promise<NextResponse> => {
@@ -77,15 +168,26 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         }
       }
 
-      if (!userId.startsWith("stateless:")) {
-        try {
-          const provisions = await ensureVisitorProvisions(userId);
-          workspaceId = provisions.workspaceId;
-          planLimit = Math.max(GATES.ai.limit, provisions.plan.rateLimitPerMinute);
-        } catch {
-          /* provisions rest when the database rests — the world stays open */
-        }
+      /* THE PARALLEL HALL — the provisions and the dynamic weigh (the
+         body's own per-ask price) run side by side: they never depend
+         on one another, so the door answers after one hall's wait. */
+      const [provisionsRes, dynamicWeighRes] = await Promise.allSettled([
+        userId.startsWith("stateless:")
+          ? Promise.resolve(null)
+          : ensureVisitorProvisions(userId),
+        bodyWeighFor(operation, req),
+      ]);
+      if (provisionsRes.status === "fulfilled" && provisionsRes.value) {
+        workspaceId = provisionsRes.value.workspaceId;
+        planLimit = Math.max(
+          GATES.ai.limit,
+          provisionsRes.value.plan.rateLimitPerMinute
+        );
+      } else if (provisionsRes.status === "rejected") {
+        /* provisions rest when the database rests — the world stays open */
       }
+      const dynamicWeigh =
+        dynamicWeighRes.status === "fulfilled" ? dynamicWeighRes.value : null;
 
       /* the flood-gate: per identity, sized by plan */
       const gate = rateLimit(`ai:${userId}`, { limit: planLimit, windowMs: GATES.ai.windowMs });
@@ -119,79 +221,223 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
       };
 
       /* ---------- the wallet's weigh — BEFORE the door serves ----------
-         The five gated doors (chat, akashic, art x, light codes, dream
-         book) draw their price from the visitor's own wallet first: an
-         empty purse is answered at once with 402 INSUFFICIENT_CREDITS
-         and the work is never begun on light that is not there. When
-         the door itself stumbles, the exact draw is refunded. */
-      const walletAction = WALLET_OPERATIONS[operation];
-      const walletCost = walletAction ? WALLET_COSTS[walletAction] : undefined;
-      if (walletAction && walletCost && walletEnforced() && !userId.startsWith("stateless:")) {
-        try {
-          const snapshot = await ensureWallet(userId);
-          if (snapshot.total < walletCost) {
-            await recordUsage({
-              userId,
-              workspaceId,
-              operation,
-              provider: "none",
-              success: false,
-              error: "insufficient_credits",
-              latencyMs: Date.now() - started,
-            });
-            return withAnonCookie(
-              NextResponse.json(
-                {
-                  error: "INSUFFICIENT_CREDITS",
-                  required: walletCost,
-                  current: snapshot.total,
-                  planTier: snapshot.planTier,
-                  actionType: walletAction,
-                },
-                { status: 402 }
-              ),
-              visitor
-            );
+         THE ECONOMY'S LAW: the conversation is free forever. The paid
+         creations draw their price from the visitor's own wallet
+         first — an empty purse is answered at once with 402
+         INSUFFICIENT_CREDITS. THE QUIET KEEPER'S OWN LIGHT: the birth
+         gift is spendable by every passage — signed or anonymous —
+         so the anonymous purse is weighed like any other: while it
+         can pay, it pays; only a DRY purse asks for a passage (401
+         SIGN_IN_REQUIRED), and the ask carries the purse's true
+         balance so the unlock modal speaks the truth. THE ONE
+         EXCEPTION — the verified keeper (the ADMIN role bound in the
+         database, seeded by ADMIN_EMAIL at boot) walks through every
+         paid door without their purse being drawn: their real usage
+         is still recorded below, never billed. When a door stumbles,
+         the exact draw is refunded. */
+      const flatAction = WALLET_OPERATIONS[operation];
+      const weigh = flatAction
+        ? {
+            actionType: flatAction,
+            cost: WALLET_COSTS[flatAction] ?? 0,
+            description: `the ${operation} door — weighed before serving`,
           }
-          const draw = await spendWalletCredits(userId, walletAction, {
-            cost: walletCost,
-            description: `The ${operation} door — weighed before serving`,
+        : dynamicWeigh;
+      const keeperFree = isKeeperFree(visitor.user);
+
+      /* THE VERIFICATION GATE — a paid door stands open only to a
+         passage that has proven its mailbox: an email-and-password
+         account still wearing its unverified dress is answered 403
+         EMAIL_UNVERIFIED BEFORE any purse is drawn (a direct API call
+         cannot walk around it — the gate lives ahead of the weigh).
+         Anonymous keepers and Google's own verified identities pass
+         untouched; the free doors never ask. */
+      if (weigh && weigh.cost > 0 && walletEnforced() && !keeperFree) {
+        if (emailGateRequired(visitor.user)) {
+          await recordUsage({
+            userId,
+            workspaceId,
+            operation,
+            provider: "none",
+            success: false,
+            error: "email_unverified",
+            latencyMs: Date.now() - started,
           });
-          if (!draw.ok) {
-            return withAnonCookie(
-              NextResponse.json(
-                {
-                  error: "INSUFFICIENT_CREDITS",
-                  required: walletCost,
-                  current: draw.total,
-                  planTier: snapshot.planTier,
-                  actionType: walletAction,
-                },
-                { status: 402 }
-              ),
-              visitor
+          return withAnonCookie(
+            NextResponse.json(
+              {
+                error: "EMAIL_UNVERIFIED",
+                message:
+                  "Confirm your email first — the letter's key opens the paid doors. Check your inbox (or ask for a fresh letter from your profile).",
+                code: "email_unverified",
+              },
+              { status: 403, headers: { "cache-control": "private, no-store" } }
+            ),
+            visitor
+          );
+        }
+      }
+
+      if (
+        weigh &&
+        weigh.cost > 0 &&
+        walletEnforced() &&
+        !userId.startsWith("stateless:") &&
+        !keeperFree
+      ) {
+        if (visitor.user.email.startsWith("anon:")) {
+          /* the quiet keeper's purse — the same weigh every passage
+             walks: pay with the gift while it holds, ask for a
+             passage only when the purse stands empty */
+          try {
+            const anonSnapshot = await ensureWallet(userId);
+            /* THE SPENDABLE LAW — the gate and the draw must agree: the
+               purse spends free + paid (the deposit well is a store of
+               value, not a hand), so the ask is weighed against the
+               spendable remainder, never a larger total. */
+            const anonSpendable =
+              anonSnapshot.freeCreditsRemaining + anonSnapshot.paidCreditsRemaining;
+            if (anonSpendable < weigh.cost) {
+              await recordUsage({
+                userId,
+                workspaceId,
+                operation,
+                provider: "none",
+                success: false,
+                error: "sign_in_required",
+                latencyMs: Date.now() - started,
+              });
+              return withAnonCookie(
+                NextResponse.json(
+                  {
+                    error: "SIGN_IN_REQUIRED",
+                    required: weigh.cost,
+                    current: anonSpendable,
+                    actionType: weigh.actionType,
+                  },
+                  { status: 401 }
+                ),
+                visitor
+              );
+            }
+            const anonDraw = await spendWalletCredits(userId, weigh.actionType, {
+              cost: weigh.cost,
+              description: weigh.description,
+            });
+            if (!anonDraw.ok) {
+              /* a race spent the last light — the passage is asked for
+                 with the purse's true remainder */
+              await recordUsage({
+                userId,
+                workspaceId,
+                operation,
+                provider: "none",
+                success: false,
+                error: "sign_in_required",
+                latencyMs: Date.now() - started,
+              });
+              return withAnonCookie(
+                NextResponse.json(
+                  {
+                    error: "SIGN_IN_REQUIRED",
+                    required: weigh.cost,
+                    current: Math.max(0, anonDraw.total),
+                    actionType: weigh.actionType,
+                  },
+                  { status: 401 }
+                ),
+                visitor
+              );
+            }
+            walletLedgerId = anonDraw.ledgerId ?? null;
+            ctx.walletLedgerId = walletLedgerId;
+            walletSpent = weigh.cost;
+          } catch (err) {
+            /* the wallet rests (database unreachable) — the door stays
+               open rather than locking a visitor out of a resting vault */
+            console.error(
+              `[meter:${operation}] the quiet keeper's weigh rested:`,
+              err instanceof Error ? err.message : err
             );
           }
-          walletLedgerId = draw.ledgerId ?? null;
-          ctx.walletLedgerId = walletLedgerId;
-          walletSpent = walletCost;
-        } catch (err) {
-          /* the wallet rests (database unreachable) — the door stays
-             open rather than locking a visitor out of a resting vault */
-          console.error(
-            `[meter:${operation}] wallet weigh rested:`,
-            err instanceof Error ? err.message : err
-          );
+        } else {
+          try {
+            const snapshot = await ensureWallet(userId);
+            /* THE SPENDABLE LAW — the gate and the draw must agree: the
+               purse spends free + paid, so a confirmed shortfall is
+               explained with the spendable remainder, never a larger
+               total that includes the sealed deposit well. */
+            const spendable = snapshot.freeCreditsRemaining + snapshot.paidCreditsRemaining;
+            if (spendable < weigh.cost) {
+              await recordUsage({
+                userId,
+                workspaceId,
+                operation,
+                provider: "none",
+                success: false,
+                error: "insufficient_credits",
+                latencyMs: Date.now() - started,
+              });
+              return withAnonCookie(
+                NextResponse.json(
+                  {
+                    error: "INSUFFICIENT_CREDITS",
+                    required: weigh.cost,
+                    current: spendable,
+                    planTier: snapshot.planTier,
+                    actionType: weigh.actionType,
+                  },
+                  { status: 402 }
+                ),
+                visitor
+              );
+            }
+            const draw = await spendWalletCredits(userId, weigh.actionType, {
+              cost: weigh.cost,
+              description: weigh.description,
+            });
+            if (!draw.ok) {
+              return withAnonCookie(
+                NextResponse.json(
+                  {
+                    error: "INSUFFICIENT_CREDITS",
+                    required: weigh.cost,
+                    current: draw.total,
+                    planTier: snapshot.planTier,
+                    actionType: weigh.actionType,
+                  },
+                  { status: 402 }
+                ),
+                visitor
+              );
+            }
+            walletLedgerId = draw.ledgerId ?? null;
+            ctx.walletLedgerId = walletLedgerId;
+            walletSpent = weigh.cost;
+          } catch (err) {
+            /* the wallet rests (database unreachable) — the door stays
+               open rather than locking a visitor out of a resting vault */
+            console.error(
+              `[meter:${operation}] wallet weigh rested:`,
+              err instanceof Error ? err.message : err
+            );
+          }
         }
       }
 
       const res = await handler(req, ctx);
 
-      /* a stumbling door gives the light back — any 4xx/5xx refunds */
+      /* a stumbling door gives the light back — any 4xx/5xx refunds.
+         THE REFUND RIDES AFTER THE ANSWER — `after` keeps the promise
+         alive beyond the response freeze, so a serverless nap can
+         never eat a refund (no one pays for a silence). */
       if (walletLedgerId && res.status >= 400) {
-        void refundWalletCredits(userId, walletLedgerId);
+        const refundLedger = walletLedgerId;
         walletSpent = 0;
         walletLedgerId = null;
+        after(() =>
+          refundWalletCredits(userId, refundLedger).catch(() => undefined)
+        );
       }
 
       /* ---------- the weighing: record & deduct after success ---------- */
@@ -228,16 +474,23 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         charged = totalCost;
       }
 
-      await recordUsage({
-        userId,
-        workspaceId,
-        operation,
-        provider: "none",
-        success,
-        error: success ? null : `http_${res.status}`,
-        creditsCharged: charged + walletSpent,
-        latencyMs: Date.now() - started,
-      });
+      /* THE WITNESS WRITES AFTER THE DOOR — the usage row is laid
+         beside the served answer, never in front of it: the visitor
+         waits one breath less on every door. */
+      const latencyMs = Date.now() - started;
+      after(
+        () =>
+          recordUsage({
+            userId,
+            workspaceId,
+            operation,
+            provider: "none",
+            success,
+            error: success ? null : `http_${res.status}`,
+            creditsCharged: charged + walletSpent,
+            latencyMs,
+          }).catch(() => undefined)
+      );
 
       /* plain Responses (the streaming SSE lines) are wrapped so the
          anonymous cookie can still ride home on them */
@@ -254,7 +507,10 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
          and the wallet's pre-execution draw goes back to its owner */
       console.error(`[meter:${operation}] handler failed:`, err);
       if (walletLedgerId) {
-        void refundWalletCredits(userId, walletLedgerId).catch(() => undefined);
+        const failLedger = walletLedgerId;
+        after(() =>
+          refundWalletCredits(userId, failLedger).catch(() => undefined)
+        );
       }
       if (visitor) {
         await recordUsage({

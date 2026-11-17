@@ -6,6 +6,9 @@ import { mailConfigured } from "@/lib/server/mail";
 import { stripeConfigured, webhookConfigured } from "@/lib/server/billing";
 import { CREDIT_PACKS, PLANS, planOrFree } from "@/lib/server/plans";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
+import { ensureWallet } from "@/lib/server/wallet";
+import { isAdminEmail } from "@/lib/server/admin";
+import { isOwnerEmail } from "@/lib/server/features";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/account/summary — everything the dashboard needs, in one  */
@@ -58,14 +61,43 @@ export async function GET(req: NextRequest) {
     const plan = planOrFree(subscription?.plan);
     const libraryCount = await db.libraryEntry.count({ where: { userId: user.id } });
 
+    /* the passage's own purse — the per-user coins (free lights spent
+       first, paid lights after), riding beside the workspace's credits */
+    let wallet: {
+      planTier: string;
+      free: number;
+      paid: number;
+      deposit: number;
+      depositSource: string | null;
+      total: number;
+    } | null = null;
+    try {
+      const w = await ensureWallet(user.id);
+      wallet = {
+        planTier: w.planTier,
+        free: w.freeCreditsRemaining,
+        paid: w.paidCreditsRemaining,
+        deposit: w.depositCredits,
+        depositSource: w.depositSource,
+        total: w.total,
+      };
+    } catch {
+      wallet = null;
+    }
+
     return NextResponse.json({
       user: {
         email: user.email,
         name: user.name,
+        image: user.image ?? null,
         tier: user.tier,
-        emailVerified: Boolean(gateUser?.emailVerifiedAt),
+        emailVerified:
+          Boolean(gateUser?.emailVerifiedAt) || user.provider === "google",
+        provider: user.provider,
         createdAt: gateUser?.createdAt ?? null,
       },
+      admin: isAdminEmail(user.email),
+      wallet,
       workspace: { id: provisions.workspaceId, name: null },
       plan: {
         id: plan.id,
@@ -110,6 +142,7 @@ export async function GET(req: NextRequest) {
         mail: mailConfigured(),
         google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
         creditsEnforced: process.env.CREDITS_ENFORCED === "true",
+        owner: isOwnerEmail(user.email),
       },
       offers: {
         plans: Object.values(PLANS).map((p) => ({
@@ -128,7 +161,7 @@ export async function GET(req: NextRequest) {
           available: Boolean(p.stripePriceId),
         })),
       },
-    });
+    }, { headers: { "cache-control": "private, no-store" } });
   } catch (err) {
     console.error("[account/summary] failed:", err);
     return NextResponse.json(
