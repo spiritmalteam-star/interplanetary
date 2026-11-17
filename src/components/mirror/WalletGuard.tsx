@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Moon, ShoppingBag, Sparkles, Star } from "lucide-react";
+import { LoaderCircle, Moon, ShoppingBag, Sparkles, Star } from "lucide-react";
 import { useMirror, type WalletNotice } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ModalShell } from "./ModalShell";
@@ -13,6 +13,9 @@ import { ModalShell } from "./ModalShell";
 /*   - it listens beneath every fetch, and when any door answers       */
 /*     402 INSUFFICIENT_CREDITS the unlock modal rises by itself —     */
 /*     no call site needs to know;                                     */
+/*   - when a paid door answers 401 SIGN_IN_REQUIRED the same modal    */
+/*     rises and offers the passage — no billable generation begins    */
+/*     without a signed keeper (the creator economy's own law);        */
 /*   - after every successful passage through a door it re-glances     */
 /*     the purse (gently, never more than once in a few breaths);      */
 /*   - the return from Stripe (?billing=success) is greeted, the URL   */
@@ -56,15 +59,63 @@ export function WalletGuard() {
             actionType?: string;
           } | null;
           if (data?.error === "INSUFFICIENT_CREDITS") {
-            useMirror.getState().openWalletModal({
-              required: data.required ?? 1,
-              current: data.current ?? 0,
-              planTier: data.planTier,
-              actionType: data.actionType,
-            });
+            /* THE QUIET CHECK'S OWN LAW — while the session's first
+               glance still breathes, no purchase dialog may open: the
+               truth is asked at once, and the modal rises only after
+               the face on the wall is certain. */
+            const state = useMirror.getState();
+            const open = () =>
+              useMirror.getState().openWalletModal({
+                required: data.required ?? 1,
+                current: data.current ?? 0,
+                planTier: data.planTier,
+                actionType: data.actionType,
+              });
+            if (state.meStatus === "loading") {
+              void state.refreshMe(true).then(open);
+            } else {
+              open();
+            }
           }
         } catch {
           /* a body that cannot be read keeps its silence */
+        }
+      } else if (res && res.status === 401) {
+        try {
+          const data = (await res.clone().json()) as {
+            error?: string;
+            required?: number;
+            current?: number;
+            actionType?: string;
+          } | null;
+          if (data?.error === "SIGN_IN_REQUIRED") {
+            /* a paid door asked for a passage — but first, reconcile the
+               belief: if the house still thinks we wear a passage while
+               the server says otherwise, re-read the truth so the modal
+               offers a sign-in (not credit packs that would 401 again) */
+            const state = useMirror.getState();
+            if (state.me && !state.me.email.startsWith("anon:")) {
+              void state.refreshMe(true); // the truth, told at once
+            }
+            /* the modal offers one — and speaks the purse's true
+               remainder, never a pretended zero. THE QUIET CHECK'S LAW:
+               while the session's first glance still breathes the modal
+               waits for the truth, never rising on a guessed face. */
+            const st = useMirror.getState();
+            const openSignIn = () =>
+              useMirror.getState().openWalletModal({
+                required: data.required ?? 1,
+                current: data.current ?? 0,
+                actionType: data.actionType,
+              });
+            if (st.meStatus === "loading") {
+              void st.refreshMe(true).then(openSignIn);
+            } else {
+              openSignIn();
+            }
+          }
+        } catch {
+          /* other 401s are none of the purse's business */
         }
       } else if (res && res.ok) {
         const method =
@@ -105,7 +156,7 @@ export function WalletGuard() {
       }
     });
     void useMirror.getState().refreshWallet();
-    void useMirror.getState().refreshMe();
+    void useMirror.getState().refreshMe(true); // lights landed — fresh glance
   }, []);
 
   return <CreditsNeededModal open={open} onClose={closeWalletModal} />;
@@ -156,14 +207,33 @@ export function CreditsNeededModal({
   const t = useT();
   const notice = useMirror((s) => s.walletNotice);
   const me = useMirror((s) => s.me);
+  const packs = useMirror((s) => s.walletPacks) ?? [];
   const openAuth = useMirror((s) => s.openAuth);
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
+  /* THE COMPLIMENTARY DOOR — the server alone decides whether the
+     FREE activation stands open and which packages it serves; the
+     frontend only reads the verdict and shows the door. */
+  const [freeOpen, setFreeOpen] = useState(false);
+  const [freePackages, setFreePackages] = useState<string[]>([]);
+  const [freeDone, setFreeDone] = useState<{ credits: number; packageName: string } | null>(null);
 
   const signedIn = Boolean(me) && !me!.email.startsWith("anon:");
 
   useEffect(() => {
-    if (open) setFailed(null);
+    if (open) {
+      setFailed(null);
+      setFreeDone(null);
+      /* the packs are the server's own law — read fresh when the modal rises */
+      void useMirror.getState().refreshWallet();
+      fetch("/api/wallet")
+        .then((r) => r.json().catch(() => null))
+        .then((d: { complimentary?: { enabled?: boolean; packages?: string[] } } | null) => {
+          setFreeOpen(Boolean(d?.complimentary?.enabled));
+          setFreePackages(Array.isArray(d?.complimentary?.packages) ? d!.complimentary!.packages : []);
+        })
+        .catch(() => setFreeOpen(false));
+    }
   }, [open]);
 
   const choose = async (id: string, plan: string | null) => {
@@ -188,6 +258,37 @@ export function CreditsNeededModal({
     }
   };
 
+  /* THE COMPLIMENTARY ACTIVATION — the same packages, the same credits,
+     laid in through the FREE door; the request carries only the
+     package's NAME — every number is computed on the server. */
+  const chooseFree = async (id: string, plan: string | null, packageName: string) => {
+    setBusy(id);
+    setFailed(null);
+    try {
+      const res = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ free: true, ...(plan ? { plan } : { pack: id }) }),
+      });
+      const data = (await res.json().catch(() => null)) as {
+        activated?: boolean;
+        credits?: number;
+        error?: string;
+      } | null;
+      if (res.ok && data?.activated) {
+        setFreeDone({ credits: data.credits ?? 0, packageName });
+        window.dispatchEvent(new Event("wallet:refresh"));
+        void useMirror.getState().refreshWallet();
+        return;
+      }
+      setFailed(data?.error ?? "The free door did not open. Rest, then try again.");
+    } catch {
+      setFailed("The free door did not open. Rest, then try again.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <ModalShell
       open={open}
@@ -202,7 +303,7 @@ export function CreditsNeededModal({
         {notice && (
           <div
             role="status"
-            className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-[12.5px] leading-relaxed text-foreground/85"
+            className="rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-[13.5px] leading-relaxed text-foreground/85"
           >
             {t("The purse holds {current} of light — this reflection asks for {required}.", {
               current: notice.current,
@@ -213,9 +314,9 @@ export function CreditsNeededModal({
 
         {!signedIn ? (
           <div className="rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4">
-            <p className="text-[13.5px] leading-relaxed text-foreground/85">
+            <p className="text-[14.5px] leading-relaxed text-foreground/85">
               {t(
-                "The purse belongs to a passage. Open yours — it arrives already holding five lights."
+                "The purse belongs to a passage. Open yours — it arrives already holding five hundred lights."
               )}
             </p>
             <button
@@ -224,13 +325,59 @@ export function CreditsNeededModal({
                 onClose();
                 openAuth("register");
               }}
-              className="focus-glow mt-3 w-full rounded-full bg-foreground py-2.5 text-[13px] font-medium text-background transition-opacity hover:opacity-90"
+              className="focus-glow mt-3 w-full rounded-full bg-foreground py-2.5 text-[14px] font-medium text-background transition-opacity hover:opacity-90"
             >
               {t("Open the passage")}
             </button>
           </div>
         ) : (
           <>
+            {/* THE CREDIT PACKS — the one wallet's filling, the house's
+                own launch prices: 100 · 250 · 700 lights. One purse
+                across music, books and the akashic readings. */}
+            {packs.map((p) => {
+              const active = busy === p.id;
+              return (
+                <div
+                  key={p.id}
+                  className="flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] p-4 transition-colors hover:border-[var(--hairline-hover)]"
+                >
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full border hairline bg-[var(--glass-bg)]">
+                    <ShoppingBag className="size-4 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[14.5px] font-medium text-foreground/90">
+                      {p.credits} {t("lights")}
+                      <span className="ml-2 text-[13px] font-normal text-muted-foreground">
+                        €{(p.priceCents / 100).toFixed(0)}
+                      </span>
+                    </p>
+                    <p className="text-[13px] text-muted-foreground">{t(p.note)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void choose(p.id, null)}
+                    disabled={busy !== null}
+                    data-testid={`wallet-pack-${p.id}`}
+                    className="focus-glow shrink-0 rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                  >
+                    {active ? (
+                      <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                    ) : (
+                      t("Choose")
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+            {packs.length === 0 && (
+              <p className="px-1 text-[13px] text-muted-foreground">
+                {t("The packs are being laid out — a moment.")}
+              </p>
+            )}
+            <p className="px-1 pt-1 text-[11px] uppercase tracking-[0.18em] text-muted-foreground/60">
+              {t("Moon passes — light that arrives every month")}
+            </p>
             {PASSES.map((p) => {
               const Icon = p.icon;
               const active = busy === p.id;
@@ -243,22 +390,22 @@ export function CreditsNeededModal({
                     <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13.5px] font-medium text-foreground/90">
+                    <p className="text-[14.5px] font-medium text-foreground/90">
                       {p.name}
-                      <span className="ml-2 text-[12px] font-normal text-muted-foreground">
+                      <span className="ml-2 text-[13px] font-normal text-muted-foreground">
                         {p.price} {t(p.cadence)}
                       </span>
                     </p>
-                    <p className="text-[12px] text-muted-foreground">{t(p.credits)} · {t(p.note)}</p>
+                    <p className="text-[13px] text-muted-foreground">{t(p.credits)} · {t(p.note)}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => void choose(p.id, p.plan)}
                     disabled={busy !== null}
-                    className="focus-glow shrink-0 rounded-full border hairline px-3.5 py-1.5 text-[12px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
+                    className="focus-glow shrink-0 rounded-full border hairline px-3.5 py-1.5 text-[13px] text-foreground/90 transition-all hover:border-[var(--hairline-hover)] hover:glow-sm disabled:opacity-50"
                   >
                     {active ? (
-                      <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                      <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                     ) : (
                       t("Choose")
                     )}
@@ -266,15 +413,138 @@ export function CreditsNeededModal({
                 </div>
               );
             })}
+            {freeDone && (
+              <div
+                role="status"
+                data-testid="free-activation-success"
+                className="rounded-xl border border-[color-mix(in_srgb,#a78bfa_45%,transparent)] bg-[color-mix(in_srgb,#a78bfa_8%,var(--background))] p-4"
+              >
+                <p className="flex items-center gap-2 text-[14.5px] font-medium text-foreground/90">
+                  <Sparkles className="size-4 text-[#a78bfa]" aria-hidden="true" />
+                  {t("Free access is yours — {credits} lights granted.", { credits: freeDone.credits })}
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+                  {t(
+                    "{name} was activated through a complimentary transaction — the same credits it always grants, recorded honestly as free, no money charged.",
+                    { name: freeDone.packageName }
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="focus-glow mt-3 w-full rounded-full bg-foreground py-2.5 text-[14px] font-medium text-background transition-opacity hover:opacity-90"
+                >
+                  {t("Return to the mirror")}
+                </button>
+              </div>
+            )}
+
+            {!freeDone && freeOpen && (
+              <>
+                <div className="flex items-center gap-2 px-1">
+                  <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
+                  <span className="mono-label text-[9px] uppercase tracking-[0.22em] text-muted-foreground/70">
+                    {t("Development access — no card, no charge")}
+                  </span>
+                  <span className="h-px flex-1 bg-[var(--hairline)]" aria-hidden="true" />
+                </div>
+                {packs
+                  .filter((p) => freePackages.includes(p.id))
+                  .map((p) => (
+                    <div
+                      key={`free-${p.id}`}
+                      data-testid={`free-option-${p.id}`}
+                      className="rounded-xl border border-[color-mix(in_srgb,#a78bfa_35%,transparent)] bg-[color-mix(in_srgb,#a78bfa_6%,var(--background))] p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,#a78bfa_40%,transparent)] bg-[color-mix(in_srgb,#a78bfa_12%,transparent)]">
+                          <ShoppingBag className="size-4 text-[#a78bfa]" aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[14.5px] font-medium text-foreground/90">
+                            {p.credits} {t("lights")}
+                            <span className="mono-label ml-2 rounded-full border border-[color-mix(in_srgb,#a78bfa_40%,transparent)] px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em] text-[#a78bfa]">
+                              FREE
+                            </span>
+                          </p>
+                          <p className="text-[13px] text-muted-foreground">
+                            {t(p.note)} · {t("complimentary transaction — the original price rests unwritten")}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void chooseFree(p.id, null, `${p.credits} ${t("lights")}`)}
+                        disabled={busy !== null}
+                        data-testid={`free-activate-${p.id}`}
+                        className="focus-glow mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,#a78bfa_45%,transparent)] text-[13px] font-medium text-foreground/90 transition-all hover:bg-[color-mix(in_srgb,#a78bfa_12%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {busy === p.id ? (
+                          <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Sparkles className="size-3.5" aria-hidden="true" />
+                        )}
+                        {t("Activate Free Access")}
+                      </button>
+                    </div>
+                  ))}
+                {PASSES.filter((p) => freePackages.includes(p.id)).map((p) => {
+                  const Icon = p.icon;
+                  return (
+                    <div
+                      key={`free-${p.id}`}
+                      data-testid={`free-option-${p.id}`}
+                      className="rounded-xl border border-[color-mix(in_srgb,#a78bfa_35%,transparent)] bg-[color-mix(in_srgb,#a78bfa_6%,var(--background))] p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-[color-mix(in_srgb,#a78bfa_40%,transparent)] bg-[color-mix(in_srgb,#a78bfa_12%,transparent)]">
+                          <Icon className="size-4 text-[#a78bfa]" aria-hidden="true" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[14.5px] font-medium text-foreground/90">
+                            {p.name}
+                            <span className="mono-label ml-2 rounded-full border border-[color-mix(in_srgb,#a78bfa_40%,transparent)] px-1.5 py-0.5 text-[8.5px] uppercase tracking-[0.14em] text-[#a78bfa]">
+                              FREE
+                            </span>
+                          </p>
+                          <p className="text-[13px] text-muted-foreground">
+                            {t(p.credits)} · {t("complimentary transaction — the original price rests unwritten")}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void chooseFree(p.id, p.plan, p.name)}
+                        disabled={busy !== null}
+                        data-testid={`free-activate-${p.id}`}
+                        className="focus-glow mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-full border border-[color-mix(in_srgb,#a78bfa_45%,transparent)] text-[13px] font-medium text-foreground/90 transition-all hover:bg-[color-mix(in_srgb,#a78bfa_12%,transparent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {busy === p.id ? (
+                          <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Sparkles className="size-3.5" aria-hidden="true" />
+                        )}
+                        {t("Activate Free Access")}
+                      </button>
+                    </div>
+                  );
+                })}
+                <p className="px-1 text-[11.5px] leading-relaxed text-muted-foreground/70">
+                  {t(
+                    "No card details required. No money charged. Credits granted through a complimentary transaction, recorded honestly as free (reason: development access)."
+                  )}
+                </p>
+              </>
+            )}
             {failed && (
-              <p role="alert" className="px-1 text-[12px] text-red-500/90">
+              <p role="alert" className="px-1 text-[13px] text-red-500/90">
                 {failed}
               </p>
             )}
-            <p className="flex items-start gap-1.5 px-1 pt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+            <p className="flex items-start gap-1.5 px-1 pt-1 text-[12.5px] leading-relaxed text-muted-foreground">
               <Sparkles className="mt-0.5 size-3 shrink-0" aria-hidden="true" />
               {t(
-                "Every reflection is weighed before it is served — a whisper 1 · a reading 2 · the atelier 5 · the light codes 12."
+                "One purse for every creation — a music preview 2 · a full song 5 · the endless journey 15 · an akashic reading 5 · a short book 15 · an extended book 40."
               )}
             </p>
           </>

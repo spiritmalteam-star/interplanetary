@@ -120,11 +120,11 @@ export function ResonantStageBadge({
         <span className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--scope-a,var(--gd))] opacity-55" />
         <span className="relative inline-flex size-1.5 rounded-full bg-[var(--scope-a,var(--gd))]" />
       </span>
-      <span className="mono-label text-[9px] uppercase tracking-[0.24em] text-[color-mix(in_srgb,var(--scope-a,var(--gd))_80%,var(--foreground))]">
+      <span className="mono-label text-[10px] uppercase tracking-[0.24em] text-[color-mix(in_srgb,var(--scope-a,var(--gd))_80%,var(--foreground))]">
         {t(CATEGORY_LABELS[category])}
       </span>
       {moveLabel ? (
-        <span className="mono-label text-[9px] uppercase tracking-[0.18em] text-muted-foreground/50">
+        <span className="mono-label text-[10px] uppercase tracking-[0.18em] text-muted-foreground/50">
           · {moveLabel}
         </span>
       ) : null}
@@ -204,7 +204,7 @@ export function NarrationStatusLine({
       ) : (
         <VoiceBars />
       )}
-      <p className="mono-label text-[8.5px] uppercase tracking-[0.2em] text-muted-foreground">
+      <p className="mono-label text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground">
         {loading
           ? t("The voice is gathering — one breath…")
           : t("The narrator is reading")}

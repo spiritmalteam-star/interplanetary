@@ -3,8 +3,10 @@
 /*                                                                      */
 /*  The Mirror Entity is the interpretation layer: it translates        */
 /*  intention, mood and symbolism into a musical direction. The         */
-/*  generation engine (Suno) renders that direction as sound — its      */
-/*  name stays behind the veil; the Mirror is the visible voice.        */
+/*  generation engine renders that direction as sound — its name        */
+/*  stays behind the veil; the Mirror is the visible voice. (Behind     */
+/*  that veil today: Google DeepMind's Lyria, through the official      */
+/*  Gemini API — the keeper's GEMINI_API_KEY opens its door.)           */
 /*                                                                      */
 /*  The language of the chamber: calming, meditative, reflective,       */
 /*  grounding, sleep-oriented, focus-oriented, emotional reset,         */
@@ -13,12 +15,14 @@
 /* ------------------------------------------------------------------ */
 
 export type LightCodesMode =
+  | "freestyle"
   | "light-transmission"
   | "calming-frequencies"
   | "other-stars"
   | "restorative"
   | "reprogramming"
-  | "mirror-transmission";
+  | "mirror-transmission"
+  | "soundtrack";
 
 export interface LcMode {
   id: LightCodesMode;
@@ -38,13 +42,23 @@ export interface LcMode {
 
 export const LC_MODES: LcMode[] = [
   {
+    id: "freestyle",
+    n: "00",
+    name: "Free Studio",
+    tagline: "Any genre, any energy — your musical direction is the law.",
+    placeholder:
+      'Describe your music — e.g. "commercial reggaeton, 96 BPM, Spanish vocals, romantic, energetic percussion".',
+    vocabulary:
+      "the visitor's written intention and chosen genres are the complete musical contract — render exactly that direction with professional production quality, whatever the genre.",
+  },
+  {
     id: "light-transmission",
     n: "01",
     name: "Light Transmission",
     tagline: "Abstract atmospheric transmissions — textures before tunes.",
     placeholder: "What would you like the transmission to carry?",
     vocabulary:
-      "luminous ambient textures, crystalline synths, distant harmonic voices, evolving drones, unusual spatial movement, non-linear melodic structures, long atmospheric transitions. Structure serves atmosphere, never a chorus.",
+      "luminous ambient textures, crystalline synths, distant harmonic voices, evolving drones, unusual spatial movement, non-linear melodic structures, long breathing transitions that flow one into the next. Structure serves atmosphere, never a chorus.",
   },
   {
     id: "calming-frequencies",
@@ -125,7 +139,7 @@ export const LC_MODES: LcMode[] = [
       "inner stillness",
     ],
     vocabulary:
-      "slow, kind harmonic motion, unhurried melodic fragments, generous silence, textures that hold without pushing. Music that keeps company while the listener settles.",
+      "slow, kind harmonic motion, unhurried melodic fragments, continuous warmth with no gaps, textures that hold and carry one another. Music that keeps company while the listener settles.",
   },
   {
     id: "reprogramming",
@@ -144,6 +158,23 @@ export const LC_MODES: LcMode[] = [
     placeholder: "What should this transmission hold? (or leave it to the Mirror)",
     vocabulary:
       "the Mirror composes the whole direction itself: intention, emotional arc, sonic language, tempo, voice character, harmonic character, texture, structure, lyrical density and ending state — held together as one coherent transmission.",
+  },
+  {
+    id: "soundtrack",
+    n: "07",
+    name: "Soundtrack",
+    tagline: "Music for films, trailers, stories and moving pictures.",
+    placeholder: "Describe the scene — what does the picture ask to sound like?",
+    intents: [
+      "an opening theme",
+      "a scene of wonder",
+      "a slow farewell",
+      "a trailer's rise",
+      "an ending that floats",
+      "credits at dawn",
+    ],
+    vocabulary:
+      "score-writing for pictures: the arrangement is described as an arc over time — how the music opens under a first image, where it swells, where it thins to let a voice or a moment breathe, and how it lands or dissolves at the end. Cues follow the scene's emotional beats as prose (the engine takes no literal timestamps), leitmotif-friendly, silence as a deliberate instrument, endings that resolve or dissolve as the story asks.",
   },
 ];
 
@@ -203,6 +234,115 @@ export const LC_DEFAULT_SHAPE: LcShape = {
   lyricsMode: "NO LYRICS",
 };
 
+/* ------------------------------------------------------------------ */
+/*  THE STUDIO CONTROLS — Music Engine 2.0's advanced creative panel.  */
+/*  Progressive disclosure: the primary flow stays                     */
+/*  describe → select style → generate. These ride hidden until asked. */
+/* ------------------------------------------------------------------ */
+
+export const LC_STUDIO = {
+  keys: [
+    "Auto", "C major", "G major", "D major", "A major", "E major", "F major", "Bb major",
+    "A minor", "E minor", "B minor", "F# minor", "C# minor", "D minor", "G minor", "C minor", "F minor",
+  ] as const,
+  moods: [
+    "Euphoric", "Romantic", "Melancholic", "Aggressive", "Dreamy", "Triumphant",
+    "Intimate", "Mysterious", "Playful", "Nostalgic", "Angry", "Serene",
+    "Hypnotic", "Anthemic", "Sad", "Hopeful",
+  ] as const,
+  vocalModes: [
+    "Auto", "Instrumental", "Male", "Female", "Duet", "Choir", "Synthetic",
+  ] as const,
+  languages: [
+    "Auto", "English", "Albanian", "Italian", "Spanish", "German", "French",
+    "Greek", "Turkish", "Portuguese", "Arabic", "Hindi", "Japanese", "Korean",
+  ] as const,
+  durations: [
+    "Auto", "~1 minute", "~2 minutes", "~3 minutes", "~4 minutes", "5+ minutes",
+  ] as const,
+  structures: [
+    "Intro", "Verse", "Chorus", "Bridge", "Drop", "Outro", "Freeform",
+  ] as const,
+  textures: [
+    "Auto", "Analog warmth", "Clean digital", "Tape saturation", "Lo-fi grit",
+    "Polished studio", "Raw live", "Cinematic wide",
+  ] as const,
+  lyricsModes: ["Auto", "Mirror writes", "I write", "Instrumental"] as const,
+} as const;
+
+/** The full studio specification a visitor can shape — every field optional. */
+export interface LcStudio {
+  bpm: number | null; // null = auto
+  key: string;
+  moods: string[];
+  energy: number; // 1..5 (kept aligned with the chamber's energy dial)
+  vocalMode: string;
+  vocalLanguage: string;
+  duration: string;
+  structure: string[]; // ordered section choices
+  instruments: string; // free text
+  texture: string;
+  acousticBalance: number; // 0 = fully electronic, 100 = fully acoustic
+  experimental: number; // 0..100
+  exclusions: string; // free text — explicitly excluded sounds
+  lyricsMode: string; // Auto | Mirror writes | I write | Instrumental
+}
+
+export const LC_DEFAULT_STUDIO: LcStudio = {
+  bpm: null,
+  key: "Auto",
+  moods: [],
+  energy: 3,
+  vocalMode: "Auto",
+  vocalLanguage: "Auto",
+  duration: "Auto",
+  structure: [],
+  instruments: "",
+  texture: "Auto",
+  acousticBalance: 50,
+  experimental: 20,
+  exclusions: "",
+  lyricsMode: "Auto",
+};
+
+/** The Mirror's composition brief — written once, shaped by many hands
+ *  (the Mirror's refinement, the Lyrics Laboratory, the visitor's own
+ *  edits) before the engine weaves it into sound. */
+export interface LcBrief {
+  title: string;
+  /** The production direction, written for the engine. */
+  style: string;
+  /** The lyric sheet (section-tagged), or null for an instrumental. */
+  lyrics: string | null;
+  /** The transmission notes — why it sounds the way it sounds. */
+  notes: string;
+  /** The visitor's own ask, kept with the brief. */
+  intention: string;
+  /** The chamber the brief belongs to. */
+  mode: LightCodesMode;
+  /** MUSIC ENGINE 2.0 — the Mirror's structured specification (bpm,
+      key, structure, arc, negative), kept separate from the prose so
+      the visitor can read exactly what was heard. */
+  spec?: {
+    bpm: number | null;
+    key: string | null;
+    structure: string | null;
+    arc: string | null;
+    negative: string | null;
+  } | null;
+}
+
+/** The Lyrics Laboratory's craft hands. */
+export type LcLyricOp =
+  | "generate"
+  | "rewrite"
+  | "rhyme"
+  | "language"
+  | "tone"
+  | "chorus"
+  | "simplify"
+  | "poetic";
+
 /** A finished transmission as the visitor keeps it. */
 export interface LcTrack {
   id: string;
@@ -218,5 +358,47 @@ export interface LcTrack {
   lyrics?: string | null;
   /** The Mirror's interpretation — why it sounds the way it sounds. */
   notes?: string;
+  /** The chosen genre ids — the visitor's musical contract. */
+  genres?: string[];
+  /** The Mirror's structured specification (bpm, key, arc, negative). */
+  spec?: LcSpec | null;
+  /** The song's length: a 30-second preview, the full composition,
+      or the endless journey (a ~30-minute seamless loop). */
+  length?: "preview" | "full" | "loop";
+  /** The engine's own words about the song's structure (revealed on request). */
+  structure?: string;
+  /** THE HOUSE'S KEEPING — present when this transmission also rests
+      as a MusicTrack row in the visitor's own vault: durable across
+      refreshes and devices, its sound served from the house's audio
+      vault (owner-checked). libraryId is the row's own id. */
+  libraryId?: string;
+  /** MUSIC ENGINE 2.0 — the vault row's own id when the weave was kept
+      (the QA ear and the publication house speak through it). */
+  trackId?: string;
+  /** The owner's heart on a vault-kept transmission. */
+  favorite?: boolean;
+  /** True when the shelf may replay this sound from the house's serve
+      door (audioUrl then carries the /api/music-audio/ key). */
+  durable?: boolean;
   createdAt: number;
+}
+
+/** The Mirror's interpreted specification — separated from the prompt law. */
+export interface LcSpec {
+  bpm: number | null;
+  key: string | null;
+  structure: string | null; // e.g. "intro — verse — chorus — verse — chorus — outro"
+  arc: string | null; // the emotional/musical arc in one line
+  negative: string | null; // exclusions the engine must honor
+}
+
+/** Karaoke timing — line-level always, word-level only when verified. */
+export interface LcSyncLine {
+  text: string;
+  start: number; // seconds
+  end: number; // seconds
+}
+export interface LcSync {
+  level: "estimated" | "manual";
+  lines: LcSyncLine[];
 }

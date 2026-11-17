@@ -61,6 +61,9 @@ const VISUAL_OBJECT_PATTERN = new RegExp(
     "\\bc(?:ry|ri)stall?i[sz]ation\\b",
     /* drawn forms — drawing(s), sketch(es), painting(s), illustration(s) */
     "\\b(?:drawings?|sketch(?:es)?|paintings?|illustrations?)\\b",
+    /* the made forms — artwork(s), portrait(s), poster(s), wallpaper(s),
+       logo(s), avatar(s), icon(s), cover(s), backdrop(s) */
+    "\\b(?:artworks?|portraits?|posters?|wallpapers?|logos?|avatars?|icons?|covers?|backdrops?|murals?|banners?)\\b",
     /* EVERY TONGUE — das Bild, l'image, la imagen, la Immagine,
        η εικόνα, resim, imazh */
     uWord(VISUAL_OBJECTS_I18N),
@@ -74,6 +77,23 @@ const VISUAL_OBJECT_PATTERN = new RegExp(
  */
 const ASK_VERB_PATTERN = new RegExp(
   `\\b(?:show|draw|paint|sketch|render|depict|portray|illustrate|make|create|generate|give|produce|channel|crystallize|crystallise|visualize|visualise|turn|${VISUAL_ASK_VERBS_I18N})\\b`,
+  "iu"
+);
+
+/** The wish phrases — a thousand ways of saying "let me see it":
+    "I want to see", "I wish I could see", "can I see", "let me see",
+    "I'd love a picture", "would love to see", "I need a picture of".
+    A wish phrase beside an image-word is an ask, however it is built. */
+const WISH_PHRASE_PATTERN = new RegExp(
+  [
+    "\\b(?:i\\s+)?(?:want|wanted|wish|wishes|wish\\s+i\\s+could|hope|long|need|need(ed)?)\\s+to\\s+(?:see|behold|watch|view)\\b",
+    "\\b(?:can|could|may)\\s+(?:i|we)\\s+(?:please\\s+)?(?:see|get|have|view)\\b",
+    "\\blet\\s+(?:me|us)\\s+see\\b",
+    "\\b(?:would|will)\\s+(?:you|ye)\\s+(?:mind\\s+)?(?:draw|paint|show|make|create|generate|render)\\b",
+    "\\b(?:would|will)\\s+love\\s+(?:to\\s+see|a\\s+(?:picture|image|photo|visual|rendering))\\b",
+    "\\b(?:show|showing|draw|drawing|paint|painting|make|making|create|creating|generate|generating|render|rendering)\\s+(?:me|us)\\b",
+    "\\b(?:i('|a)m|am)\\s+(?:asking|begging)\\s+(?:for|of)\\b[^.!?]{0,24}\\b(?:picture|image|photo|visual)\\b",
+  ].join("|"),
   "iu"
 );
 
@@ -211,6 +231,19 @@ function verbNearObject(s: string): boolean {
   return false;
 }
 
+/** The wish phrase stands near the image word it serves — the same
+    small-machine law the ask-verb obeys, with a longer reach (wishes
+    lead their sentence more often than imperatives do). */
+function wishNearObject(s: string): boolean {
+  const objRe = new RegExp(VISUAL_OBJECT_PATTERN.source, "gi");
+  let m: RegExpExecArray | null;
+  while ((m = objRe.exec(s))) {
+    const before = s.slice(Math.max(0, m.index - 56), m.index);
+    if (WISH_PHRASE_PATTERN.test(before)) return true;
+  }
+  return false;
+}
+
 /**
  * One sentence asks for an image when it holds an image-word AND an
  * asking shape — an imperative/petition verb beside it, a form frame —
@@ -245,6 +278,9 @@ function isVisualAskSentence(s: string): boolean {
   }
 
   if (hasObject && verbNearObject(s) && !REFERENCE_PATTERN.test(s)) {
+    return true;
+  }
+  if (hasObject && wishNearObject(s) && !REFERENCE_PATTERN.test(s)) {
     return true;
   }
   if (hasObject && FORM_FRAME_PATTERN.test(s)) return true;

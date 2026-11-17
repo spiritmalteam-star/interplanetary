@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getSessionUser, hashPassword } from "@/lib/server/access";
+import { getSessionUser, hashPassword, safeVerifyNext } from "@/lib/server/access";
 import { sendLetter, mailConfigured, envelope } from "@/lib/server/mail";
 import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
 import { randomBytes } from "crypto";
@@ -41,11 +41,13 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const body = (await req.json().catch(() => null)) as { next?: string } | null;
+    const next = safeVerifyNext(body?.next);
     const origin = process.env.APP_URL || req.nextUrl.origin;
-    const link = `${origin}/?verify=${raw}`;
-    const body =
+    const link = `${origin}/?verify=${raw}${next ? `&next=${encodeURIComponent(next)}` : ""}`;
+    const letterBody =
       "One tap and your email is part of your passage — your library stays yours, forever.";
-    const { text, html } = envelope(body, link, "Verify my email");
+    const { text, html } = envelope(letterBody, link, "Verify my email");
     const outcome = await sendLetter({
       to: user.email,
       subject: "Verify your passage — Reflective Me",
@@ -58,7 +60,9 @@ export async function POST(req: NextRequest) {
       configured: mailConfigured(),
       message: outcome.sent
         ? "A letter of light is on its way."
-        : "The messenger rests for now (no email provider configured) — the letter rests in the server log.",
+        : outcome.reason === "mail_not_configured"
+          ? "The messenger rests for now (no email provider configured) — the letter rests in the server log."
+          : "The messenger could not carry the letter just now — the attempt rests in the server log.",
     });
   } catch (err) {
     console.error("[auth/verify/resend] failed:", err);

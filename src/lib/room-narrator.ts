@@ -261,6 +261,8 @@ export async function speakRoomNarration(
       cachePut(key, url);
     }
     const audio = new Audio(url);
+    /* one voice at a time — the music bows out while the room speaks */
+    window.dispatchEvent(new CustomEvent("reflectme:pause-music"));
     currentAudio = audio;
     bindAudio(audio, roomId);
     try {

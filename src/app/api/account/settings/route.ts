@@ -21,6 +21,9 @@ interface VisitorSettings {
   theme?: string;
   voice?: string;
   pace?: number;
+  /** The visitor's own level of depth and exploration — -1 lets the
+      walk's own DNA decide; 0–4 names the tier they say they walk at. */
+  depth?: number;
   /** The visitor's fields of expansion — coherent phrases become
       seeds for new branches in all fields of the tree. */
   seeds?: string[];
@@ -39,6 +42,9 @@ function sanitizeSettings(raw: unknown): VisitorSettings {
   if (typeof r.voice === "string") out.voice = r.voice.slice(0, 40);
   if (typeof r.pace === "number" && Number.isFinite(r.pace)) {
     out.pace = Math.min(2, Math.max(0.5, r.pace));
+  }
+  if (typeof r.depth === "number" && Number.isFinite(r.depth)) {
+    out.depth = Math.min(4, Math.max(-1, Math.floor(r.depth)));
   }
   if (Array.isArray(r.seeds)) {
     const seen = new Set<string>();

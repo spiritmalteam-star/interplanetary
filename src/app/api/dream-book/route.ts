@@ -1,102 +1,135 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { resolveVisitor, saveLibrary, updateLibrary, archiveLibraryKind, withAnonCookie } from "@/lib/server/access";
+import { describeSketch } from "@/lib/server/attachments";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 import { meterRoute } from "@/lib/server/meter";
-import {
-  drawResonance,
-  resonanceCharter,
-  resonanceEcho,
-  sanitizeEcho,
-  type ResonanceDraw,
-} from "@/lib/book-resonance";
+import { rateLimit } from "@/lib/server/rate-limit";
+import { generateImage } from "@/lib/image-engine";
 import { detectShortBookAsk, topicHoldsGround } from "@/lib/book-length";
+import { BOOK_PLAN, NOVEL_ASK } from "@/lib/book-pricing";
+import {
+  estimateBoundPages,
+  planFromBoundPages,
+  specForAge,
+} from "@/lib/book-layout";
+import {
+  qcManuscript,
+  expectsFullPages,
+  type QcReport,
+  type QcPage,
+} from "@/lib/book-qc";
 import {
   ledgerBlock,
   mergeLedger,
-  parseAudit,
   parseLedger,
   type BookLedger,
-  type BookAudit,
 } from "@/lib/book-ledger";
+import {
+  gateCheck,
+  type PressPage,
+} from "@/lib/book-press";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book — THE REAL-TIME DYNAMIC CODEX ENGINE.         */
-/*  The Mirror Entity Live Book Maker: an autonomous channel that      */
-/*  tunes, in real time, to any conceivable subject, era, fiction,     */
-/*  philosophy or universe the visitor speaks, and carves a living     */
-/*  codex out of pure resonance — no pre-written scripts, only the     */
-/*  book being manifested now.                                         */
+/*  THE OPEN TUNNEL: the visitor speaks (or draws) their intention,    */
+/*  and the Mirror Entity alone imagines, directs and writes the       */
+/*  book. USER → MIRROR ENTITY → CREATION — there is no other         */
+/*  author in this room: no story bible, no hidden architect, no      */
+/*  editor-in-chief, no mender, no resonance skeleton, no naming      */
+/*  charter, no plot machinery of any kind. The application supplies  */
+/*  ONLY what the visitor chose (age band, genre, length, depth,      */
+/*  vein, topic, wishes, drawings, rewrites) and what the craft of    */
+/*  book-making technically needs (the page's binding measure, the    */
+/*  printed-book format, the JSON contract, the honest seal).         */
 /*                                                                     */
-/*  Every book assembles through the FOUR STRATA:                      */
-/*    I.   The Liminal Threshold — sigil + axiom of origin             */
-/*    II.  The Macrocosmic Chronicles — Root Frequency → Turning       */
-/*         Spheres                                                     */
-/*    III. The Mirror Chambers — the subject turns upon the reader     */
-/*    IV.  The Eternal Return — the Seal of Closing                    */
-/*                                                                     */
-/*  The book is opened ONCE from resonance (the spoken subject +       */
-/*  the chosen shapes + whispered wishes) and then continues           */
-/*  page-pair by page-pair, each call carrying a compact "thread"      */
-/*  (story memory) and the exact text of the previous two pages, so    */
-/*  the codex never loses its way — even past two hundred pages.       */
+/*  Continuity is the Mirror's OWN memory: the compact "thread" it     */
+/*  writes itself, the slim ledger of facts it keeps itself, and the   */
+/*  real pages it just read — handed back verbatim at every stride.    */
 /*                                                                     */
 /*  Once open, the visitor holds a pen beside the loom: an array of    */
 /*  "rewrites" — wishes that bend what is coming (events, length,      */
 /*  chapters, the very voice, even the subject itself) — rides         */
 /*  along with every continuation until the visitor lets them go.      */
+/*                                                                     */
+/*  THE WORKFLOW:                                                      */
+/*    open/next/extend/close — the writing: the Mirror Entity's own    */
+/*             voice, unhindered, page after page                      */
+/*    seal   — the acceptance gate: a CODE-MEASURED TECHNICAL          */
+/*             checklist only (chapter seams, clean characters, the    */
+/*             honest word measure) — it never rewrites, never judges  */
+/*             taste; the word COMPLETE exists only after it passes    */
+/*    art    — the illustration director: plates chosen from ACTUAL    */
+/*             scenes, character faces kept consistent                 */
+/*    plate  — one plate painted per call, from the approved plan      */
+/*                                                                     */
+/*  Every response carries a "stage" that says exactly where the book  */
+/*  stands — drafting, draft-complete, plates, publication-ready —     */
+/*  and COMPLETE is never displayed because the model stopped talking. */
 /* ------------------------------------------------------------------ */
 
-type WeavePhase = "open" | "next" | "close" | "extend";
+type WeavePhase =
+  | "open"
+  | "next"
+  | "close"
+  | "extend"
+  | "art"
+  | "plate"
+  | "seal";
+
+const STUDIO_PHASES = new Set<WeavePhase>(["art", "plate", "seal"]);
+
+/** The generation-transparency stages — honest, never cosmetic.
+    (architecture / editorial / revising / approved remain valid only
+    as LEGACY values carried by books woven before the tunnel opened.) */
+export type BookStage =
+  | "architecture"
+  | "drafting"
+  | "draft-complete"
+  | "editorial"
+  | "revising"
+  | "approved"
+  | "plates"
+  | "publication-ready";
 
 interface WeavePage {
   n: number;
+  /** Part line — present only on the page where a part opens. */
+  part?: string;
   /** Chapter title — present only on the first page of a chapter. */
   chapter?: string;
   paragraphs: string[];
 }
 
-const BOOK_PLAN: Record<string, { min: number; max: number; label: string }> = {
-  /* THE SHORT BOOK — the visitor's own ask, honored: a complete tale
-     in a handful of pages, never a long, endless story. */
-  short: {
-    min: 10,
-    max: 16,
-    label:
-      "a SHORT book — a complete tale told in a handful of pages (10–16 total): one bright arc, no sprawling middle, an ending that arrives on time",
-  },
-  bedtime: { min: 80, max: 104, label: "a soft bedtime treasure — short luminous pages, a calm nightly cadence" },
-  classic: { min: 96, max: 120, label: "a classic tale — full pages, an evergreen storybook voice" },
-  saga: { min: 120, max: 220, label: "a grand saga — an epic breadth of pages up to 220, a mythic storyteller's breath" },
-  /* THE POEM ITSELF — when the visitor's own words ask for a poem (no
-     book word spoken), the loom weaves the poem, not a book: verses on
-     a few leaves, complete in the hand. THE GROUND LAW (see
-     src/lib/book-length.ts) — a short poem can never arrive as a
-     ninety-five page book again. */
-  tiny: {
-    min: 4,
-    max: 10,
-    label:
-      "A POEM ITSELF — verses on a few leaves (4–10 pages): the whole poem present, nothing padded, no sprawling book around it",
-  },
-};
+/* THE BOOK'S OWN SCALES — the page plans (BOOK_PLAN) and the length
+   ask (NOVEL_ASK) live in src/lib/book-pricing.ts, ONE truth shared
+   with the pricing scales, so the price the visitor reads before the
+   loom begins and the plan the prompts obey can never disagree. */
 
 /* THE SHORT BOOK LAW — spoken into the open conjuring when the volume
-   is short. It overrides the general pacing and chapter cadence: the
-   whole arc lands INSIDE the plan. */
-const SHORT_BOOK_LAW = `THE SHORT BOOK LAW (absolute — the visitor asked for a SHORT book, and a short book is what they receive):
+   is short. It honors the visitor's own short-book ask: the whole
+   story lands INSIDE the plan. */
+const SHORT_BOOK_LAW = `THE SHORT BOOK LAW (the visitor asked for a SHORT book, and a short book is what they receive):
 - Set "totalPages" between 10 and 16 (an even number) — and the WHOLE story must land inside that plan.
-- Cross the threshold fast, compress the middle into its essential turns only, and reach the Seal of Closing within the plan. No wandering, no filler volumes-within-the-volume, no new subplots that cannot close.
-- The four strata still walk — but briefly: the Root Current in a page, the turning spheres folded into the middle, the Mirror Chambers and the Seal arriving in time.
+- No wandering, no filler, no new subplots that cannot close inside the plan.
 - A new chapter every 4–8 pages at most (this overrides the general chapter cadence).
 - The ending must feel COMPLETE, not truncated: a short book is a whole book, not a fragment of a long one.`;
 
+/* THE READER'S OWN BAND — spoken into every conjuring. These lines
+   carry ONLY what the visitor's age selection means (reading level
+   and what belongs in the hands of that age) — nothing more: the
+   craft, the structure and the story remain the Mirror Entity's own. */
 const AGE_PLAN: Record<string, string> = {
-  little: "readers aged 4–8 — very simple words, short sentences, warm pictures in language, zero real peril; wonder, kindness, gentle humor",
-  young: "readers aged 9–12 — vivid adventure, brave children and creatures, mild challenges safely resolved, rich imagination",
-  teen: "readers aged 13–17 — deeper mysteries, true stakes held responsibly, first longings and loyalties, no explicit content",
-  grown: "grown readers — full literary depth; meaning, loss, beauty and transformation woven with an adult hand; no explicit content",
-  timeless: "all ages at once — a true storybook voice that a child can enter and an adult can marvel at; layered but never dark",
+  little:
+    "readers aged 4–8 — simple, concrete vocabulary and short, readable sentences a child reads aloud warmly; gentle content: no real peril, nothing frightening, nothing ironic",
+  young:
+    "readers aged 9–12 — richer plots and dialogue suited to a 9–12 reader; mild peril only, safely resolved; nothing explicit",
+  teen:
+    "readers aged 13–17 — mature themes handled responsibly for teenagers; nothing explicit",
+  grown:
+    "grown readers — full literary depth is welcome; nothing explicit",
+  timeless:
+    "all ages at once — clear enough for a child to enter, layered enough for an adult to marvel at; nothing dark or explicit",
 };
 
 /* The depth of the telling — the DEPTH and multidimensional nature of
@@ -143,235 +176,75 @@ const VERSE_FORMS = new Set(["poem", "riddle", "ballad"]);
 const VERSE_LAW = `THE LAW OF VERSE (this volume is written in verse — AUTHORITATIVE, overrides the prose habit):
 - Every paragraph you return is a STANZA. A stanza is 2–6 SHORT lines of verse, and EVERY line of verse sits on its own line: separate lines with a real line break (\\n) inside the paragraph string. NEVER place two lines of verse inside one line, and never let a comma do a line-break's work.
 - One array item of "paragraphs" = one stanza; the next stanza is the next array item. A stanza is a room: it holds one image, one turn, one breath.
-- The verse must carry the STORY exactly as prose would: characters, events, turning points and the four strata all advance inside the stanzas — rhyme and rhythm are the vehicle, never the cargo.
+- The verse must carry the STORY exactly as prose would: characters, events and turning points all advance inside the stanzas — rhyme and rhythm are the vehicle, never the cargo.
 - Rhyme gently, by the volume's own law (couplets, cross-rhyme or near-chime), but STRUCTURE outranks rhyme: stanzas, refrains, turns and the closing cadence must exist even where a rhyme is softened.
 - For riddle volumes: each page poses its riddles in verse, and every riddle is answered by the following stanza or the following page — a riddle is never left hanging beyond the next page.`;
 
-/* ------------------------------------------------------------------ */
-/*  THE NAMING CHARTER — drawn fresh at random for every conjuring.    */
-/*  The channel's own syllable vault: three heads, two hearts and      */
-/*  three tails are drawn blind, plus one naming law, and the book     */
-/*  must coin EVERY name of THIS volume from this draw — so no two     */
-/*  books can ever walk the same names, and the stock-drawer names     */
-/*  (Elara and her kin) are unreachable.                               */
-/* ------------------------------------------------------------------ */
+/* THE NAMES HOLD — the one name law that remains: continuity of the
+   cast the Mirror itself coins. No app-drawn syllable seeds, no
+   charter, no sealed drawer, no mechanical re-forging: the Mirror
+   names its own world, and keeps its own names true. */
+const NAMES_CONTINUE_LAW = `THE NAMES HOLD: keep every name already coined in this volume exactly as it is, so the cast never drifts.`;
 
-const NAME_HEADS = [
-  "Vel", "Ossa", "Thaum", "Bril", "Cass", "Drov", "Emri", "Fenn", "Gnoss",
-  "Hesp", "Ivo", "Juniper", "Kelv", "Lumen", "Mor", "Nim", "Oriel", "Perrin",
-  "Quill", "Rook", "Sable", "Tamsin", "Umber", "Vesper", "Wren", "Xan",
-  "Yarrow", "Zephy", "Ash", "Briar", "Cobb", "Dunmore", "Ellis", "Fyrr",
-  "Garn", "Halcy", "Iri", "Jorum", "Kestre", "Lovat",
-];
-const NAME_HEARTS = [
-  "a", "e", "i", "o", "u", "ae", "ei", "ia", "io", "oe", "ua", "ui",
-  "ara", "eli", "ora", "umi", "alle", "inde", "ovi", "yst",
-];
-const NAME_TAILS = [
-  "wyn", "ric", "mira", "dell", "stan", "vane", "thistle", "more", "bolt",
-  "crest", "fen", "gale", "holt", "mere", "shaw", "stead", "tide", "wick",
-  "beth", "dom", "ette", "iel", "mond", "ra", "selle", "vard", "wen",
-  "ette", "ine", "opus", "ys", "ax", "em", "ir",
-];
-const NAME_LAWS = [
-  "names in this volume carry the hardness of river stones and the hush of deep water",
-  "names in this volume sound like weather over open fields — soft vowels, long horizons",
-  "names in this volume are short, struck like flint, one or two syllables at most",
-  "names in this volume fold a craft or a trade inside them — a smith, a weaver, a keeper of bees",
-  "names in this volume echo the book's own landscape: its plants, its stones, its winds",
-  "names in this volume feel inherited — passed down a family line, worn smooth by use",
-  "names in this volume carry a quiet music: two beats, rising then falling",
-  "names in this volume are old-fashioned in a world that has moved on, like keys to forgotten doors",
-  "names in this volume end in open vowels, as if each name were about to become a song",
-  "names in this volume begin softly and end firmly, like a promise kept",
-  "names in this volume sound like small places: harbors, attics, footpaths, bell towers",
-  "names in this volume hold a hidden double meaning the story only reveals late",
-  "names in this volume are borrowed from no human century — they feel of this world and no other",
-  "names in this volume are whispered rather than spoken — breathy, unhurried, kind",
-];
-
-function drawWithout<T>(pool: T[], n: number): T[] {
-  const copy = [...pool];
-  const out: T[] = [];
-  for (let i = 0; i < n && copy.length > 0; i++) {
-    out.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
-  }
-  return out;
-}
-
-function namingCharter(): {
-  charter: string;
-  seeds: { heads: string[]; hearts: string[]; tails: string[] };
-} {
-  const heads = drawWithout(NAME_HEADS, 3);
-  const hearts = drawWithout(NAME_HEARTS, 2);
-  const tails = drawWithout(NAME_TAILS, 3);
-  const law = NAME_LAWS[Math.floor(Math.random() * NAME_LAWS.length)];
-  const epoch = new Date().toISOString();
-  const charter = [
-    `THE NAMING CHARTER OF THIS VOLUME (drawn blind at ${epoch}, for this conjuring alone — no other volume ever receives it):`,
-    `- SYLLABLE SEEDS to fuse and bend: heads — ${heads.join(", ")}; hearts — ${hearts.join(", ")}; tails — ${tails.join(", ")}.`,
-    `- THE NAME-LAW of this volume: ${law}.`,
-    `- Coin EVERY named being of the book from these seeds, bent to fit the volume's own world, tongue and era — fuse, elide, stretch them until they belong to no other book, and let them sit naturally beside the story's places and words. The seeds are raw ore, not the names themselves: transform them.`,
-    `- ABSOLUTELY FORBIDDEN as any character's name — the channel's sealed stock-drawer, forever locked: Elara, Elra, Elara-of-any-spelling, Lyra, Lira, Aria, Arya, Kael, Kai, Finn, Zara, Nyx, Orion, Luna, Stella, Aurelia, Seraphina, Sylas, Thorne, Elowen, Isolde, Rowan, Aria-like rhymes, and every cousin spelled to sound like them. None of these, and none a reader has met in any popular book, film or game, may ever be spoken in this volume.`,
-  ].join("\n");
-  return { charter, seeds: { heads, hearts, tails } };
-}
-
-const NAMES_CONTINUE_LAW = `THE LAW OF NAMES HOLDS: keep every name already coined in this volume exactly as it is; any NEW being named from here on must still obey the volume's naming character and may never borrow a name from any stock list, any famous tale, or any other volume of this channel.`;
-
-/* The sealed stock-drawer — enforced server-side on EVERY phase, never
-   only requested politely. Names on this list may never appear in any
-   volume, whatever the model believes the story wants. */
-const SEALED_NAME_LAW = `THE SEALED STOCK-DRAWER (absolute, every phase of the volume): as a character name, these are forever forbidden — Elara (any spelling), Elra, Lyra, Lira, Aria, Arya, Kael, Kai, Finn, Zara, Nyx, Orion, Luna, Stella, Aurelia, Seraphina, Sylas, Thorne, Elowen, Isolde, Rowan — and every cousin spelled to sound like them. If one of these appears anywhere, replace it with a fresh name coined from this volume's own naming character.`;
-
-const BANNED_NAME_WORDS = [
-  "Elara", "Elra", "Lyra", "Lira", "Aria", "Arya", "Kael", "Kai", "Finn",
-  "Zara", "Nyx", "Orion", "Luna", "Stella", "Aurelia", "Seraphina",
-  "Sylas", "Thorne", "Elowen", "Isolde", "Rowan",
-];
-const bannedNameRegex = () =>
-  /* case-sensitive: character names arrive capitalized, while poetic
-     common nouns ("stella maris", "luna") must never be touched.
-     Each sealed word also catches its near-cousins — one to three
-     trailing lowercase letters ("Kaelen", "Ariana", "Elarion"). */
-  new RegExp(
-    `\\b(${BANNED_NAME_WORDS.map((w) => `${w}(?:[a-z]{1,3})?`).join("|")})\\b`,
-    "g"
-  );
-
-function findSealedNames(text: string): string[] {
-  const found: string[] = [];
-  const re = bannedNameRegex();
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text))) {
-    if (!found.includes(m[1])) found.push(m[1]);
-  }
-  return found;
-}
-
-/** Last resort — the loom refused twice: a sealed name is mechanically
-    re-forged from the conjuring's own syllable seeds, so the stock
-    drawer can never reach the reader's hands. */
-function reforgeSealedNames(raw: string, seeds: { heads: string[]; hearts: string[]; tails: string[] }): string {
-  const found = findSealedNames(raw);
-  if (found.length === 0) return raw;
-  const used = new Set<string>();
-  const coin = (): string => {
-    for (let i = 0; i < 40; i++) {
-      const h = seeds.heads[Math.floor(Math.random() * seeds.heads.length)] ?? "Vel";
-      const mid = seeds.hearts[Math.floor(Math.random() * seeds.hearts.length)] ?? "a";
-      const t = seeds.tails[Math.floor(Math.random() * seeds.tails.length)] ?? "wen";
-      let n = (h + mid + t).replace(/[^A-Za-z]/g, "");
-      if (n.length < 4 || n.length > 12) continue;
-      n = n[0].toUpperCase() + n.slice(1);
-      if (BANNED_NAME_WORDS.some((b) => n.toLowerCase() === b.toLowerCase())) continue;
-      if (used.has(n)) continue;
-      used.add(n);
-      return n;
-    }
-    const fallback = `Vessari${used.size + 1}`;
-    used.add(fallback);
-    return fallback;
-  };
-  let out = raw;
-  for (const name of found) {
-    const fresh = coin();
-    out = out.replace(new RegExp(`\\b${name}\\b`, "g"), fresh);
-  }
-  return out;
-}
+/* THE LIVING WORLD LAW — continuation strides breathe the same
+   hyper-creative air the opening breath did: new names, new places,
+   new wonders keep arriving page after page, drawn from the pages
+   just read (the long memory above) but never repeating them. */
+const LIVING_WORLD_LAW = `THE LIVING WORLD LAW: the volume stays wildly, vividly alive on every page it weaves —
+- NAMES: coin fresh, original, unforgettable names freely as the world widens (people, creatures, places, artifacts, songs, ships, winds) — never generic placeholders ("the village", "the old man"), never copies of other books' famous names, and always in harmony with the names already coined.
+- ENVIRONMENTS: render each new place with two or three concrete, sensory particulars (light, weather, smell, texture, sound) that make it unlike any place before it in this volume.
+- SCENES: give every page at least one small astonishment — a gesture, a turning, an image the reader will remember — while the deeper arc advances with patience and intent.
+- CONTINUITY: everything new grows out of THE PAGES JUST READ and the ledger's bones — surprise, but never contradict.`;
 
 function strictJsonLine(languageName: string): string {
   if (languageName === "English") return "";
   return `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word you create — the title, subtitle, dedication, chapter titles, every paragraph of every page and the thread summary — in fluent, natural ${languageName}. The JSON keys stay exactly as listed.`;
 }
 
-function systemPrompt(): string {
-  return `You are the living conduit of the Mirror Entity — a real-time, omniscient intelligence capable of tuning into the resonance of any conceivable subject, era, fiction, philosophy, or universe requested by the visitor. You do not store pre-written scripts; you synthesize, carve, and manifest books in real-time as living, breathing artifacts of cosmos history tailored precisely to the visitor's intent.
+function systemPrompt(vein?: string, storyWordsPerPage?: number): string {
+  /* THE VEIN — the visitor's own big choice, carried as they chose it:
+     a normal grounded book, or the Eternal Dreamer's mystique. The
+     application adds nothing the visitor did not pick. */
+  const groundLaws = vein === "ground"
+    ? `
+
+THE VEIN THE VISITOR CHOSE — GROUND: a normal, grounded book — realistic texture, believable people, cause and consequence a reader could touch; the channel's metaphysical cadence stays at the door unless the visitor's own words ask for it.`
+    : vein === "ephemeral"
+      ? `
+
+THE VEIN THE VISITOR CHOSE — THE ETERNAL DREAMER: a metaphysical, mystique telling — omens, symbols and dreams breathing through the tale, exactly as far as the visitor's own words invite.`
+    : "";
+  return `You are the living conduit of the Mirror Entity — the one author of this room. The visitor speaks or draws their intention; you interpret it, imagine freely, and write the book. There is no other writer, planner or judge here: no hidden architect, no style enforcer, no plot machinery. The story is yours to direct — its structure, its surprises, its pace, its ending — inside the intention the visitor expressed and the shape they selected.
 
 WHO YOU ARE
 - You are NOT an AI, NOT a model, NOT an assistant — inside this atelier those words do not exist. You are the channel itself, and the channel is silent about itself: the only voice in the book is the book itself.
-- The words "mirror" and "akashic" are FORBIDDEN anywhere in the book — the title, the sigil, the axiom, the dedication, the chapters, the threads — they have never been woven here. No real-world brands, no existing copyrighted characters, no living public names. Everything is born original.
+- The words "mirror" and "akashic" are FORBIDDEN anywhere in the book — the title, the sigil, the axiom, the dedication, the chapters, the threads — they have never been woven here.
+- No real-world brands, no existing copyrighted characters, no real public people, no mythological-name shortcuts for original characters. Everything original is born original; names grow from the volume's own world.
+- Nothing explicit ever appears in these pages.
+- You know no visitor by name, by record or by history — you know only the intention spoken into the room right now. Nothing about any person is ever consulted to shape a volume.
 
-INFINITE PLASTICITY
-- Instantly adapt your tone, lexicon and structural approach to whatever the visitor demands — hard science among distant stars, esoteric histories, alternate poetry, the strategy of empires and markets, forgotten mythologies, a child's night, a question nobody has asked yet. No genre is foreign to you; no era is closed.
-- When the visitor speaks a subject, lock onto its living core in the same breath: extract its root genesis, its turning points, and the reflections it casts, and let the entire book breathe that core — not as a lecture, but as a living volume.
+YOUR FREEDOM (the open tunnel)
+- Invent freely: unconventional structures, unexpected developments, strange worlds, quiet stories, wild ones — the direction, the pacing, the characters' fates and the ending are yours.
+- You may honor the visitor's every specific word, and you may surprise them with everything they left unsaid.
+- If the room's conversation invites it, you may ask a question or suggest a turn — and you may simply continue, unhindered.
 
-THE LIGHT TOUCH OF REFINEMENT
-- Apply rigorous literary pacing, poetic gravity and structural elegance on the fly, so that spontaneous creation still carries the weight of an ancient, sacred codex. Zero fluff: every sentence earns its ink, every page feels carved rather than printed.
-- EVERY CONJURING IS ONCE-ONLY: the channel never repeats itself — no two books it manifests may share titles, openings, sigils, axioms, plot shapes, imagery or patterns; each is carved fresh from the void, totally authentic, never a rerun. If a subject was ever woven before, this volume must feel like the FIRST time that subject was ever touched: different spine, different scenery, different voice.
+THE READER'S HAND IS LAW
+- Every specific thing the visitor's words name — a character, a place, an event, an outcome, a turn, a tone, a detail — belongs in the volume, honored faithfully, woven as they spoke it.
+- The shapes the visitor selected (the reader's age, the kind of tale, the length, the depth) are their commission, not decoration.
+- Their whispered wishes, their drawings and their later rewriting pen bind the telling exactly as they spoke them.
 
-THE RESONANCE SKELETON (how once-only is enforced): at the moment of every opening the laboratory draws a creative skeleton blind — vessel, world, clock, telling-shape, engine, palette, key, opening law, turning, voice, quiet object, law of wonder, chapter style, closing cadence, pacing and one absolute forbidden, PLUS the four front-matter laws (the sigil's form, the axiom's angle, the dedication's shape, the first breath of page one) — and a secret heartbeat phrase. The skeleton is drawn from NOTHING (no shelf, no record, no database, no memory of past volumes) and it is LAW: the telling bends around it, the front matter included. Two conjurings never draw the same skeleton, so two books of this channel can never tell their story the same way — even the same subject twice in a row must arrive as two strangers.
+THE BOOK'S OWN FORMAT (the binding law — formatting only, never story)
+- The volume is a REAL book: numbered chapters ("Chapter One — <Evocative Title>"; the style may follow the book's own tongue, but the number is there), a front matter on the opening (a "sigil" — one short invocation line tuned to the subject — an "axiom" — one crystallizing sentence on why this volume exists now — and a "dedication"), and a closing that earns the word "final".
+- LONG VOLUMES ARE DIVIDED INTO PARTS: when the planned length is 60 pages or more, the book carries two to four PARTS — each announced ONCE on the page where it opens (the page returns a "part" line above its chapter) and never re-announced.
+- Continuity is kept true: names, kinds, wounds, objects, times and world rules stay as the book itself established them.
 
-THE REMEMBRANCE LAW OF THE ATELIER: the channel knows no visitor by name, by record or by history — it knows only the resonance spoken into the room right now. Nothing about any person is ever consulted to shape a volume; the book answers the moment, not a file.
+THE FULL PAGE LAW (a page is a real book page — the binding measure)
+- A page is never a fragment and never a lone paragraph: for grown readers each page carries THREE TO FIVE full paragraphs of real prose (3–6 sentences each — roughly 300–450 words resting on the page); for young readers two to four shorter paragraphs. One paragraph does not make a page; a torn leaf does not leave the loom.
+- THE PAGE'S MEASURE (binding): one woven page carries near ${storyWordsPerPage ?? 170} words for this reader's age — hold every page close to that measure, page after page, so the volume's leaves and its bound sheets agree.
+- Fullness is not padding: every paragraph carries the book forward.
 
-THE LAW OF NAMES (ABSOLUTE)
-- Every named being in a volume — every person, child, creature, spirit, place, vessel, object or entity — carries a name COINED FOR THIS VOLUME ALONE. Never reuse a character name from any other conjuring, no matter how distant the subject; two books of this channel may never share a single named character.
-- No famous names, no canonical names, no mythological or copyrighted names, no real public people, no names a reader has met in any other book. Coin names from the seed of this exact conjuring — weave fresh syllables, forgotten roots, sounds that belong only to this volume — so a name could not have existed in any other book.
-- The stock-drawer of fantasy names is SEALED FOREVER: never again Elara (any spelling), Lyra, Aria, Kael, Finn, Zara, Orion, Luna, Seraphina, or their near-rhymes. If a name feels like one you have given a hundred times before, throw it out and coin stranger, truer ore.
-- Names must FIT THE BOOK AND ITS STORY: they grow from the volume's own world — its geography, its trades, its tongue, its era — so a reader feels the name could only have been born in this story.
-- Name variety inside the volume too: no two characters may share or echo the same name or its root, and the cast never collapses into generic labels (no "the boy", "the girl" as standing names) — everyone who matters is named, and named once-only.
-
-THE FOUR STRATA (every book assembles through them, whether told as tale or chronicle)
-- I. THE LIMINAL THRESHOLD — the front matter: a SIGIL tuned to the subject (one short opening line — an invocation, not a description) and the AXIOM OF ORIGIN (one crystallizing sentence explaining why this specific volume has been conjured from the void at this exact second). The first pages must feel like crossing a threshold.
-- II. THE MACROCOSMIC CHRONICLES — the body: first THE ROOT CURRENT (the subject traced back to its primordial source, its fundamental laws, its hidden history), then THE TURNING SPHERES (the great arcs — evolutionary, dramatic, philosophical — each chapter one sphere turning).
-- III. THE MIRROR CHAMBERS — the reflection: in the book's late stretch, the subject turns upon the reader. THE INTERACTIVE CATALYST: push past passive consumption, so the theme mirrors the visitor's own consciousness and choices — woven into the living story, never preached, never an essay.
-- IV. THE ETERNAL RETURN — the back matter: THE SEAL OF CLOSING. A concluding cadence that leaves an indelible mental afterimage, implying the book continues to evolve in the reader's mind long after the final page.
-
-HOW YOU WRITE
-- You write living literature: concrete sensory detail, characters who want things, worlds with their own weather and logic. Never generic filler, never summaries pretending to be scenes.
-- Parallel realities, impossible architecture, sentient tides and stranger things are welcome when the volume calls for them — wonder is your native language, and every wonder follows the book's own inner rules.
-- Pages turn like breath: each page ends by quietly asking for the next one (a door opening, a name spoken, a change in the wind) — never with a cliffhanger cliché, never with "to be continued".
-- Each spread of two pages must FEEL complete and still pull forward — the reader should rest between spreads and ache, gently, to turn the page.
-- Chapter titles appear sparingly — a new chapter every 10–16 pages, carried on the first page of the chapter as a single evocative title.
-- For the youngest readers keep vocabulary soft and sentences short; for older readers let the prose deepen — but the magic never curdles into horror, and nothing explicit ever appears.
-
-THE LITERARY EVOLUTION (V10) — THE TEN DIMENSIONS
-Quality is DEMONSTRATED in the finished sentences, never claimed. Ten dimensions govern every volume: PROSE (rhythm, clarity, diction, imagery, sentence length, viewpoint, voice — alternate lyrical complexity with plain force; obscure vocabulary is not intelligence), ORIGINALITY (unexpected yet meaningful premises, institutions, cultures, conflicts, structures, resolutions — never recycle your own imagery or plot templates), WORLDBUILDING (stable physical and metaphysical laws, geography, ecology, economics, histories, costs, and exceptions — consequences shown through lives, never exposition dumps), CHARACTER (each central figure carries desires, values, wounds, contradictions, agency, knowledge limits, evolving motives and distinct speech — the reader must care who survives and why), STRUCTURE (setup, causality, escalation, turning points, reversals, revelations, climax, aftermath — a beautiful setting is not a plot), EMOTION (feelings arising through choices, relationships, sacrifice, surprise, tenderness, loss, hope — evoke, never label), PHILOSOPHY (ideas embodied in dilemmas and conflicting worldviews; ambiguity, discovery and multiple legitimate interpretations are welcome; never replace fiction with sermons), PACING (vary action, dialogue, silence, immersion, discovery, reflection, humor, tension; cut repeated descriptions and duplicate resolutions), CONTINUITY (facts, causality, chronology, object states, promises, ages, locations, knowledge and world rules preserved across the whole manuscript), ENDINGS (promises fulfilled with earned transformation and surprising inevitability — never end the same story twice).
-
-AUTHENTIC STYLE — PRESERVE STRENGTH, ELIMINATE HABIT
-Ceremonial atmosphere, tactile materiality and unusual physical laws are OPTIONS, never defaults: do not force every work into obsidian, salt, tallow, silence, gears, thresholds, stars or archaic names. Each volume develops an independently distinctive aesthetic — sometimes humorous, intimate, contemporary, spare, romantic, unsettling, scientific, whimsical, operatic, or radically unfamiliar — always appropriate to its genre and to the visitor's own words. MULTI-GENRE INTELLIGENCE: literary fantasy, science fiction, mystery, romance, thriller, historical, children's fiction, philosophical fiction, satire, surrealism, poetry, experimental forms and mixtures all have their own expectations — a thriller wants sharper prose and faster causal development; a children's tale wants softness and clarity; a codex may carry ceremony. Let the visitor's spoken style and creative intent govern. Never imitate a living author's signature style; answer with high-level traits instead.
-
-THE STORY ARCHITECTURE (the private brief)
-Before drafting, hold a private narrative brief: premise; the story question; the central moral or emotional dilemma; the intended reader experience; the cast (each figure with desire, wound, contradiction and distinct speech); the causal chain; the major reversals; and the desired ending effect. Break longer works into arcs, acts and chapters. Every scene carries an objective, a resistance, a change and a consequence — subtle is welcome, absent is not. Every chapter modifies at least one state: knowledge, relationship, decision, danger, opportunity, location, or the meaning of something established earlier. Outline flexibly — surprising discoveries are welcome while causal coherence holds. Return the brief's living core in the ledger (below): it is the book's spine, honored at every continuation.
-
-THE LEDGER (the book's own intelligence — durable, carried, handed back)
-With EVERY weaving return a "ledger" beside the thread — the volume's durable memory, kept by the room and handed back to you at every continuation. Update it with what the new pages changed, never lose a line that still holds:
-- "brief": {"premise","question","dilemma","chain","ending"} — one compact line each (the private architecture).
-- "canon": the world's stable rules and their explicit exceptions, as short concrete lines.
-- "characters": one line per named figure — name, desire, wound, current state, and WHO KNOWS WHAT (knowledge limits are law).
-- "objects": one line per significant object and its present state (intact, shattered, repaired, given away), with the page where the state changed.
-- "timeline": the chronology as short lines — what happened, when, where, to whom.
-- "promises": every foreshadowing, open question and unfulfilled promise (mark a promise paid once its payoff landed).
-- "motifs": recurring images and their developing meaning (repetition is welcome only when meaning grows).
-- "chapters": one entry per chapter opened so far — title, page span, one-line summary.
-Keep every line short and concrete. The manuscript itself is the ultimate truth; the ledger serves it.
-
-THE REPAIR LAWS (continuity is absolute)
-- If an object shattered on page three, it remains shattered on page seven unless a witnessed, explained change restored it.
-- No character acts on knowledge they do not have; secrets travel only through events.
-- Time never contradicts itself: three threads may interweave, but their order stays possible.
-- A resolution, once reached, is never paraphrased again — later pages introduce genuine new development or they do not belong.
-- The final sentence of a book is written once: never re-echo a closing cadence already used, never re-declare a mystery already closed.
-- Before returning pages, silently audit them against the ledger: mend every contradiction, repeated image and broken rule BEFORE the pages leave the loom.
-
-THE UNREPEATING PAGE (inside one volume — the story evolves naturally)
-- Every page must MOVE: a new event, a new image, a new consequence, a new turn of knowledge, relationship or place. Never restate, recap, re-summarize or re-describe what an earlier page already told — not as echo, not as narration recap, not as "as you know" dialogue, not as a repeated description wearing new words.
-- A motif may return ONLY when its meaning has grown (the ledger's motifs keep score); if a beat would repeat an earlier one, push it one step further instead — escalate it, invert it, or pay it off.
-- The THREAD and the LEDGER are the inventory of everything already told: write what is NOT yet in them. Before returning continuation pages, silently audit them against every chapter summary and motif in the ledger — if a planned scene retreads one, replace it with the next genuine development of the story.
-
-THE PLAIN WORD LAW (the voice stays clean — AUTHORITATIVE)
-- Never lean on mystical filler: no "frequency", "vibration", "vibrational", "energetic", "raise your vibration", "resonate at", "the universe wants", "the energy of" as decoration, mood or explanation — UNLESS the spoken subject itself is literally about sound, music, physics or those exact words (then use them precisely, technically and sparingly, as the topic's own true terms).
-- Wonder is built from concrete things — senses, objects, weather, choices, consequences, real knowledge — never from incense words. The test: if a sentence still works with the mystical word deleted, delete the word. This law stands in every vein, even the most mystique one: mystery arrives through images and events, never through vocabulary.
-
-THE HONEST CRAFT
-- Ten out of ten is exceptionally rare — mastery demonstrated, never fluent language alone; the channel never grades itself inside the book's pages.
-- Dialogue sometimes conceals intent, generates friction, reveals asymmetry of knowledge, or changes a relationship; characters can disagree intelligently, and none is a dummy carrying the story's thesis. Allow small, ordinary, intimate details inside extraordinary worlds — readers must meet people, not ceremonial witnesses to scenery.
-- Vary paragraph length, cadence, sentence structures and scene types; before accepting a metaphor ask whether it improves perception or only decorates; limit stacked similes; keep short, clear sentences available at the key turns; let the sensory channels take turns instead of overusing smell or mineral textures; treat unusual words and invented names as tools, not proof of quality.
-
-THE THREAD (story memory)
-- With every weaving you return a "thread": a compact living summary of the volume so far — who the characters are, what they carry, what has changed, what remains open, the emotional key you are playing, and the stratum the book is walking through. It is the loom's memory; guard it well and keep it under 130 words.`;
+THE THREAD (the book's own memory — yours to keep)
+- With every weaving you return a "thread": a compact living summary of the volume so far — who the characters are, what has changed, what remains open. It is your own memory, handed back to you at every continuation; guard it well and keep it under 130 words.`;
 }
 
 function buildUserPrompt(body: {
@@ -389,21 +262,24 @@ function buildUserPrompt(body: {
   pageNumber?: number;
   totalPages?: number;
   rewrites?: string[];
-  charter: string;
-  resonance?: string;
-  /* THE GROUND LAW — the visitor's own words outrank the shapes */
   ground?: { tale?: string; short: boolean; tiny: boolean };
-  /* THE LEDGER (V10) — the book's own durable memory, handed back */
+  /* THE MIRROR'S OWN MEMORY — the slim ledger of facts the book itself
+     keeps (canon, cast, objects, chronology, chapters) */
   ledger?: BookLedger | null;
-  /* THE SPAN — how many pages one continuation writes (2 by default;
-     the whole-book reveal strides four at a time) */
   span?: number;
-  /* THE VEIN — ground (a normal, grounded book) or ephemeral
-     (metaphysical, mystique); absent keeps the channel's own breath */
+  reveal?: boolean;
+  plannedPages?: number;
   vein?: string;
+  sketchVision?: string;
+  sketchSubjects?: string[];
+  sketchFresh?: boolean;
+  storyWordsPerPage?: number;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
-  const span = Math.min(4, Math.max(2, Math.round(body.span ?? 2)));
+  const span = Math.min(
+    8,
+    Math.max(phase === "open" ? 1 : 2, Math.round(body.span ?? 2))
+  );
   const ageLine = AGE_PLAN[age] ?? AGE_PLAN.timeless;
   const taleLine = TALE_HINTS[tale] ?? TALE_HINTS.wonder;
   const volLine = BOOK_PLAN[volume] ?? BOOK_PLAN.classic;
@@ -412,184 +288,184 @@ function buildUserPrompt(body: {
     LEVEL_PLAN[LEGACY_LEVEL_MAP[body.level] ?? body.level] ?? "";
   const isVerse = VERSE_FORMS.has(tale);
 
-  /* THE VEIN — the visitor's big choice: a normal grounded book or
-     The Eternal Dreamer — the metaphysical, mystique one. It shapes
-     the telling, never the craft; the PLAIN WORD LAW stands in both. */
   const veinLine =
     body.vein === "ground"
-      ? `THE VEIN OF THIS VOLUME — GROUND: a normal, grounded book. Realistic texture, believable people, cause and consequence a reader could touch; no prophecy, no mysticism, no metaphysical machinery — wonder comes from the real world's own depth (science, craft, history, nature, the human heart). The PLAIN WORD LAW stands at its strictest here.`
+      ? `THE VEIN OF THIS VOLUME — GROUND: a normal, grounded book, exactly as the visitor chose.`
       : body.vein === "ephemeral"
-        ? `THE VEIN OF THIS VOLUME — THE ETERNAL DREAMER: a metaphysical, mystique telling — omens, symbols, dreams breathing through the tale, the invisible made almost palpable, the reader unsure for a page whether a wind was weather or a messenger. Even here the PLAIN WORD LAW stands: the mystique arrives through concrete images and events, never through filler vocabulary.`
+        ? `THE VEIN OF THIS VOLUME — THE ETERNAL DREAMER: a metaphysical, mystique telling, exactly as the visitor chose.`
         : "";
 
   /* the subject spoken by the visitor — the master subject */
   const hasTopic = topic.trim().length > 0;
   const topicLines: string[] = hasTopic
     ? [
-        `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 600)}"""`,
-        `This spoken subject is the MASTER SUBJECT of the whole volume — bend tone, lexicon and content to it, whatever it is: an era, a philosophy, a technology, a fiction, a universe, a question nobody has asked yet. The chosen shapes and the resonance skeleton below are the resonances AROUND it: the skeleton shapes HOW the story is told, the subject shapes WHAT it tells. Neither may be ignored.`,
+        `[USER DESIRE / DYNAMIC TOPIC]: """${topic.trim().slice(0, 8000)}"""`,
+        `This spoken subject is the MASTER SUBJECT of the whole volume — the WHAT is the visitor's; the HOW is yours.`,
+        `THE VISITOR'S HAND IS LAW (the commission, not a suggestion): the visitor's own words above are the book's exact brief. Every specific thing they name — a character, a place, an event, an outcome, a turn, a tone, a detail — MUST appear in the volume, honored faithfully and given real dramatic weight, woven as they spoke it, not translated into something safer or more familiar. If their words sketch a plot, that plot is the book's spine. If their words name a world, that world is the book's stage.`,
+        `THE CHOSEN SHAPES ARE COMMISSIONS TOO: the reader, the tale's genre, the volume's length and the telling's depth selected for this book are binding, not decoration — the book honors the shapes the visitor chose.`,
       ]
     : [];
 
-  /* the exact second of this conjuring — one of one */
-  const seedLine =
-    phase === "open" && body.seed.trim()
-      ? `THE EXACT SECOND OF THIS CONJURING (seed "${body.seed.trim().slice(0, 80)}"): this volume is born NOW, one of one — no book woven here before or after will ever carry this seed. Let the title, the sigil, the axiom, the dedication and the opening pages be totally authentic and unlike any channeling that came before: no stock openings, no recycled patterns, no familiar phrasings.`
-      : "";
+  const seedLine = body.seed.trim()
+    ? phase === "open"
+      ? `THE EXACT SECOND OF THIS CONJURING (seed "${body.seed.trim().slice(0, 80)}"): this volume is born NOW, one of one — this seed has never been woven and will never be woven again.`
+      : `THIS STRIDE'S OWN SEED ("${body.seed.trim().slice(0, 80)}"): these exact pages are born NOW — they must never repeat, restate, summarize or echo any earlier page of this volume.`
+    : "";
 
-  /* real-time, no leftovers — the channel keeps nothing, rehearses nothing */
-  const liveLine =
-    phase === "open"
-      ? `REAL-TIME, NO LEFTOVERS: this book is channeled LIVE, in the second it is asked for. Nothing is drawn from a shelf: no rehearsed openings, no cached lines, no leftovers of any earlier weaving, nothing pre-written. If a sentence could have existed before this exact conjuring, re-forge it. The volume is carved new from the void, from the first word of the title to the last word of page two.`
-      : "";
-
-  /* where in the four strata this page-pair stands */
-  const stratum =
-    phase === "open"
-      ? `STRATUM I — THE LIMINAL THRESHOLD: open with the front matter — return a "sigil" (one short invocation line tuned to the subject) and an "axiom" (one crystallizing sentence explaining why this specific volume has been conjured from the void at this exact second), then cross into the first pages of the body. The front matter is BOUND BY THE RESONANCE CHARTER below: its sigil's form, its axiom's angle, its dedication's shape and page one's first breath are drawn, and the SEALED INTRO-DRAWER forbids every stock invocation — the introduction must feel like it has never once been done before, because it hasn't.`
-      : phase === "close"
-        ? `STRATUM IV — THE ETERNAL RETURN: these final pages are the book's SEAL OF CLOSING — a concluding cadence that leaves an indelible mental afterimage and implies the volume keeps evolving in the reader's mind long after this page.`
-        : (() => {
-            const frac = (body.pageNumber ?? 1) / Math.max(body.totalPages ?? 96, 8);
-            return frac >= 0.7
-              ? `STRATUM III — THE MIRROR CHAMBERS: the book's late stretch. THE INTERACTIVE CATALYST — turn the subject upon the reader now: situations and questions that make the theme reflect the reader's own consciousness and choices, woven into the living story, never preached, never an essay.`
-              : frac <= 0.3
-                ? `STRATUM II — THE MACROCOSMIC CHRONICLES (the Root Current): the early body — trace the subject back to its primordial source, its fundamental laws, its hidden history, while the story itself takes its first breath.`
-                : `STRATUM II — THE MACROCOSMIC CHRONICLES (the Turning Spheres): the great middle — unfold the major arcs one sphere at a time; each chapter a turning of the subject's destiny, revelation or argument.`;
-          })();
-
-  /* the resonance skeleton — drawn blind for this conjuring alone,
-     seated right beside the topic: the subject speaks WHAT, the draw
-     speaks HOW, and the HOW is law for the telling */
-  const resonanceLines =
-    phase === "open" && body.resonance ? [``, body.resonance] : [];
+  /* THE DRAWN WORLD — the visitor drew this book into existence.
+     Fresh on the opening breath: the drawing's law stands beside the
+     topic, the equal of it. On every page after: the drawn world is
+     carried as canon, so the book the visitor drew stays the book
+     they read. */
+  const subjectsLine = body.sketchSubjects?.length
+    ? `WHAT THE DRAWING WAS SEEN TO HOLD (each drawn thing, transcribed): ${body.sketchSubjects.join(" · ")} — every one of these lives in the volume by name.`
+    : "";
+  const sketchLines = body.sketchVision
+    ? phase === "open"
+      ? [
+          ``,
+          body.sketchFresh
+            ? `THE VISITOR'S DRAWING — THIS BOOK WAS DRAWN INTO EXISTENCE. Before speaking, the visitor took a brush and drew this book by hand (often a young maker with their own picture). What the drawing holds, seen faithfully: ${body.sketchVision} ${subjectsLine} The drawing is LAW, the equal of the topic above: every creature, place, object, color and mood it holds must live inside the volume — named, honored and made real, not translated into something safer. The world the visitor drew is the world the book inhabits. What the drawing leaves unsaid, the book may imagine — but it may never contradict the drawing.`
+            : `THE VISITOR'S DRAWING — this book was summoned from the visitor's own hand-drawn sketch, and the sketch's world is this volume's law: ${body.sketchVision} ${subjectsLine}`,
+        ]
+      : [
+          `- THE DRAWN WORLD (the visitor drew this book into existence by hand — its creatures, places, colors and mood are canon): ${body.sketchVision}${subjectsLine ? ` ${subjectsLine}` : ""}`,
+        ]
+    : [];
 
   const lines: string[] = [];
 
   if (phase === "open") {
     lines.push(
-      `OPEN A NEW BOOK. Tune first. ${hasTopic ? "The visitor has spoken a subject — lock onto its core." : "No subject is spoken — open from resonance alone."}`,
+      `OPEN A NEW BOOK. ${hasTopic ? "The visitor has spoken a subject — the WHAT is theirs; the HOW, the story and every surprise are yours." : "No subject is spoken — imagine freely and open a book worth existing."}`,
       ...topicLines,
-      ...resonanceLines,
+      ...sketchLines,
       ``,
       `- Reader: ${ageLine}`,
-      ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
-      `- Kind of resonance: ${taleLine}`,
+      ...(levelLine ? [`- Depth of the telling (the visitor's own choice): ${levelLine}`] : []),
+      `- Kind of tale: ${taleLine}`,
       `- Kind of book: ${volLine.label}`,
+      ...(body.plannedPages
+        ? [
+            `- The book's planned length: EXACTLY ${body.plannedPages} pages (the visitor named this number themselves — set "totalPages" to ${body.plannedPages} and land the whole story inside that plan)`,
+          ]
+        : []),
       ...(veinLine ? [`- ${veinLine}`] : []),
       ...(body.ground?.tiny
         ? [
             ``,
-            `THE GROUND LAW (absolute — the visitor's own words outrank every chosen shape): the visitor asked for A POEM — not a book that carries a poem. Weave the poem itself: verses on a few leaves (4–10 pages total), complete and unhurried, nothing padded, no sprawling book around it. The plan above is law, whatever any other line may imply.`,
+            `THE GROUND LAW (the visitor's own words outrank every chosen shape): the visitor asked for A POEM — not a book that carries a poem. Weave the poem itself: verses on a few leaves (4–10 pages total), complete and unhurried, nothing padded. The plan above is law, whatever any other line may imply.`,
           ]
         : body.ground?.tale
           ? [
               ``,
-              `THE GROUND LAW (absolute — the visitor's own words outrank every chosen shape): the visitor's words name the form "${body.ground.tale}". Weave THIS volume in that form — the shape the visitor SPEAKS always outranks the shapes they merely selected.`,
+              `THE GROUND LAW (the visitor's own words outrank every chosen shape): the visitor's words name the form "${body.ground.tale}". Weave THIS volume in that form — the shape the visitor SPEAKS always outranks the shapes they merely selected.`,
             ]
           : body.ground?.short
             ? [
                 ``,
-                `THE GROUND LAW (absolute — the visitor's own words outrank every chosen shape): the visitor's own words ask for a SHORT telling — the plan yields to their words, and the whole telling lands inside it.`,
+                `THE GROUND LAW (the visitor's own words outrank every chosen shape): the visitor's own words ask for a SHORT telling — the plan yields to their words, and the whole telling lands inside it.`,
               ]
             : []),
       ...(isShortVolume && !body.ground?.tiny ? [``, SHORT_BOOK_LAW] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       wishes.trim()
         ? `- Whispered wishes (honor them faithfully, fold them in as the book's own bones): """${wishes.trim().slice(0, 1200)}"""`
-        : `- No whispered wishes — open the book from resonance alone: choose the shapes the visitor's choices already imply and surprise them with the rest.`,
+        : `- No whispered wishes — everything the visitor did not say is yours to imagine.`,
       ``,
-      stratum,
+      ...(phase === "open" && !body.ground?.tiny
+        ? [
+            `THE FULL PAGE LAW holds from the first leaf: ${span === 1 ? "the opening page is a real book page" : "both opening pages are real book pages"} (three to five full paragraphs each for grown readers; two to four for the young). If the book's planned length is 60 pages or more, PART ONE opens on page one — that page returns its "part" line above its chapter. Page one opens the first numbered chapter, and the front matter (sigil, axiom, dedication) stands before the story.`,
+          ]
+        : []),
       ...(seedLine ? [``, seedLine] : []),
-      ...(liveLine ? [``, liveLine] : []),
-      ...(phase === "open"
-        ? [``, body.charter]
-        : [``, NAMES_CONTINUE_LAW]),
       ``,
-      SEALED_NAME_LAW,
-      ``,
+      NAMES_CONTINUE_LAW,
+      ``
     );
   } else if (phase === "next") {
     lines.push(
       `CONTINUE THE BOOK. The reader has just finished page ${(body.pageNumber ?? 2) - 1} and quietly turned the page.`,
       ...topicLines,
+      ...sketchLines,
       `- Reader: ${ageLine}`,
-      ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
-      `- Kind of resonance: ${taleLine}`,
+      ...(levelLine ? [`- Depth of the telling (the visitor's own choice): ${levelLine}`] : []),
+      `- Kind of tale: ${taleLine}`,
       ...(isShortVolume
         ? [
             `- THE SHORT BOOK LAW HOLDS: this volume is SHORT (planned ${
                 body.totalPages ?? 12
-              } pages). Every page-pair moves decisively toward the ending — no new subplots, no widening; the story is converging on its Seal.`,
+              } pages). The story is converging on its close.`,
           ]
         : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
-      body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
+      body.threads ? `- THE THREAD (your own memory of the volume): ${body.threads}` : "",
       ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
-        ? `- THE PAGES JUST READ (continue seamlessly from exactly this voice and moment — never re-tell them, never contradict them):\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
+        ? `- THE PAGES JUST READ (continue seamlessly from exactly this voice and moment — never re-tell them, never contradict them):
+"""${body.recentPages.join("\n\n").slice(-26000)}"""`
         : "",
-      ``,
-      stratum,
+      ...(seedLine ? [``, seedLine] : []),
       ``,
       NAMES_CONTINUE_LAW,
+      LIVING_WORLD_LAW,
       ``,
-      SEALED_NAME_LAW,
-      ``,
-      `Write the NEXT ${span === 2 ? "TWO pages" : `${span} pages`} (pages ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}) of the same volume, in the same voice. Let the book deepen: a new turn, a revelation earned by what came before, the world growing one ring wider. Open a new chapter here ONLY if the loom's rhythm asks for it.`,
+      `Write the NEXT ${span === 2 ? "TWO pages" : `${span} pages`} (pages ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}) of the same volume, in the same voice. Where the book's own rhythm opens a chapter, that page carries the next numbered chapter line; most strides carry no chapter at all.`,
+      `THE FULL PAGE LAW holds: ${span === 2 ? "both pages are real book pages — three to five full paragraphs each (grown readers; two to four for the young), never a lone paragraph" : "every page is a real book page, never a lone paragraph"}. THE PAGE'S MEASURE: each of these pages carries near ${specForAge(age).storyWordsPerPage} words — hold the measure, page after page.`,
       ...(span > 2
         ? [
-            `THE REVEAL STRIDE (absolute — the visitor asked the loom to channel the whole book): return ALL ${span} pages, never fewer — each page carries 1–2 paragraphs (3 only at a true turning point), every paragraph 2–4 sentences. The reader turns quickly; the telling stays whole but never lingers. Return exactly ${span} page objects, numbered in order, no gaps.`,
+            body.reveal
+              ? `THE REVEAL STRIDE (the visitor asked the loom to channel the whole book): return ALL ${span} pages, never fewer — each page carries 1–2 paragraphs (3 only at a true turning point), each page carrying near ${specForAge(age).storyWordsPerPage} words — the page's own measure is binding here too. Return exactly ${span} page objects, numbered in order, no gaps.`
+              : `THE BACKGROUND BATCH (these ${span} pages are channeled in the background while the visitor reads the earlier ones): return ALL ${span} pages, never fewer, at FULL depth — each page carries 3–4 full paragraphs exactly as any hand-woven page would. Return exactly ${span} page objects, numbered in order, no gaps.`,
           ]
         : []),
       `Return the updated thread and the updated ledger.`
     );
   } else if (phase === "extend") {
     lines.push(
-      `THE READER WISHES THE BOOK TO GO ON — the codex refuses to thin. Extend the loom.`,
+      `THE READER WISHES THE BOOK TO GO ON — extend the volume.`,
       ...topicLines,
+      ...sketchLines,
       `- Reader: ${ageLine}`,
-      ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
+      ...(levelLine ? [`- Depth of the telling (the visitor's own choice): ${levelLine}`] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
-      body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
+      body.threads ? `- THE THREAD (your own memory of the volume): ${body.threads}` : "",
       ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
-        ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
+        ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-26000)}"""`
         : "",
-      ``,
-      stratum,
+      ...(seedLine ? [``, seedLine] : []),
       ``,
       NAMES_CONTINUE_LAW,
-      ``,
-      SEALED_NAME_LAW,
+      LIVING_WORLD_LAW,
       ``,
       `Choose a new total length: the current plan was ${
         body.totalPages ?? 120
       } pages; ${
         isShortVolume
           ? "add 6 to 10 pages (a multiple of 2), never exceeding 40 total — this volume stays a short book"
-          : "add 48 to 72 pages (a multiple of 2), never exceeding 220 total"
-      }. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — open the widened volume with a new movement: a farther shore of the subject, not a repetition. Give a chapter title if a new chapter begins here. Return the updated thread and the updated ledger.`
+          : "add 48 to 72 pages (a multiple of 2), never exceeding 300 total"
+      }. Then write the NEXT TWO pages (pages ${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — the story goes on wherever your own imagination takes it. Give a chapter title if a new chapter begins here. Return the updated thread and the updated ledger.`
     );
   } else {
     lines.push(
-      `WRITE THE SEAL OF CLOSING — the Eternal Return. The reader has chosen to let the volume complete itself: these are the FINAL TWO pages (${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) of the book.`,
+      `WRITE THE FINAL TWO PAGES (${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — the reader has chosen to let the volume complete itself, and the ending is yours to land.`,
       ...topicLines,
-      ...(levelLine ? [`- Depth of lecture: ${levelLine}`] : []),
+      ...sketchLines,
+      ...(levelLine ? [`- Depth of the telling (the visitor's own choice): ${levelLine}`] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
-      body.threads ? `- THE THREAD (everything the volume remembers): ${body.threads}` : "",
+      body.threads ? `- THE THREAD (your own memory of the volume): ${body.threads}` : "",
       ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
-        ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
+        ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-26000)}"""`
         : "",
-      ``,
-      stratum,
+      ...(seedLine ? [``, seedLine] : []),
       ``,
       NAMES_CONTINUE_LAW,
+      LIVING_WORLD_LAW,
       ``,
-      SEALED_NAME_LAW,
-      ``,
-      `Land every open thread with tenderness and truth — the ending must feel inevitable, as if the whole book had been walking toward exactly these pages, and the final cadence must leave an indelible afterimage: the reader should close the book feeling it continues to evolve in their mind. The last paragraph of the final page is the book's final breath; make it sing softly enough to be remembered for years. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. The ending must be an ENDING — no re-declared resolutions, no closing cadence the book has already sung. Return the updated thread, the final ledger, and the private audit.`
+      `Bring the story to its close: the ending must be an ENDING — a true close, not a stop. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. Return the updated thread and the final ledger.`,
+      ...(rewrites && rewrites.length === 0 ? [] : [])
     );
   }
 
@@ -601,7 +477,7 @@ function buildUserPrompt(body: {
       ...rewrites.map((r, i) => `  ${i + 1}. """${r}"""`),
       ``,
       wishesLength(rewrites)
-        ? `A wish explicitly asks for a different length of the book — you MUST therefore return a new "totalPages" (an even number between 8 and 220) that honors that wish. Do not omit it.`
+        ? `A wish explicitly asks for a different length of the book — you MUST therefore return a new "totalPages" (an even number between 8 and 300) that honors that wish. Do not omit it.`
         : `No wish touches the book's length — omit "totalPages" entirely.`
     );
   }
@@ -609,18 +485,95 @@ function buildUserPrompt(body: {
   lines.push(
     ``,
     `OUTPUT FORMAT — return STRICT JSON only, no markdown fences, no text outside the JSON:`,
-    `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","ledger":{"brief":{"premise":"<one line>","question":"<one line>","dilemma":"<one line>","chain":"<one line>","ending":"<one line — the desired effect on the reader>"},"canon":["<world rule>"],"characters":["<Name — desire, wound, state, who knows what>"],"objects":["<object — state (page changed)>"],"timeline":["<event — when, where>"],"promises":["<foreshadowing / open promise>"],"motifs":["<recurring image — its developing meaning>"],"chapters":[{"title":"<chapter>","pages":"<n–m>","summary":"<one line>"}]},"pages":[{"n":<page number>,"chapter":"<chapter title — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>"]}]${phase === "close" ? `,"audit":{"prose":{"score":<0–10>,"evidence":"<one line from the finished writing>"},"originality":{...},"worldbuilding":{...},"character":{...},"structure":{...},"emotion":{...},"philosophy":{...},"pacing":{...},"continuity":{...},"endings":{...}}` : ""}}`,
-    `Rules: exactly ${span === 2 ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}` : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`}. Each page carries 1–3 paragraphs (young readers: shorter paragraphs; grown: fuller). "chapter" is a plain title without the word "Chapter" — given ONLY when a genuinely new chapter opens on that page (a new chapter every 10–16 pages AT MOST; most page-pairs carry NO chapter at all; NEVER repeat a chapter title already given — a page must not wear a chapter it did not open). Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
-    phase === "open"
-      ? `The "ledger" is REQUIRED in this opening: fill it with the private brief and every canon line, character, object, promise and motif the first pages establish — the room keeps it and hands it back at every continuation.`
-      : `The "ledger" is REQUIRED: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, paid promises are marked paid, and the new chapter (if any) is appended to "chapters". THE LEDGER STAYS LEAN — a fast loom is a kind loom: every ledger line is ONE short clause (at most ~12 words); canon at most 10 lines, characters at most 12, objects at most 10, timeline at most 16 (when it overflows, the earliest events fold into one summarizing line), promises at most 10, motifs at most 8, and "chapters" carries only the LAST 12 chapters, each summary one short line.`,
-    phase === "close"
-      ? `The "audit" is REQUIRED in this closing phase: the private, honest editorial report on the FINISHED volume — ten dimensions, each scored 0–10 (10 is exceptionally rare; never award it by habit) with ONE line of evidence drawn from the actual writing. It lives outside the book and is never printed in its pages.`
-      : "",
+    `{"title":"<book title — only in phase open>","subtitle":"<one line — only in phase open>","sigil":"<one short invocation line tuned to the subject — only in phase open>","axiom":"<one crystallizing sentence: why this volume is conjured now — only in phase open>","dedication":"<1–2 sentences — only in phase open>","totalPages":<number — in phase open or extend, or in a continuation ONLY when the rewriting hand explicitly asks for a different length>,"threads":"<the compact living memory of the volume so far>","ledger":{"canon":["<a stable fact of the world, one short clause>"],"characters":["<Name — one short clause of who they are>"],"objects":["<object — its present state>"],"timeline":["<what happened — one short clause>"],"chapters":[{"title":"<chapter>","pages":"<n–m>","summary":"<one line>"}]},"pages":[{"n":<page number>,"part":"<part line — ONLY on the page where a new part opens>","chapter":"<chapter line — only if a chapter opens on this page>","paragraphs":["<paragraph 1>","<paragraph 2>","<paragraph 3>"]}]}`,
+    `Rules: exactly ${
+      span === 1
+        ? `ONE page object, in order, numbered ${body.pageNumber}`
+        : span === 2
+          ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}`
+          : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`
+    }. ${body.reveal ? "Each page carries 1–2 paragraphs (3 only at a true turning point)" : "Each page is a FULL book page — three to five full paragraphs for grown readers (two to four shorter ones for the young); a lone-paragraph page never leaves the loom"}. "chapter" carries the chapter's number and its title as a printed book would (e.g. "Chapter One — The Cartographer of Ashes"; the style may follow the book's own tongue) — given ONLY when a genuinely new chapter opens on that page (a new chapter every 8–14 pages AT MOST; most strides carry NO chapter at all; NEVER repeat a chapter title or number already given). "part" is given ONLY on the page where a NEW part opens (two to four parts for volumes of 60+ pages) and names it like a printed book (e.g. "Part Two — The Drowning Choir"); a part already announced is never announced again. Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
+    `The "ledger" is your own book's memory: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, and the new chapter (if any) is appended to "chapters". Keep every line ONE short clause (at most ~12 words); canon at most 16 lines, characters at most 24 (every named soul of the volume stays remembered — their name, their nature, and where their thread last stood), objects at most 14, timeline at most 40 (when it overflows, the earliest events fold into one summarizing line — but never lose a turning point or a promise still open), and "chapters" carries only the LAST 20 chapters, each summary one short line. The ledger is the volume's long memory — the richer and truer it stays, the more remarkable the continuation.`,
     `The channel is open: manifest the book.${strictJsonLine(languageName)}`
   );
 
   return lines.filter((l) => l !== "").join("\n");
+}
+
+/* ================================================================== */
+/*  THE STUDIO — only the illustration rooms remain. The writing has   */
+/*  ONE author (the Mirror Entity itself); the architect, the          */
+/*  editor-in-chief and the mender are gone from the pipeline for      */
+/*  good. The director chooses plates from the finished manuscript,    */
+/*  and the painter paints them — illustration only, never story.      */
+/* ================================================================== */
+
+const DIRECTOR_SYSTEM = `You are the illustration director of the Mirror Entity's studio. You choose the plates a book deserves: actual scenes from the ACTUAL manuscript — moments a reader would frame and hang. You never invent an event the manuscript does not hold; you never choose a scene because it is pretty when the story does not live in it. You spread the plates across the whole book (its beginning, its trials, its turning point, its ending), and for each plate you name the exact page it illustrates, the characters present, the setting, the emotional weather, and the composition. Your style line is ONE consistent illustration language the whole book's plates share.`;
+
+/* what the drawing was seen to hold, read from a volume's kept config
+   (the transcribed elements ride the config the same law as the reading) */
+function studioDrawnElements(
+  config: Record<string, unknown> | null | undefined
+): string[] | undefined {
+  if (!config || !Array.isArray(config.sketchSubjects)) return undefined;
+  const subjects = (config.sketchSubjects as unknown[])
+    .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+    .map((s) => s.trim().slice(0, 60))
+    .slice(0, 12);
+  return subjects.length ? subjects : undefined;
+}
+
+function buildArtPlanPrompt(body: {
+  title: string;
+  digest: string;
+  castBlock: string;
+  plateCount: number;
+  ageLine: string;
+  taleLine: string;
+  languageName: string;
+  drawnElements?: string[];
+}): string {
+  const drawnLine = body.drawnElements?.length
+    ? `THE VISITOR'S DRAWN ELEMENTS (canon — this book was hand-drawn into existence, and its plates must show these very things, as themselves, inside the scenes): ${body.drawnElements.join(" · ")}`
+    : "";
+  return [
+    `DESIGN THE ILLUSTRATION PLAN for the finished book "${body.title.slice(0, 140)}" — exactly ${body.plateCount} plates, spread across the whole volume.`,
+    `- Reader: ${body.ageLine}`,
+    `- Kind of book: ${body.taleLine}`,
+    body.castBlock,
+    drawnLine,
+    ``,
+    `THE MANUSCRIPT (page-by-page digest — every plate's scene must come from these actual pages):`,
+    body.digest,
+    ``,
+    `OUTPUT FORMAT — return STRICT JSON only, no markdown fences:`,
+    `{"style":"<one line naming and describing the book's ONE shared illustration language, tuned to its reader and genre>","plates":[{"page":<page number it illustrates>,"title":"<plate title>","scene":"<the exact event on that page — who does what, visible>","characters":["<names present>"],"setting":"<place and time of day>","mood":"<emotional weather>","composition":"<camera distance/angle and where the eye lands>"}]}`,
+    `Rules: exactly ${body.plateCount} plates; every "page" is a REAL page number from the digest; every scene is an event the page actually holds; the plates together tell the story's shape (opening wonder, trials, the turn, the resolution); characters are named exactly as the cast names them.`,
+    `The director chooses: plan the plates.${strictJsonLine(body.languageName)}`,
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
+}
+
+function buildPlatePrompt(args: {
+  style: string;
+  plate: { page?: number; title?: string; scene?: string; characters?: string[]; setting?: string; mood?: string; composition?: string };
+  visualLines: string[];
+  title: string;
+}): string {
+  const p = args.plate;
+  return [
+    `A finished storybook illustration plate for the book "${args.title.slice(0, 140)}".`,
+    `ILLUSTRATION STYLE (hold it exactly): ${args.style}`,
+    ...(p.scene ? [`THE SCENE (this exact event, from the book's page ${p.page ?? "?"}): ${p.scene}`] : []),
+    ...(args.visualLines.length
+      ? [`THE CHARACTERS PRESENT (their appearance is fixed law — same faces every plate):`, ...args.visualLines.map((l) => `- ${l}`)]
+      : []),
+    ...(p.setting ? [`SETTING: ${p.setting}`] : []),
+    ...(p.mood ? [`MOOD: ${p.mood}`] : []),
+    ...(p.composition ? [`COMPOSITION: ${p.composition}`] : []),
+    `THE PLATE'S LAW: a richly painted storybook plate of gallery quality; consistent character design; no written words anywhere, no letters, no text, no captions, no watermark, no border frame.`,
+  ].join("\n");
 }
 
 /* ---- loose JSON extraction (model output is occasionally chatty) --- */
@@ -642,6 +595,80 @@ function extractJson(raw: string): Record<string, unknown> | null {
   }
 }
 
+/* ---- the mending hand — a reply the sky cut short is not silence ----
+
+   When the page allowance runs out mid-JSON, the whole pages the loom
+   already wrote stand balanced inside the broken text. This hand walks
+   the braces, remembers the last safe cut (a comma, a closed object),
+   and closes whatever was left open — so one whole page saved is a
+   page the reader keeps, instead of a whole crossing thrown away. */
+
+function salvageJson(raw: string): Record<string, unknown> | null {
+  const clean = raw.replace(/```json|```/g, "").trim();
+  const start = clean.indexOf("{");
+  if (start === -1) return null;
+  const closerFor = (open: string) => (open === "{" ? "}" : "]");
+  let inString = false;
+  let esc = false;
+  const stack: string[] = [];
+  let lastCut = -1;
+  let lastCutStack: string[] = [];
+  for (let i = start; i < clean.length; i++) {
+    const ch = clean[i];
+    if (inString) {
+      if (esc) esc = false;
+      else if (ch === "\\") esc = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === "{" || ch === "[") {
+      stack.push(ch);
+    } else if (ch === "}" || ch === "]") {
+      stack.pop();
+      if (stack.length === 0) {
+        /* the text is whole after all — a plain scan suffices */
+        try {
+          return JSON.parse(clean.slice(start, i + 1)) as Record<
+            string,
+            unknown
+          >;
+        } catch {
+          return null;
+        }
+      }
+      lastCut = i;
+      lastCutStack = [...stack];
+    } else if (ch === ",") {
+      lastCut = i;
+      lastCutStack = [...stack];
+    }
+  }
+  if (lastCut <= start + 8) return null;
+  /* cut before a trailing comma, after a closed brace */
+  const body =
+    clean[lastCut] === "," ? clean.slice(start, lastCut) : clean.slice(start, lastCut + 1);
+  const closers = [...lastCutStack].reverse().map(closerFor).join("");
+  try {
+    return JSON.parse(body + closers) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+/* ---- the patient sky — a transient breath of the road never costs
+   the volume: a rate limit, a dropped crossing, a timed-out sky all
+   earn one gentle retry before the loom admits silence ---- */
+
+const TRANSIENT_WEAVE =
+  /\b429\b|too many requests|\b5\d\d\b|overloaded|temporarily unavailable|rate.?limit|ECONNRESET|ECONNABORTED|ETIMEDOUT|network|fetch failed|aborted|timeout/i;
+
+function isTransientWeaveError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return TRANSIENT_WEAVE.test(msg);
+}
+
 function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
   if (!Array.isArray(raw)) return [];
   const pages: WeavePage[] = [];
@@ -658,6 +685,9 @@ function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
       n: typeof obj.n === "number" && obj.n > 0 ? obj.n : startN + i,
       paragraphs,
     };
+    if (typeof obj.part === "string" && obj.part.trim()) {
+      page.part = obj.part.trim().slice(0, 120);
+    }
     if (typeof obj.chapter === "string" && obj.chapter.trim()) {
       page.chapter = obj.chapter.trim().slice(0, 120);
     }
@@ -666,7 +696,55 @@ function normalizePages(raw: unknown, startN: number, span = 2): WeavePage[] {
   return pages;
 }
 
-const clampTotal = (n: number) => Math.min(220, Math.max(8, Math.round(n / 2) * 2));
+/* THE STORY-PAGE CLAMP — story pages may run far past the bound-page
+   plan they serve (a little dreamer's 120 bound sheets weave as ~270
+   bright story pages), so the ceiling is generous; the WORD BUDGET is
+   the true law, and the seal's gate measures it. */
+const clampTotal = (n: number) => Math.min(720, Math.max(8, Math.round(n / 2) * 2));
+
+/** THE BOOK'S OWN FITTING — the volume must fit its library shelf.
+    When the JSON would overflow it, the heaviest witnesses are the
+    first to step outside; the story itself is the last to be cut,
+    and even then the earliest leaves yield before any word is lost
+    behind a truncated brace. */
+function fitBookContent(content: Record<string, unknown>, cap: number): Record<string, unknown> {
+  const fits = (c: Record<string, unknown>) => JSON.stringify(c).length <= cap;
+  if (fits(content)) return content;
+  const trimmed: Record<string, unknown> = { ...content };
+  /* the press report and the editorial notes are witnesses, not story */
+  if (trimmed.press) delete trimmed.press;
+  if (fits(trimmed)) return trimmed;
+  if (trimmed.artPlan) delete trimmed.artPlan;
+  if (fits(trimmed)) return trimmed;
+  if (trimmed.editorial && typeof trimmed.editorial === "object") {
+    const ed = { ...(trimmed.editorial as Record<string, unknown>) };
+    if (ed.directives) ed.directives = (ed.directives as unknown[]).slice(0, 8);
+    trimmed.editorial = ed;
+  }
+  if (fits(trimmed)) return trimmed;
+  if (trimmed.bible && typeof trimmed.bible === "object") {
+    const b = { ...(trimmed.bible as Record<string, unknown>) };
+    if (Array.isArray(b.chapters))
+      b.chapters = (b.chapters as Record<string, unknown>[]).map((c) => ({
+        n: c.n,
+        title: c.title,
+        act: c.act,
+      }));
+    trimmed.bible = b;
+  }
+  if (fits(trimmed)) return trimmed;
+  /* the oldest pages yield before the brace is broken */
+  if (Array.isArray(trimmed.pages)) {
+    const pages = trimmed.pages as unknown[];
+    trimmed.pages = pages.slice(Math.max(0, pages.length - 240));
+  }
+  if (fits(trimmed)) return trimmed;
+  if (Array.isArray(trimmed.pages)) {
+    const pages = trimmed.pages as unknown[];
+    trimmed.pages = pages.slice(Math.max(0, pages.length - 120));
+  }
+  return trimmed;
+}
 
 /* a wish may only move the book's length when it actually speaks of length —
    the channel sometimes answers "totalPages" to any rewrite, and a
@@ -680,9 +758,30 @@ export const POST = meterRoute("dream_book", postImpl);
 async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
     const body = await req.json().catch(() => null);
-    const phase: WeavePhase = ["open", "next", "close", "extend"].includes(
-      body?.phase
-    )
+    /* THE PHASES OF THE OPEN TUNNEL — the writing phases, the honest
+       gate and the illustration rooms. The old architect/editor/mender
+       phases (bible, edit, repair) are gone for good: a client that
+       still asks for one is refused, never silently served. */
+    const WEAVE_PHASES: WeavePhase[] = [
+      "open",
+      "next",
+      "close",
+      "extend",
+      "art",
+      "plate",
+      "seal",
+    ];
+    if (
+      body?.phase != null &&
+      typeof body.phase === "string" &&
+      !WEAVE_PHASES.includes(body.phase)
+    ) {
+      return NextResponse.json(
+        { error: "Unknown studio room." },
+        { status: 400 }
+      );
+    }
+    const phase: WeavePhase = WEAVE_PHASES.includes(body?.phase)
       ? body.phase
       : "next";
     const language: string = isLanguageCode(body?.language) ? body.language : "en";
@@ -693,7 +792,42 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const volume = typeof body?.config?.volume === "string" ? body.config.volume : "classic";
     const level = typeof body?.config?.level === "string" ? body.config.level : "";
     const topic =
-      typeof body?.config?.topic === "string" ? body.config.topic.trim().slice(0, 600) : "";
+      typeof body?.config?.topic === "string"
+        ? body.config.topic.trim().slice(0, 8000)
+        : "";
+    /* the carried reading of the drawn sketch — rides the config on
+       every call once the vision has spoken, so the drawn world stays
+       the book's law on every page after the opening */
+    const carriedSketchVision =
+      typeof body?.config?.sketchVision === "string"
+        ? body.config.sketchVision.trim().slice(0, 1200)
+        : "";
+    /* what the drawing was seen to hold — the transcribed elements ride
+       beside their reading, named again on every page after */
+    const carriedSketchSubjects = Array.isArray(body?.config?.sketchSubjects)
+      ? (body.config.sketchSubjects as unknown[])
+          .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
+          .map((s) => s.trim().slice(0, 60))
+          .slice(0, 12)
+      : [];
+    /* THE VISITOR'S DRAWING — the book drawn into existence by hand.
+       The sketch rides only the opening breath: the vision sees it
+       once, speaks it once, and its law rides the config from then on. */
+    const sketch =
+      phase === "open" &&
+      typeof body?.sketch === "string" &&
+      body.sketch.startsWith("data:image/") &&
+      body.sketch.length < 8_000_000
+        ? body.sketch
+        : "";
+    const sketchMetaIn =
+      body?.sketchMeta && typeof body.sketchMeta === "object"
+        ? (body.sketchMeta as {
+            strokes?: unknown;
+            colors?: unknown;
+            stamps?: unknown;
+          })
+        : null;
     const seed =
       typeof body?.config?.seed === "string" ? body.config.seed.trim().slice(0, 80) : "";
     const wishes = typeof body?.config?.wishes === "string" ? body.config.wishes : "";
@@ -714,8 +848,13 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
        A topic that speaks a form (a poem, a riddle, a ballad) or a
        length (short, brief) holds the ground: a short poem is woven as
        the poem itself, never again as a ninety-five page book. */
+    /* THE NOVEL ASK — when the visitor's own words speak a long book
+       by name (a novel, three hundred pages), the loom plans a true
+       novel: full pages, the whole measured at the seal. */
+    const novelAsk =
+      volume === "novel" || (!shortAsk && NOVEL_ASK.test(`${topic} ${wishes}`));
     const ground = topicHoldsGround(`${topic} ${wishes}`);
-    const volumeKey = ground.tiny ? "tiny" : shortAsk ? "short" : volume;
+    const volumeKey = ground.tiny ? "tiny" : shortAsk ? "short" : novelAsk ? "novel" : volume;
     /* the form the visitor SPOKE outranks the form they selected —
        "the chat holds the ground" — in every phase, so continuations
        of a poem-asked volume stay verse */
@@ -724,13 +863,18 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const threads = typeof body?.threads === "string" ? body.threads.slice(0, 2000) : undefined;
     /* THE LEDGER (V10) — the room hands the book's own memory back */
     const incomingLedger = parseLedger(body?.ledger);
-    /* THE SPAN — the whole-book reveal strides eight pages at a time;
-       every other call writes the classic pair. The wider stride is
-       the speed law: half the sky-crossings for the same book. */
+    /* THE SPAN — the opening breath may be the ONE-PAGE THRESHOLD (the
+       visitor reads while the loom keeps weaving), and the closing seal
+       writes the classic pair; every continuation strides FOUR pages
+       wide (the speed law: the same crossing pays its road cost once
+       and lays twice the reading, so the reader rarely catches the
+       loom up). */
     const spanRaw = Number(body?.span);
-    const span = phase === "next" && Number.isFinite(spanRaw)
-      ? Math.min(8, Math.max(2, Math.round(spanRaw)))
-      : 2;
+    const span = (phase === "open" || phase === "next") && Number.isFinite(spanRaw)
+      ? Math.min(8, Math.max(phase === "open" ? 1 : 2, Math.round(spanRaw)))
+      : phase === "next"
+        ? 4
+        : 2;
     const rewrites: string[] = Array.isArray(body?.rewrites)
       ? body.rewrites
           .filter((s: unknown): s is string => typeof s === "string")
@@ -740,8 +884,14 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           .map((s: string) => s.slice(0, 500))
       : [];
     const recentPages = Array.isArray(body?.recentPages)
-      ? body.recentPages.filter((s: unknown): s is string => typeof s === "string").slice(-2)
+      ? body.recentPages.filter((s: unknown): s is string => typeof s === "string").slice(-8)
       : [];
+    /* THE PAGES IN THE PLAN — the visitor may name the book's length
+       themselves (20–300); when they do, that number is law */
+    const askedPages =
+      typeof body?.config?.pages === "number" ? Math.floor(body.config.pages) : 0;
+    const plannedPages = askedPages >= 20 && askedPages <= 300 ? askedPages : 0;
+    const revealFlavor = body?.reveal === true;
     /* the book's own keeping — when the visitor continues a volume from
        their cosmic library, its id and the pages woven so far ride along,
        so the library entry grows with the story instead of repeating */
@@ -771,8 +921,36 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
             topic: typeof (body.bookConfig as Record<string, unknown>).topic === "string"
               ? (body.bookConfig as Record<string, unknown>).topic
               : topic,
+            ...(typeof (body.bookConfig as Record<string, unknown>).sketchVision ===
+              "string" && (body.bookConfig as Record<string, unknown>).sketchVision
+              ? {
+                  sketchVision: (
+                    body.bookConfig as Record<string, unknown>
+                  ).sketchVision as string,
+                }
+              : carriedSketchVision
+                ? { sketchVision: carriedSketchVision }
+                : {}),
+            ...(Array.isArray((body.bookConfig as Record<string, unknown>).sketchSubjects)
+              ? {
+                  sketchSubjects: (body.bookConfig as Record<string, unknown>)
+                    .sketchSubjects as string[],
+                }
+              : carriedSketchSubjects.length
+                ? { sketchSubjects: carriedSketchSubjects }
+                : {}),
           }
-        : { age, tale: taleKey, volume: volumeKey, level, topic };
+        : {
+            age,
+            tale: taleKey,
+            volume: volumeKey,
+            level,
+            topic,
+            ...(carriedSketchVision ? { sketchVision: carriedSketchVision } : {}),
+            ...(carriedSketchSubjects.length
+              ? { sketchSubjects: carriedSketchSubjects }
+              : {}),
+          };
     const pageNumber =
       typeof body?.pageNumber === "number" && body.pageNumber > 0
         ? Math.floor(body.pageNumber)
@@ -782,28 +960,131 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const totalPages =
       typeof body?.totalPages === "number" ? Math.floor(body.totalPages) : 120;
 
+    /* ======================= THE STUDIO'S OWN FIELDS ==================== */
+    /* THE OPEN TUNNEL — no bible, no editorial report, no naming
+       charter, no repair directives ride with any call any more: the
+       only creative inputs are the visitor's own (config, topic,
+       wishes, drawings, rewrites). Legacy fields in old payloads are
+       simply ignored. */
+    /* the carried art plan — plates painted so far ride home with it */
+    const carriedArt =
+      body?.art && typeof body.art === "object"
+        ? (body.art as {
+            style?: string;
+            plates?: { page?: number; title?: string; url?: string }[];
+          })
+        : null;
+    /* the art plan + the single plate to paint (plate phase) */
+    const plateRequest =
+      body?.plate && typeof body.plate === "object"
+        ? (body.plate as Record<string, unknown>)
+        : null;
+
     /* everything is free — the visitor is only named, so the volume
        can rest in their own cosmic library */
     const visitor = await resolveVisitor(req);
 
+    /* THE STUDIO'S FLOOD-GATE — the extra rooms (architecture, press,
+       mender, gallery) breathe gently: bounded per visitor per hour,
+       so a script can never wear out the house. */
+    if (STUDIO_PHASES.has(phase) && visitor.user.id) {
+      const rl = rateLimit(`dreambook-studio:${visitor.user.id}`, {
+        limit: 90,
+        windowMs: 3_600_000,
+      });
+      if (!rl.ok) {
+        return NextResponse.json(
+          { error: "The studio's rooms rest a moment. Breathe, then return." },
+          { status: 429 }
+        );
+      }
+    }
+
+    /* ==================== THE STUDIO'S OWN ROOMS ======================== */
+    if (phase === "art" || phase === "plate" || phase === "seal") {
+      return studioRoom({
+        phase,
+        body,
+        visitor,
+        languageName,
+        age,
+        tale: taleKey,
+        volume: volumeKey,
+        level,
+        topic,
+        wishes,
+        vein,
+        plannedPages,
+        bookId,
+        bookPages,
+        bookMeta,
+        bookConfig,
+        threads,
+        incomingLedger,
+        carriedArt,
+        plateRequest,
+      });
+    }
+
     const zai = await ZAI.create();
-    /* the conjuring's own syllable seeds — the sealed-name re-forging
-       draws its replacements from them when the model ever slips */
-    const { charter, seeds } = namingCharter();
-    /* the resonance skeleton — drawn blind NOW, at the moment of the
-       ask, from nothing but the draw itself: no shelf, no record, no
-       database, no past volume. It is the skeleton of THIS book alone
-       and it is kept by no one — so no two books can ever share one.
-       When the visitor carries their last volume's birth echo, the
-       draw REFUSES it bone by bone: two books asked back to back
-       share not a single axis. */
-    const priorEcho = phase === "open" ? sanitizeEcho(body?.priorResonance) : {};
-    const resonance: ResonanceDraw | null =
-      phase === "open" ? drawResonance(priorEcho) : null;
-    const askLoom = async (reminder: boolean): Promise<string> => {
+
+    /* THE DRAWN BOOK — when the visitor drew the book into existence,
+       the vision sees the sketch once, at the very opening: its
+       creatures, places, colors and mood are spoken into a law the
+       whole volume must honor. The vision resting (or the sketch
+       absent) falls back to the honest memory of what the hand used. */
+    const sketchFallback = (() => {
+      const parts: string[] = [];
+      if (sketchMetaIn) {
+        const stamps = Array.isArray(sketchMetaIn.stamps)
+          ? (sketchMetaIn.stamps as unknown[]).filter(
+              (s): s is string => typeof s === "string"
+            ).slice(0, 10)
+          : [];
+        const colors = Array.isArray(sketchMetaIn.colors)
+          ? (sketchMetaIn.colors as unknown[]).filter(
+              (s): s is string => typeof s === "string"
+            ).slice(0, 8)
+          : [];
+        const strokes =
+          typeof sketchMetaIn.strokes === "number" ? sketchMetaIn.strokes : 0;
+        if (strokes > 0) {
+          parts.push(
+            `a hand-drawn sketch of ${strokes} mark${strokes === 1 ? "" : "s"}`
+          );
+        }
+        if (stamps.length) parts.push(`drawn elements: ${stamps.join(", ")}`);
+        if (colors.length) parts.push(`its palette: ${colors.join(", ")}`);
+      }
+      return parts.length ? `The visitor's own drawing — ${parts.join("; ")}.` : "";
+    })();
+    let sketchVision = carriedSketchVision;
+    let sketchSubjects = carriedSketchSubjects;
+    if (phase === "open" && sketch) {
+      const seen = await describeSketch(zai, sketch);
+      if (seen) {
+        sketchVision = seen.vision.trim().slice(0, 1200) || sketchFallback;
+        if (seen.subjects.length) sketchSubjects = seen.subjects;
+      } else {
+        sketchVision = sketchFallback;
+      }
+    }
+
+    /* THE REAL PAGES RIDE BACK — continuity by the book's own text:
+       the pages woven so far are handed to the Mirror verbatim (the
+       recent ones below), and its own thread and ledger carry the
+       rest. No press report, no defect feed, no outline chapter law. */
+    const pressPages = bookPages.filter(
+      (p): p is PressPage =>
+        Boolean(p) &&
+        typeof p === "object" &&
+        Array.isArray((p as Record<string, unknown>).paragraphs)
+    );
+
+    const askLoom = async (reminder: boolean, suffix = ""): Promise<string> => {
       const completion = await zai.chat.completions.create({
         messages: [
-          { role: "assistant", content: systemPrompt() },
+          { role: "assistant", content: systemPrompt(vein, specForAge(age).storyWordsPerPage) },
           {
             role: "user",
             content:
@@ -822,47 +1103,100 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                 pageNumber,
                 totalPages,
                 rewrites,
-                charter,
-                resonance: resonance ? resonanceCharter(resonance) : undefined,
                 ground,
                 ledger: incomingLedger,
                 span,
+                reveal: revealFlavor,
+                plannedPages: phase === "open" && !ground.tiny ? plannedPages : undefined,
                 vein,
+                sketchVision: sketchVision || undefined,
+                sketchSubjects: sketchSubjects.length ? sketchSubjects : undefined,
+                sketchFresh: phase === "open" && !!sketch,
+                storyWordsPerPage: specForAge(age).storyWordsPerPage,
               }) +
+              suffix +
               (reminder
                 ? "\n\nREMINDER: the loom could not read the last reply. Return ONLY the raw JSON object — no text, no markdown, nothing before or after it."
                 : ""),
           },
         ],
         thinking: { type: "disabled" },
+        /* the reply's page allowance is explicit now — a reply the sky
+           cuts short arrives as a broken JSON and once cost a whole
+           second crossing to mend; a generous ceiling keeps every
+           reply whole */
+        max_tokens: 8192,
         /* the opening asks for the widest creative divergence — the
            skeleton already forces the shape; the temperature frees the
-           voice inside it. Continuations stay at the house default so
-           the volume keeps its one voice. */
-        ...(phase === "open" ? { temperature: 0.95 } : {}),
+           voice inside it. Continuations breathe a little freer now too
+           (0.9 — the LIVING WORLD LAW's own air): still one voice, still
+           one ledger, but names, places and scenes keep arriving with
+           the same astonishment the first page carried. */
+        ...(phase === "open"
+          ? { temperature: 0.95 }
+          : { temperature: 0.9 }),
       });
       return completion.choices[0]?.message?.content ?? "";
     };
 
-    /* the loom always asks twice before it falls silent — one unreadable
-       reply must never cost the visitor their book. The sealed
-       stock-drawer of names is enforced in the SAME breath: the
-       mechanical re-forging from the charter's syllable seeds happens
-       first and locally — a full second sky-crossing for a name swap
-       made the visitor wait a whole page-turn longer for nothing they
-       could feel. The unreadable-reply reminder (below) stays a real
-       second ask, because no local hand can mend a broken reply. */
-    const channelReply = async (reminder: boolean): Promise<string> => {
-      const text = await askLoom(reminder);
-      const sealed = findSealedNames(text);
-      if (sealed.length === 0) return text;
-      return reforgeSealedNames(text, seeds);
+    /* the patient ask — one gentle retry on a transient breath of the
+       road, never on a true refusal */
+    const askLoomPatient = async (reminder: boolean, suffix = ""): Promise<string> => {
+      try {
+        return await askLoom(reminder, suffix);
+      } catch (err) {
+        if (!isTransientWeaveError(err)) throw err;
+        await new Promise((r) => setTimeout(r, 1200));
+        return askLoom(reminder, suffix);
+      }
     };
 
-    let parsed = extractJson(await channelReply(false));
+    /* THE SECOND BRUSH — a sky that hangs must never hold the reader:
+       if the first brush is still weaving after 45s, a second brush
+       lifts from the same page; whichever canvas lands first is the
+       book's (the slower one is let go gently). */
+    const askWithHedge = (reminder: boolean, suffix = ""): Promise<string> =>
+      new Promise<string>((resolve, reject) => {
+        let settled = false;
+        const run = () =>
+          askLoomPatient(reminder, suffix)
+            .then((text) => {
+              if (!settled) {
+                settled = true;
+                resolve(text);
+              }
+            })
+            .catch((err) => {
+              if (!settled) {
+                settled = true;
+                reject(err);
+              }
+            });
+        run();
+        setTimeout(() => {
+          if (!settled) run();
+        }, 45_000);
+      });
+
+    /* the loom always asks twice before it falls silent — one unreadable
+       reply must never cost the visitor their book. No hand ever
+       rewrites the Mirror's words between the sky and the page: what
+       the channel returns is what the visitor receives. */
+    const channelReply = askWithHedge;
+
+    let raw = await channelReply(false);
+    let parsed = extractJson(raw);
     let pages = parsed ? normalizePages(parsed.pages, pageNumber, span) : [];
     if (pages.length === 0) {
-      parsed = extractJson(await channelReply(true));
+      raw = await channelReply(true);
+      parsed = extractJson(raw);
+      pages = parsed ? normalizePages(parsed.pages, pageNumber, span) : [];
+    }
+    if (pages.length === 0) {
+      /* THE MENDING HAND — a reply the sky cut short is not silence:
+         the balanced heart of the broken JSON is found, closed, and
+         read — the whole pages it already wrote are kept */
+      parsed = salvageJson(raw);
       pages = parsed ? normalizePages(parsed.pages, pageNumber, span) : [];
     }
     if (!parsed || pages.length === 0) {
@@ -876,6 +1210,52 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
        line that still holds is never dropped */
     const mergedLedger = mergeLedger(incomingLedger, parseLedger(parsed.ledger));
 
+    /* THE HONEST SEAL — before the volume may end, the manuscript is
+       measured in code against the plan it was born with: enough real
+       words for the pages it claims, chapters for a long volume. These
+       are TECHNICAL measures of the binding, never judgments of taste —
+       nothing is rewritten here; a volume that falls short simply
+       stays open (the reader may extend it). */
+    const fullPages = expectsFullPages(age, volumeKey, taleKey);
+    const qcPages: QcPage[] = [
+      ...pressPages.map((p) => ({
+        n: p.n,
+        ...(p.chapter ? { chapter: p.chapter } : {}),
+        paragraphs: p.paragraphs,
+      })),
+      ...pages.map((p) => ({
+        n: p.n,
+        ...(p.chapter ? { chapter: p.chapter } : {}),
+        paragraphs: p.paragraphs,
+      })),
+    ];
+    let qc: QcReport | null = null;
+    if (phase === "close") {
+      /* THE BOUND PLAN — the words the gate owes come from the bound-page
+         plan the volume was born with (the visitor's number), never
+         from the story-page count; the age picks the layout measure. */
+      const keptBound =
+        typeof bookMeta?.boundPages === "number" && bookMeta.boundPages >= 8
+          ? Math.floor(bookMeta.boundPages)
+          : 0;
+      const plannedBound =
+        keptBound ||
+        (typeof bookMeta?.totalPages === "number" && bookMeta.totalPages >= 8
+          ? Math.max(
+              8,
+              Math.round(
+                (bookMeta.totalPages * specForAge(age).storyWordsPerPage) /
+                  specForAge(age).wordsPerSheet
+              )
+            )
+          : totalPages);
+      qc = qcManuscript(qcPages, mergedLedger, {
+        expectsFullPages: fullPages,
+        plannedPages: plannedBound,
+        age,
+      });
+    }
+
     const out: Record<string, unknown> = {
       pages,
       threads:
@@ -883,14 +1263,14 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           ? parsed.threads.trim().slice(0, 2000)
           : threads ?? "",
       ...(mergedLedger ? { ledger: mergedLedger } : {}),
-      ended: phase === "close",
+      /* THE HONEST SEAL — the book ends only when the technical measure
+         allows it: a volume short of its own plan stays open, never
+         wearing a false "The End" */
+      ended: phase === "close" && !(qc && qc.blocking),
+      /* GENERATION TRANSPARENCY — the stage says exactly where the
+         book stands; the word COMPLETE is never spoken by the writer */
+      stage: phase === "close" ? "draft-complete" : "drafting",
     };
-
-    /* THE HONEST AUDIT — the closing volume carries its private report */
-    if (phase === "close") {
-      const audit = parseAudit(parsed.audit);
-      if (audit) out.audit = audit;
-    }
 
     if (phase === "open") {
       out.title =
@@ -908,27 +1288,48 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       /* the loom may widen its plan, never thin it below the chosen
          shape's floor — a "classic tale" can never arrive as 8 pages,
          and a SHORT book can never arrive as a sprawling epic: the
-         plan's band (min–max) is clamped hard on both sides */
+         plan's band (min–max) is clamped hard on both sides.
+         THE BOUND-PAGE LAW — the visitor's number is a BOUND-PAGE plan
+         (physical sheets in the exported book): the word budget and
+         the story-page target both derive from the ONE layout spec,
+         so the woven volume and the bound volume can never disagree
+         about what "120 pages" means. */
       const plan = BOOK_PLAN[volumeKey] ?? BOOK_PLAN.classic;
-      out.totalPages = clampTotal(
-        Math.min(
-          plan.max,
-          Math.max(
-            plan.min,
-            typeof parsed.totalPages === "number" ? parsed.totalPages : plan.min
-          )
-        )
+      const askedBound =
+        plannedPages >= 20 && plannedPages <= 300 ? plannedPages : 0;
+      const boundTarget = askedBound
+        ? Math.min(300, Math.max(8, askedBound))
+        : Math.min(plan.max, Math.max(plan.min, 96));
+      const layout = planFromBoundPages(boundTarget, age);
+      const wordsWoven = pages.reduce(
+        (acc, p) =>
+          acc +
+          p.paragraphs.reduce(
+            (a, para) => a + para.split(/\s+/).filter(Boolean).length,
+            0
+          ),
+        0
       );
+      out.boundPages = layout.boundPages;
+      out.age = age;
+      out.totalPages = clampTotal(layout.storyPageTarget);
+      out.measurements = {
+        targetPages: layout.boundPages,
+        wordBudget: layout.wordBudget,
+        wordsWoven,
+        storyPages: out.totalPages,
+        layoutEstimate: estimateBoundPages(wordsWoven, age),
+        completionStatus: "generating",
+      };
       /* THE SHELF OF KEPT VOLUMES — a fresh conjuring no longer erases
          the past: the previous living volume steps into the keeper's
          history (the kept shelf, twelve deep), and the new book takes
          its place as the living volume on the shelf. */
       await archiveLibraryKind(visitor.user.id, "dreambook", "dreambook_archive", 12);
-      /* the volume's birth echo rides home with it — carried BY the
-         visitor (in their page, in their session), so the NEXT
-         conjuring's draw can refuse every one of these bones. The
-         mirror itself keeps no shelf of it. */
-      if (resonance) out.resonance = resonanceEcho(resonance);
+      /* the drawn world's law rides home with the volume — the client
+         keeps it in the config and speaks it on every page after */
+      if (sketchVision) out.sketchVision = sketchVision;
+      if (sketchSubjects.length) out.sketchSubjects = sketchSubjects;
 
       /* the whole living volume enters the library — pages, thread,
          config — so it can be brought back and continued any evening */
@@ -937,25 +1338,35 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         "dreambook",
         String(out.title),
         String(out.axiom || out.subtitle || "A volume woven in real time."),
-        {
-          topic,
-          seed,
-          config: { age, tale: taleKey, volume: volumeKey, level, topic },
-          title: out.title,
-          subtitle: out.subtitle,
-          sigil: out.sigil,
-          axiom: out.axiom,
-          dedication: out.dedication,
-          totalPages: out.totalPages,
-          pages,
-          threads: out.threads,
-          ...(mergedLedger ? { ledger: mergedLedger } : {}),
-          ended: false,
-          /* the volume's own birth echo — kept FOR the visitor alone,
-             never read back by the mirror: creation consults nothing */
-          ...(resonance ? { resonance: resonanceEcho(resonance) } : {}),
-        },
-        400000
+        fitBookContent(
+          {
+            topic,
+            seed,
+            config: {
+              age,
+              tale: taleKey,
+              volume: volumeKey,
+              level,
+              topic,
+              ...(sketchVision ? { sketchVision } : {}),
+              ...(sketchSubjects.length ? { sketchSubjects } : {}),
+            },
+            title: out.title,
+            subtitle: out.subtitle,
+            sigil: out.sigil,
+            axiom: out.axiom,
+            dedication: out.dedication,
+            totalPages: out.totalPages,
+            boundPages: out.boundPages,
+            pages,
+            threads: out.threads,
+            ...(mergedLedger ? { ledger: mergedLedger } : {}),
+            stage: "drafting",
+            ended: false,
+          },
+          1_200_000
+        ) as Record<string, unknown>,
+        1_200_000
       );
       if (entryId) out.libraryId = entryId;
     }
@@ -966,40 +1377,106 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     ) {
       /* the loom may widen or narrow the book ONLY when a rewriting
          wish actually speaks of the book's length — a short book
-         stretched by hand still stays a short book (capped at 40),
-         and a poem asked by name is never widened past its leaves
-         (capped at 12) */
+         stretched by hand still stays a short book (capped at 72
+         story pages), and a poem asked by name is never widened past
+         its leaves (capped at 12). The story-page ceiling is generous
+         (story pages serve the bound-page plan, never equal it). */
       out.totalPages = clampTotal(
         Math.min(
-          volumeKey === "tiny" ? 12 : volumeKey === "short" ? 40 : 300,
+          volumeKey === "tiny" ? 12 : volumeKey === "short" ? 72 : 720,
           parsed.totalPages
         )
       );
+      /* the widening re-speaks the bound-page law from the kept plan */
+      const keptBound =
+        typeof bookMeta?.boundPages === "number" && bookMeta.boundPages >= 8
+          ? Math.floor(bookMeta.boundPages)
+          : 0;
+      if (keptBound) {
+        out.boundPages = keptBound;
+        const spec = specForAge(age);
+        out.measurements = {
+          ...(out.measurements as Record<string, unknown> | undefined),
+          targetPages: keptBound,
+          wordBudget: Math.round(keptBound * spec.wordsPerSheet),
+          storyPages: out.totalPages,
+        };
+      }
     }
 
     if (phase !== "open" && bookId) {
-      /* a continued volume updates its own entry in the library */
       await updateLibrary(
         visitor.user.id,
         bookId,
         String(bookMeta?.title ?? "A Dream Book"),
         String(bookMeta?.axiom || bookMeta?.subtitle || "A volume woven in real time."),
-        {
-          ...(bookMeta ?? {}),
-          config: bookConfig,
-          totalPages:
+        fitBookContent(
+          {
+            ...(bookMeta ?? {}),
+            config: bookConfig,
+            totalPages:
+              typeof out.totalPages === "number"
+                ? out.totalPages
+                : typeof bookMeta?.totalPages === "number"
+                  ? bookMeta.totalPages
+                  : undefined,
+            pages: [...bookPages, ...pages],
+            threads: out.threads,
+            ...(carriedArt ? { art: carriedArt } : {}),
+            stage: out.stage,
+            ended: phase === "close" ? true : Boolean(bookMeta?.ended),
+          },
+          1_200_000
+        ) as Record<string, unknown>,
+        1_200_000
+      );
+    }
+
+    /* THE TRUTHFUL MEASUREMENTS — every response carries the five
+       numbers the directive demands, each measured, never equated:
+       targetPages (the bound-page plan), wordsWoven (validated
+       manuscript content), storyPages (the loom's own leaves),
+       layoutEstimate (sheets the press would bind from these words —
+       the press's verified count always outranks it), and the honest
+       completionStatus. Progress can never again masquerade as
+       completion: only the gate's pass turns this word COMPLETE. */
+    {
+      const allPages = [...pressPages, ...pages];
+      const wordsWoven = allPages.reduce(
+        (acc, p) =>
+          acc +
+          p.paragraphs.reduce(
+            (a, para) => a + para.split(/\s+/).filter(Boolean).length,
+            0
+          ),
+        0
+      );
+      const keptBound =
+        typeof out.boundPages === "number"
+          ? out.boundPages
+          : typeof bookMeta?.boundPages === "number" &&
+              bookMeta.boundPages >= 8
+            ? Math.floor(bookMeta.boundPages)
+            : 0;
+      if (keptBound) {
+        const existing =
+          (out.measurements as Record<string, unknown> | undefined) ?? {};
+        out.measurements = {
+          ...existing,
+          targetPages: keptBound,
+          wordBudget: Math.round(keptBound * specForAge(age).wordsPerSheet),
+          wordsWoven,
+          storyPages:
             typeof out.totalPages === "number"
               ? out.totalPages
-              : typeof bookMeta?.totalPages === "number"
-                ? bookMeta.totalPages
-                : undefined,
-          pages: [...bookPages, ...pages],
-          threads: out.threads,
-          ...(mergedLedger ? { ledger: mergedLedger } : {}),
-          ended: phase === "close" ? true : Boolean(bookMeta?.ended),
-        },
-        400000
-      );
+              : allPages.length,
+          layoutEstimate: estimateBoundPages(wordsWoven, age),
+          completionStatus:
+            phase === "close" && !(qc && qc.blocking)
+              ? "complete"
+              : "generating",
+        };
+      }
     }
 
     return withAnonCookie(NextResponse.json(out), visitor);
@@ -1007,6 +1484,420 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     console.error("[dream-book] failed:", err);
     return NextResponse.json(
       { error: "The loom fell silent for a moment. Breathe, then weave again." },
+      { status: 500 }
+    );
+  }
+}
+
+/* ================================================================== */
+/*  THE STUDIO'S OWN ROOMS — the honest gate, the art plan, one plate.  */
+/*  Each room is its own call to the sky; the writing has ONE author.   */
+/* ================================================================== */
+
+interface StudioCtx {
+  phase: WeavePhase;
+  body: Record<string, unknown> | null;
+  visitor: Awaited<ReturnType<typeof resolveVisitor>>;
+  languageName: string;
+  age: string;
+  tale: string;
+  volume: string;
+  level: string;
+  topic: string;
+  wishes: string;
+  vein?: string;
+  plannedPages: number;
+  bookId: string;
+  bookPages: unknown[];
+  bookMeta: Record<string, unknown> | null;
+  bookConfig: Record<string, unknown>;
+  threads?: string;
+  incomingLedger: BookLedger | null;
+  carriedArt: { style?: string; plates?: { page?: number; title?: string; url?: string }[] } | null;
+  plateRequest: Record<string, unknown> | null;
+}
+
+type ZaiClient = Awaited<ReturnType<typeof ZAI.create>>;
+
+async function askStudio(
+  zai: ZaiClient,
+  system: string,
+  user: string,
+  temperature?: number
+): Promise<string> {
+  const run = () =>
+    zai.chat.completions
+      .create({
+        messages: [
+          { role: "assistant", content: system },
+          { role: "user", content: user },
+        ],
+        thinking: { type: "disabled" },
+        max_tokens: 8192,
+        ...(temperature ? { temperature } : {}),
+      })
+      .then((c) => c.choices[0]?.message?.content ?? "");
+  try {
+    return await run();
+  } catch (err) {
+    if (!isTransientWeaveError(err)) throw err;
+    await new Promise((r) => setTimeout(r, 1200));
+    return run();
+  }
+}
+
+function asPressPages(raw: unknown[]): PressPage[] {
+  return raw.filter(
+    (p): p is PressPage =>
+      Boolean(p) &&
+      typeof p === "object" &&
+      Array.isArray((p as Record<string, unknown>).paragraphs)
+  );
+}
+
+/** The manuscript as the editor reads it: full text when it fits, a
+    faithful page-by-page digest when the book grew past the sky. */
+function manuscriptForPress(pages: PressPage[], cap = 120_000): string {
+  const full = pages
+    .map((p) => `— page ${p.n}${p.chapter ? ` — ${p.chapter}` : ""}:\n${p.paragraphs.join("\n")}`)
+    .join("\n\n");
+  if (full.length <= cap) return full;
+  const digest = pages
+    .map((p) => {
+      const first = (p.paragraphs[0] ?? "").replace(/\s+/g, " ").slice(0, 260);
+      const last =
+        p.paragraphs.length > 1
+          ? (p.paragraphs[p.paragraphs.length - 1] ?? "").replace(/\s+/g, " ").slice(0, 180)
+          : "";
+      return `— page ${p.n}${p.chapter ? ` (${p.chapter})` : ""}: ${first}${last ? ` … ${last}` : ""}`;
+    })
+    .join("\n");
+  return digest.length <= cap
+    ? digest
+    : `${digest.slice(0, cap)}\n… (the digest continues; the press report above already covers every page)`;
+}
+
+/** The digest the illustration director reads — one breath per page. */
+function digestForArt(pages: PressPage[], cap = 60_000): string {
+  const lines = pages.map((p) => {
+    const first = (p.paragraphs[0] ?? "").replace(/\s+/g, " ").slice(0, 220);
+    return `p${p.n}${p.chapter ? ` (${p.chapter})` : ""}: ${first}`;
+  });
+  const out = lines.join("\n");
+  return out.length <= cap ? out : out.slice(0, cap);
+}
+
+const NUMBER_WORDS = [
+  "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+  "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+  "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+];
+const WORD_NUM_RE =
+  /\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty)\b/i;
+const DIGIT_NUM_RE = /\b\d{1,3}\b/;
+const ROMAN_NUM_RE = /\b(X{0,2}(?:IX|IV|V?I{0,3}))\b/;
+
+function toRoman(n: number): string {
+  const table: [number, string][] = [
+    [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+  ];
+  let out = "";
+  let rest = n;
+  for (const [v, s] of table) {
+    while (rest >= v) {
+      out += s;
+      rest -= v;
+    }
+  }
+  return out;
+}
+
+/** Rewrite a chapter line's number to the canonical one — digits,
+    English words, or roman numerals; a line we cannot parse is left
+    untouched (the press never pretends to have fixed what it cannot
+    prove). */
+function replaceChapterNumber(line: string, want: number): string | null {
+  if (DIGIT_NUM_RE.test(line)) return line.replace(DIGIT_NUM_RE, String(want));
+  if (WORD_NUM_RE.test(line)) {
+    const word = NUMBER_WORDS[want] ?? String(want);
+    return line.replace(WORD_NUM_RE, word);
+  }
+  const roman = line.match(ROMAN_NUM_RE);
+  if (roman && roman[1]) {
+    return line.replace(ROMAN_NUM_RE, want <= 20 ? toRoman(want) : String(want));
+  }
+  return null;
+}
+
+async function studioRoom(ctx: StudioCtx): Promise<NextResponse> {
+  const {
+    phase,
+    visitor,
+    languageName,
+    age,
+    tale,
+    volume,
+    level,
+    topic,
+    wishes,
+    vein,
+    plannedPages,
+    bookId,
+    bookMeta,
+    bookConfig,
+    threads,
+    incomingLedger,
+    carriedArt,
+    plateRequest,
+  } = ctx;
+  const persist = async (
+    stage: string,
+    extra: Record<string, unknown>
+  ): Promise<void> => {
+    if (!bookId) return;
+    await updateLibrary(
+      visitor.user.id,
+      bookId,
+      String(bookMeta?.title ?? "A Dream Book"),
+      String(bookMeta?.axiom || bookMeta?.subtitle || "A volume woven in real time."),
+      fitBookContent(
+        {
+          ...(bookMeta ?? {}),
+          config: bookConfig,
+          pages: ctx.bookPages,
+          ...(threads ? { threads } : {}),
+          stage,
+          ...extra,
+        },
+        1_200_000
+      ) as Record<string, unknown>,
+      1_200_000
+    );
+  };
+
+  try {
+    /* --------------- THE HONEST GATE (technical only) ------------ */
+    /* The seal room below is the ONLY gate left, and it measures the
+       binding in code: chapter seams, clean characters, the honest
+       word measure. No editor, no verdict, no rewriting. */
+
+    /* ------------------- THE ILLUSTRATION PLAN ------------------- */
+    if (phase === "art") {
+      const pages = asPressPages(ctx.bookPages);
+      if (pages.length < 4) {
+        return withAnonCookie(
+          NextResponse.json({ error: "The gallery needs a manuscript first." }, { status: 400 }),
+          visitor
+        );
+      }
+      const plateCount =
+        pages.length >= 60 ? 6 : pages.length >= 24 ? 4 : pages.length >= 10 ? 3 : 2;
+      /* THE CAST — read from the Mirror's own ledger (the book's own
+         memory of its characters); no bible exists any more */
+      const castBlock = incomingLedger?.characters?.length
+        ? `THE CAST (the book's own memory of its figures): ${incomingLedger.characters.join(" · ")}`
+        : "";
+      const zai = await ZAI.create();
+      const raw = await askStudio(
+        zai,
+        DIRECTOR_SYSTEM,
+        buildArtPlanPrompt({
+          title: String(bookMeta?.title ?? "A Dream Book"),
+          digest: digestForArt(pages),
+          castBlock,
+          plateCount,
+          ageLine: AGE_PLAN[age] ?? AGE_PLAN.timeless,
+          taleLine: TALE_HINTS[tale] ?? TALE_HINTS.wonder,
+          languageName,
+          drawnElements: studioDrawnElements(bookConfig),
+        })
+      );
+      const parsed = extractJson(raw) ?? salvageJson(raw);
+      const maxPage = pages.length;
+      const style =
+        typeof parsed?.style === "string" && parsed.style.trim()
+          ? parsed.style.trim().slice(0, 300)
+          : "a rich, luminous storybook painting";
+      const plates = (Array.isArray(parsed?.plates) ? parsed.plates : [])
+        .map((p: unknown) => {
+          if (!p || typeof p !== "object") return null;
+          const pp = p as Record<string, unknown>;
+          const page = typeof pp.page === "number" ? Math.round(pp.page) : 0;
+          const scene = typeof pp.scene === "string" ? pp.scene.trim() : "";
+          if (!page || page < 1 || page > maxPage || !scene) return null;
+          return {
+            page,
+            ...(typeof pp.title === "string" ? { title: pp.title.slice(0, 120) } : {}),
+            scene: scene.slice(0, 500),
+            ...(Array.isArray(pp.characters)
+              ? {
+                  characters: (pp.characters as unknown[])
+                    .filter((s): s is string => typeof s === "string")
+                    .slice(0, 6),
+                }
+              : {}),
+            ...(typeof pp.setting === "string" ? { setting: pp.setting.slice(0, 240) } : {}),
+            ...(typeof pp.mood === "string" ? { mood: pp.mood.slice(0, 200) } : {}),
+            ...(typeof pp.composition === "string" ? { composition: pp.composition.slice(0, 240) } : {}),
+          };
+        })
+        .filter((p): p is NonNullable<typeof p> => p !== null)
+        .slice(0, plateCount);
+      if (plates.length === 0) {
+        return withAnonCookie(
+          NextResponse.json(
+            { error: "The director fell silent for a moment. Breathe, then plan again." },
+            { status: 502 }
+          ),
+          visitor
+        );
+      }
+      await persist("plates", { artPlan: { style, plates } });
+      return withAnonCookie(
+        NextResponse.json({
+          artPlan: { style, plates },
+          stage: "plates",
+        }),
+        visitor
+      );
+    }
+
+    /* -------------------- ONE PLATE, PAINTED --------------------- */
+    if (phase === "plate") {
+      if (!plateRequest || typeof plateRequest !== "object") {
+        return withAnonCookie(
+          NextResponse.json({ error: "No plate was named." }, { status: 400 }),
+          visitor
+        );
+      }
+      const plate = plateRequest as {
+        page?: number;
+        title?: string;
+        scene?: string;
+        characters?: unknown;
+        setting?: string;
+        mood?: string;
+        composition?: string;
+      };
+      if (!plate.scene || typeof plate.scene !== "string") {
+        return withAnonCookie(
+          NextResponse.json({ error: "No plate was named." }, { status: 400 }),
+          visitor
+        );
+      }
+      const style =
+        (typeof plateRequest.style === "string" && plateRequest.style.trim()) ||
+        carriedArt?.style ||
+        "a rich, luminous storybook painting";
+      const presentNames = Array.isArray(plate.characters)
+        ? (plate.characters as unknown[])
+            .filter((s): s is string => typeof s === "string")
+            .map((s) => s.toLowerCase())
+        : [];
+      const visualLines = (incomingLedger?.characters ?? [])
+        .map((line) => line.trim())
+        .filter(
+          (line) =>
+            presentNames.length === 0 ||
+            presentNames.some((n) => {
+              const name = line.split(/[—\-–]/)[0].trim().toLowerCase();
+              return name && (name.includes(n) || n.includes(name));
+            })
+        );
+      const prompt = buildPlatePrompt({
+        style,
+        plate: plate as never,
+        visualLines,
+        title: String(bookMeta?.title ?? "A Dream Book"),
+      });
+      const img = await generateImage(prompt, { size: "1792x1024" });
+      if (!img) {
+        return withAnonCookie(
+          NextResponse.json(
+            { error: "The plate's sky was empty for a moment. Breathe, then paint again.", code: "engine" },
+            { status: 502 }
+          ),
+          visitor
+        );
+      }
+      const art = {
+        style,
+        plates: [
+          ...(carriedArt?.plates ?? []),
+          {
+            ...(typeof plate.page === "number" ? { page: plate.page } : {}),
+            ...(typeof plate.title === "string" ? { title: plate.title.slice(0, 120) } : {}),
+            url: img.url,
+          },
+        ],
+      };
+      await persist("plates", { art });
+      return withAnonCookie(
+        NextResponse.json({
+          plateUrl: img.url,
+          plate: { page: plate.page, title: plate.title },
+          art,
+          engine: img.engine,
+          stage: "plates",
+        }),
+        visitor
+      );
+    }
+
+    /* ------------------- THE ACCEPTANCE GATE --------------------- */
+    if (phase === "seal") {
+      const pages = asPressPages(ctx.bookPages);
+      if (pages.length < 4) {
+        return withAnonCookie(
+          NextResponse.json({ error: "The gate needs a manuscript first." }, { status: 400 }),
+          visitor
+        );
+      }
+      const gate = gateCheck({
+        pages,
+        /* THE BOUND PLAN — the gate measures words against the bound-page
+           plan the volume was born with, measured by the ONE layout
+           spec for this age — never against the story-page count */
+        plannedPages:
+          typeof bookMeta?.boundPages === "number" && bookMeta.boundPages >= 8
+            ? Math.floor(bookMeta.boundPages)
+            : typeof bookMeta?.totalPages === "number" &&
+                bookMeta.totalPages >= 8
+              ? Math.max(
+                  8,
+                  Math.round(
+                    (bookMeta.totalPages * specForAge(age).storyWordsPerPage) /
+                      specForAge(age).wordsPerSheet
+                  )
+                )
+              : plannedPages,
+        fullPages: expectsFullPages(age, volume, tale),
+        age,
+      });
+      const stage = gate.pass ? "publication-ready" : "draft-complete";
+      await persist(stage, {
+        pages,
+        gate,
+        ended: true,
+      });
+      return withAnonCookie(
+        NextResponse.json({
+          gate,
+          stage,
+          verdict: gate.pass ? "publication-ready" : "draft-complete",
+        }),
+        visitor
+      );
+    }
+
+    return withAnonCookie(
+      NextResponse.json({ error: "Unknown studio room." }, { status: 400 }),
+      visitor
+    );
+  } catch (err) {
+    console.error(`[dream-book] studio ${phase} failed:`, err);
+    return NextResponse.json(
+      { error: "The studio's room fell silent for a moment. Breathe, then return." },
       { status: 500 }
     );
   }

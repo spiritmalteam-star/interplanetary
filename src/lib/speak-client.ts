@@ -1,0 +1,262 @@
+/* ================================================================== */
+/*  THE SPEAKING HAND — the client's own patience before the doors.    */
+/*                                                                     */
+/*  Every chat the visitor speaks walks through here: a dropped line   */
+/*  is asked once more (the mirror responds instead of dying on one    */
+/*  stumble), and a sky whose energy is spent is NAMED — a gentle      */
+/*  toast and a typed silence the rooms can dress in amber, never      */
+/*  mute static and never a laboratory word.                           */
+/* ================================================================== */
+
+/** The notice the visitor reads when the mirror cannot answer
+    because its energy ran out momentarily. */
+export const ENERGY_NOTICE =
+  "The mirror's energy ran out momentarily — it will speak again once the light returns.";
+
+/** A typed silence — the rooms style it gently (amber, not alarm). */
+export class EnergyError extends Error {
+  constructor() {
+    super(ENERGY_NOTICE);
+    this.name = "EnergyError";
+  }
+}
+
+/* The words the skies and the meter use when the light is spent:
+   gateway code 1113 ("insufficient balance"), the resource package
+   spent, the recharge plea, the quota wall, the purse's own word. */
+const ENERGY_TEXT =
+  /1113|insufficient balance|no resource package|recharge|arrears|quota|insufficient_credits|energy_exhausted/i;
+
+export function isEnergyStatus(status: number, data: unknown): boolean {
+  if (status === 402) return true;
+  const d = data as { error?: unknown; code?: unknown } | null;
+  const code = typeof d?.code === "string" ? d.code : "";
+  const msg = typeof d?.error === "string" ? d.error : "";
+  return ENERGY_TEXT.test(code) || ENERGY_TEXT.test(msg);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** THE GENTLE NOTICE — one toast, the house's own voice, so the
+    visitor always knows WHY the mirror is quiet. */
+export function announceEnergy(): void {
+  if (typeof window === "undefined") return;
+  import("sonner")
+    .then(({ toast }) => {
+      toast("The mirror is resting for a breath", {
+        description:
+          "Its energy ran out momentarily — it will speak again once the light returns.",
+      });
+    })
+    .catch(() => undefined);
+}
+
+/** THE DOOR'S OWN PATIENCE — a dropped line (network storm) is
+    knocked on once more before the silence is accepted; the door
+    itself never judges the statuses (the caller reads the body).
+    THE COMPLETION LAW — a door with no hand of its own is bounded:
+    one quiet breath of two minutes and forty-five seconds (under the
+    sky's own 180s cap), so no ask ever hangs forever. An asker that
+    carries its own signal (a streaming crossing, a superseded ask)
+    keeps its own hand untouched. */
+const DOOR_TIMEOUT_MS = 165_000;
+
+export async function speakDoor(url: string, init: RequestInit): Promise<Response> {
+  /* a fresh bound per knock — the second knock carries its own full
+     patience, never the first one's nearly-spent breath */
+  const bound = () =>
+    init.signal ??
+    (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function"
+      ? AbortSignal.timeout(DOOR_TIMEOUT_MS)
+      : undefined);
+  try {
+    return await fetch(url, { ...init, signal: bound() });
+  } catch (err) {
+    const first = err;
+    await sleep(1200);
+    try {
+      return await fetch(url, { ...init, signal: bound() });
+    } catch {
+      throw first;
+    }
+  }
+}
+
+/** THE ENERGY'S OWN WORD — raises the typed silence (and the toast)
+    when a response carries the spent-light word. Call right after
+    the body is read, before any generic verdict. */
+export function raiseEnergy(status: number, data: unknown): void {
+  if (!isEnergyStatus(status, data)) return;
+  announceEnergy();
+  throw new EnergyError();
+}
+
+/** THE MIRROR'S OWN ANSWER — the full rite for one chat door:
+    knock (with patience), read, name the energy silence, give a
+    crowded sky one more breath (HTTP 429 only — a network stumble
+    already knocked twice inside the door, and a 5xx has already
+    waited long enough not to be asked to wait again), then either
+    hand back the reply or throw the truthful error. */
+export async function speakReply(
+  url: string,
+  body: unknown,
+  field: "reply" | "transmission",
+  fallback: string
+): Promise<string> {
+  const attempt = async (): Promise<{ res: Response; data: unknown }> => {
+    const res = await speakDoor(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data: unknown = await res.json().catch(() => null);
+    return { res, data };
+  };
+
+  let out = await attempt();
+  if (isEnergyStatus(out.res.status, out.data)) {
+    announceEnergy();
+    throw new EnergyError();
+  }
+  /* one more breath for a crowded sky (429) — never for the energy's
+     own silence (that word is already spoken above) and never for a
+     generic 5xx: a server that answered an error after a long wait is
+     not asked to wait again (network stumbles knock twice inside the
+     door itself) */
+  if (out.res.status === 429) {
+    await sleep(1400);
+    try {
+      out = await attempt();
+    } catch {
+      /* the first verdict stands */
+    }
+    if (isEnergyStatus(out.res.status, out.data)) {
+      announceEnergy();
+      throw new EnergyError();
+    }
+  }
+
+  const d = out.data as { reply?: unknown; transmission?: unknown; error?: unknown } | null;
+  const raw = field === "reply" ? d?.reply : d?.transmission;
+  const reply = typeof raw === "string" ? raw.trim() : "";
+  if (!out.res.ok || !reply) {
+    throw new Error(
+      typeof d?.error === "string" && d.error ? d.error : fallback
+    );
+  }
+  return reply;
+}
+
+/** THE GIFT-BEARING ANSWER — the same rite as speakReply, carrying
+    whatever else the door handed over beside the words (today: the
+    vision gift — a painting prompt the visualization engine paints). */
+export async function speakReplyGift(
+  url: string,
+  body: unknown,
+  field: "reply" | "transmission",
+  fallback: string
+): Promise<{ text: string; vision: string | null; omni: { taskId: string; needsApproval: boolean } | null }> {
+  const attempt = async (): Promise<{ res: Response; data: unknown }> => {
+    const res = await speakDoor(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data: unknown = await res.json().catch(() => null);
+    return { res, data };
+  };
+
+  let out = await attempt();
+  if (isEnergyStatus(out.res.status, out.data)) {
+    announceEnergy();
+    throw new EnergyError();
+  }
+  if (out.res.status === 429) {
+    await sleep(1400);
+    try {
+      out = await attempt();
+    } catch {
+      /* the first verdict stands */
+    }
+    if (isEnergyStatus(out.res.status, out.data)) {
+      announceEnergy();
+      throw new EnergyError();
+    }
+  }
+
+  const d = out.data as {
+    reply?: unknown;
+    transmission?: unknown;
+    vision?: unknown;
+    error?: unknown;
+    omni?: { taskId?: unknown; needsApproval?: unknown; steps?: unknown };
+  } | null;
+  const raw = field === "reply" ? d?.reply : d?.transmission;
+  const reply = typeof raw === "string" ? raw.trim() : "";
+  if (!out.res.ok || !reply) {
+    throw new Error(
+      typeof d?.error === "string" && d.error ? d.error : fallback
+    );
+  }
+  const omniRaw = d?.omni;
+  /* THE LEDGER'S OWN SHAPE — the staged work rides with its steps as
+     they truly ran (an absent ledger is an honest empty one, never a
+     crash: the confirm card reads from this). */
+  const omniSteps: { tool: string; status: string; name: string }[] =
+    omniRaw && typeof omniRaw === "object" && Array.isArray((omniRaw as { steps?: unknown }).steps)
+      ? ((omniRaw as { steps: { tool?: unknown; status?: unknown; name?: unknown }[] }).steps
+          .filter((s) => s && typeof s === "object" && typeof s.tool === "string")
+          .map((s) => ({
+            tool: String(s.tool),
+            status: typeof s.status === "string" ? s.status : "pending",
+            name: typeof s.name === "string" ? s.name : "",
+          })))
+      : [];
+  const omni =
+    omniRaw && typeof omniRaw === "object" && typeof omniRaw.taskId === "string"
+      ? { taskId: omniRaw.taskId, needsApproval: omniRaw.needsApproval === true, steps: omniSteps }
+      : null;
+  return {
+    text: reply,
+    vision: typeof d?.vision === "string" && d.vision.trim() ? d.vision.trim() : null,
+    omni,
+  };
+}
+
+/** M.E. PRIME'S CONFIRMATION HAND — a consequential step is staged and
+    waits for the visitor's explicit yes: one toast, one Confirm hand,
+    the approval crossing through the same door. Nothing acts without
+    this press — the law of the house. */
+export function offerOmniConfirm(taskId: string): void {
+  if (typeof window === "undefined") return;
+  import("sonner")
+    .then(({ toast }) => {
+      toast("M.E. Prime awaits your yes", {
+        description:
+          "One consequential step is staged — confirm to let it act. Nothing moves without you.",
+        duration: 20000,
+        action: {
+          label: "Confirm",
+          onClick: () => {
+            void fetch("/api/transmission", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query: "confirm", mode: "omni", approveTaskId: taskId }),
+            })
+              .then((r) => r.json())
+              .then((d: { transmission?: string; error?: string }) => {
+                if (d?.transmission) {
+                  toast.success(d.transmission.slice(0, 240));
+                } else {
+                  toast.error(d?.error || "The confirmation could not cross — press once more.");
+                }
+              })
+              .catch(() => toast.error("The confirmation could not cross — press once more."));
+          },
+        },
+      });
+    })
+    .catch(() => undefined);
+}

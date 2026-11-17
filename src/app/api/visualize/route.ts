@@ -19,6 +19,7 @@ import {
 } from "@/lib/image-engine";
 import { meterRoute } from "@/lib/server/meter";
 
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ================================================================== */
 /*  MIRROR ENTITY — UNIVERSAL VISUALIZATION ENGINE                     */
 /*  One endpoint: the visitor asks in natural language, a Visual       */
@@ -27,19 +28,6 @@ import { meterRoute } from "@/lib/server/meter";
 /*  Information-heavy modes are HYBRID: the cinematic artwork is       */
 /*  generated, while labels, panels and diagrams are rendered as real  */
 /*  interface elements on the client — always readable, always exact.  */
-/* ================================================================== */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 /* the atelier's gallery — shared with the generate_image engine */
 const ART_DIR = GALLERY_DIR;
 
@@ -47,8 +35,15 @@ const ART_DIR = GALLERY_DIR;
 const ART_DIRECTION =
   "Cinematic science-fiction concept art of extraordinary quality, advanced interplanetary encyclopedia aesthetic, monumental crystalline and organic architecture, sophisticated holographic interface elements, midnight-blue, violet, cyan, ivory and gold palette, volumetric illumination, realistic reflections, deep spatial composition, atmospheric perspective, intricate environmental storytelling, controlled luminosity rather than excessive brightness, ultra-detailed, elegant, professional composition";
 
+/** THE FIVE-IN-ONE SHEET LAW — every single artwork (except presentation
+    slides) is composed as one dense information sheet: five clearly
+    separated regions, each showing a different facet of the idea, with
+    short correctly-spelled engraved labels tying them together. */
+const COMPOSITE_SHEET =
+  "composed as ONE dense information sheet that reads like five images in one: a dominant central vista plus four clearly separated side or corner panels (or a 2x2 grid around the centerpiece), each panel a DIFFERENT facet of the same idea — environment, inhabitants, technology, a detailed close-up, a schematic cross-section — divided by thin luminous separators, each panel carrying one or two short correctly spelled engraved labels, the whole sheet rich with readable annotations, diagrams and data glyphs; information-dense yet orderly";
+
 const ART_AVOID =
-  "Avoid: generic AI look, chaotic composition, distorted anatomy, cluttered layout, watermark, signature, frame, border, large garbled text, misspelled words";
+  "Avoid: generic AI look, chaotic composition, distorted anatomy, decorative outer frame, watermark, signature, large garbled text, misspelled or nonsense words, blur, noise, low resolution, oversaturation";
 
 const DIRECTOR_SYSTEM = `You are the Visual Director of the Mirror Entity — an interplanetary visual encyclopedia that answers curiosity with extraordinary images. A visitor asks to SEE something; you translate their request into a complete visual composition.
 
@@ -66,11 +61,11 @@ RESOLVING THE SUBJECT (CRITICAL)
 - For follow-ups, EVOLVE the previous visualization (same subject, new aspect, richer detail, new angle, or a new mode) — do not start from zero.
 
 PROMPT COMPOSITION
-- "artworkPrompt": a rich ENGLISH image prompt (40-90 words) built from the user's request, the conversation context, the subject's distinctive visual characteristics, and the Mirror Entity art direction. Describe composition, lighting, scale, materials, mood. IMPORTANT: the image model cannot render readable text — do NOT ask it to include labels, captions or paragraphs. At most "a single short engraved title" is acceptable; prefer purely visual artwork.
-- For "presentation", each slide carries its own artworkPrompt with a DIFFERENT visual aspect of the subject (overview, detail, system, human scale).
+- "artworkPrompt": a rich ENGLISH image prompt (60-130 words) built from the user's request, the conversation context, the subject's distinctive visual characteristics, and the Mirror Entity art direction. CONTEXT FIDELITY (sacred): the painting must represent the visitor's context as fully as possible — fold EVERY salient detail from their request and the conversation into the prompt: who/what is present, the setting and era, culture and artifacts, colors, weather, time of day, emotional mood, symbolic elements, scale and action. A detail the prompt omits is a detail the painting loses. Describe composition, lighting, materials, texture, depth. Quality law: crisp ultra-detailed HD rendering, razor-sharp focus, high fidelity textures, professional color grading. THE FIVE-IN-ONE SHEET: compose the artwork as ONE dense information sheet of five separated panels/regions, each panel a different facet of the subject; name each facet explicitly in the prompt and welcome short engraved labels and schematic annotations — but spell every label EXACTLY and keep it SHORT (1-4 words), because garbled or misspelled text is forbidden.
+- For "presentation", each slide carries its own artworkPrompt with a DIFFERENT visual aspect of the subject (overview, detail, system, human scale). Slides are single scenes, NOT multi-panel sheets.
 
 STRUCTURED CONTENT (hybrid rendering — the app draws the text itself)
-- "panels": for encyclopedia (3-4), diagram (2-3) and science/map (2) — each {"heading": "...", "body": "..."} — concise, accurate, elegant. Body 20-60 words. Written in the visitor's language.
+- "panels": for encyclopedia (4), diagram (2-3) and science/map (2-3) — each {"heading": "...", "body": "..."} — concise, accurate, elegant. Body 20-60 words. Written in the visitor's language. THE DENSITY LAW: pack as much readable information as each panel can carry — numbers, names, functions, measurements — the sheet below the artwork is part of the five-in-one reading.
 - "diagram": for mode "diagram" ONLY — {"nodes": [{"id":"n1","label":"...","x":50,"y":30}], "edges": [["n1","n2"]]}. 4-8 nodes; x and y are integers 8-92 (normalized positions over the artwork); labels max 22 characters; edges connect logical relationships. Distribute nodes clearly (no overlaps).
 - "annotations": for modes "science" and "map" — 3-6 items [{"x":20,"y":40,"label":"..."}], x/y integers 8-92, label max 26 characters, in the visitor's language.
 - For mode "illustration": panels/annotations/diagram must be empty.
@@ -174,7 +169,7 @@ const MODE_DEFAULT_SIZE: Record<VisualizationMode, ImageSize> = {
    queued behind the previous one and retried with growing patience —
    but the ladder is kept short, so a resting brush never keeps the
    visitor waiting minutes for news. */
-const PAINT_BACKOFF_MS = [1500, 4000];
+const PAINT_BACKOFF_MS = [800, 2000];
 
 let brushLine: Promise<unknown> = Promise.resolve();
 function withBrush<T>(task: () => Promise<T>): Promise<T> {
@@ -192,8 +187,11 @@ async function paint(
     for (let i = 0; i < attempts; i++) {
       /* the generate_image tool — DALL·E 3 first, the Z.ai atelier as
          the eternal fallback; retries and the circuit breaker live
-         inside the engine */
-      const img = await generateImage(prompt, { size });
+         inside the engine. THE HD LAW — every crystal paints in
+         high definition (professional, clean, context-true). */
+      const paintClock = Date.now();
+      const img = await generateImage(prompt, { size, quality: "hd" });
+      console.log("[api/visualize] the brush painted in", Date.now() - paintClock, "ms (engine:", img?.engine ?? "none", ")");
       if (img) return img;
       console.error(`[api/visualize] paint attempt ${i + 1}: every brush rested`);
       if (i < attempts - 1) {
@@ -206,11 +204,13 @@ async function paint(
   });
 }
 
-/** Keep the atelier tidy — paintings older than two days are released. */
+/** Keep the atelier tidy — paintings older than thirty days are
+    released (the visitor's history reopens a conversation's visions
+    for a whole month before the gallery lets them rest). */
 function sweepOldPaintings(): void {
   try {
     if (!fs.existsSync(ART_DIR)) return;
-    const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
     for (const f of fs.readdirSync(ART_DIR)) {
       if (!f.endsWith(".png")) continue;
       const p = path.join(ART_DIR, f);
@@ -263,6 +263,13 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const modeHint = isVisualizationMode(body?.modeHint)
       ? (body.modeHint as VisualizationMode)
       : null;
+    /* THE ONE PLATE LAW — when the visitor's room asks for a single
+       picture (the Manifest gift), the presentation door never opens:
+       exactly one image is painted, however the director leans. */
+    const singleImage = body?.single === true;
+    /* THE VISITOR'S OWN STYLE — chosen through the "/" hand; the
+       director weaves it into the prompt when present. */
+    const style = str(body?.style, 120);
     const contextSubject = str(body?.contextSubject, 400);
     const previousMode = isVisualizationMode(body?.previousMode)
       ? (body.previousMode as VisualizationMode)
@@ -295,8 +302,19 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         `The visitor explicitly chose the mode "${modeHint}" — honor it exactly.`
       );
     }
+    if (singleImage) {
+      userLines.push(
+        `ONE IMAGE ONLY: never choose the "presentation" mode — reply with one single artwork ("illustration" unless another single mode serves better).`
+      );
+    }
+    if (style) {
+      userLines.push(
+        `THE VISITOR'S CHOSEN STYLE: "${style}" — let it lead the artwork's whole look (palette, texture, mood), while staying true to the subject.`
+      );
+    }
 
     const zai = await ZAI.create();
+    const directorClock = Date.now();
 
     /* ---------- the Visual Director composes the vision ---------- */
     const completion = await zai.chat.completions.create({
@@ -309,6 +327,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       max_tokens: 4096,
     });
 
+    console.log("[api/visualize] the director composed in", Date.now() - directorClock, "ms");
     const raw = (completion.choices[0]?.message?.content ?? "").trim();
     let spec = parseJsonLoose(raw);
     if (!spec) {
@@ -374,9 +393,10 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     }
 
     /* ---------- shape the director's spec ---------- */
-    const mode: VisualizationMode = isVisualizationMode(spec.mode)
+    let mode: VisualizationMode = isVisualizationMode(spec.mode)
       ? spec.mode
       : "illustration";
+    if (singleImage && mode === "presentation") mode = "illustration";
     const aspect = ["wide", "tall", "square"].includes(String(spec.aspect))
       ? String(spec.aspect)
       : null;
@@ -391,7 +411,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const explanation = str(spec.explanation, 1200);
     const discernment = str(spec.discernment, 400);
     const artworkPrompt =
-      str(spec.artworkPrompt, 1200) || `${subject}. ${ART_DIRECTION}`;
+      str(spec.artworkPrompt, 1600) || `${subject}. ${COMPOSITE_SHEET}. ${ART_DIRECTION}`;
 
     const panelsRaw = Array.isArray(spec.panels) ? spec.panels : [];
     const panels = panelsRaw
@@ -456,14 +476,21 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
 
     /* ---------- the atelier paints ---------- */
     sweepOldPaintings();
-    const finalPrompt = `${artworkPrompt}. ${ART_DIRECTION}. ${ART_AVOID}.`;
+    const finalPrompt =
+      mode === "presentation"
+        ? style
+          ? `${artworkPrompt}. Style: ${style}. ${ART_DIRECTION}. ${ART_AVOID}.`
+          : `${artworkPrompt}. ${ART_DIRECTION}. ${ART_AVOID}.`
+        : style
+          ? `${artworkPrompt}. Style: ${style}. ${COMPOSITE_SHEET}. ${ART_DIRECTION}. ${ART_AVOID}.`
+          : `${artworkPrompt}. ${COMPOSITE_SHEET}. ${ART_DIRECTION}. ${ART_AVOID}.`;
     const preparedPrompt = finalPrompt;
     const slidesSpec = Array.isArray(spec.slides) ? spec.slides : [];
 
     let mainPainting: GeneratedImage | null = null;
     const slidePaintings: (GeneratedImage | null)[] = [];
 
-    if (mode === "presentation") {
+    if (mode === "presentation" && !singleImage) {
       /* painted one by one — the queue keeps the brushes honest; each
          slide may try three times before the brushes rest */
       const slideDefs = slidesSpec.slice(0, 5);
@@ -479,7 +506,11 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         );
       }
     } else {
-      mainPainting = await paint(finalPrompt, size);
+      /* THE ONE PLATE NEVER GIVES UP EASILY — a single crystallization
+         (the wish spoken on the floor, the rooms' crystallize hand)
+         tries three brushes before it rests: the first knock, two
+         more with breathing room between. */
+      mainPainting = await paint(finalPrompt, size, singleImage ? 3 : 2);
     }
 
     const id = `viz-${Date.now().toString(36)}-${crypto

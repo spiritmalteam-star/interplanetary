@@ -219,7 +219,7 @@ function TreeLeafChip({
       data-testid={testId}
       title={leaf.reason ? `${label} — ${leaf.reason}` : label}
       style={{ width: LEAF_W }}
-      className={`focus-glow relative line-clamp-2 rounded-full border px-3 py-1 text-left text-[11.5px] leading-[1.25] transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`focus-glow relative line-clamp-2 rounded-full border px-3 py-1 text-left text-[12.5px] leading-[1.25] transition-colors duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 ${
         leaf.isBud
           ? "border-[color-mix(in_srgb,var(--gd)_55%,transparent)] bg-[color-mix(in_srgb,var(--gd)_10%,var(--glass-bg))] text-foreground/90"
           : connected
@@ -244,7 +244,7 @@ function TreeLeafChip({
       )}
       {leaf.isBud && leaf.type && leaf.type !== "pause" && (
         <span
-          className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]"
+          className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[9px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]"
           style={{
             border: "1px solid color-mix(in srgb, var(--gd) 34%, transparent)",
           }}
@@ -280,7 +280,7 @@ function EchoChip({
       data-testid={testId}
       title={label}
       style={{ width: ECHO_CHIP_W }}
-      className="focus-glow line-clamp-2 rounded-full border border-[color-mix(in_srgb,var(--gd)_16%,var(--hairline))] bg-[color-mix(in_srgb,var(--glass-bg)_55%,transparent)] px-3 py-1 text-left text-[10.5px] leading-[1.25] text-muted-foreground/70 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--gd)_34%,transparent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+      className="focus-glow line-clamp-2 rounded-full border border-[color-mix(in_srgb,var(--gd)_16%,var(--hairline))] bg-[color-mix(in_srgb,var(--glass-bg)_55%,transparent)] px-3 py-1 text-left text-[11.5px] leading-[1.25] text-muted-foreground/70 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--gd)_34%,transparent)] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
     >
       {label}
     </button>
@@ -1366,10 +1366,10 @@ export function SuggestionTree({
           onClick={() => setState("grove")}
           data-testid={`${prefix}-open`}
           aria-label={t("Open the tree")}
-          className="focus-glow flex h-9 w-full items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)] px-3.5 text-muted-foreground backdrop-blur-xl transition-colors duration-300 hover:text-foreground"
+          className="focus-glow flex h-9 w-full items-center gap-2 rounded-full border hairline bg-[var(--glass-bg)] px-3.5 text-muted-foreground backdrop-blur-md transition-colors duration-300 hover:text-foreground"
         >
           <ListTree className="size-3.5 shrink-0" aria-hidden="true" />
-          <span className="truncate font-serif text-[12px] italic">
+          <span className="truncate font-serif text-[13px] italic">
             {t("The whispers")}
           </span>
           <ChevronUp className="ml-auto size-3.5 shrink-0 opacity-70" aria-hidden="true" />
@@ -1584,7 +1584,7 @@ export function SuggestionTree({
                   </span>
                 </div>
                 <span
-                  className={`absolute whitespace-nowrap text-[11.5px] font-medium leading-6 transition-colors duration-500 ${
+                  className={`absolute whitespace-nowrap text-[12.5px] font-medium leading-6 transition-colors duration-500 ${
                     b.leading || b.id === "channeling"
                       ? "text-foreground"
                       : "text-muted-foreground/80"
@@ -1620,7 +1620,7 @@ export function SuggestionTree({
                     }}
                   />
                   <span
-                    className={`absolute text-[10.5px] leading-[1.2] ${
+                    className={`absolute text-[11.5px] leading-[1.2] ${
                       s.connected ? "text-foreground/85" : "text-muted-foreground/75"
                     }`}
                     style={{
@@ -1648,11 +1648,11 @@ export function SuggestionTree({
                         className="absolute rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--gd)_30%,transparent)] bg-[color-mix(in_srgb,var(--gd)_5%,transparent)] px-3 py-1"
                       >
                         {!leaf.quiet && (
-                          <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]">
+                          <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[9px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--gd)]">
                             {t("Pause & integrate")}
                           </span>
                         )}
-                        <span className="line-clamp-2 align-middle text-[11.5px] italic leading-[1.25] text-foreground/80">
+                        <span className="line-clamp-2 align-middle text-[12.5px] italic leading-[1.25] text-foreground/80">
                           {t(leaf.text)}
                         </span>
                       </div>
@@ -1773,7 +1773,7 @@ export function SuggestionTree({
           overscrollBehavior: "contain",
           contain: "layout paint",
         }}
-        className={`no-scrollbar relative cursor-grab overflow-hidden rounded-2xl border hairline bg-[color-mix(in_srgb,var(--glass-bg)_72%,transparent)] backdrop-blur-xl transition-[height] duration-300 active:cursor-grabbing ${
+        className={`no-scrollbar relative cursor-grab overflow-hidden rounded-2xl border hairline bg-[color-mix(in_srgb,var(--glass-bg)_72%,transparent)] backdrop-blur-md transition-[height] duration-300 active:cursor-grabbing ${
           disabled ? "pointer-events-none opacity-70" : ""
         }`}
       >
@@ -1818,7 +1818,7 @@ export function SuggestionTree({
           className="pointer-events-none absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-[var(--background)] to-transparent"
         />
         {!hintSeen && (
-          <div className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border hairline bg-[var(--glass-bg)] px-2.5 py-0.5 text-[9.5px] text-muted-foreground/80 backdrop-blur-xl">
+          <div className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border hairline bg-[var(--glass-bg)] px-2.5 py-0.5 text-[10.5px] text-muted-foreground/80 backdrop-blur-md">
             {t("Drag the tree in any direction")}
           </div>
         )}
