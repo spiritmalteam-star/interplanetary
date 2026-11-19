@@ -115,12 +115,12 @@ export function parseLedger(raw: unknown): BookLedger | null {
   }
   const ledger: BookLedger = {
     ...(brief ? { brief } : {}),
-    ...(lines(o.canon, 16) ? { canon: lines(o.canon, 16) } : {}),
-    ...(lines(o.characters, 18) ? { characters: lines(o.characters, 18) } : {}),
-    ...(lines(o.objects, 14) ? { objects: lines(o.objects, 14) } : {}),
-    ...(lines(o.timeline, 14) ? { timeline: lines(o.timeline, 14) } : {}),
-    ...(lines(o.promises, 16) ? { promises: lines(o.promises, 16) } : {}),
-    ...(lines(o.motifs, 10) ? { motifs: lines(o.motifs, 10) } : {}),
+    ...(lines(o.canon, 20) ? { canon: lines(o.canon, 20) } : {}),
+    ...(lines(o.characters, 28) ? { characters: lines(o.characters, 28) } : {}),
+    ...(lines(o.objects, 18) ? { objects: lines(o.objects, 18) } : {}),
+    ...(lines(o.timeline, 44) ? { timeline: lines(o.timeline, 44) } : {}),
+    ...(lines(o.promises, 20) ? { promises: lines(o.promises, 20) } : {}),
+    ...(lines(o.motifs, 12) ? { motifs: lines(o.motifs, 12) } : {}),
     ...(chapters ? { chapters } : {}),
   };
   return Object.keys(ledger).length > 0 ? ledger : null;
@@ -181,41 +181,28 @@ export function parseAudit(raw: unknown): BookAudit | null {
 }
 
 /** The bounded injection — the ledger rides into every continuation,
-    compact enough to never crowd the pages it protects. */
+    compact enough to never crowd the pages it protects. THE OPEN
+    TUNNEL: only the Mirror's own continuity memory is handed back —
+    the facts the book itself keeps (canon, cast, objects, chronology,
+    chapters). The old brief/promises/motifs machinery is never spoken
+    to the page again (legacy ledgers simply keep those fields quiet). */
 export function ledgerBlock(ledger: BookLedger | null): string {
   if (!ledger) return "";
   const out: string[] = [];
-  if (ledger.brief) {
-    const b = ledger.brief;
-    const parts = [
-      b.premise ? `premise: ${b.premise}` : "",
-      b.question ? `question: ${b.question}` : "",
-      b.dilemma ? `dilemma: ${b.dilemma}` : "",
-      b.chain ? `chain: ${b.chain}` : "",
-      b.ending ? `ending effect sought: ${b.ending}` : "",
-    ].filter(Boolean);
-    if (parts.length) out.push(`  BRIEF — ${parts.join(" · ")}`);
-  }
-  if (ledger.canon?.length) out.push(`  CANON — ${ledger.canon.slice(0, 12).join(" | ")}`);
+  if (ledger.canon?.length) out.push(`  CANON — ${ledger.canon.slice(0, 16).join(" | ")}`);
   if (ledger.characters?.length)
-    out.push(`  CHARACTERS — ${ledger.characters.slice(0, 14).join(" | ")}`);
+    out.push(`  CHARACTERS — ${ledger.characters.slice(0, 24).join(" | ")}`);
   if (ledger.objects?.length)
-    out.push(`  OBJECTS (state is law) — ${ledger.objects.slice(0, 10).join(" | ")}`);
+    out.push(`  OBJECTS (state is law) — ${ledger.objects.slice(0, 14).join(" | ")}`);
   if (ledger.timeline?.length)
-    out.push(`  TIMELINE — ${ledger.timeline.slice(0, 10).join(" | ")}`);
-  if (ledger.promises?.length)
-    out.push(
-      `  PROMISES (every one must land or stay honest) — ${ledger.promises.slice(0, 12).join(" | ")}`
-    );
-  if (ledger.motifs?.length)
-    out.push(`  MOTIFS — ${ledger.motifs.slice(0, 8).join(" | ")}`);
+    out.push(`  TIMELINE — ${ledger.timeline.slice(0, 40).join(" | ")}`);
   if (ledger.chapters?.length)
     out.push(
       `  CHAPTERS — ${ledger.chapters
-        .slice(-14)
+        .slice(-20)
         .map((c) => `"${c.title}"${c.pages ? ` (${c.pages})` : ""}`)
         .join(" | ")}`
     );
   if (out.length === 0) return "";
-  return `- THE LEDGER (the volume's own intelligence — honor every line; carry it forward and update it with what these pages change):\n${out.join("\n")}`;
+  return `- THE LEDGER (the volume's own memory of facts — honor every line; carry it forward and update it with what these pages change):\n${out.join("\n")}`;
 }

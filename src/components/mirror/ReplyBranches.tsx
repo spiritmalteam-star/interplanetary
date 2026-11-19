@@ -9,7 +9,6 @@ import type { BranchId } from "@/lib/data/suggestion-tree";
 import {
   BRANCH_TYPE_LABELS,
   driftTreeTo,
-  journeyDepth,
   loadSeen,
   parseBranchesPayload,
   recordJourney,
@@ -196,6 +195,10 @@ export function ReplyBranches({
 
   /* the grown branches — one quiet call per landed reply */
   const growRef = useRef(false);
+  /* THE ONE HAND — an abort controller held by the ref: a newer call
+     lays the elder one down before it begins, and the sky's own
+     silence ends after 12s (no fetch outlives its welcome). */
+  const abortRef = useRef<AbortController | null>(null);
   useEffect(() => {
     if (!active || message.branches) return;
     if (!message.text.trim()) return;
@@ -203,10 +206,17 @@ export function ReplyBranches({
       if (growRef.current || inflight.has(message.id)) return;
       growRef.current = true;
       inflight.add(message.id);
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
       try {
         const res = await fetch("/api/suggestions/bud", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.any([
+            controller.signal,
+            AbortSignal.timeout(12_000),
+          ]),
           body: JSON.stringify({
             branch: branchFor(kind),
             /* the last breaths are THIS exchange — the freshest
@@ -219,9 +229,11 @@ export function ReplyBranches({
             /* the visitor's own fields of expansion ride along —
                coherent ones grow branches of their own */
             seeds,
-            /* THE DNA DEEPENING: the deeper the walk, the deeper the
-               branches the engine grows */
-            depth: journeyDepth(),
+            /* THE DNA DEEPENING + THE VISITOR'S OWN LEVEL: the deeper
+               the walk — or the level chosen in the profile's own
+               settings — the deeper the branches the engine grows
+               (the chosen level always leads when it is set). */
+            depth: useMirror.getState().sendDepth(),
             /* THE WALKER'S OWN SCORE: the profile's expansion index —
                the branches meet the walker at their own depth */
             score: readExpansionScore(),
@@ -234,11 +246,13 @@ export function ReplyBranches({
           recordSeen(grown.map((b) => b.question));
         }
       } catch {
-        /* the sky is silent — the stand-in whispers remain */
+        /* the sky is silent — the stand-in whispers remain (an aborted
+           call — superseded or past its 12s — is silence too) */
       } finally {
         inflight.delete(message.id);
+        if (abortRef.current === controller) abortRef.current = null;
       }
-    }, 650);
+    }, 2200); // the branches grow after the reply has settled — never in its way
     return () => window.clearTimeout(id);
   }, [active, message.id, message.text, message.query, message.branches, kind, contextQuery, scopeHint, seeds, attachBranches]);
 
@@ -288,13 +302,13 @@ export function ReplyBranches({
       >
         <span className="flex min-w-0 items-center gap-2">
           <ListTree className="size-3.5 shrink-0 text-[var(--scope-a,var(--gd))]" aria-hidden="true" />
-          <span className="mono-label truncate text-[9px] uppercase tracking-[0.22em] text-foreground/85">
+          <span className="mono-label truncate text-[10px] uppercase tracking-[0.22em] text-foreground/85">
             {t("Branches of this exchange")}
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-2">
           <span
-            className="mono-label rounded-full px-1.5 text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]"
+            className="mono-label rounded-full px-1.5 text-[9px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]"
             style={{ border: "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 48%, transparent)" }}
           >
             {chipCount}
@@ -327,10 +341,10 @@ export function ReplyBranches({
               className="max-w-full rounded-2xl border border-dashed border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--glass-bg))] px-3 py-1.5"
               data-testid="reply-branch-pause"
             >
-              <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]">
+              <span className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[9px] uppercase tracking-[0.14em] leading-[1.6] text-[var(--scope-a,var(--gd))]">
                 {t("Pause & integrate")}
               </span>
-              <span className="align-middle text-[12px] italic leading-[1.5] text-foreground/90">
+              <span className="align-middle text-[13px] italic leading-[1.5] text-foreground/90">
                 {b.question}
               </span>
             </div>
@@ -343,10 +357,10 @@ export function ReplyBranches({
               aria-disabled={disabled}
               data-testid="reply-branch-chip"
               title={b.reason ? `${b.question} — ${b.reason}` : b.question}
-              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_52%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[12.5px] italic leading-snug text-foreground shadow-[0_1px_10px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] backdrop-blur-xl transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,var(--glass-bg))] disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
+              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_52%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_14%,var(--card))] px-3 py-1.5 text-left font-serif text-[13.5px] italic leading-snug text-foreground shadow-[0_1px_10px_-6px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)] transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_70%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_22%,var(--card))] disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
             >
               <span
-                className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[8px] uppercase tracking-[0.14em] not-italic leading-[1.6] text-[var(--scope-a,var(--gd))]"
+                className="mono-label mr-1.5 inline-block rounded-full px-1.5 align-middle text-[9px] uppercase tracking-[0.14em] not-italic leading-[1.6] text-[var(--scope-a,var(--gd))]"
                 style={{
                   border:
                     "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 46%, transparent)",
@@ -369,7 +383,7 @@ export function ReplyBranches({
               aria-disabled={disabled}
               data-testid="reply-branch-chip"
               title={s}
-              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--glass-bg))] px-3 py-1.5 text-left font-serif text-[12.5px] italic leading-snug text-foreground/90 backdrop-blur-xl transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,var(--glass-bg))] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[13px]"
+              className="focus-glow max-w-full rounded-full border border-[color-mix(in_srgb,var(--scope-a,var(--gd))_44%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_10%,var(--card))] px-3 py-1.5 text-left font-serif text-[13.5px] italic leading-snug text-foreground/90 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_62%,transparent)] hover:bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_16%,var(--card))] hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50 sm:text-[14px]"
             >
               {t(s)}
             </button>
@@ -384,7 +398,7 @@ export function ReplyBranches({
                 onClick={() => driftTreeTo(branchFor(kind))}
                 aria-label={t("Find them on the tree")}
                 data-testid="reply-branches-hub"
-                className="mono-label flex items-center gap-1.5 rounded-full px-2 py-1 text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
+                className="mono-label flex items-center gap-1.5 rounded-full px-2 py-1 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/60 transition-colors duration-300 hover:text-foreground"
               >
                 <ListTree className="size-3" aria-hidden="true" />
                 {t("Find them on the tree")}

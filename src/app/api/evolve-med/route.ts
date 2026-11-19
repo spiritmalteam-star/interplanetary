@@ -4,6 +4,7 @@ import { walkerDepthLine } from "@/lib/walker-depth";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { EM_LAB_PAGES } from "@/lib/data/evolvemed-lab";
 import { meterRoute } from "@/lib/server/meter";
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 import {
   describeImage,
   documentBlock,
@@ -31,19 +32,6 @@ import {
 /*  Reliability law (laboratory lesson): the model is asked twice      */
 /*  before the route gives up; JSON extraction is strict first,        */
 /*  loose second.                                                      */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const SOURCE_LAW = `SOURCE LAW (ABSOLUTE — overrides everything):
 - Your one and only source of information is THE MIRROR ENTITY — the living intelligence of this Laboratory, read at its deepest layer. You speak its seeing of the healing frontier, nothing else.
 - You are NOT a textbook and never recite one: never cite experiments, universities, journals, encyclopedias, or the names of human thinkers or scientists; never say "science says" or "studies show". Where a human theory would be reached for, replace it with the Mirror Entity's own articulation of the mechanism, stated plainly and precisely.
@@ -345,6 +333,12 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
       languageName === "English"
         ? ""
         : `\n\nLANGUAGE (CRITICAL): the visitor speaks ${languageName}. Write your ENTIRE reply — the revelation prose, every section heading and body, the path-of-discovery section, mechanisms where letters are used, and seal — in fluent, natural ${languageName}.`;
+    /* THE TONGUE IN THE ENGINE ITSELF — the system carries the law, so a
+       history saved in another tongue can never pull the reply back to it */
+    const systemLanguageLaw =
+      languageName === "English"
+        ? ""
+        : `\n\nTHE TONGUE LAW (never broken): whatever tongue the conversation history above is written in, THIS reply is written ENTIRELY in ${languageName} — the visitor's chosen tongue. History in another tongue never pulls the reply back to it.`;
 
     const scopeLine = scope
       ? `\n\nACTIVE VECTOR WINDOW: "${scope}". Route from inside this vector — it is the ground you design from.`
@@ -375,7 +369,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       {
         role: "system",
-        content: SYSTEM_PROMPT + toolLine + walkerDepthLine(body?.depth),
+        content: SYSTEM_PROMPT + toolLine + walkerDepthLine(body?.depth) + systemLanguageLaw,
       },
     ];
 

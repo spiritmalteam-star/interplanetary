@@ -20,8 +20,8 @@ export interface RevelationSection {
 /** The body ink — one size for the worlds' threads, one for the
     instrument cards' tighter chambers. */
 const BODY_SIZES = {
-  md: "text-[15px] leading-[1.8] text-foreground/88",
-  sm: "text-[14px] leading-[1.8] text-foreground/88",
+  md: "text-[16px] leading-[1.8] text-foreground/88",
+  sm: "text-[15px] leading-[1.8] text-foreground/88",
 } as const;
 
 type BodySize = keyof typeof BODY_SIZES;
@@ -90,7 +90,7 @@ export function RevelationSections({
             className={cn(boxed && "glass rounded-xl px-4 py-3.5")}
           >
             <div className="flex items-center gap-2.5">
-              <h4 className="mono-label min-w-0 text-[9.5px] tracking-[0.22em] text-[var(--scope-a)]">
+              <h4 className="mono-label min-w-0 text-[10.5px] tracking-[0.22em] text-[var(--scope-a)]">
                 {heading}
               </h4>
               <span

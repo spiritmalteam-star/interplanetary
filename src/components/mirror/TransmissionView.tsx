@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { memo, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { isPageHidden } from "@/lib/page-lifecycle";
 import {
   Check,
   CircleAlert,
@@ -9,8 +10,11 @@ import {
   FileText,
   Leaf,
   RotateCcw,
+  Send,
 } from "lucide-react";
+import PublishToGathering from "@/components/gathering/PublishToGathering";
 import { useMirror, type ChatMessage } from "@/lib/mirror-store";
+import { cleanCopyText } from "@/lib/copy-clean";
 import { SCOPE_META, sectionImage } from "@/lib/entity-utils";
 import { auraFor, INK_AURA, type Aura } from "@/lib/aura";
 import { useTheme } from "next-themes";
@@ -19,6 +23,7 @@ import type { Mode, Scope } from "@/lib/mirror-types";
 import { cn } from "@/lib/utils";
 import { findTerms } from "@/lib/data/lexicon";
 import { ListenButton } from "./ListenButton";
+import { ShareButton } from "./ShareButton";
 import { voiceProfile } from "@/lib/voice-profiles";
 import { AlienLoading } from "./AlienLoading";
 import { TermPopover } from "./TermPopover";
@@ -152,7 +157,7 @@ export function LoadingTransmission({
       {query && (
         <div className="relative mx-auto mb-6 max-w-[620px]">
           <span
-            className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+            className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[45px] leading-none opacity-40"
             style={{ color: "var(--scope-a)" }}
             aria-hidden="true"
           >
@@ -163,8 +168,8 @@ export function LoadingTransmission({
               in the frame at once; the page never reads as blank while
               the mirror listens. The full words stay in the DOM for
               every screen reader. */}
-          <div className="relative max-h-[136px] overflow-hidden [mask-image:linear-gradient(180deg,black_62%,transparent_100%)]">
-            <p className="ink-hand ink-soft line-clamp-5 px-6 text-[15.5px] italic leading-[1.85]">
+          <div className="relative max-h-[136px] overflow-hidden [m[mask-image:linear-gradient(180deg,black_62%,transparent_100%)]">
+            <p className="ink-hand ink-soft line-clamp-5 px-6 text-[16.5px] italic leading-[1.85]">
               {query}
             </p>
           </div>
@@ -187,7 +192,7 @@ export function LoadingTransmission({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
-            className="text-[14.5px] italic leading-relaxed text-muted-foreground"
+            className="text-[15.5px] italic leading-relaxed text-muted-foreground"
           >
             {t(WAITING_PHRASES[phase] ?? WAITING_PHRASES[0])}
           </motion.p>
@@ -202,7 +207,7 @@ export function LoadingTransmission({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="mx-auto mt-1.5 max-w-[440px] px-4 text-center text-[12.5px] italic leading-relaxed text-muted-foreground/70"
+            className="mx-auto mt-1.5 max-w-[440px] px-4 text-center text-[13.5px] italic leading-relaxed text-muted-foreground/70"
           >
             {t(
               "A long question takes a long breath — the mirror is still weaving."
@@ -256,7 +261,7 @@ function TransmissionBody({ text }: { text: string }) {
                     "linear-gradient(90deg, color-mix(in srgb, var(--scope-a) 32%, transparent), transparent)",
                 }}
               />
-              <p className="ink-hand ink-soft text-center text-[14.5px] italic leading-relaxed">
+              <p className="ink-hand ink-soft text-center text-[15.5px] italic leading-relaxed">
                 {b.text}
               </p>
             </motion.div>
@@ -279,7 +284,7 @@ function TransmissionBody({ text }: { text: string }) {
                     style={{ background: "var(--scope-a)" }}
                     aria-hidden="true"
                   />
-                  <span className="ink-hand text-[15.5px] leading-[1.9] text-foreground/88 sm:text-[16px]">
+                  <span className="ink-hand text-[16.5px] leading-[1.9] text-foreground/88 sm:text-[17px]">
                     {item}
                   </span>
                 </li>
@@ -295,9 +300,9 @@ function TransmissionBody({ text }: { text: string }) {
             initial="hidden"
             animate="show"
             className={cn(
-              "ink-hand whitespace-pre-wrap text-[16.5px] leading-[1.95] text-foreground/92",
+              "ink-hand whitespace-pre-wrap text-[17.5px] leading-[1.95] text-foreground/92",
               i === firstParaIndex &&
-                "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[50px] first-letter:font-semibold first-letter:leading-[0.8]"
+                "first-letter:float-left first-letter:mr-3 first-letter:mt-[7px] first-letter:text-[51px] first-letter:font-semibold first-letter:leading-[0.8]"
             )}
           >
             <TermProse text={b.text} />
@@ -308,9 +313,10 @@ function TransmissionBody({ text }: { text: string }) {
   );
 }
 
-/* ---------- the vision itself — one exchange may carry an image ------- */
-
-function ExchangeVisual({ message }: { message: ChatMessage }) {
+/* ---------- the vision itself — one exchange may carry an image -------
+   Exported: the realm's own rooms render the vision inline now — the
+   making never leaves the conversation (the working room is gone). */
+export function ExchangeVisual({ message }: { message: ChatMessage }) {
   const t = useT();
   const askScopeVisual = useMirror((s) => s.askScopeVisual);
   const activeMode = useMirror((s) => s.activeMode);
@@ -330,7 +336,7 @@ function ExchangeVisual({ message }: { message: ChatMessage }) {
         className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-3.5"
         data-testid="scope-visual-error"
       >
-        <p className="text-[14px] italic leading-relaxed text-foreground/80">
+        <p className="text-[15px] italic leading-relaxed text-foreground/80">
           {t(
             "The atelier is quiet — the vision could not be composed. Rest a breath, then ask again."
           )}
@@ -342,7 +348,7 @@ function ExchangeVisual({ message }: { message: ChatMessage }) {
               void askScopeVisual(activeMode, message.visualRequest ?? "", null)
             }
             data-testid="scope-visual-retry"
-            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[13px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
+            className="focus-glow mt-2.5 flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_35%,transparent)] px-4 text-[14px] text-foreground/90 transition-all duration-300 hover:-translate-y-px"
           >
             <RotateCcw className="size-3.5" aria-hidden="true" />
             {t("Be still and receive")}
@@ -395,7 +401,11 @@ function ExchangeVisual({ message }: { message: ChatMessage }) {
 
 /* ---------- one completed exchange ---------- */
 
-export function Exchange({
+/* MEMOIZED — the forming view's unhurried clocks tick inside the parent
+   (once a second at most); the memo keeps those breaths from reaching
+   into every settled exchange of the thread. Only a change of message,
+   position or channel state redraws a card. */
+export const Exchange = memo(function Exchange({
   message,
   index,
   animate,
@@ -410,13 +420,15 @@ export function Exchange({
 }) {
   const scopeMeta = SCOPE_META[scope];
   const [copied, setCopied] = useState(false);
+  /* THE PUBLICATION HAND — this very transmission carried to the hall */
+  const [publishOpen, setPublishOpen] = useState(false);
   const t = useT();
   /* Each card draws its own light — quietly, never spoken of. */
   const aura = useAura(message.id);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message.text);
+      await navigator.clipboard.writeText(cleanCopyText(message.text));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2200);
     } catch {
@@ -443,7 +455,7 @@ export function Exchange({
       >
         <div className="mb-4 flex items-center gap-3">
           <span
-            className="mono-label rounded-full border px-2 py-0.5 text-[11px]"
+            className="mono-label rounded-full border px-2 py-0.5 text-[12px]"
             style={{
               borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
               color: "color-mix(in srgb, var(--scope-a) 85%, white)",
@@ -466,20 +478,20 @@ export function Exchange({
 
         <div className="relative mx-auto max-w-[620px]">
           <span
-            className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+            className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[45px] leading-none opacity-40"
             style={{ color: "var(--scope-a)" }}
             aria-hidden="true"
           >
             “
           </span>
-          <p className="ink-hand ink-soft px-6 text-[15.5px] italic leading-[1.85] opacity-70">
+          <p className="ink-hand ink-soft px-6 text-[16.5px] italic leading-[1.85] opacity-70">
             {message.query}
           </p>
           <div
             data-testid="failed-msg"
             className="mt-3 flex flex-wrap items-center justify-center gap-1.5 px-6"
           >
-            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[9.5px] text-muted-foreground">
+            <span className="mono-label flex items-center gap-1 rounded-full border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-2 py-1 text-[10.5px] text-muted-foreground">
               <CircleAlert
                 className="size-3 text-[var(--destructive)]"
                 aria-hidden="true"
@@ -493,7 +505,7 @@ export function Exchange({
               onClick={() =>
                 useMirror.getState().retryFailed(scope as Mode, message.id)
               }
-              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[11px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+              className="focus-glow flex items-center gap-1 rounded-full border hairline px-2.5 py-1 text-[12px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <RotateCcw className="size-3" aria-hidden="true" />
               {t("Send again")}
@@ -516,7 +528,7 @@ export function Exchange({
       {/* index ribbon */}
       <div className="mb-4 flex items-center gap-3">
         <span
-          className="mono-label rounded-full border px-2 py-0.5 text-[11px]"
+          className="mono-label rounded-full border px-2 py-0.5 text-[12px]"
           style={{
             borderColor: "color-mix(in srgb, var(--scope-a) 30%, transparent)",
             color: "color-mix(in srgb, var(--scope-a) 85%, white)",
@@ -540,13 +552,13 @@ export function Exchange({
       {/* query echo */}
       <div className="relative mx-auto max-w-[620px]">
         <span
-          className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[44px] leading-none opacity-40"
+          className="pointer-events-none absolute -left-1 -top-5 select-none font-serif text-[45px] leading-none opacity-40"
           style={{ color: "var(--scope-a)" }}
           aria-hidden="true"
         >
           “
         </span>
-        <p className="ink-hand ink-soft px-6 text-[15.5px] italic leading-[1.85]">
+        <p className="ink-hand ink-soft px-6 text-[16.5px] italic leading-[1.85]">
           {message.query}
         </p>
         {message.attachments &&
@@ -557,7 +569,7 @@ export function Exchange({
               data-testid="exchange-attachments"
             >
               {message.attachments.images > 0 && (
-                <span className="mono-label flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] text-muted-foreground">
+                <span className="mono-label flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] text-muted-foreground">
                   <FileText className="size-2.5" aria-hidden="true" />
                   {t("an image")}
                 </span>
@@ -565,7 +577,7 @@ export function Exchange({
               {message.attachments.docNames.map((name) => (
                 <span
                   key={name}
-                  className="mono-label flex max-w-[200px] items-center gap-1 rounded-full border px-2 py-0.5 text-[9.5px] text-muted-foreground"
+                  className="mono-label flex max-w-[200px] items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] text-muted-foreground"
                 >
                   <FileText className="size-2.5 shrink-0" aria-hidden="true" />
                   <span className="truncate">{name}</span>
@@ -607,7 +619,7 @@ export function Exchange({
         />
 
         <div className="relative px-6 py-6 sm:px-10 sm:py-8">
-          {/* listen + copy — the only actions, one quiet row (words only;
+          {/* listen + copy + publish — the only actions, one quiet row (words only;
               a direct-generation artifact carries no words of its own) */}
           {!hasVisual && message.text.trim() && (
             <div className="mb-4 flex items-center justify-end gap-2">
@@ -624,6 +636,25 @@ export function Exchange({
                 ) : (
                   <Copy className="size-3.5" aria-hidden="true" />
                 )}
+              </button>
+              <ShareButton
+                text={message.text}
+                title={t("A transmission of the mirror")}
+                cacheKey={message.id}
+                variant="bare"
+                className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+              />
+              {/* THE PUBLICATION HAND — the transmission carried to the
+                  hall as a reflection, its birthplace remembered */}
+              <button
+                type="button"
+                onClick={() => setPublishOpen(true)}
+                aria-label={t("Publish to the hall")}
+                title={t("Publish to the hall")}
+                data-testid="transmission-publish"
+                className="focus-glow flex size-8 items-center justify-center rounded-full border hairline text-[#a1844a] transition-all duration-300 hover:border-[color-mix(in_srgb,#c9a75c_45%,transparent)]"
+              >
+                <Send className="size-3.5" aria-hidden="true" />
               </button>
             </div>
           )}
@@ -650,15 +681,34 @@ export function Exchange({
               kind={message.sideArtifact.kind}
               resonance={message.sideArtifact.resonance}
               resume={message.sideArtifact.resume}
-              themes={message.sideArtifact.themes}
               tool={message.sideArtifact.tool}
             />
           )}
         </div>
       </div>
+
+      {/* THE PUBLICATION HAND — this transmission carried to the hall:
+          its own words, the channel remembered as its birthplace, the
+          private record on the shelf never exposed by the offering */}
+      <PublishToGathering
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        payload={{
+          /* the scope's key rides as its own plain string — the room's
+             own union is narrower than the house's full family */
+          sourcePortal: (scope as string) === "forge" ? "invent" : (scope as string) === "hyperx" ? "hyperx" : "channeling",
+          recentSector: (scope as string) === "forge" ? "invent" : "observatory",
+          titleHint: (message.query ?? "").slice(0, 120) || undefined,
+          suggestedTitle:
+            (message.query ?? "").slice(0, 140) || "A transmission of the mirror",
+          preview: message.text.slice(0, 4000),
+          generic: true,
+          contentTypeLabel: (scope as string) === "forge" ? "Invention" : (scope as string) === "hyperx" ? "Research / Exploration" : "Reflection / Transmission",
+        }}
+      />
     </motion.article>
   );
-}
+});
 
 /* ---------- the healing apothecary — one quiet stand at the thread's
    end, offered only in the Healing channel once a transmission has
@@ -676,7 +726,7 @@ function ApothecaryStand({ concern }: { concern: string }) {
       className="mt-9 flex flex-col items-center pb-1 text-center"
       data-testid="apothecary-stand"
     >
-      <p className="mono-label text-[10px] uppercase tracking-[0.22em] text-muted-foreground/60">
+      <p className="mono-label text-[11px] uppercase tracking-[0.22em] text-muted-foreground/60">
         {t("The healing apothecary")}
       </p>
       <button
@@ -684,7 +734,7 @@ function ApothecaryStand({ concern }: { concern: string }) {
         onClick={() => void askRemedy(concern)}
         aria-label={t("Prepare a remedy")}
         data-testid="prepare-remedy"
-        className="focus-glow mt-3 flex h-10 items-center gap-2.5 rounded-full border px-5 text-[13.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:glow-sm"
+        className="focus-glow mt-3 flex h-10 items-center gap-2.5 rounded-full border px-5 text-[14.5px] font-medium text-foreground/90 transition-all duration-300 hover:-translate-y-px hover:glow-sm"
         style={{
           borderColor: "color-mix(in srgb, #52525b 42%, transparent)",
           background:
@@ -698,7 +748,7 @@ function ApothecaryStand({ concern }: { concern: string }) {
         />
         {t("Prepare a remedy")}
       </button>
-      <p className="mt-2.5 max-w-[320px] text-[12.5px] italic leading-relaxed text-muted-foreground/70">
+      <p className="mt-2.5 max-w-[320px] text-[13.5px] italic leading-relaxed text-muted-foreground/70">
         {t("Prepared from what has been spoken here")}
       </p>
     </motion.div>
@@ -738,7 +788,11 @@ export function TransmissionView() {
   useEffect(() => {
     if (status !== "loading") return;
     const id = window.setInterval(
-      () => setFormingAge((a) => a + 1),
+      () => {
+        /* the hidden clock does not age the forming — it resumes on return */
+        if (isPageHidden()) return;
+        setFormingAge((a) => a + 1);
+      },
       1000
     );
     return () => window.clearInterval(id);
@@ -747,7 +801,11 @@ export function TransmissionView() {
   useEffect(() => {
     if (status !== "loading") return;
     const id = window.setInterval(
-      () => setFormingPhase((p) => (p + 1) % WAITING_PHRASES.length),
+      () => {
+        /* the hidden room cycles no phrases — the beat waits for eyes */
+        if (isPageHidden()) return;
+        setFormingPhase((p) => (p + 1) % WAITING_PHRASES.length);
+      },
       2400
     );
     return () => window.clearInterval(id);
@@ -903,10 +961,10 @@ export function TransmissionView() {
             <span className="scope-corner scope-corner-tr" aria-hidden="true" />
             <span className="scope-corner scope-corner-bl" aria-hidden="true" />
             <span className="scope-corner scope-corner-br" aria-hidden="true" />
-            <p className="text-[16.5px] font-medium text-foreground/85">
+            <p className="text-[17.5px] font-medium text-foreground/85">
               {t("This channel is quiet.")}
             </p>
-            <p className="mx-auto mt-2 max-w-[380px] text-[14.5px] leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-[380px] text-[15.5px] leading-relaxed text-muted-foreground">
               {t(
                 "Every scope keeps its own private channel — ask from the composer below to open the first transmission."
               )}
@@ -994,13 +1052,13 @@ export function TransmissionView() {
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] as const }}
           className="scope-frame-card mt-8 rounded-2xl glass p-6 text-center"
         >
-          <p className="text-[16px] leading-relaxed text-foreground/85">
+          <p className="text-[17px] leading-relaxed text-foreground/85">
             {t(
               "The field received your question but could not complete the transmission."
             )}
           </p>
-          <p className="mt-2 text-[14.5px] italic text-muted-foreground">
-            {session.error}
+          <p className="mt-2 text-[15.5px] italic text-muted-foreground">
+            {session.error ? t(session.error) : ""}
           </p>
         </motion.div>
       )}

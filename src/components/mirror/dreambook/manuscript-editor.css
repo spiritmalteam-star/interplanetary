@@ -1,0 +1,229 @@
+/* ------------------------------------------------------------------ */
+/*  THE INK DESK — the manuscript editor's own paper.                  */
+/*  Everything is scoped under .manuscript-editor (the pen) and        */
+/*  .manuscript-prose (the reading room's rendering of a page the pen  */
+/*  has touched), so no other room of the house feels it. The book's   */
+/*  own ink vars (--dream-ink family, defined beside .dream-page in    */
+/*  globals.css) dress every stroke; the house scope light tints the   */
+/*  active tools. No continuous animation — only quiet transitions,    */
+/*  silenced for the visitors who asked for stillness.                 */
+/* ------------------------------------------------------------------ */
+
+/* ---- the toolbar: one quiet row of ghost hands ---- */
+.manuscript-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--dream-ink, var(--foreground)) 12%, transparent);
+}
+
+/* ---- the paper the pen writes on ---- */
+.manuscript-editor-frame {
+  border: 1px solid
+    color-mix(in srgb, var(--dream-ink, var(--foreground)) 16%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, #ffffff 52%, transparent);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+.manuscript-editor-frame:focus-within {
+  border-color: color-mix(
+    in srgb,
+    var(--scope-a, var(--gd, var(--foreground))) 45%,
+    transparent
+  );
+  box-shadow: 0 0 0 3px
+    color-mix(
+      in srgb,
+      var(--scope-a, var(--gd, var(--foreground))) 14%,
+      transparent
+    );
+}
+
+/* ---- the manuscript body: Literata, justified like a real page ---- */
+.manuscript-editor-scroll .ProseMirror {
+  font-family: var(--font-literata), Georgia, "Times New Roman", serif;
+  color: var(--dream-ink, var(--foreground));
+  min-height: 320px;
+  max-height: min(54vh, 560px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 18px 20px 24px;
+  font-size: 15.5px;
+  line-height: 1.78;
+  text-align: justify;
+  hyphens: auto;
+  outline: none;
+  caret-color: var(--dream-ink, var(--foreground));
+}
+
+.manuscript-editor-scroll .ProseMirror > * + * {
+  margin-top: 0.9em;
+}
+.manuscript-editor-scroll .ProseMirror > p {
+  margin: 0;
+}
+.manuscript-editor-scroll .ProseMirror > p + p {
+  text-indent: 1.4em;
+}
+
+/* headings — the chapter's own voice inside the leaf */
+.manuscript-editor-scroll .ProseMirror h2,
+.manuscript-prose h2 {
+  font-size: 1.5em;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 1.15em 0 0.4em;
+  text-align: left;
+  text-indent: 0;
+  color: var(--dream-ink, var(--foreground));
+}
+.manuscript-editor-scroll .ProseMirror h3,
+.manuscript-prose h3 {
+  font-size: 1.18em;
+  line-height: 1.3;
+  font-weight: 600;
+  font-style: italic;
+  margin: 1em 0 0.35em;
+  text-align: left;
+  text-indent: 0;
+  color: var(--dream-ink-soft, var(--foreground));
+}
+
+/* lists */
+.manuscript-editor-scroll .ProseMirror ul,
+.manuscript-editor-scroll .ProseMirror ol,
+.manuscript-prose ul,
+.manuscript-prose ol {
+  margin: 0.9em 0;
+  padding-left: 1.5em;
+  text-align: left;
+  text-indent: 0;
+}
+.manuscript-editor-scroll .ProseMirror li,
+.manuscript-prose li {
+  margin: 0.3em 0;
+}
+.manuscript-editor-scroll .ProseMirror li > p,
+.manuscript-prose li > p {
+  margin: 0;
+}
+.manuscript-editor-scroll .ProseMirror li::marker,
+.manuscript-prose li::marker {
+  color: color-mix(
+    in srgb,
+    var(--dream-ink, var(--foreground)) 55%,
+    transparent
+  );
+}
+
+/* the quote — a hairline of ink down the left margin */
+.manuscript-editor-scroll .ProseMirror blockquote,
+.manuscript-prose blockquote {
+  margin: 1em 0;
+  padding: 0.1em 0 0.1em 1.1em;
+  border-left: 2px solid
+    color-mix(in srgb, var(--dream-ink, var(--foreground)) 28%, transparent);
+  font-style: italic;
+  color: var(--dream-ink-soft, var(--foreground));
+  text-align: left;
+  text-indent: 0;
+}
+.manuscript-editor-scroll .ProseMirror blockquote p,
+.manuscript-prose blockquote p {
+  margin: 0;
+  text-indent: 0;
+}
+
+/* the quiet rule between movements */
+.manuscript-editor-scroll .ProseMirror hr,
+.manuscript-prose hr {
+  border: none;
+  border-top: 1px solid
+    color-mix(in srgb, var(--dream-ink, var(--foreground)) 25%, transparent);
+  width: 38%;
+  margin: 1.7em auto;
+}
+
+/* ink code — a whisper of mono in the serif flow */
+.manuscript-editor-scroll .ProseMirror code,
+.manuscript-prose code {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
+  font-size: 0.82em;
+  padding: 0.12em 0.4em;
+  border-radius: 6px;
+  background: color-mix(
+    in srgb,
+    var(--dream-ink, var(--foreground)) 7%,
+    transparent
+  );
+}
+
+/* the placeholder — the room's gentle invitation */
+.manuscript-editor-scroll .ProseMirror p.is-editor-empty:first-child::before,
+.manuscript-editor-scroll .ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: color-mix(
+    in srgb,
+    var(--dream-ink, var(--foreground)) 38%,
+    transparent
+  );
+  font-style: italic;
+}
+
+/* the reading room's own rendering of a pen-touched page
+   (the .dream-body wrapper already carries Literata + justify) */
+.manuscript-prose {
+  color: var(--dream-ink, var(--foreground));
+}
+.manuscript-prose > * + * {
+  margin-top: 0.9em;
+}
+.manuscript-prose > p {
+  margin: 0;
+}
+.manuscript-prose > p + p {
+  text-indent: 1.4em;
+}
+
+/* the drop cap a chapter-opening keeps, rich pages included */
+.manuscript-drop > p:first-child::first-letter {
+  float: left;
+  font-size: 3.1em;
+  line-height: 0.82;
+  padding: 0.06em 0.09em 0 0;
+  color: var(--dream-ink);
+  font-weight: 500;
+}
+
+/* the count under the paper — the desk's quiet honesty */
+.manuscript-count {
+  margin-top: 8px;
+  text-align: right;
+  color: var(--dream-ink-faint, var(--muted-foreground));
+}
+
+/* the locked desk — the loom holds the pen */
+.manuscript-editor[data-readonly="true"] .manuscript-editor-frame {
+  background: color-mix(in srgb, #ffffff 68%, transparent);
+  opacity: 0.86;
+}
+
+/* stillness for the visitors who asked for it */
+@media (prefers-reduced-motion: reduce) {
+  .manuscript-editor-frame,
+  .manuscript-editor-frame:focus-within,
+  .manuscript-toolbar button {
+    transition: none !important;
+  }
+}
