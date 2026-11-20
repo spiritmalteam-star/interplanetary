@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -8,6 +8,8 @@ import {
   ChevronDown,
   Download,
   Eye,
+  Library,
+  ListMusic,
   Pause,
   Play,
   RefreshCw,
@@ -19,14 +21,28 @@ import {
 } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
+import { usePlayerStore } from "@/lib/player-store";
 import {
+  LC_DEFAULT_STUDIO,
   LC_MODES,
   LC_SHAPE,
+  LC_STUDIO,
+  type LightCodesMode,
   type LcMode,
+  type LcStudio,
 } from "@/lib/data/light-codes";
 import { cn } from "@/lib/utils";
 import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
 import type { ChatAttachment } from "./attachments";
+import StudioControls from "./music/StudioControls";
+import VizPanel from "./music/VizPanel";
+import GenerationShelf from "./music/GenerationShelf";
+import {
+  playShelfTrack,
+  useMusicShelf,
+  type ShelfJob,
+  type ShelfTrack,
+} from "./music/shelf-client";
 
 /* ------------------------------------------------------------------ */
 /*  LIGHT CODES — the musical chamber. A compact room: the heading,    */
@@ -154,28 +170,39 @@ function Player() {
   const modeName =
     LC_MODES.find((m) => m.id === track.mode)?.name ?? track.mode;
   const t = useT();
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [time, setTime] = useState(0);
-  const [dur, setDur] = useState(track.duration ?? 0);
-  const [loop, setLoop] = useState(false);
+
+  /* ONE player, ONE store — the chamber reads the same clock as every
+     other surface, and the visualizer listens through the same analyser */
+  const storePlaying = usePlayerStore((s) => s.playing);
+  const storeTime = usePlayerStore((s) => s.time);
+  const storeDuration = usePlayerStore((s) => s.duration);
+  const storeRepeat = usePlayerStore((s) => s.repeat);
+  const storeTrack = usePlayerStore((s) => s.track);
+  const storeToggle = usePlayerStore((s) => s.toggle);
+  const storeSeek = usePlayerStore((s) => s.seek);
+  const storePlayTrack = usePlayerStore((s) => s.playTrack);
+  const storeSetRepeat = usePlayerStore((s) => s.setRepeat);
+
   const [showTranslation, setShowTranslation] = useState(false);
 
+  const isCurrent = storeTrack?.audioUrl === track.audioUrl;
+  const playing = isCurrent && storePlaying;
+  const time = isCurrent ? storeTime : 0;
+  const dur = isCurrent && storeDuration > 0 ? storeDuration : (track.duration ?? 0);
   const progress = dur > 0 ? Math.min(1, time / dur) : 0;
+  const loop = isCurrent && storeRepeat === "one";
 
   const toggle = () => {
-    const el = audioRef.current;
-    if (!el) return;
-    if (el.paused) void el.play().catch(() => undefined);
-    else el.pause();
+    if (!isCurrent) storePlayTrack(track);
+    else storeToggle();
   };
 
   const seek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = audioRef.current;
-    if (!el || !dur) return;
+    if (!dur) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    el.currentTime = ratio * dur;
+    if (!isCurrent) storePlayTrack(track);
+    storeSeek(ratio * dur);
   };
 
   return (
@@ -186,20 +213,6 @@ function Player() {
       className="scope-frame-card relative rounded-2xl p-4 sm:p-5"
       data-testid="lc-player"
     >
-      <audio
-        ref={audioRef}
-        src={track.audioUrl}
-        loop={loop}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => setPlaying(false)}
-        onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => {
-          if (Number.isFinite(e.currentTarget.duration)) {
-            setDur(e.currentTarget.duration);
-          }
-        }}
-      />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p
@@ -220,6 +233,11 @@ function Player() {
         >
           <X className="size-4" aria-hidden="true" />
         </button>
+      </div>
+
+      {/* THE FIELD — a thousand styles listening to this song */}
+      <div className="mt-3">
+        <VizPanel trackKey={track.id} />
       </div>
 
       {/* waveform */}
@@ -279,7 +297,7 @@ function Player() {
           {t("Download")}
         </a>
         <PlayerChip
-          onClick={() => setLoop((l) => !l)}
+          onClick={() => storeSetRepeat(isCurrent && storeRepeat === "one" ? "off" : "one")}
           icon={Repeat}
           label={loop ? "Looping" : "Turn into loop"}
           active={loop}
@@ -477,12 +495,84 @@ export function LightCodesView() {
   const t = useT();
 
   const [shapeOpen, setShapeOpen] = useState(false);
+  const [studioOpen, setStudioOpen] = useState(false);
   const [phraseIdx, setPhraseIdx] = useState(0);
   /* what the transmission carries — one image, up to three documents */
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
+  /* the studio — the professional controls, kept in the visitor's browser */
+  const [studio, setStudio] = useState<LcStudio>(() => {
+    if (typeof window === "undefined") return LC_DEFAULT_STUDIO;
+    try {
+      const raw = window.localStorage.getItem("mirror-lc-studio");
+      if (raw) return { ...LC_DEFAULT_STUDIO, ...(JSON.parse(raw) as Partial<LcStudio>) };
+    } catch {
+      /* storage unavailable — the defaults stand */
+    }
+    return LC_DEFAULT_STUDIO;
+  });
+  const patchStudio = (patch: Partial<LcStudio>) =>
+    setStudio((prev) => {
+      const next = { ...prev, ...patch };
+      try {
+        localStorage.setItem("mirror-lc-studio", JSON.stringify(next));
+      } catch {
+        /* storage unavailable */
+      }
+      return next;
+    });
+
+  /* songs per transmission — the shelf keeps every one of them */
+  const [songCount, setSongCount] = useState(1);
+  const shelf = useMusicShelf();
+  const [shelfOpen, setShelfOpen] = useState(false);
+  const toggleShelf = () => {
+    setShelfOpen((v) => {
+      if (!v) void shelf.refreshShelf();
+      return !v;
+    });
+  };
+
+  /* the durable generation — the shelf never loses a paid-for song */
+  const handleGenerate = () => {
+    const carried = attachments;
+    setAttachments([]);
+    if (carried.length > 0) {
+      /* an image or a document rides the legacy chamber flow, which
+         reads them with the vision field — the shelf keeps songs only */
+      void generateLightCode({ attachments: carried });
+      return;
+    }
+    void shelf
+      .start({
+        count: songCount,
+        mode: lcMode,
+        intention: lcIntention.trim(),
+        civilization: lcCivilization,
+        shape: lcShape as unknown as Record<string, unknown>,
+        studio: studio as unknown as Record<string, unknown>,
+        userLyrics:
+          lcShape.lyricsMode === "USER WRITES" && lcUserLyrics.trim()
+            ? lcUserLyrics.trim()
+            : null,
+        instrumental: lcShape.voice === "None",
+        language: useMirror.getState().language ?? "en",
+      })
+      .then((outcome) => {
+        if (outcome === "fallback") {
+          /* the vault rests — the legacy single-song flow carries the visit */
+          void generateLightCode();
+        }
+      });
+  };
+
+  const busy =
+    lcStatus === "interpreting" ||
+    lcStatus === "polling" ||
+    (shelf.busy && shelf.activeJob !== null);
+  const job = shelf.activeJob;
+
   const mode = LC_MODES.find((m) => m.id === lcMode) ?? LC_MODES[0];
-  const busy = lcStatus === "interpreting" || lcStatus === "polling";
 
   useEffect(() => {
     if (!busy) return;
@@ -516,6 +606,21 @@ export function LightCodesView() {
               {t("Light Codes")}
             </span>
           </span>
+          <button
+            type="button"
+            onClick={toggleShelf}
+            aria-expanded={shelfOpen}
+            data-testid="lc-shelf-toggle"
+            className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-3 text-[12.5px] text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:px-3.5"
+          >
+            <Library className="size-3.5" aria-hidden="true" />
+            <span className="hidden sm:inline">{t("Shelf")}</span>
+            {shelf.jobs.length > 0 && (
+              <span className="mono-label rounded-full bg-[color-mix(in_srgb,var(--scope-a)_16%,transparent)] px-1.5 text-[8.5px] text-[var(--scope-a)]">
+                {shelf.jobs.length}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
@@ -525,6 +630,31 @@ export function LightCodesView() {
         data-testid="light-codes"
       >
         <div className="mx-auto w-full max-w-[760px] px-4 pb-10 pt-6 sm:px-6">
+          {/* THE SHELF — every generation ever paid for, kept */}
+          <AnimatePresence>
+            {shelfOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="overflow-hidden"
+              >
+                <div className="mb-5">
+                  <GenerationShelf
+                    jobs={shelf.jobs}
+                    loading={shelf.loadingShelf}
+                    activeJobId={shelf.activeJob?.id ?? null}
+                    onPlay={(j: ShelfJob, tr: ShelfTrack) => playShelfTrack(j, tr)}
+                    onResume={(jobId: string) => void shelf.resume(jobId)}
+                    onHide={(jobId: string) => void shelf.hideJob(jobId)}
+                    onRefresh={() => void shelf.refreshShelf()}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* heading */}
           <div className="text-center">
             <h1 className="scope-gradient-text text-[22px] font-semibold tracking-[0.14em] sm:text-[26px]">
@@ -724,16 +854,71 @@ export function LightCodesView() {
             </AnimatePresence>
           </div>
 
+          {/* THE STUDIO — the professional controls, disclosed only when asked */}
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => setStudioOpen((v) => !v)}
+              aria-expanded={studioOpen}
+              data-testid="lc-studio-toggle"
+              className="focus-glow flex w-full items-center justify-center gap-1.5 text-[11.5px] uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {t("The studio")}
+              <ChevronDown
+                className={cn(
+                  "size-3.5 transition-transform duration-300",
+                  studioOpen && "rotate-180"
+                )}
+                aria-hidden="true"
+              />
+            </button>
+            <AnimatePresence>
+              {studioOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] p-3.5">
+                    <StudioControls studio={studio} onChange={patchStudio} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* GENERATE */}
           <div className="mt-5 flex flex-col items-center">
+            {/* songs per transmission — the shelf keeps every one */}
+            <div className="mb-3 flex items-center gap-1.5" data-testid="lc-song-count">
+              <ListMusic className="size-3.5 text-muted-foreground" aria-hidden="true" />
+              <span className="mono-label mr-1 text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                {t("Songs")}
+              </span>
+              {[1, 2, 4, 6].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setSongCount(n)}
+                  aria-pressed={songCount === n}
+                  data-testid={`lc-songs-${n}`}
+                  className={cn(
+                    "focus-glow h-7 w-7 rounded-full border text-[11.5px] transition-all duration-300",
+                    songCount === n
+                      ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
+                      : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               disabled={busy}
-              onClick={() => {
-                const carried = attachments;
-                setAttachments([]);
-                void generateLightCode({ attachments: carried });
-              }}
+              onClick={handleGenerate}
               data-testid="lc-generate"
               className="focus-glow group flex h-12 items-center gap-2.5 rounded-full bg-gradient-to-r from-[var(--scope-a)] to-[color-mix(in_srgb,var(--scope-b)_80%,var(--scope-a))] px-8 text-[14.5px] font-semibold tracking-wide text-[#f6f4ef] shadow-[0_6px_28px_-10px_color-mix(in_srgb,var(--scope-a)_75%,transparent)] transition-all duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -800,6 +985,35 @@ export function LightCodesView() {
               )}
             </AnimatePresence>
           </div>
+
+          {/* the shelf's own progress — a partial set is never a lost set */}
+          {job && job.pendingCount > 0 && (
+            <p
+              className="mt-3 text-center text-[12px] leading-relaxed text-muted-foreground"
+              data-testid="lc-job-progress"
+            >
+              {t(
+                "Rendering {ready} of {total} — nothing is lost. Leave whenever you must; the shelf keeps every song.",
+                { ready: job.readyCount, total: job.trackCount }
+              )}
+            </p>
+          )}
+          {job && job.pendingCount === 0 && (job.status === "partial" || job.status === "failed") && (
+            <div className="mt-3 flex flex-col items-center">
+              <button
+                type="button"
+                onClick={() => void shelf.resume(job.id)}
+                data-testid="lc-job-continue"
+                className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12px] text-[var(--scope-a)] transition-all duration-300 hover:glow-sm"
+              >
+                <RefreshCw className="size-3" aria-hidden="true" />
+                {t("Continue the set")}
+                <span className="text-muted-foreground">
+                  · {t("only the songs not already held are charged")}
+                </span>
+              </button>
+            </div>
+          )}
 
           {/* the Mirror's written interpretation — before the sound */}
           {lcStatus !== "ready" && interpretation && (interpretation.notes || interpretation.title) && (
