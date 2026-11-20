@@ -1,311 +1,392 @@
 "use client";
 
 /* ------------------------------------------------------------------ */
-/*  THE STUDIO — the professional controls of the chamber: the genre   */
-/*  shelf, tempo and key, moods, voice, structure, texture and the     */
-/*  two honest dials. Kept in the visitor's own browser; everything    */
-/*  here speaks verbatim into the engine's contract.                   */
+/*  MUSIC ENGINE 2.0 — THE STUDIO CONTROLS.                            */
+/*                                                                     */
+/*  The advanced creative panel: BPM, key, moods, energy, vocal mode   */
+/*  and language, duration, structure, instruments, production         */
+/*  texture, acoustic/electronic balance, experimental intensity,      */
+/*  explicit exclusions and lyrics authorship.                         */
+/*                                                                     */
+/*  THE NARROWING LAW — these controls NARROW the visitor's stated     */
+/*  intention; they never replace it. Every control rests at "Auto"    */
+/*  unless the visitor's own hand moves it.                            */
 /* ------------------------------------------------------------------ */
 
-import { Music2, X } from "lucide-react";
-import { LC_STUDIO, type LcStudio } from "@/lib/data/light-codes";
-import GenreSelector from "./GenreSelector";
+import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import type { LcStudio } from "@/lib/data/light-codes";
 
-interface Props {
-  studio: LcStudio;
-  onChange: (patch: Partial<LcStudio>) => void;
-}
+const KEYS = [
+  "Auto", "C", "G", "D", "A", "E", "B", "F#", "F", "Bb", "Eb", "Ab",
+  "Am", "Em", "Dm", "Bm", "F#m", "Gm", "Cm", "Fm",
+] as const;
 
-function FieldLabel({ children }: { children: string }) {
+const MOODS = [
+  "Uplifted", "Melancholic", "Romantic", "Dark", "Dreamy", "Aggressive",
+  "Nostalgic", "Playful", "Serene", "Hypnotic", "Epic", "Intimate",
+] as const;
+
+const VOCAL_MODES = [
+  "Auto", "Instrumental", "Male", "Female", "Duet", "Choir", "Synthetic",
+] as const;
+
+const VOCAL_LANGUAGES = [
+  "Auto", "English", "Albanian", "Spanish", "Italian", "French", "German",
+  "Portuguese", "Turkish", "Greek", "Arabic", "Hindi", "Russian", "Chinese",
+] as const;
+
+const DURATIONS = [
+  "Auto", "30 seconds", "60 seconds", "90 seconds", "2 minutes",
+  "3 minutes", "4 minutes", "5 minutes",
+] as const;
+
+const SECTIONS = [
+  "Intro", "Verse", "Pre-Chorus", "Chorus", "Bridge", "Drop", "Break", "Outro",
+] as const;
+
+const TEXTURES = [
+  "Auto", "Warm analog", "Clean digital", "Lo-fi tape", "Crisp studio",
+  "Raw live", "Polished radio",
+] as const;
+
+const LYRICS_MODES = ["Auto", "Mirror writes", "I write", "Instrumental"] as const;
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  const t = useT();
   return (
-    <span className="mono-label mb-1 block text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+    <label className="block">
+      <span className="mono-label mb-1 block text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        {t(label)}
+      </span>
       {children}
-    </span>
+    </label>
   );
 }
 
-const selectClass =
-  "focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[12px] text-foreground";
+function SelectField({
+  label,
+  options,
+  value,
+  onChange,
+  testId,
+}: {
+  label: string;
+  options: readonly string[];
+  value: string;
+  onChange: (v: string) => void;
+  testId?: string;
+}) {
+  const t = useT();
+  return (
+    <Field label={label}>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        data-testid={testId}
+        className="focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[13px] text-foreground"
+      >
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {t(o)}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+}
 
 function Chip({
   active,
   onClick,
   children,
-  title,
+  testId,
 }: {
   active: boolean;
   onClick: () => void;
-  children: string;
-  title?: string;
+  children: React.ReactNode;
+  testId?: string;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
-      onClick={onClick}
       aria-pressed={active}
-      title={title}
+      onClick={onClick}
+      data-testid={testId}
       className={cn(
-        "focus-glow rounded-full border px-2.5 py-1 text-[11px] transition-all duration-300",
+        "focus-glow rounded-full border px-2.5 py-1 text-[11.5px] transition-all duration-300",
         active
-          ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
-          : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:text-foreground"
+          ? "border-[color-mix(in_srgb,var(--scope-a)_60%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)]"
+          : "border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] text-muted-foreground hover:border-[var(--hairline-hover)] hover:text-foreground"
       )}
     >
-      {children}
+      {t(typeof children === "string" ? children : "")}
     </button>
   );
 }
 
-export default function StudioControls({ studio, onChange }: Props) {
-  const toggleMood = (mood: string) => {
-    const moods = studio.moods ?? [];
-    const next = moods.includes(mood)
-      ? moods.filter((m) => m !== mood)
-      : moods.length < 3
-        ? [...moods, mood]
-        : moods;
-    onChange({ moods: next });
-  };
+export default function StudioControls({
+  studio,
+  onChange,
+}: {
+  studio: LcStudio;
+  onChange: (patch: Partial<LcStudio>) => void;
+}) {
+  const t = useT();
 
-  const toggleStructure = (section: string) => {
-    const structure = studio.structure ?? [];
-    const next = structure.includes(section)
-      ? structure.filter((s) => s !== section)
-      : structure.length < 6
-        ? [...structure, section]
-        : structure;
-    onChange({ structure: next });
-  };
+  const toggleMood = (m: string) =>
+    onChange({
+      moods: studio.moods.includes(m)
+        ? studio.moods.filter((x) => x !== m)
+        : [...studio.moods, m].slice(0, 4),
+    });
+
+  const toggleSection = (s: string) =>
+    onChange({
+      structure: studio.structure.includes(s)
+        ? studio.structure.filter((x) => x !== s)
+        : [...studio.structure, s].slice(0, 8),
+    });
 
   return (
-    <div className="space-y-3" data-testid="lc-studio">
-      {/* the musical style — the searchable genre shelf */}
-      <div>
-        <FieldLabel>Musical style — up to four voices, fused</FieldLabel>
-        <GenreSelector
-          selected={studio.genres ?? []}
-          onChange={(ids) => onChange({ genres: ids })}
-          testId="lc-genre-selector"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-        {/* tempo — auto or exact */}
-        <div className="col-span-2">
-          <FieldLabel>Tempo {studio.bpm ? `· ${studio.bpm} BPM` : "· auto"}</FieldLabel>
-          <div className="flex items-center gap-2">
+    <div className="space-y-3">
+      {/* ------- tempo & key ------- */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <span className="mono-label mb-1 block text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Tempo (BPM)")}
+          </span>
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => onChange({ bpm: studio.bpm ? null : 100 })}
               aria-pressed={studio.bpm === null}
+              onClick={() => onChange({ bpm: null })}
+              data-testid="studio-bpm-auto"
               className={cn(
-                "focus-glow h-8 shrink-0 rounded-lg border px-2.5 text-[11.5px] transition-all",
+                "focus-glow h-8 shrink-0 rounded-lg border px-2.5 text-[12px] transition-colors duration-300",
                 studio.bpm === null
-                  ? "border-[color-mix(in_srgb,var(--scope-a)_55%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_12%,transparent)] text-[var(--scope-a)]"
-                  : "border-[color-mix(in_srgb,var(--hairline)_80%,transparent)] text-muted-foreground hover:text-foreground"
+                  ? "border-[color-mix(in_srgb,var(--scope-a)_60%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)] text-[var(--scope-a)]"
+                  : "border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] text-muted-foreground hover:text-foreground"
               )}
             >
-              Auto
+              {t("Auto")}
             </button>
             <input
-              type="range"
-              min={60}
-              max={180}
-              step={1}
-              value={studio.bpm ?? 100}
-              disabled={studio.bpm === null}
-              onChange={(e) => onChange({ bpm: Number(e.target.value) })}
-              aria-label="Tempo in BPM"
-              className="h-1.5 w-full accent-[var(--scope-a)] disabled:opacity-40"
+              type="number"
+              min={40}
+              max={220}
+              value={studio.bpm ?? ""}
+              placeholder={t("Auto")}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                onChange({ bpm: Number.isFinite(v) && v >= 40 && v <= 220 ? Math.round(v) : null });
+              }}
+              data-testid="studio-bpm"
+              aria-label={t("Tempo in beats per minute")}
+              className="focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[13px] text-foreground placeholder:text-muted-foreground/60"
             />
           </div>
         </div>
-
-        <label className="block">
-          <FieldLabel>Key</FieldLabel>
-          <select
-            value={studio.key}
-            onChange={(e) => onChange({ key: e.target.value })}
-            className={selectClass}
-          >
-            {LC_STUDIO.keys.map((k) => (
-              <option key={k} value={k}>{k}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block">
-          <FieldLabel>Voice</FieldLabel>
-          <select
-            value={studio.vocalMode}
-            onChange={(e) => onChange({ vocalMode: e.target.value })}
-            className={selectClass}
-          >
-            {LC_STUDIO.vocalModes.map((v) => (
-              <option key={v} value={v}>{v}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block">
-          <FieldLabel>Vocal language</FieldLabel>
-          <select
-            value={studio.vocalLanguage}
-            onChange={(e) => onChange({ vocalLanguage: e.target.value })}
-            className={selectClass}
-          >
-            {LC_STUDIO.languages.map((l) => (
-              <option key={l} value={l}>{l}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block">
-          <FieldLabel>Length</FieldLabel>
-          <select
-            value={studio.duration}
-            onChange={(e) => onChange({ duration: e.target.value })}
-            className={selectClass}
-          >
-            {LC_STUDIO.durations.map((d) => (
-              <option key={d} value={d}>{d}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block">
-          <FieldLabel>Texture</FieldLabel>
-          <select
-            value={studio.texture}
-            onChange={(e) => onChange({ texture: e.target.value })}
-            className={selectClass}
-          >
-            {LC_STUDIO.textures.map((tx) => (
-              <option key={tx} value={tx}>{tx}</option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block">
-          <FieldLabel>Lyrics</FieldLabel>
-          <select
-            value={studio.lyricsMode}
-            onChange={(e) => onChange({ lyricsMode: e.target.value })}
-            className={selectClass}
-          >
-            {LC_STUDIO.lyricsModes.map((lm) => (
-              <option key={lm} value={lm}>{lm}</option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          label="Key"
+          options={KEYS}
+          value={studio.key}
+          onChange={(v) => onChange({ key: v })}
+          testId="studio-key"
+        />
       </div>
 
-      {/* moods — at most three */}
-      <div>
-        <FieldLabel>Moods · up to three</FieldLabel>
-        <div className="flex flex-wrap gap-1.5">
-          {LC_STUDIO.moods.map((m) => (
-            <Chip key={m} active={(studio.moods ?? []).includes(m)} onClick={() => toggleMood(m)}>
+      {/* ------- moods ------- */}
+      <Field label="Moods — up to four">
+        <div className="flex flex-wrap gap-1.5" data-testid="studio-moods" role="group" aria-label={t("Moods")}>
+          {MOODS.map((m) => (
+            <Chip
+              key={m}
+              active={studio.moods.includes(m)}
+              onClick={() => toggleMood(m)}
+              testId={`studio-mood-${m.toLowerCase().replace(/\s+/g, "-")}`}
+            >
               {m}
             </Chip>
           ))}
         </div>
-      </div>
+      </Field>
 
-      {/* structure — an ordered walk, at most six sections */}
+      {/* ------- energy ------- */}
       <div>
-        <FieldLabel>
-          Structure {studio.structure && studio.structure.length > 0 ? `· ${studio.structure.join(" → ")}` : "· free"}
-        </FieldLabel>
-        <div className="flex flex-wrap gap-1.5">
-          {LC_STUDIO.structures.map((s) => (
-            <Chip key={s} active={(studio.structure ?? []).includes(s)} onClick={() => toggleStructure(s)}>
-              {s}
-            </Chip>
+        <span className="mono-label mb-1 block text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+          {t("Energy")}
+        </span>
+        <div className="flex items-center gap-1" role="radiogroup" aria-label={t("Energy")} data-testid="studio-energy">
+          {[1, 2, 3, 4, 5].map((v) => (
+            <button
+              key={v}
+              type="button"
+              role="radio"
+              aria-checked={studio.energy === v}
+              aria-label={t(`Energy ${v} of 5`)}
+              onClick={() => onChange({ energy: v })}
+              className={cn(
+                "focus-glow h-7 flex-1 rounded-md border text-[11.5px] transition-colors duration-300",
+                studio.energy === v
+                  ? "border-[color-mix(in_srgb,var(--scope-a)_60%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_16%,transparent)] text-[var(--scope-a)]"
+                  : "border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {v}
+            </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-        <label className="block">
-          <FieldLabel>Instruments — the room's own hands</FieldLabel>
+      {/* ------- voice & duration ------- */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <SelectField
+          label="Voice"
+          options={VOCAL_MODES}
+          value={studio.vocalMode}
+          onChange={(v) => onChange({ vocalMode: v })}
+          testId="studio-vocal-mode"
+        />
+        <SelectField
+          label="Vocal language"
+          options={VOCAL_LANGUAGES}
+          value={studio.vocalLanguage}
+          onChange={(v) => onChange({ vocalLanguage: v })}
+          testId="studio-vocal-language"
+        />
+        <SelectField
+          label="Duration"
+          options={DURATIONS}
+          value={studio.duration}
+          onChange={(v) => onChange({ duration: v })}
+          testId="studio-duration"
+        />
+        <SelectField
+          label="Texture"
+          options={TEXTURES}
+          value={studio.texture}
+          onChange={(v) => onChange({ texture: v })}
+          testId="studio-texture"
+        />
+      </div>
+
+      {/* ------- structure ------- */}
+      <Field label="Structure — the walk, in order">
+        <div className="flex flex-wrap gap-1.5" data-testid="studio-structure" role="group" aria-label={t("Structure")}>
+          {SECTIONS.map((s) => (
+            <Chip
+              key={s}
+              active={studio.structure.includes(s)}
+              onClick={() => toggleSection(s)}
+              testId={`studio-section-${s.toLowerCase().replace(/[^a-z]+/g, "-")}`}
+            >
+              {s}
+            </Chip>
+          ))}
+        </div>
+        {studio.structure.length > 0 && (
+          <p className="mt-1.5 text-[11px] text-muted-foreground">
+            {studio.structure.map((s) => t(s)).join(" → ")}
+          </p>
+        )}
+      </Field>
+
+      {/* ------- instruments & exclusions ------- */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Field label="Instruments — the voices you want">
           <input
             type="text"
             value={studio.instruments}
             onChange={(e) => onChange({ instruments: e.target.value })}
-            placeholder="e.g. felt piano, cello, soft brushes…"
-            maxLength={200}
-            className="focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[12px] text-foreground placeholder:text-muted-foreground/60"
+            placeholder={t("e.g. nylon guitar, upright bass, brushed drums")}
+            data-testid="studio-instruments"
+            className="focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[13px] text-foreground placeholder:text-muted-foreground/60"
           />
-        </label>
-        <label className="block">
-          <FieldLabel>Excluded — what must never sound</FieldLabel>
+        </Field>
+        <Field label="Excluded sounds — never heard">
           <input
             type="text"
             value={studio.exclusions}
             onChange={(e) => onChange({ exclusions: e.target.value })}
-            placeholder="e.g. no drums, no synth lead…"
-            maxLength={200}
-            className="focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[12px] text-foreground placeholder:text-muted-foreground/60"
+            placeholder={t("e.g. no saxophone, no sirens, no sudden drops")}
+            data-testid="studio-exclusions"
+            className="focus-glow h-8 w-full rounded-lg border hairline bg-[var(--glass-bg)] px-2 text-[13px] text-foreground placeholder:text-muted-foreground/60"
           />
-        </label>
+        </Field>
       </div>
 
-      {/* the two honest dials */}
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+      {/* ------- the two dials ------- */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <FieldLabel>
-            Acoustic balance · {typeof studio.acousticBalance === "number" ? studio.acousticBalance : 50}
-          </FieldLabel>
+          <span className="mono-label mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <span>{t("Acoustic / electronic balance")}</span>
+            <span className="text-[10.5px] normal-case tracking-normal text-[var(--scope-a)]">
+              {studio.acousticBalance <= 25
+                ? t("Electronic")
+                : studio.acousticBalance <= 45
+                  ? t("Mostly electronic")
+                  : studio.acousticBalance <= 60
+                    ? t("Balanced")
+                    : studio.acousticBalance <= 80
+                      ? t("Mostly acoustic")
+                      : t("Acoustic")}
+            </span>
+          </span>
           <input
             type="range"
             min={0}
             max={100}
-            value={typeof studio.acousticBalance === "number" ? studio.acousticBalance : 50}
+            step={5}
+            value={studio.acousticBalance}
             onChange={(e) => onChange({ acousticBalance: Number(e.target.value) })}
-            aria-label="Acoustic balance — electronic to acoustic"
-            className="h-1.5 w-full accent-[var(--scope-a)]"
+            aria-label={t("Acoustic versus electronic balance")}
+            data-testid="studio-acoustic"
+            className="h-1 w-full cursor-pointer accent-[var(--scope-a)]"
           />
-          <div className="mt-0.5 flex justify-between text-[9px] text-muted-foreground/60">
-            <span>Electronic</span>
-            <span>Acoustic</span>
-          </div>
         </div>
         <div>
-          <FieldLabel>
-            Experimentation · {typeof studio.experimental === "number" ? studio.experimental : 30}
-          </FieldLabel>
+          <span className="mono-label mb-1 flex items-center justify-between text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <span>{t("Experimental intensity")}</span>
+            <span className="text-[10.5px] normal-case tracking-normal text-[var(--scope-a)]">
+              {studio.experimental <= 15
+                ? t("Faithful")
+                : studio.experimental <= 45
+                  ? t("Adventurous")
+                  : studio.experimental <= 70
+                    ? t("Bold")
+                    : t("Boundless")}
+            </span>
+          </span>
           <input
             type="range"
             min={0}
             max={100}
-            value={typeof studio.experimental === "number" ? studio.experimental : 30}
+            step={5}
+            value={studio.experimental}
             onChange={(e) => onChange({ experimental: Number(e.target.value) })}
-            aria-label="How experimental the weave may be"
-            className="h-1.5 w-full accent-[var(--scope-a)]"
+            aria-label={t("Experimental intensity")}
+            data-testid="studio-experimental"
+            className="h-1 w-full cursor-pointer accent-[var(--scope-a)]"
           />
-          <div className="mt-0.5 flex justify-between text-[9px] text-muted-foreground/60">
-            <span>Faithful</span>
-            <span>Boundless</span>
-          </div>
         </div>
       </div>
 
-      {(studio.genres ?? []).length > 0 ? (
-        <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.16em] text-muted-foreground/80">
-          <Music2 className="size-3" aria-hidden="true" />
-          {(studio.genres ?? []).length} genre voices riding this chamber
-          <button
-            type="button"
-            onClick={() => onChange({ genres: [] })}
-            aria-label="Clear the chosen genres"
-            className="focus-glow text-muted-foreground hover:text-foreground"
-          >
-            <X className="size-3" aria-hidden="true" />
-          </button>
-        </p>
-      ) : null}
+      {/* ------- lyrics authorship ------- */}
+      <SelectField
+        label="Lyrics"
+        options={LYRICS_MODES}
+        value={studio.lyricsMode}
+        onChange={(v) => onChange({ lyricsMode: v })}
+        testId="studio-lyrics-mode"
+      />
     </div>
   );
 }

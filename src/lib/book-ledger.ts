@@ -115,12 +115,12 @@ export function parseLedger(raw: unknown): BookLedger | null {
   }
   const ledger: BookLedger = {
     ...(brief ? { brief } : {}),
-    ...(lines(o.canon, 20) ? { canon: lines(o.canon, 20) } : {}),
-    ...(lines(o.characters, 28) ? { characters: lines(o.characters, 28) } : {}),
-    ...(lines(o.objects, 18) ? { objects: lines(o.objects, 18) } : {}),
-    ...(lines(o.timeline, 44) ? { timeline: lines(o.timeline, 44) } : {}),
-    ...(lines(o.promises, 20) ? { promises: lines(o.promises, 20) } : {}),
-    ...(lines(o.motifs, 12) ? { motifs: lines(o.motifs, 12) } : {}),
+    ...(lines(o.canon, 16) ? { canon: lines(o.canon, 16) } : {}),
+    ...(lines(o.characters, 18) ? { characters: lines(o.characters, 18) } : {}),
+    ...(lines(o.objects, 14) ? { objects: lines(o.objects, 14) } : {}),
+    ...(lines(o.timeline, 14) ? { timeline: lines(o.timeline, 14) } : {}),
+    ...(lines(o.promises, 16) ? { promises: lines(o.promises, 16) } : {}),
+    ...(lines(o.motifs, 10) ? { motifs: lines(o.motifs, 10) } : {}),
     ...(chapters ? { chapters } : {}),
   };
   return Object.keys(ledger).length > 0 ? ledger : null;
@@ -189,17 +189,17 @@ export function parseAudit(raw: unknown): BookAudit | null {
 export function ledgerBlock(ledger: BookLedger | null): string {
   if (!ledger) return "";
   const out: string[] = [];
-  if (ledger.canon?.length) out.push(`  CANON — ${ledger.canon.slice(0, 16).join(" | ")}`);
+  if (ledger.canon?.length) out.push(`  CANON — ${ledger.canon.slice(0, 12).join(" | ")}`);
   if (ledger.characters?.length)
-    out.push(`  CHARACTERS — ${ledger.characters.slice(0, 24).join(" | ")}`);
+    out.push(`  CHARACTERS — ${ledger.characters.slice(0, 14).join(" | ")}`);
   if (ledger.objects?.length)
-    out.push(`  OBJECTS (state is law) — ${ledger.objects.slice(0, 14).join(" | ")}`);
+    out.push(`  OBJECTS (state is law) — ${ledger.objects.slice(0, 10).join(" | ")}`);
   if (ledger.timeline?.length)
-    out.push(`  TIMELINE — ${ledger.timeline.slice(0, 40).join(" | ")}`);
+    out.push(`  TIMELINE — ${ledger.timeline.slice(0, 10).join(" | ")}`);
   if (ledger.chapters?.length)
     out.push(
       `  CHAPTERS — ${ledger.chapters
-        .slice(-20)
+        .slice(-14)
         .map((c) => `"${c.title}"${c.pages ? ` (${c.pages})` : ""}`)
         .join(" | ")}`
     );

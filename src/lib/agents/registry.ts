@@ -256,7 +256,7 @@ export async function setAgentStatus(agentKey: string, status: "active" | "inact
   const row = await db.agentRecord.findUnique({ where: { agentKey }, select: { id: true } });
   if (!row) return false;
   await db.agentRecord.update({ where: { agentKey }, data: { status } });
-  if ((status as string) !== "active") {
+  if (status !== "active") {
     /* deactivation bars the gate: every grant falls silent with the agent */
     await db.agentGrant.updateMany({ where: { agentId: row.id }, data: { active: status === "active" } });
   }

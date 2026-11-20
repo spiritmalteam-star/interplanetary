@@ -286,9 +286,6 @@ export interface LcStudio {
   experimental: number; // 0..100
   exclusions: string; // free text — explicitly excluded sounds
   lyricsMode: string; // Auto | Mirror writes | I write | Instrumental
-  /** The chosen genre ids — the musical style shelf (up to four
-      voices, fused). Optional: older shelves keep without it. */
-  genres?: string[];
 }
 
 export const LC_DEFAULT_STUDIO: LcStudio = {
@@ -306,7 +303,6 @@ export const LC_DEFAULT_STUDIO: LcStudio = {
   experimental: 20,
   exclusions: "",
   lyricsMode: "Auto",
-  genres: [],
 };
 
 /** The Mirror's composition brief — written once, shaped by many hands

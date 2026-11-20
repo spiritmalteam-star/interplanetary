@@ -1,6 +1,6 @@
 "use client";
 
-import { Atom, FlaskConical, Layers, Leaf, Wind } from "lucide-react";
+import { Atom, FlaskConical, Layers, Wind } from "lucide-react";
 import { useMirror, type LandingScopeKey } from "@/lib/mirror-store";
 import { SCOPE_META, SCOPE_ORDER } from "@/lib/mirror/workspaces";
 import { useT } from "@/lib/i18n";
@@ -37,12 +37,6 @@ const LAB_FIELDS: Record<
     mark: "Lab bench inside",
     tools: [
       { icon: Wind, label: "Breath · Body · Care log" },
-    ],
-  },
-  florax: {
-    mark: "Lab bench inside",
-    tools: [
-      { icon: Leaf, label: "Mortar · Extraction · Formulation" },
     ],
   },
 };

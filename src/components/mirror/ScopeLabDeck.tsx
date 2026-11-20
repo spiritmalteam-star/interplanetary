@@ -18,11 +18,8 @@ import {
 import {
   Atom,
   AudioWaveform,
-  Blend,
-  FlaskConical,
   GitMerge,
   HeartPulse,
-  Leaf,
   Pause,
   PersonStanding,
   Play,
@@ -30,7 +27,6 @@ import {
   RotateCcw,
   Rocket,
   Sparkle,
-  Sprout,
   Wind,
   type LucideIcon,
 } from "lucide-react";
@@ -41,7 +37,7 @@ import {
   QuantumInstruments,
 } from "./ScopeLabInstruments";
 
-export type LabScope = "interplanetary" | "quantum" | "healing" | "florax";
+export type LabScope = "interplanetary" | "quantum" | "healing";
 
 type Complex = { re: number; im: number };
 type LabProgress = Record<string, { xp: number; events: number }>;
@@ -54,21 +50,18 @@ const TIER_NAMES: Record<LabScope, readonly string[]> = {
   quantum: ["Observer", "Experimenter", "Theorist", "Adept of the Unseen"],
   healing: ["Listener", "Breather", "Steward", "Keeper of Quiet"],
   interplanetary: ["Scout", "Navigator", "Cartographer", "Herald of the Deep"],
-  florax: ["Sprout", "Herbalist", "Alchemist", "Keeper of the Garden"],
 };
 
 const LAB_TITLES: Record<LabScope, string> = {
   interplanetary: "The Interplanetary Lab",
   quantum: "The Quantum Lab",
   healing: "The HealX Lab",
-  florax: "The Florax Greenhouse",
 };
 
 const LAB_SUBTITLES: Record<LabScope, string> = {
   interplanetary: "scan · decode · compute — chart the near deep",
   quantum: "states · gates · entanglement — touch the unseen",
   healing: "breath · body · rest — instruments for quiet",
-  florax: "leaves · extractions · living formulations",
 };
 
 /** accent at NN% strength over transparency */
@@ -1413,247 +1406,9 @@ function InterplanetaryLab({ accent, disabled, addXp, onAsk }: {
   );
 }
 
-/* ══ THE FLORAX GREENHOUSE ═════════════════════════════════════════════
-   The botanical world's own benches: the Mixing Bench — a compendium of
-   living ingredients, each carrying its honest class of actives, mixed
-   into deterministic formulation sketches with synergy and caution
-   lines — and the Discovery Wheel, which turns a therapeutic aim into a
-   trio and a discovery path. Every result ends at the honest border:
-   exploratory alchemy, never a prescription. */
-
-interface FloraxIngredient {
-  id: string;
-  name: string;
-  part: string;
-  active: string;
-  cls: "flavonoid" | "terpene" | "polyphenol" | "polysaccharide" | "organosulfur" | "tannin" | "alkaloid" | "anthocyanin" | "glycoside";
-  prep: string;
-  caution: string | null;
-  thinning: boolean;
-  aims: string[];
-}
-
-const FLORAX_SHELF: FloraxIngredient[] = [
-  { id: "willow", name: "Willow bark", part: "bark", active: "salicin", cls: "glycoside", prep: "cold maceration or gentle decoction, 12 parts water to 1 bark", caution: "carries the thinning gift — never with blood-thinners", thinning: true, aims: ["resilience"] },
-  { id: "chamomile", name: "Chamomile flower", part: "flower", active: "apigenin", cls: "flavonoid", prep: "infusion, 5 minutes covered, water just off the boil", caution: "kin to ragweed — allergy watched", thinning: false, aims: ["calm", "sleep", "skin"] },
-  { id: "ginger", name: "Ginger root", part: "rhizome", active: "gingerol", cls: "terpene", prep: "fresh infusion, 10 minutes, covered", caution: "carries the thinning gift in larger bowls", thinning: true, aims: ["digestion", "resilience"] },
-  { id: "turmeric", name: "Turmeric rhizome", part: "rhizome", active: "curcumin", cls: "polyphenol", prep: "simmered in oil or milk with a pinch of black pepper", caution: "piperine or fat carries it — gallbladder watched", thinning: false, aims: ["resilience", "skin", "digestion"] },
-  { id: "peppermint", name: "Peppermint leaf", part: "leaf", active: "menthol", cls: "terpene", prep: "infusion, 4 minutes, never boiling the leaf", caution: "can lift reflux in some bodies", thinning: false, aims: ["focus", "digestion"] },
-  { id: "greentea", name: "Green tea leaf", part: "leaf", active: "EGCG catechin", cls: "polyphenol", prep: "infusion, 2 minutes, water below the boil", caution: "holds iron at arm's length — drink between meals", thinning: false, aims: ["focus", "resilience"] },
-  { id: "lavender", name: "Lavender flower", part: "flower", active: "linalool", cls: "terpene", prep: "infusion, 3 minutes; the oil only outside the body", caution: "the oil sensitizes skin undiluted", thinning: false, aims: ["calm", "sleep"] },
-  { id: "garlic", name: "Garlic bulb", part: "bulb", active: "allicin", cls: "organosulfur", prep: "crushed and rested 10 minutes, then raw or barely warmed", caution: "carries the thinning gift — never with blood-thinners", thinning: true, aims: ["resilience", "digestion"] },
-  { id: "elderberry", name: "Elderberry fruit", part: "fruit", active: "anthocyanins", cls: "anthocyanin", prep: "simmered into syrup, 20 minutes, never raw parts", caution: "raw stems and leaves are not food", thinning: false, aims: ["resilience"] },
-  { id: "reishi", name: "Reishi mushroom", part: "fruiting body", active: "beta-glucans", cls: "polysaccharide", prep: "long decoction, 40 minutes or more", caution: "overlaps the thinning gift — anticoagulant care", thinning: true, aims: ["sleep", "resilience"] },
-  { id: "calendula", name: "Calendula petal", part: "petal", active: "triterpenes", cls: "terpene", prep: "oil infusion, 2 weeks in the sun; then salve", caution: "kin to the aster family — allergy watched", thinning: false, aims: ["skin"] },
-  { id: "rosemary", name: "Rosemary leaf", part: "leaf", active: "rosmarinic acid", cls: "polyphenol", prep: "infusion, 5 minutes, or oil infusion for the bench", caution: "the essential oil is never drunk", thinning: false, aims: ["focus", "skin", "resilience"] },
-];
-
-const FLORAX_NAMES: readonly string[][] = [
-  ["The Quiet Ember", "The Amber Veil", "The Verdant Hour"],
-  ["The Green Lantern", "The Sleeping Grove", "The Copper Root"],
-  ["The Velvet Moss", "The Morning Resin", "The Humming Leaf"],
-];
-
-function floraxHash(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i += 1) h = (h * 33 + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-}
-
-/** the pairing law — deterministic synergy and caution lines */
-function floraxPairLine(a: FloraxIngredient, b: FloraxIngredient): { line: string; caution: boolean } {
-  if (a.thinning && b.thinning) {
-    return { line: "caution — both carry the thinning gift; the bowl must not pour twice", caution: true };
-  }
-  const key = [a.cls, b.cls].sort().join("+");
-  if (key === "flavonoid+terpene") return { line: "volatile synergy — the terpene opens the gate the flavonoid walks through", caution: false };
-  if (key === "polyphenol+polysaccharide") return { line: "the slow scaffold — the polysaccharide carries what the polyphenol does", caution: false };
-  if (key === "polysaccharide+tannin") return { line: "the tannin binds; the mucilage softens its grip", caution: false };
-  if (key === "flavonoid+organosulfur") return { line: "the sulfur sharpens; the flavonoid steadies", caution: false };
-  if (key === "polyphenol+terpene") return { line: "warming synergy — heat and patience trade places", caution: false };
-  if (key === "flavonoid+polyphenol") return { line: "the antioxidant braid — two reds woven into one thread", caution: false };
-  if (key === "terpene+terpene") return { line: "the volatiles answer each other — keep both bowls light", caution: false };
-  if (key === "anthocyanin+flavonoid") return { line: "the deep color deepens — a harvest of pigments", caution: false };
-  if (key === "glycoside+terpene") return { line: "the glycoside leads, the volatile follows — weigh both", caution: true };
-  return { line: "a quiet companionship — neither leads, neither resists", caution: false };
-}
-
-function FloraxMixingBench({ accent, disabled, addXp, onAsk }: {
-  accent: string; disabled: boolean;
-  addXp: (n: number, events?: number) => void; onAsk: (question: string) => void;
-}) {
-  const t = useT();
-  const [picked, setPicked] = useState<string[]>([]);
-  const [result, setResult] = useState<null | {
-    name: string; ratio: string; prep: string; lines: { line: string; caution: boolean }[];
-    cautions: string[]; border: string; ask: string;
-  }>(null);
-
-  const toggle = (id: string) => {
-    setResult(null);
-    setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length < 3 ? [...p, id] : p));
-  };
-
-  const compose = () => {
-    const items = picked.map((id) => FLORAX_SHELF.find((x) => x.id === id)).filter(Boolean) as FloraxIngredient[];
-    if (items.length < 2) return;
-    const h = floraxHash(items.map((x) => x.id).join("+"));
-    const lines: { line: string; caution: boolean }[] = [];
-    for (let i = 0; i < items.length; i += 1) {
-      for (let j = i + 1; j < items.length; j += 1) lines.push(floraxPairLine(items[i], items[j]));
-    }
-    const cautions = items.map((x) => x.caution).filter(Boolean) as string[];
-    const ratio = items.length === 2 ? "2 : 1 parts" : "2 : 1 : 1 parts";
-    const ask = `Walk the Florax path with me: I am sketching a formulation of ${items
-      .map((x) => `${x.name} (${x.active})`)
-      .join(", ")}, at ${ratio}, by ${items[0].prep}. What does each ingredient truly carry, how could they meet, and what new biologic treatment does the combination reach toward — with the honest border named?`;
-    setResult({
-      name: FLORAX_NAMES[h % 3][Math.floor(h / 3) % 3],
-      ratio,
-      prep: items[0].prep,
-      lines,
-      cautions,
-      border: "an exploratory formulation sketch — not a remedy to take; the last step belongs to trained human hands",
-      ask,
-    });
-    addXp(2, 1);
-  };
-
-  return (
-    <LabCard icon={Blend} accent={accent} title={t("The Mixing Bench")}
-      note={t("pick two or three — read what each carries, then compose")}>
-      <div className="flex flex-wrap gap-1.5">
-        {FLORAX_SHELF.map((ing) => (
-          <Chip key={ing.id} accent={accent} active={picked.includes(ing.id)}
-            disabled={disabled} title={`${ing.active} · ${ing.caution ?? "no known caution"}`}
-            onClick={() => toggle(ing.id)}>
-            {ing.name}
-          </Chip>
-        ))}
-      </div>
-      <div className="mt-2 flex items-center gap-2">
-        <LabButton accent={accent} disabled={disabled || picked.length < 2} onClick={compose}>
-          {t("Compose")}
-        </LabButton>
-        {picked.length > 0 ? (
-          <LabButton accent={accent} disabled={disabled} onClick={() => { setPicked([]); setResult(null); }}>
-            <RotateCcw className="mr-1 inline size-3" aria-hidden="true" />
-            {t("Clear")}
-          </LabButton>
-        ) : null}
-      </div>
-      {result ? (
-        <div className="mt-2 rounded-xl border p-2.5" style={{ borderColor: mix(accent, 26), background: mix(accent, 8) }}>
-          <p className="font-serif text-[13px] text-foreground">{t(result.name)}</p>
-          <p className="mono-label mt-0.5 text-[9px] uppercase tracking-[0.14em] text-muted-foreground/80">
-            {t("parts")} {result.ratio} · {t("by")} {result.prep}
-          </p>
-          <ul className="mt-1.5 space-y-1">
-            {result.lines.map((l, i) => (
-              <li key={i} className="text-[10.5px] leading-snug"
-                style={{ color: l.caution ? mix(accent, 90) : "var(--muted-foreground)" }}>
-                {l.caution ? "△ " : "· "}
-                {t(l.line)}
-              </li>
-            ))}
-          </ul>
-          {result.cautions.length > 0 ? (
-            <p className="mt-1.5 text-[10px] leading-snug" style={{ color: mix(accent, 85) }}>
-              △ {result.cautions.map((c) => t(c)).join(" · ")}
-            </p>
-          ) : null}
-          <HonestLine>{t(result.border)}</HonestLine>
-          <div className="mt-1.5">
-            <GhostAsk accent={accent} disabled={disabled} onClick={() => onAsk(result.ask)}>
-              {t("Ask the Mirror to decode this formulation")}
-            </GhostAsk>
-          </div>
-        </div>
-      ) : null}
-    </LabCard>
-  );
-}
-
-const FLORAX_AIMS: { id: string; label: string; trio: [string, string, string]; note: string }[] = [
-  { id: "calm", label: "Calm", trio: ["chamomile", "lavender", "rosemary"], note: "the flavonoid quiets, the linalool slows the breath, the rosemary keeps the mind's lamp lit but low" },
-  { id: "sleep", label: "Sleep", trio: ["lavender", "chamomile", "reishi"], note: "the volatiles descend, the apigenin settles, the beta-glucans hold the long night's hand" },
-  { id: "focus", label: "Focus", trio: ["greentea", "peppermint", "rosemary"], note: "the catechin steadies attention, the menthol clears the airway, the rosmarinic acid guards the working mind" },
-  { id: "resilience", label: "Resilience", trio: ["elderberry", "ginger", "turmeric"], note: "the anthocyanins shield, the gingerol warms the threshold, the curcumin keeps the embers even" },
-  { id: "digestion", label: "Digestion", trio: ["ginger", "peppermint", "garlic"], note: "the gingerol stirs the fire, the menthol loosens the gates, the allicin clears the old growth" },
-  { id: "skin", label: "Skin", trio: ["calendula", "chamomile", "turmeric"], note: "the triterpenes mend the surface, the apigenin quiets the red, the curcumin holds the long repair" },
-];
-
-function FloraxDiscoveryWheel({ accent, disabled, addXp, onAsk }: {
-  accent: string; disabled: boolean;
-  addXp: (n: number, events?: number) => void; onAsk: (question: string) => void;
-}) {
-  const t = useT();
-  const [aim, setAim] = useState<string | null>(null);
-  const found = FLORAX_AIMS.find((a) => a.id === aim) ?? null;
-  const trio = found
-    ? found.trio.map((id) => FLORAX_SHELF.find((x) => x.id === id)).filter(Boolean) as FloraxIngredient[]
-    : [];
-  const ask = found
-    ? `Walk the Florax discovery path for ${found.label.toLowerCase()}: the trio is ${trio
-        .map((x) => `${x.name} (${x.active})`)
-        .join(", ")}. Teach the preparation, the mechanism of each pairing, and what new biologic treatment the path reaches toward — with the honest border named.`
-    : "";
-
-  return (
-    <LabCard icon={Sprout} accent={accent} title={t("The Discovery Wheel")}
-      note={t("choose an aim — receive a trio and a discovery path")}>
-      <div className="flex flex-wrap gap-1.5">
-        {FLORAX_AIMS.map((a) => (
-          <Chip key={a.id} accent={accent} active={aim === a.id} disabled={disabled}
-            onClick={() => { setAim(a.id); if (aim !== a.id) addXp(1); }}>
-            {t(a.label)}
-          </Chip>
-        ))}
-      </div>
-      {found ? (
-        <div className="mt-2 rounded-xl border p-2.5" style={{ borderColor: mix(accent, 26), background: mix(accent, 8) }}>
-          <p className="font-serif text-[13px] text-foreground">
-            {trio.map((x) => t(x.name)).join(" + ")}
-          </p>
-          <p className="mt-1 text-[10.5px] leading-snug text-muted-foreground">{t(found.note)}</p>
-          <p className="mt-1 text-[10px] leading-snug" style={{ color: mix(accent, 85) }}>
-            △ {trio.map((x) => x.caution).filter(Boolean).map((c) => t(c as string)).join(" · ") ||
-              t("no known cautions among the three")}
-          </p>
-          <HonestLine>{t("a discovery path, not a prescription — verify with trained hands")}</HonestLine>
-          <div className="mt-1.5">
-            <GhostAsk accent={accent} disabled={disabled} onClick={() => onAsk(ask)}>
-              {t("Walk this path with Florax")}
-            </GhostAsk>
-          </div>
-        </div>
-      ) : null}
-    </LabCard>
-  );
-}
-
-function FloraxLab({ accent, disabled, addXp, onAsk }: {
-  accent: string; disabled: boolean;
-  addXp: (n: number, events?: number) => void; onAsk: (question: string) => void;
-}) {
-  const t = useT();
-  return (
-    <>
-      <LabCard icon={Leaf} accent={accent} title={t("The Living Compendium")}
-        note={t("every ingredient carries its honest class of actives")} className="min-[540px]:col-span-2">
-        <p className="text-[10.5px] leading-relaxed text-muted-foreground">
-          {t("Alkaloids, flavonoids, terpenes, tannins, glycosides, polysaccharides — read the leaf before you mix it. Every chip above names its active and its caution; the garden is generous, the border is honest.")}
-        </p>
-      </LabCard>
-      <FloraxMixingBench accent={accent} disabled={disabled} addXp={addXp} onAsk={onAsk} />
-      <FloraxDiscoveryWheel accent={accent} disabled={disabled} addXp={addXp} onAsk={onAsk} />
-    </>
-  );
-}
-
 /* ══ THE DECK ═══════════════════════════════════════════════════════════ */
 
-const VALID_SCOPES: readonly LabScope[] = ["interplanetary", "quantum", "healing", "florax"];
+const VALID_SCOPES: readonly LabScope[] = ["interplanetary", "quantum", "healing"];
 
 export function ScopeLabDeck(props: {
   scope: LabScope;
@@ -1702,7 +1457,6 @@ export function ScopeLabDeck(props: {
           <HealxLab accent={accent} disabled={disabled} addXp={progress.addXp} onAsk={onAsk} tier={progress.tier} />
         ) : null}
         {scope === "interplanetary" ? <InterplanetaryLab {...labProps} /> : null}
-        {scope === "florax" ? <FloraxLab {...labProps} /> : null}
       </div>
     </section>
   );

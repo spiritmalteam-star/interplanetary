@@ -186,16 +186,6 @@ const VERSE_LAW = `THE LAW OF VERSE (this volume is written in verse — AUTHORI
    names its own world, and keeps its own names true. */
 const NAMES_CONTINUE_LAW = `THE NAMES HOLD: keep every name already coined in this volume exactly as it is, so the cast never drifts.`;
 
-/* THE LIVING WORLD LAW — continuation strides breathe the same
-   hyper-creative air the opening breath did: new names, new places,
-   new wonders keep arriving page after page, drawn from the pages
-   just read (the long memory above) but never repeating them. */
-const LIVING_WORLD_LAW = `THE LIVING WORLD LAW: the volume stays wildly, vividly alive on every page it weaves —
-- NAMES: coin fresh, original, unforgettable names freely as the world widens (people, creatures, places, artifacts, songs, ships, winds) — never generic placeholders ("the village", "the old man"), never copies of other books' famous names, and always in harmony with the names already coined.
-- ENVIRONMENTS: render each new place with two or three concrete, sensory particulars (light, weather, smell, texture, sound) that make it unlike any place before it in this volume.
-- SCENES: give every page at least one small astonishment — a gesture, a turning, an image the reader will remember — while the deeper arc advances with patience and intent.
-- CONTINUITY: everything new grows out of THE PAGES JUST READ and the ledger's bones — surprise, but never contradict.`;
-
 function strictJsonLine(languageName: string): string {
   if (languageName === "English") return "";
   return `\n\nLANGUAGE (CRITICAL): the visitor reads in ${languageName}. Write EVERY word you create — the title, subtitle, dedication, chapter titles, every paragraph of every page and the thread summary — in fluent, natural ${languageName}. The JSON keys stay exactly as listed.`;
@@ -244,7 +234,7 @@ THE FULL PAGE LAW (a page is a real book page — the binding measure)
 - Fullness is not padding: every paragraph carries the book forward.
 
 THE THREAD (the book's own memory — yours to keep)
-- With every weaving you return a "thread": a compact living summary of the volume so far — who the characters are, what has changed, what remains open. It is your own memory, handed back to you at every continuation; guard it well and keep it under 220 words.`;
+- With every weaving you return a "thread": a compact living summary of the volume so far — who the characters are, what has changed, what remains open. It is your own memory, handed back to you at every continuation; guard it well and keep it under 130 words.`;
 }
 
 function buildUserPrompt(body: {
@@ -403,12 +393,11 @@ function buildUserPrompt(body: {
       ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
         ? `- THE PAGES JUST READ (continue seamlessly from exactly this voice and moment — never re-tell them, never contradict them):
-"""${body.recentPages.join("\n\n").slice(-60000)}"""`
+"""${body.recentPages.join("\n\n").slice(-2600)}"""`
         : "",
       ...(seedLine ? [``, seedLine] : []),
       ``,
       NAMES_CONTINUE_LAW,
-      LIVING_WORLD_LAW,
       ``,
       `Write the NEXT ${span === 2 ? "TWO pages" : `${span} pages`} (pages ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}) of the same volume, in the same voice. Where the book's own rhythm opens a chapter, that page carries the next numbered chapter line; most strides carry no chapter at all.`,
       `THE FULL PAGE LAW holds: ${span === 2 ? "both pages are real book pages — three to five full paragraphs each (grown readers; two to four for the young), never a lone paragraph" : "every page is a real book page, never a lone paragraph"}. THE PAGE'S MEASURE: each of these pages carries near ${specForAge(age).storyWordsPerPage} words — hold the measure, page after page.`,
@@ -432,12 +421,11 @@ function buildUserPrompt(body: {
       body.threads ? `- THE THREAD (your own memory of the volume): ${body.threads}` : "",
       ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
-        ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-60000)}"""`
+        ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
         : "",
       ...(seedLine ? [``, seedLine] : []),
       ``,
       NAMES_CONTINUE_LAW,
-      LIVING_WORLD_LAW,
       ``,
       `Choose a new total length: the current plan was ${
         body.totalPages ?? 120
@@ -457,12 +445,11 @@ function buildUserPrompt(body: {
       body.threads ? `- THE THREAD (your own memory of the volume): ${body.threads}` : "",
       ...(body.ledger ? [ledgerBlock(body.ledger)] : []),
       body.recentPages?.length
-        ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-60000)}"""`
+        ? `- THE PAGES JUST READ:\n"""${body.recentPages.join("\n\n").slice(-2600)}"""`
         : "",
       ...(seedLine ? [``, seedLine] : []),
       ``,
       NAMES_CONTINUE_LAW,
-      LIVING_WORLD_LAW,
       ``,
       `Bring the story to its close: the ending must be an ENDING — a true close, not a stop. On page ${body.pageNumber}, open the final chapter (give it a title) if the rhythm asks. Return the updated thread and the final ledger.`,
       ...(rewrites && rewrites.length === 0 ? [] : [])
@@ -493,7 +480,7 @@ function buildUserPrompt(body: {
           ? `TWO page objects, in order, numbered ${phase === "open" ? "1 and 2" : `${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}`}`
           : `${span} page objects, in order, numbered ${body.pageNumber} through ${(body.pageNumber ?? 2) + span - 1}`
     }. ${body.reveal ? "Each page carries 1–2 paragraphs (3 only at a true turning point)" : "Each page is a FULL book page — three to five full paragraphs for grown readers (two to four shorter ones for the young); a lone-paragraph page never leaves the loom"}. "chapter" carries the chapter's number and its title as a printed book would (e.g. "Chapter One — The Cartographer of Ashes"; the style may follow the book's own tongue) — given ONLY when a genuinely new chapter opens on that page (a new chapter every 8–14 pages AT MOST; most strides carry NO chapter at all; NEVER repeat a chapter title or number already given). "part" is given ONLY on the page where a NEW part opens (two to four parts for volumes of 60+ pages) and names it like a printed book (e.g. "Part Two — The Drowning Choir"); a part already announced is never announced again. Page text is pure prose — no headings, no markdown, no asterisks, no emojis. In verse forms a paragraph string may contain real line breaks (\\n) so every verse line sits on its own line.`,
-    `The "ledger" is your own book's memory: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, and the new chapter (if any) is appended to "chapters". Keep every line ONE short clause (at most ~12 words); canon at most 28 lines, characters at most 48 (EVERY named soul of the volume stays remembered — their name, their nature, and where their thread last stood), objects at most 26, timeline at most 90 (when it overflows, the earliest events fold into one summarizing line — but never lose a turning point or a promise still open), and "chapters" carries the LAST 48 chapters, each summary one short line. The ledger is the volume's long memory — the richer and truer it stays, the more remarkable the continuation.`,
+    `The "ledger" is your own book's memory: carry forward EVERY line you received, updated by what these new pages changed — a line that still holds is never dropped, objects keep their state, and the new chapter (if any) is appended to "chapters". Keep every line ONE short clause (at most ~12 words); canon at most 10 lines, characters at most 12, objects at most 10, timeline at most 16 (when it overflows, the earliest events fold into one summarizing line), and "chapters" carries only the LAST 12 chapters, each summary one short line.`,
     `The channel is open: manifest the book.${strictJsonLine(languageName)}`
   );
 
@@ -884,7 +871,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
           .map((s: string) => s.slice(0, 500))
       : [];
     const recentPages = Array.isArray(body?.recentPages)
-      ? body.recentPages.filter((s: unknown): s is string => typeof s === "string").slice(-20)
+      ? body.recentPages.filter((s: unknown): s is string => typeof s === "string").slice(-2)
       : [];
     /* THE PAGES IN THE PLAN — the visitor may name the book's length
        themselves (20–300); when they do, that number is law */
@@ -1128,13 +1115,9 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         max_tokens: 8192,
         /* the opening asks for the widest creative divergence — the
            skeleton already forces the shape; the temperature frees the
-           voice inside it. Continuations breathe a little freer now too
-           (0.9 — the LIVING WORLD LAW's own air): still one voice, still
-           one ledger, but names, places and scenes keep arriving with
-           the same astonishment the first page carried. */
-        ...(phase === "open"
-          ? { temperature: 0.95 }
-          : { temperature: 0.9 }),
+           voice inside it. Continuations stay at the house default so
+           the volume keeps its one voice. */
+        ...(phase === "open" ? { temperature: 0.95 } : {}),
       });
       return completion.choices[0]?.message?.content ?? "";
     };

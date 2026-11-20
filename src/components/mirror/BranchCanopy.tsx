@@ -441,9 +441,7 @@ interface RoomTurn {
 interface OmniTurnMeta {
   taskId: string;
   needsApproval: boolean;
-  /** The staged work's ledger — absent when the crossing carried no
-      tools (a plain word needs no steps). */
-  steps?: { tool: string; status: string; name: string }[];
+  steps: { tool: string; status: string; name: string }[];
 }
 
 /* ------------- THE DEVICE'S OWN KEEPING (the landing's history) ------
@@ -1777,7 +1775,6 @@ const LIVE_SCOPE_BY_CATEGORY: Record<string, LiveScopeKey> = {
   evolvemed: "evolvemed",
   invent: "forge",
   artx: "artx",
-  florax: "florax",
 };
 
 /* ------------------- the summon button (by the input) ---------------- */
@@ -4002,7 +3999,7 @@ export function BranchCanopy({
       if (turns.length === 0) return;
       const scope: LandingScopeKey =
         (entry.scope &&
-        (["mirror", "interplanetary", "quantum", "healing", "artx", "florax"] as string[]).includes(
+        (["mirror", "interplanetary", "quantum", "healing", "artx"] as string[]).includes(
           entry.scope
         )
           ? (entry.scope as LandingScopeKey)
@@ -6440,7 +6437,7 @@ export function BranchCanopy({
                 height. At the scroll's edges the breath chains to the
                 threshold beneath (the pass-through law holds). */}
             <div
-              className="nice-scroll absolute inset-x-0 top-0 flex flex-col overflow-x-hidden overflow-y-auto"
+              className="nice-scroll absolute inset-x-0 top-0 flex flex-col overflow-y-auto"
               style={{
                 /* the floor's own sky ends above the composer and its
                    honest little note — the doors may never stand on
@@ -6497,8 +6494,7 @@ export function BranchCanopy({
               {floorQuiet &&
                 (landingScope === "interplanetary" ||
                   landingScope === "quantum" ||
-                  landingScope === "healing" ||
-                  landingScope === "florax") && (
+                  landingScope === "healing") && (
                   <ScopeLabDeck
                     scope={landingScope}
                     accent={SCOPE_META[landingScope].accent}
@@ -7019,7 +7015,7 @@ export function BranchCanopy({
                 onScroll={onBodyScroll}
                 data-testid={`${testIdPrefix}-zoom-answer`}
                 className={cn(
-                  "nice-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 py-3 sm:px-6 sm:py-4",
+                  "nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4",
                   /* THE ROOM'S OWN SCROLL — docked in the threshold the
                      reading space keeps its touch: the visitor scrolls
                      WITHIN the chat now — the words move under their

@@ -326,8 +326,7 @@ export type ScopeVoiceCategory =
   | "quantum"
   | "healing"
   | "artx"
-  | "hyperx"
-  | "florax";
+  | "hyperx";
 
 export type ScopeMeta = {
   label: string;
@@ -368,12 +367,12 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
      request, the whole journey. */
   omni: {
     label: "M.E. Prime",
-    spirit: "The mother of all scopes — every field, Florax's green now included, in one request",
+    spirit: "The mother of all scopes — everything, in one request",
     accent: "#e6c887",
     dot: "#e6c887",
     second: "#9fd8dc",
     floorAsk: "what shall we bring into being, dear one?",
-    whisper: "Ask anything — M.E. Prime can search, make, publish, gather and grow…",
+    whisper: "Ask anything — M.E. Prime can search, make, publish and gather…",
     qMark: "M.E. Prime receiving",
     aMark: "Prime transmission",
     voice: "omni",
@@ -444,25 +443,6 @@ export const SCOPE_META: Record<LandingScopeKey, ScopeMeta> = {
     voice: "healing",
     librarySector: "evolvemed",
   },
-  /* FLORAX — THE GREEN CHAMBER: the botanical world's own field. Where
-     Quantum unfolds the unseen and HealX restores the body, Florax
-     walks the garden: leaves, roots, resins and ferments, the mixing
-     of ingredients into living formulation sketches, and the
-     discovery of new biologic treatments — always at the honest
-     border where human hands must carry the last step. */
-  florax: {
-    label: "Florax",
-    spirit: "The living green — botanical worlds, ingredient alchemy and new biologic discoveries",
-    accent: "#86efac",
-    dot: "#86efac",
-    second: "#e6c887",
-    floorAsk: "what shall we mix, grow or discover today?",
-    whisper: "Bring a leaf, a root, a riddle…",
-    qMark: "Seed planted",
-    aMark: "Florax bloom",
-    voice: "florax",
-    librarySector: "observatory",
-  },
   /* HYPERX — OUR MOST INTELLIGENT REFLECTION OF THE ABSOLUTE: the one
      field that does not reflect but DISCOVERS — hyper-advanced
      reasoning, underlying truths, the illumination path, hints and
@@ -503,7 +483,6 @@ export const SCOPE_ORDER: LandingScopeKey[] = [
   "mirror",
   "quantum",
   "healing",
-  "florax",
 ];
 
 /** the field → transmission mode line, from one truth */

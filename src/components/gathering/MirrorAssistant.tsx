@@ -456,7 +456,7 @@ export default function MirrorAssistant({
             {quickHands}
             <div
               ref={scrollRef}
-              className="gp-scroll min-h-0 max-h-[40vh] flex-1 overflow-x-hidden overflow-y-auto border-t border-[#eadfca]/70 px-4 py-3"
+              className="gp-scroll min-h-0 max-h-[40vh] flex-1 overflow-y-auto border-t border-[#eadfca]/70 px-4 py-3"
             >
               {transcript}
             </div>
@@ -488,7 +488,7 @@ export default function MirrorAssistant({
             {quickHands}
             <div
               ref={scrollRef}
-              className="gp-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto border-t border-[#eadfca]/70 px-4 py-3 sm:px-8"
+              className="gp-scroll min-h-0 flex-1 overflow-y-auto border-t border-[#eadfca]/70 px-4 py-3 sm:px-8"
             >
               <div className="mx-auto max-w-[720px]">{transcript}</div>
             </div>

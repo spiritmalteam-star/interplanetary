@@ -104,41 +104,6 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
-/* recharts v3 no longer exposes the injected payload/label props on
-   the Tooltip's public type — the house describes its own shape. */
-interface TooltipPayloadItem {
-  dataKey?: string | number
-  name?: string | number
-  value?: number | string | Array<number | string>
-  color?: string
-  fill?: string
-  payload?: Record<string, unknown>
-}
-
-interface ChartTooltipContentProps extends React.ComponentProps<"div"> {
-  active?: boolean
-  payload?: TooltipPayloadItem[]
-  label?: unknown
-  indicator?: "line" | "dot" | "dashed"
-  hideLabel?: boolean
-  hideIndicator?: boolean
-  labelFormatter?: (
-    label: unknown,
-    payload: TooltipPayloadItem[]
-  ) => React.ReactNode
-  labelClassName?: string
-  formatter?: (
-    value: unknown,
-    name: unknown,
-    item: TooltipPayloadItem,
-    index: number,
-    payload: unknown
-  ) => React.ReactNode
-  color?: string
-  nameKey?: string
-  labelKey?: string
-}
-
 function ChartTooltipContent({
   active,
   payload,
@@ -153,7 +118,14 @@ function ChartTooltipContent({
   color,
   nameKey,
   labelKey,
-}: ChartTooltipContentProps) {
+}: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
+  React.ComponentProps<"div"> & {
+    hideLabel?: boolean
+    hideIndicator?: boolean
+    indicator?: "line" | "dot" | "dashed"
+    nameKey?: string
+    labelKey?: string
+  }) {
   const { config } = useChart()
 
   const tooltipLabel = React.useMemo(() => {
@@ -210,7 +182,7 @@ function ChartTooltipContent({
         {payload.map((item, index) => {
           const key = `${nameKey || item.name || item.dataKey || "value"}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
-          const indicatorColor = color || item.payload?.fill || item.color
+          const indicatorColor = color || item.payload.fill || item.color
 
           return (
             <div
@@ -278,20 +250,17 @@ function ChartTooltipContent({
 
 const ChartLegend = RechartsPrimitive.Legend
 
-interface ChartLegendContentProps extends React.ComponentProps<"div"> {
-  hideIcon?: boolean
-  payload?: TooltipPayloadItem[]
-  verticalAlign?: "top" | "bottom" | "middle"
-  nameKey?: string
-}
-
 function ChartLegendContent({
   className,
   hideIcon = false,
   payload,
   verticalAlign = "bottom",
   nameKey,
-}: ChartLegendContentProps) {
+}: React.ComponentProps<"div"> &
+  Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
+    hideIcon?: boolean
+    nameKey?: string
+  }) {
   const { config } = useChart()
 
   if (!payload?.length) {
@@ -312,7 +281,7 @@ function ChartLegendContent({
 
         return (
           <div
-            key={`${item.value}`}
+            key={item.value}
             className={cn(
               "[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3"
             )}

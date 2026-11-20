@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
-import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { X } from "lucide-react";
 import { bootUiLanguage, useDocumentLang, useT } from "@/lib/i18n";
@@ -9,16 +8,7 @@ import { toast } from "sonner";
 import { useMirror, LANDING_SCOPES } from "@/lib/mirror-store";
 import { SCOPE_META } from "@/lib/mirror/workspaces";
 import { cn } from "@/lib/utils";
-import { perfEco } from "@/lib/perf-mode";
 import LandingPage from "./LandingPage";
-
-/* THE GATHERING'S HALL — the social network stands over everything
-   when its sigil is pressed; it rides in on its own door (the hall
-   is client-born — createPortal needs the window). */
-const GatheringPortal = dynamic(
-  () => import("@/components/gathering/GatheringPortal"),
-  { ssr: false }
-);
 
 /* ------------------------------------------------------------------ */
 /*  THE THRESHOLD'S GATE.                                              */
@@ -201,20 +191,11 @@ function scopeDress(key: string): CSSProperties {
 export default function LandingGate() {
   const { setTheme } = useTheme();
   const landingScope = useMirror((s) => s.landingScope);
-  const gatheringOpen = useMirror((s) => s.gatheringPortalOpen);
   /* the page's language is read from the visitor's device at the very
      first breath — and <html lang> follows the chosen voice, so screen
      readers and browsing agents hear what the eye sees */
   useEffect(() => {
     bootUiLanguage();
-    /* THE ECO TIER'S VERDICT — one honest answer to "how strong is
-       this device", set once at the root: every room's stillness law
-       reads the same truth from html[data-perf]. */
-    try {
-      document.documentElement.dataset.perf = perfEco() ? "eco" : "full";
-    } catch {
-      /* the verdict stays unset — the house runs full */
-    }
   }, []);
   useDocumentLang();
   const t = useT();
@@ -923,9 +904,6 @@ export default function LandingGate() {
           </div>
         </div>
       )}
-          {/* THE GATHERING'S HALL — one hall over every surface, raised by
-          its own sigil and folded by its own door */}
-      {gatheringOpen && <GatheringPortal />}
     </>
   );
 }

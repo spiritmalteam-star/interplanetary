@@ -173,7 +173,7 @@ export function WelcomeTour() {
     const id = window.setTimeout(() => {
       if (sensitiveReturnUnderway()) return;
       const s = useMirror.getState();
-      if (s.gatheringPortalOpen || s.aboutOpen) return;
+      if (s.gatheringPortalOpen || s.communionOpen || s.aboutOpen) return;
       s.openTour();
     }, 1200);
     return () => window.clearTimeout(id);
@@ -184,8 +184,8 @@ export function WelcomeTour() {
      dismissal flag is NOT carved: the tour is offered again another
      day — the room simply takes the visitor's breath now). */
   const gatheringPortalOpen = useMirror((s) => s.gatheringPortalOpen);
+  const communionOpen = useMirror((s) => s.communionOpen);
   const aboutOpen = useMirror((s) => s.aboutOpen);
-  const communionOpen = false; /* the communion room rests — no veil to mind */
   useEffect(() => {
     if (!tourOpen) return;
     if (gatheringPortalOpen || communionOpen || aboutOpen) closeTour();
@@ -417,7 +417,6 @@ const ABOUT_SECTIONS: { title: string; body: string }[] = [
 export function AboutRoom() {
   const t = useT();
   const aboutOpen = useMirror((s) => s.aboutOpen);
-  const communionOpen = false; /* the communion room rests — no veil to mind */
   const closeAbout = useMirror((s) => s.closeAbout);
   const openTour = useMirror((s) => s.openTour);
   const dialogRef = useRef<HTMLDivElement | null>(null);

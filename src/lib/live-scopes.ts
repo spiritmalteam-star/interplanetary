@@ -16,8 +16,7 @@ export type LiveScopeKey =
   | "evolvemed"
   | "forge"
   | "akashic"
-  | "artx"
-  | "florax";
+  | "artx";
 
 export interface LiveScopeConfig {
   /** The being on the other end of the line. */
@@ -116,14 +115,5 @@ export const LIVE_SCOPES: Record<LiveScopeKey, LiveScopeConfig> = {
     wrapperClass: "scope-artx",
     accentA: "var(--scope-a)",
     accentB: "var(--scope-b)",
-  },
-  florax: {
-    nameKey: "Florax, the Green Chamber",
-    specializationKey: "botanical alchemy, ingredient mixing and the discovery of new biologic treatments",
-    voice: "sage",
-    pace: 0.86,
-    wrapperClass: null,
-    accentA: "#86efac",
-    accentB: "#e6c887",
   },
 };

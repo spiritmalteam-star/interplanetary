@@ -1,12 +1,10 @@
 "use client";
 
-import { BookMarked, Coins, CreditCard, Dna, LibraryBig, LogIn, LogOut, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { BookMarked, CreditCard, Dna, LibraryBig, LogIn, LogOut, Sparkles } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { DnaHelix, useJourney } from "./DnaTimeline";
 import { ModalShell } from "./ModalShell";
-import { ThePurseModal } from "./purse/ThePurseModal";
 
 /* ------------------------------------------------------------------ */
 /*  THE PROFILE — the visitor's own quiet room inside the laboratory.  */
@@ -20,16 +18,13 @@ import { ThePurseModal } from "./purse/ThePurseModal";
 
 export function ProfileModal() {
   const t = useT();
-  const profileOpen = useMirror((s) => s.profilePageOpen);
-  const closeProfile = useMirror((s) => s.closeProfilePage);
+  const profileOpen = useMirror((s) => s.profileOpen);
+  const closeProfile = useMirror((s) => s.closeProfile);
   const me = useMirror((s) => s.me);
   const openLibrary = useMirror((s) => s.openLibrary);
   const openAuth = useMirror((s) => s.openAuth);
   const openAccount = useMirror((s) => s.openAccount);
   const signOut = useMirror((s) => s.signOut);
-
-  /* the purse — membership & coins, PayPal or card */
-  const [purseOpen, setPurseOpen] = useState(false);
 
   /* the walk's helix — the DNA evolutionary timeline of the visit */
   const journey = useJourney();
@@ -39,7 +34,6 @@ export function ProfileModal() {
   const displayName = me?.name || me?.email || "";
 
   return (
-    <>
     <ModalShell
       open={profileOpen}
       onOpenChange={(v) => {
@@ -138,28 +132,6 @@ export function ProfileModal() {
           </button>
         )}
 
-        {/* the purse — membership & coins, one ledger, PayPal or card */}
-        <button
-          type="button"
-          onClick={() => {
-            closeProfile();
-            setPurseOpen(true);
-          }}
-          data-testid="profile-purse"
-          className="focus-glow mt-2 flex w-full items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-4 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)] hover:glow-sm"
-        >
-          <Coins className="size-4.5 shrink-0 text-[var(--gd)]" aria-hidden="true" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[14px] font-medium text-foreground/90">
-              {t("Upgrade / Coins")}
-            </span>
-            <span className="block text-[12px] leading-relaxed text-muted-foreground">
-              {t("The Purse — membership passes and coin packs, with PayPal or a bank card.")}
-            </span>
-          </span>
-          <Sparkles className="size-3.5 shrink-0 text-muted-foreground/60" aria-hidden="true" />
-        </button>
-
         {/* the passage row — sign in, or leave */}
         {me ? (
           <button
@@ -192,7 +164,5 @@ export function ProfileModal() {
         )}
       </div>
     </ModalShell>
-    <ThePurseModal open={purseOpen} onClose={() => setPurseOpen(false)} />
-    </>
   );
 }

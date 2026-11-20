@@ -694,16 +694,14 @@ export const Exchange = memo(function Exchange({
         open={publishOpen}
         onClose={() => setPublishOpen(false)}
         payload={{
-          /* the scope's key rides as its own plain string — the room's
-             own union is narrower than the house's full family */
-          sourcePortal: (scope as string) === "forge" ? "invent" : (scope as string) === "hyperx" ? "hyperx" : "channeling",
-          recentSector: (scope as string) === "forge" ? "invent" : "observatory",
+          sourcePortal: scope === "forge" ? "invent" : scope === "hyperx" ? "hyperx" : "channeling",
+          recentSector: scope === "forge" ? "invent" : "observatory",
           titleHint: (message.query ?? "").slice(0, 120) || undefined,
           suggestedTitle:
             (message.query ?? "").slice(0, 140) || "A transmission of the mirror",
           preview: message.text.slice(0, 4000),
           generic: true,
-          contentTypeLabel: (scope as string) === "forge" ? "Invention" : (scope as string) === "hyperx" ? "Research / Exploration" : "Reflection / Transmission",
+          contentTypeLabel: scope === "forge" ? "Invention" : scope === "hyperx" ? "Research / Exploration" : "Reflection / Transmission",
         }}
       />
     </motion.article>

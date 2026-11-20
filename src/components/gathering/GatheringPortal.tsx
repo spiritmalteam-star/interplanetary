@@ -587,10 +587,10 @@ export default function GatheringPortal() {
         section === "gathering"
           ? "The Gathering · ReflectMe"
           : `The Gathering · ${ROOMS[section].label} · ReflectMe`;
-      /* THE WELCOME VEIL RESTS — the owner asked for a hall that
-         opens straight onto the rooms: no timer ever raises the
-         first-visit sheet again. The sheet keeps its door (the deep
-         link may still call it), but the hall itself never blocks. */
+      if (!window.localStorage.getItem("gathering-intro-v1")) {
+        const id = window.setTimeout(() => setFirstVisit(true), 900);
+        return () => window.clearTimeout(id);
+      }
     }
   }, []);
 
@@ -706,14 +706,7 @@ export default function GatheringPortal() {
                 "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",
             }}
           >
-            {/* THE OWNER'S MARK — the house's own logo, small and proud */}
-            <img
-              src="/logo.svg"
-              alt=""
-              aria-hidden="true"
-              className="size-[22px] object-contain"
-              draggable={false}
-            />
+            <span className="block size-4 rounded-[5px] border border-[#cbb98d] bg-[linear-gradient(150deg,#fefcf6,#e8dcbd)]" />
           </span>
           <div className="min-w-0">
             <p className="truncate font-[family-name:var(--font-cinzel)] text-[14px] font-semibold tracking-wide text-[#3d3428]">
@@ -779,14 +772,7 @@ export default function GatheringPortal() {
                 "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",
             }}
           >
-            {/* THE OWNER'S MARK — the house's own logo in the crown */}
-            <img
-              src="/logo.svg"
-              alt=""
-              aria-hidden="true"
-              className="size-5 object-contain"
-              draggable={false}
-            />
+            <span className="block size-3.5 rounded-[5px] border border-[#cbb98d] bg-[linear-gradient(150deg,#fefcf6,#e8dcbd)]" />
           </span>
           <div className="min-w-0 text-center">
             <p className="truncate font-[family-name:var(--font-cinzel)] text-[14px] font-semibold tracking-wide text-[#3d3428] sm:text-[15px]">

@@ -212,7 +212,7 @@ async function visiblePostWhere(userId: string) {
       { userId }, // one's own offerings, whatever their audience
     ],
     userId: { notIn: walls.size ? [...walls] : undefined },
-  };
+  } as const;
 }
 
 /* ------------------------------ tools ------------------------------ */
@@ -247,7 +247,6 @@ export const TOOLS: Record<string, ToolDefinition> = {
         },
         orderBy: { createdAt: "desc" },
         take,
-        include: { user: true },
         select: {
           id: true,
           title: true,
@@ -701,6 +700,7 @@ export const TOOLS: Record<string, ToolDefinition> = {
         await db.networkNotification.create({
           data: {
             userId: invitee,
+            actorId: ctx.userId,
             actorName: owner ? networkName(owner) : "A fellow maker",
             type: "project_invite",
             body: project.title.slice(0, 120),
@@ -795,6 +795,7 @@ export const TOOLS: Record<string, ToolDefinition> = {
       await db.gatheringPost.update({ where: { id: postId }, data: { echoCount } });
       await notify({
         userId: post.userId,
+        actorId: ctx.userId,
         actorName: networkName(await db.user.findUnique({ where: { id: ctx.userId }, select: { name: true, email: true, provider: true } }) ?? { name: null, email: "", provider: null }),
         type: "echo",
         body: `${post.title}: ${body.slice(0, 120)}`,
@@ -999,6 +1000,7 @@ export const TOOLS: Record<string, ToolDefinition> = {
       });
       await notify({
         userId: targetId,
+        actorId: ctx.userId,
         actorName: networkName(await db.user.findUnique({ where: { id: ctx.userId }, select: { name: true, email: true, provider: true } }) ?? { name: null, email: "", provider: null }),
         type: "connection_request",
         body: null,
@@ -1047,6 +1049,7 @@ export const TOOLS: Record<string, ToolDefinition> = {
       await db.networkCircleMember.create({ data: { circleId, userId: ctx.userId, role: "member" } });
       await notify({
         userId: circle.ownerId,
+        actorId: ctx.userId,
         actorName: networkName(await db.user.findUnique({ where: { id: ctx.userId }, select: { name: true, email: true, provider: true } }) ?? { name: null, email: "", provider: null }),
         type: "circle_join",
         body: circle.name,

@@ -9,7 +9,6 @@ import {
   BookMarked,
   Check,
   ChevronRight,
-  Coins,
   Copy,
   CreditCard,
   Dna,
@@ -34,7 +33,6 @@ import {
 import { LANGUAGES, PICKER_LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
 import { LanguageButton } from "@/components/mirror/LanguageButton";
 import { useMirror } from "@/lib/mirror-store";
-import { ThePurseModal } from "./purse/ThePurseModal";
 import { DnaHelix, TrajectoryEvolution, useJourney } from "./DnaTimeline";
 import { FuelEnginePanel } from "./FuelEnginePanel";
 import { AdminConsole } from "./AdminConsole";
@@ -144,8 +142,6 @@ export function ProfilePage() {
   const t = useT();
   const open = useMirror((s) => s.profilePageOpen);
   const close = useMirror((s) => s.closeProfilePage);
-  /* the purse — membership & coins, PayPal or card, one ledger */
-  const [purseOpen, setPurseOpen] = useState(false);
 
   const me = useMirror((s) => s.me);
   const wallet = useMirror((s) => s.wallet);
@@ -1079,19 +1075,6 @@ export function ProfilePage() {
                 >
                   {wallet ? wallet.total.toLocaleString("en-US") : "—"}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setPurseOpen(true)}
-                  data-testid="profile-purse-door"
-                  className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] text-[var(--scope-a,var(--gd))] transition-all duration-300 hover:glow-sm"
-                  style={{
-                    borderColor:
-                      "color-mix(in srgb, var(--scope-a, var(--gd)) 45%, transparent)",
-                  }}
-                >
-                  <Coins className="size-3.5" aria-hidden="true" />
-                  {t("Upgrade / Coins")}
-                </button>
                 <button
                   type="button"
                   onClick={() => exitTo(openAccount)}
@@ -2620,15 +2603,6 @@ export function ProfilePage() {
         </div>
       </motion.div>
       )}
-      {/* the purse — membership & coins, PayPal or card, one ledger;
-          a capture that lands here refreshes the balance in place */}
-      <ThePurseModal
-        open={purseOpen}
-        onClose={() => {
-          setPurseOpen(false);
-          void useMirror.getState().refreshWallet();
-        }}
-      />
     </AnimatePresence>
   );
 }

@@ -206,7 +206,7 @@ export default function MessagesSection({ active }: { active: boolean }) {
                 <ArrowLeft className="size-3.5 rotate-90" aria-hidden="true" />
               </button>
             </div>
-            <div className="gp-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-4 sm:px-7">
+            <div className="gp-scroll min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-7">
               {people.length === 0 ? (
                 <p className="py-8 text-center text-[13px] text-[#a2947c]">
                   {t("Meet makers in Encounters first — conversations grow from meetings.")}
@@ -388,7 +388,7 @@ function ThreadRoom({ id, onBack }: { id: string; onBack: () => void }) {
         </button>
       </div>
 
-      <div ref={bodyRef} className="gp-scroll mx-auto mt-4 min-h-0 w-full max-w-[760px] flex-1 space-y-3 overflow-x-hidden overflow-y-auto pr-1" data-testid="messages-thread">
+      <div ref={bodyRef} className="gp-scroll mx-auto mt-4 min-h-0 w-full max-w-[760px] flex-1 space-y-3 overflow-y-auto pr-1" data-testid="messages-thread">
         {messages === null ? (
           <p className="flex items-center justify-center gap-2 py-16 text-[13.5px] text-[#a2947c]">
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />

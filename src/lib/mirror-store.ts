@@ -247,8 +247,7 @@ export type LandingScopeKey =
   | "quantum"
   | "healing"
   | "artx"
-  | "hyperx"
-  | "florax";
+  | "hyperx";
 
 export const LANDING_SCOPES: LandingScopeKey[] = [
   "omni",
@@ -258,7 +257,6 @@ export const LANDING_SCOPES: LandingScopeKey[] = [
   "healing",
   "artx",
   "hyperx",
-  "florax",
 ];
 
 /** The standing field of the threshold — THE MIRROR, always. */
@@ -959,9 +957,6 @@ interface MirrorState {
       written to any shelf) */
   lcCarriedImage: string | null;
   lcTrack: LcTrack | null; // the finished, playable transmission
-  /** THE MIRROR'S WRITTEN DIRECTION — the chamber's interpretation,
-      visible while the songs render (title, style, lyrics, notes). */
-  lcInterpretation: LcTrack | null;
   lcError: string | null;
   /** A gentle word for the shelf — a sound the device no longer holds. */
   lcNotice: string | null;
@@ -1929,7 +1924,6 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   lcLyricsDrafts: [],
   lcCarriedImage: null,
   lcTrack: null,
-  lcInterpretation: null,
   lcError: null,
   lcNotice: null,
   lcHistory: [],

@@ -155,23 +155,9 @@ export function imageBlock(description: string | null): string | null {
 }
 
 /* ------------------------------------------------------------------ */
-/*  THE DRAWN BOOK — the sketch the visitor drew into existence.        */
+/*  Shared body validation for the four chat endpoints.                */
 /* ------------------------------------------------------------------ */
 
-/** What the vision saw in the visitor's drawing. */
-export interface SketchSighting {
-  /** The faithful reading, spoken as one honest paragraph. */
-  vision: string;
-  /** Every drawn thing transcribed — creatures, places, objects. */
-  subjects: string[];
-}
-
-/**
- * See the visitor's hand-drawn sketch once, at the book's opening.
- * The bespoke law: what the drawing holds, nothing invented — its
- * creatures, places, objects, colors and mood. Returns null when the
- * vision rests (the caller falls back to the honest meta).
- */
 export interface ParsedAttachments {
   imageDataUrl: string | null;
   documents: IncomingDocument[];
