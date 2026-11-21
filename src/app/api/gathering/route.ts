@@ -360,7 +360,6 @@ export async function GET(req: NextRequest) {
           where: {
             visibility: "public",
             status: "published",
-            circleId: null,
             userId: { notIn: Array.from(walls) },
           },
           orderBy: { createdAt: "desc" },
@@ -379,7 +378,6 @@ export async function GET(req: NextRequest) {
                   },
                   visibility: "public",
                   status: "published",
-                  circleId: null,
                 },
                 orderBy: { createdAt: "desc" },
                 take: FORYOU_POOL_FOLLOWED,
@@ -432,7 +430,11 @@ export async function GET(req: NextRequest) {
             : {}),
         ...(isGatheringRegion(region) ? { region } : {}),
         ...(epistemicLevel ? { epistemic: epistemicLevel } : {}),
-        ...(circleId ? { circleId } : { circleId: mine ? undefined : null }),
+        /* the circle's own filter stands only when a circle is named —
+           the visibility law already keeps a circle's private words
+           out of the open hall, so the open hall reads public offerings
+           however their circle field rests */
+        ...(circleId ? { circleId } : {}),
         ...(q
           ? {
               OR: [
@@ -457,7 +459,6 @@ export async function GET(req: NextRequest) {
           [] as { followingId: string }[]
         );
         where.userId = { in: [...follows.map((f) => f.followingId), visitor.user.id] };
-        where.circleId = null;
         where.OR = [{ visibility: "public" }, { userId: visitor.user.id }];
       } else if (mine) {
         /* the maker reads every room of their own house */
