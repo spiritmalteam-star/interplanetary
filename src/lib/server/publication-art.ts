@@ -137,6 +137,28 @@ export interface AdornOutcome {
   reason?: string;
 }
 
+/** THE FACE IS WRITTEN through the graceful shelf: a young sky that
+    has not built the newest columns yet still receives the picture on
+    the column it does carry (cover) — the face walks wherever the
+    offering walks. */
+async function writeFace(postId: string, data: Record<string, unknown>): Promise<boolean> {
+  try {
+    await db.gatheringPost.update({ where: { id: postId }, data: data as never });
+    return true;
+  } catch {
+    /* the full dress may not fit this sky — lay the face alone */
+    try {
+      await db.gatheringPost.update({
+        where: { id: postId },
+        data: { cover: data.cover as string },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
 /** Paint one publication's face. Skips offerings that already walk
     with a picture. Never throws — a failed face is honestly reported. */
 export async function adornPublication(postId: string): Promise<AdornOutcome> {
@@ -182,19 +204,16 @@ export async function adornPublication(postId: string): Promise<AdornOutcome> {
   try {
     const img = await generateImage(prompt, { size: PORTRAIT_SIZE });
     if (img?.url) {
-      await db.gatheringPost.update({
-        where: { id: postId },
-        data: {
-          cover: img.url,
-          mediaUrl: img.url,
-          mediaType: "image",
-          mediaName: null,
-          aiMedia: true,
-          aiStyle: "possibilities-portrait",
-          altText: alt,
-        },
+      const written = await writeFace(postId, {
+        cover: img.url,
+        mediaUrl: img.url,
+        mediaType: "image",
+        mediaName: null,
+        aiMedia: true,
+        aiStyle: "possibilities-portrait",
+        altText: alt,
       });
-      return { ok: true, engine: "sky" };
+      return { ok: written, engine: written ? "sky" : "skipped", reason: written ? undefined : "unwritable" };
     }
   } catch {
     /* the sky stumbled — the keeper's brush stands behind it */
@@ -203,19 +222,16 @@ export async function adornPublication(postId: string): Promise<AdornOutcome> {
   /* the keeper's brush — the painting that never fails */
   try {
     const painting = keeperPainting(seed);
-    await db.gatheringPost.update({
-      where: { id: postId },
-      data: {
-        cover: painting,
-        mediaUrl: painting,
-        mediaType: "image",
-        mediaName: null,
-        aiMedia: true,
-        aiStyle: "keeper's brush",
-        altText: alt,
-      },
+    const written = await writeFace(postId, {
+      cover: painting,
+      mediaUrl: painting,
+      mediaType: "image",
+      mediaName: null,
+      aiMedia: true,
+      aiStyle: "keeper's brush",
+      altText: alt,
     });
-    return { ok: true, engine: "keeper" };
+    return { ok: written, engine: written ? "keeper" : "skipped", reason: written ? undefined : "unwritable" };
   } catch {
     return { ok: false, engine: "skipped", reason: "unpaintable" };
   }
