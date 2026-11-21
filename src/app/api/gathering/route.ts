@@ -187,6 +187,88 @@ type PostRow = Prisma.GatheringPostGetPayload<{
   };
 }>;
 
+/* THE CASCADING SHELF — a young sky's database may not carry every
+   column the hall wears yet (an older cloud push named a smaller
+   GatheringPost). The reader tries the richest shelf first and steps
+   down, shelf by shelf, until it finds the one the sky actually has;
+   every fallen field is then filled with its honest default, so the
+   offerings always stand — whole, in whatever dress the sky can
+   genuinely serve. */
+const POST_FIELD_LEVELS: Array<Record<string, true>> = [
+  {
+    id: true, kind: true, title: true, body: true, sector: true, region: true,
+    tags: true, circleId: true, sourcePortal: true, sourceType: true, sourceId: true,
+    refKind: true, refUrl: true, cover: true, mediaUrl: true, mediaType: true,
+    mediaName: true, visibility: true, epistemic: true, status: true, language: true,
+    altText: true, aiMedia: true, aiStyle: true, resonanceCount: true, echoCount: true,
+    createdAt: true, updatedAt: true, userId: true,
+  },
+  {
+    id: true, kind: true, title: true, body: true, sector: true, region: true,
+    tags: true, circleId: true, sourcePortal: true, sourceType: true, sourceId: true,
+    refKind: true, refUrl: true, cover: true, mediaUrl: true, mediaType: true,
+    visibility: true, epistemic: true, status: true, resonanceCount: true,
+    echoCount: true, createdAt: true, userId: true,
+  },
+  {
+    id: true, kind: true, title: true, body: true, sector: true, tags: true,
+    sourcePortal: true, sourceType: true, sourceId: true, cover: true, refUrl: true,
+    mediaUrl: true, mediaType: true, visibility: true, resonanceCount: true,
+    echoCount: true, createdAt: true, userId: true,
+  },
+  {
+    id: true, kind: true, title: true, body: true, resonanceCount: true,
+    echoCount: true, createdAt: true, userId: true, visibility: true,
+  },
+];
+
+const POST_USER_SELECT = { select: { name: true, email: true, provider: true, image: true } } as const;
+
+function normalizePostRow(raw: Record<string, unknown>): PostRow {
+  return {
+    id: String(raw.id),
+    kind: String(raw.kind ?? "reflection"),
+    title: String(raw.title ?? ""),
+    body: String(raw.body ?? ""),
+    sector: (raw.sector as string | null) ?? null,
+    region: (raw.region as string | null) ?? null,
+    tags: (raw.tags as string | null) ?? null,
+    circleId: (raw.circleId as string | null) ?? null,
+    sourcePortal: (raw.sourcePortal as string | null) ?? null,
+    sourceType: (raw.sourceType as string | null) ?? null,
+    sourceId: (raw.sourceId as string | null) ?? null,
+    refKind: (raw.refKind as string | null) ?? null,
+    refUrl: (raw.refUrl as string | null) ?? null,
+    cover: (raw.cover as string | null) ?? null,
+    mediaUrl: (raw.mediaUrl as string | null) ?? null,
+    mediaType: (raw.mediaType as string | null) ?? null,
+    mediaName: (raw.mediaName as string | null) ?? null,
+    visibility: String(raw.visibility ?? "public"),
+    epistemic: (raw.epistemic as string | null) ?? null,
+    status: String(raw.status ?? "published"),
+    language: (raw.language as string | null) ?? null,
+    altText: (raw.altText as string | null) ?? null,
+    aiMedia: Boolean(raw.aiMedia),
+    aiStyle: (raw.aiStyle as string | null) ?? null,
+    publishKey: (raw.publishKey as string | null) ?? null,
+    resonanceCount: Number(raw.resonanceCount ?? 0),
+    echoCount: Number(raw.echoCount ?? 0),
+    createdAt: raw.createdAt as Date,
+    updatedAt: (raw.updatedAt as Date) ?? (raw.createdAt as Date),
+    deletedAt: (raw.deletedAt as Date | null) ?? null,
+    userId: String(raw.userId),
+    user: raw.user as PostRow["user"],
+    circle: (raw.circle as PostRow["circle"]) ?? null,
+    resonances: (raw.resonances as PostRow["resonances"]) ?? [],
+    _count: (raw._count as PostRow["_count"]) ?? { resonances: 0, echoes: 0 },
+    projectSeeds: [],
+    mirrorSuggestions: [],
+    bookmarks: [],
+    reposts: [],
+    question: null,
+  } as unknown as PostRow;
+}
+
 /** weave the merged pool: score, order, then let no one kind crowd the
     path — no more than two neighbours of the same kind in a row */
 function rankForYou(pool: PostRow[], followedIds: Set<string>, tokens: string[]): PostRow[] {
@@ -275,10 +357,9 @@ async function graceful<T>(read: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
-/** THE LEAN FALLBACK — the offerings read without the relation shelves
-    (resonances, circle, counts) when a young sky has not built those
-    tables yet: the works still stand in the hall, wearing what the
-    works themselves carry. */
+/** THE LEAN FALLBACK — the offerings read through the cascading shelf:
+    first with the relations and the richest fields, then leaner, until
+    the sky's own shelf answers. */
 async function readPosts(
   args: {
     where: Prisma.GatheringPostWhereInput;
@@ -289,26 +370,34 @@ async function readPosts(
   },
   visitorUserId: string
 ): Promise<PostRow[]> {
-  const include = {
-    user: { select: { name: true, email: true, provider: true, image: true } },
+  const fullInclude = {
+    user: POST_USER_SELECT,
     circle: { select: { id: true, name: true } },
     resonances: { where: { userId: visitorUserId }, select: { id: true } },
     _count: { select: { resonances: true, echoes: true } },
-  } satisfies Prisma.GatheringPostInclude;
+  } as const;
+
+  /* the richest dress first — relations and every field */
   try {
-    return await db.gatheringPost.findMany({ ...args, include });
+    return await db.gatheringPost.findMany({ ...args, include: fullInclude });
   } catch {
-    const lean = await db.gatheringPost.findMany({
-      ...args,
-      include: { user: { select: { name: true, email: true, provider: true, image: true } } },
-    });
-    return lean.map((p) => ({
-      ...p,
-      circle: null,
-      resonances: [],
-      _count: { resonances: 0, echoes: 0 },
-    }));
+    /* fall through to the shelves below */
   }
+
+  /* the relations' shelves may rest unbuilt — try fields alone */
+  for (const fields of POST_FIELD_LEVELS) {
+    try {
+      const lean = await db.gatheringPost.findMany({
+        ...args,
+        select: { ...fields, user: POST_USER_SELECT },
+      });
+      return (lean as unknown as Record<string, unknown>[]).map(normalizePostRow);
+    } catch {
+      /* this shelf is not the sky's — try the next */
+    }
+  }
+  /* the sky carries no shelf at all — the honest failure */
+  throw new Error("The offerings' shelf could not be read on this sky.");
 }
 
 /* ---------------- GET /api/gathering — the living exhibition ---------------- */

@@ -24,6 +24,48 @@ async function graceful<T>(read: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
+/* THE CASCADING SHELF — the reader tries the richest field shelf first
+   and steps down until the sky's own database answers; every field a
+   young sky has not built yet is then filled with its honest default. */
+const POST_FIELD_LEVELS: Array<Record<string, true>> = [
+  {
+    id: true, kind: true, title: true, body: true, sector: true, region: true,
+    tags: true, circleId: true, sourcePortal: true, sourceType: true, sourceId: true,
+    refKind: true, refUrl: true, cover: true, mediaUrl: true, mediaType: true,
+    mediaName: true, visibility: true, epistemic: true, status: true, language: true,
+    altText: true, aiMedia: true, aiStyle: true, resonanceCount: true, echoCount: true,
+    createdAt: true, userId: true,
+  },
+  {
+    id: true, kind: true, title: true, body: true, sector: true, tags: true,
+    circleId: true, sourcePortal: true, sourceType: true, cover: true, refUrl: true,
+    mediaUrl: true, mediaType: true, visibility: true, epistemic: true, status: true,
+    resonanceCount: true, echoCount: true, createdAt: true, userId: true,
+  },
+  {
+    id: true, kind: true, title: true, body: true, tags: true, cover: true,
+    mediaUrl: true, mediaType: true, visibility: true, status: true,
+    resonanceCount: true, echoCount: true, createdAt: true, userId: true,
+  },
+];
+
+const POST_READER_SELECT = { select: { id: true, name: true, email: true, provider: true, image: true } } as const;
+
+async function readPostById(id: string): Promise<Record<string, unknown> | null> {
+  for (const fields of POST_FIELD_LEVELS) {
+    try {
+      const post = await db.gatheringPost.findUnique({
+        where: { id },
+        select: { ...fields, user: POST_READER_SELECT },
+      });
+      return post as unknown as Record<string, unknown> | null;
+    } catch {
+      /* this shelf is not the sky's — try the next */
+    }
+  }
+  return null;
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -32,34 +74,28 @@ export async function GET(
     const { id } = await params;
     const visitor = await resolveVisitor(req);
 
-    const post = await db.gatheringPost.findUnique({
-      where: { id },
-      include: {
-        user: { select: { id: true, name: true, email: true, provider: true, image: true } },
-        circle: { select: { id: true, name: true } },
-      },
-    }).catch(() =>
-      db.gatheringPost.findUnique({
-        where: { id },
-        include: {
-          user: { select: { id: true, name: true, email: true, provider: true, image: true } },
-        },
-      })
-    );
-    if (!post) {
+    const postRaw = await readPostById(id);
+    if (!postRaw) {
       return NextResponse.json({ error: "That offering no longer hangs in the hall." }, { status: 404 });
     }
+    const post = {
+      ...postRaw,
+      circle: (postRaw.circle as { id: string; name: string } | null) ?? null,
+      visibility: String(postRaw.visibility ?? "public"),
+      status: String(postRaw.status ?? "published"),
+    };
+    const postUserId = String(postRaw.userId);
 
     /* the visibility law — the server decides, never the visitor's politeness */
     let visible = false;
     if (post.visibility === "public") visible = true;
     else if (post.visibility === "unlisted") visible = true; // the quiet link — anyone who holds it
-    else if (post.userId === visitor.user.id) visible = true; // the maker's own house, always
+    else if (postUserId === visitor.user.id) visible = true; // the maker's own house, always
     else if (post.visibility === "circle" && post.circleId) {
       const membership = await graceful(
         () =>
           db.networkCircleMember.findUnique({
-            where: { circleId_userId: { circleId: post.circleId!, userId: visitor.user.id } },
+            where: { circleId_userId: { circleId: String(post.circleId), userId: visitor.user.id } },
             select: { id: true },
           }),
         null
@@ -71,8 +107,8 @@ export async function GET(
           db.networkConnection.findFirst({
             where: {
               OR: [
-                { requesterId: visitor.user.id, addresseeId: post.userId, status: "accepted" },
-                { requesterId: post.userId, addresseeId: visitor.user.id, status: "accepted" },
+                { requesterId: visitor.user.id, addresseeId: postUserId, status: "accepted" },
+                { requesterId: postUserId, addresseeId: visitor.user.id, status: "accepted" },
               ],
             },
             select: { id: true },
@@ -82,7 +118,7 @@ export async function GET(
       visible = Boolean(link);
     }
     /* drafts and unpublished hang nowhere — only their maker reads them */
-    if (post.status !== "published" && post.userId !== visitor.user.id) visible = false;
+    if (post.status !== "published" && postUserId !== visitor.user.id) visible = false;
 
     if (!visible) {
       return NextResponse.json({ error: "This offering rests in a room you do not walk." }, { status: 403 });
@@ -159,36 +195,36 @@ export async function GET(
     return withAnonCookie(
       NextResponse.json({
         post: {
-          id: post.id,
-          kind: post.kind,
-          title: post.title,
-          body: post.body,
-          sector: post.sector,
-          tags: (post.tags ?? "")
+          id: String(postRaw.id),
+          kind: String(postRaw.kind ?? "reflection"),
+          title: String(postRaw.title ?? ""),
+          body: String(postRaw.body ?? ""),
+          sector: (postRaw.sector as string | null) ?? null,
+          tags: String(postRaw.tags ?? "")
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean),
-          sourcePortal: post.sourcePortal,
-          sourceType: post.sourceType,
-          cover: post.cover,
-          refUrl: post.refUrl,
-          mediaUrl: post.mediaUrl,
-          mediaType: post.mediaType,
-          mediaName: post.mediaName,
+          sourcePortal: (postRaw.sourcePortal as string | null) ?? null,
+          sourceType: (postRaw.sourceType as string | null) ?? null,
+          cover: (postRaw.cover as string | null) ?? null,
+          refUrl: (postRaw.refUrl as string | null) ?? null,
+          mediaUrl: (postRaw.mediaUrl as string | null) ?? null,
+          mediaType: (postRaw.mediaType as string | null) ?? null,
+          mediaName: (postRaw.mediaName as string | null) ?? null,
           visibility: post.visibility,
-          epistemic: post.epistemic,
-          circle: post.circle ? { id: post.circle.id, name: post.circle.name } : null,
-          resonanceCount: post.resonanceCount,
-          echoCount: post.echoCount,
-          createdAt: post.createdAt.toISOString(),
+          epistemic: (postRaw.epistemic as string | null) ?? null,
+          circle: (postRaw.circle as { id: string; name: string } | null) ?? null,
+          resonanceCount: Number(postRaw.resonanceCount ?? 0),
+          echoCount: Number(postRaw.echoCount ?? 0),
+          createdAt: (postRaw.createdAt as Date).toISOString(),
           author: {
-            id: post.userId,
-            name: gatheringName(post.user),
-            fullName: networkName(post.user),
-            image: post.user.image ?? null,
-            anon: post.user.provider === "anon",
+            id: postUserId,
+            name: gatheringName(postRaw.user as Parameters<typeof gatheringName>[0]),
+            fullName: networkName(postRaw.user as Parameters<typeof networkName>[0]),
+            image: ((postRaw.user as { image?: string | null }).image ?? null),
+            anon: ((postRaw.user as { provider?: string | null }).provider ?? "") === "anon",
           },
-          mine: post.userId === visitor.user.id,
+          mine: postUserId === visitor.user.id,
           resonated: Boolean(resonated),
           repostCount,
           bookmarked: Boolean(bookmarked),
@@ -196,6 +232,9 @@ export async function GET(
           hasQuestion: Boolean(hasQuestion),
           hasLab: Boolean(hasLab),
           hasIntentionSpace: Boolean(hasIntentionSpace),
+          altText: (postRaw.altText as string | null) ?? null,
+          aiMedia: Boolean(postRaw.aiMedia),
+          aiStyle: (postRaw.aiStyle as string | null) ?? null,
         },
         echoes: echoes
           .filter((e) => !walls.has(e.userId))
