@@ -159,43 +159,70 @@ async function writeFace(postId: string, data: Record<string, unknown>): Promise
   }
 }
 
+/** THE FACE'S OWN READ — through the graceful shelf: the offering is
+    read on whichever shelf the sky carries, the newest fields falling
+    back to their honest defaults. */
+async function readAdornSeed(
+  postId: string
+): Promise<(AdornSeed & { cover: string | null; mediaUrl: string | null; status: string }) | null> {
+  const levels: Array<Record<string, true>> = [
+    {
+      id: true, kind: true, title: true, body: true, tags: true, sector: true,
+      sourcePortal: true, cover: true, mediaUrl: true, status: true,
+    },
+    {
+      id: true, kind: true, title: true, body: true, tags: true, sector: true,
+      sourcePortal: true, cover: true, status: true,
+    },
+    { id: true, kind: true, title: true, body: true, status: true, cover: true },
+  ];
+  for (const select of levels) {
+    try {
+      const post = await db.gatheringPost.findUnique({
+        where: { id: postId },
+        select: select as never,
+      }) as Record<string, unknown> | null;
+      if (!post) return null;
+      return {
+        kind: String(post.kind ?? "reflection"),
+        title: String(post.title ?? ""),
+        body: String(post.body ?? ""),
+        tags: (post.tags as string | null) ?? null,
+        sector: (post.sector as string | null) ?? null,
+        sourcePortal: (post.sourcePortal as string | null) ?? null,
+        cover: (post.cover as string | null) ?? null,
+        mediaUrl: (post.mediaUrl as string | null) ?? null,
+        status: String(post.status ?? "published"),
+      };
+    } catch {
+      /* this shelf is not the sky's — try the next */
+    }
+  }
+  return null;
+}
+
 /** Paint one publication's face. Skips offerings that already walk
     with a picture. Never throws — a failed face is honestly reported. */
 export async function adornPublication(postId: string): Promise<AdornOutcome> {
-  let seed: AdornSeed | null = null;
-  try {
-    const post = await db.gatheringPost.findUnique({
-      where: { id: postId },
-      select: {
-        id: true,
-        kind: true,
-        title: true,
-        body: true,
-        tags: true,
-        sector: true,
-        sourcePortal: true,
-        cover: true,
-        mediaUrl: true,
-        status: true,
-      },
-    });
-    if (!post || post.status !== "published") {
-      return { ok: false, engine: "skipped", reason: "not_published" };
-    }
-    if (post.cover || post.mediaUrl) {
-      return { ok: true, engine: "skipped", reason: "already_faceful" };
-    }
-    seed = {
-      kind: post.kind,
-      title: post.title,
-      body: post.body,
-      tags: post.tags,
-      sector: post.sector,
-      sourcePortal: post.sourcePortal,
-    };
-  } catch {
+  const read = await readAdornSeed(postId);
+  if (!read) {
     return { ok: false, engine: "skipped", reason: "unreadable" };
   }
+  const { cover, mediaUrl, status } = read;
+  if (status !== "published") {
+    return { ok: false, engine: "skipped", reason: "not_published" };
+  }
+  if (cover || mediaUrl) {
+    return { ok: true, engine: "skipped", reason: "already_faceful" };
+  }
+  const seed: AdornSeed = {
+    kind: read.kind,
+    title: read.title,
+    body: read.body,
+    tags: read.tags,
+    sector: read.sector,
+    sourcePortal: read.sourcePortal,
+  };
 
   const prompt = buildAdornPrompt(seed);
   const alt = altFor(seed.title);
@@ -238,16 +265,31 @@ export async function adornPublication(postId: string): Promise<AdornOutcome> {
 }
 
 /** One batch of faces — the backfill's own stride. Returns how many
-    were painted and how many published works still stand faceless. */
+    were painted and how many published works still stand faceless.
+    The faceless read itself wears the graceful shelf: on a sky without
+    the mediaUrl column the cover column alone names the faceless. */
 export async function adornPublicationsBatch(take = 4): Promise<{
   painted: number;
   remaining: number;
 }> {
-  const faceless = await db.gatheringPost.findMany({
-    where: { status: "published", cover: null, mediaUrl: null },
-    orderBy: { createdAt: "desc" },
-    select: { id: true },
-  });
+  let faceless: { id: string }[] = [];
+  try {
+    faceless = await db.gatheringPost.findMany({
+      where: { status: "published", cover: null, mediaUrl: null },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    });
+  } catch {
+    try {
+      faceless = await db.gatheringPost.findMany({
+        where: { status: "published", cover: null },
+        orderBy: { createdAt: "desc" },
+        select: { id: true },
+      });
+    } catch {
+      faceless = [];
+    }
+  }
   const remaining = faceless.length;
   const batch = faceless.slice(0, Math.max(1, Math.min(10, take)));
   let painted = 0;
