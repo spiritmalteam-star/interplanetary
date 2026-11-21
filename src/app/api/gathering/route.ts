@@ -263,6 +263,18 @@ function foldTwins(rows: PostRow[]): { rows: PostRow[]; folded: number } {
   return { rows: kept, folded };
 }
 
+/* ---------------- the quiet walls — graceful on every sky ----------------
+   A young cloud may not carry every table yet; the hall still opens.
+   Each side-room read falls back to its honest empty answer, so the
+   exhibition never closes because one shelf has not been built. */
+async function graceful<T>(read: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await read();
+  } catch {
+    return fallback;
+  }
+}
+
 /* ---------------- GET /api/gathering — the living exhibition ---------------- */
 export async function GET(req: NextRequest) {
   try {
@@ -285,7 +297,10 @@ export async function GET(req: NextRequest) {
       !mine && !circleId && !q && isGatheringTab(tabRaw) ? tabRaw : "latest";
 
     /* the quiet walls — a closed door's words never reach the hall */
-    const walls = await wallIdsFor(visitor.user.id);
+    const walls = await graceful(
+      () => wallIdsFor(visitor.user.id),
+      new Set<string>()
+    );
 
     const include = {
       user: { select: { name: true, email: true, provider: true, image: true } },
@@ -301,10 +316,14 @@ export async function GET(req: NextRequest) {
     if (tab === "foryou") {
       /* the weaver's pools: the open hall's newest words, and the
          newest words of the makers the visitor chose to follow */
-      const follows = await db.networkFollow.findMany({
-        where: { followerId: visitor.user.id },
-        select: { followingId: true },
-      });
+      const follows = await graceful(
+        () =>
+          db.networkFollow.findMany({
+            where: { followerId: visitor.user.id },
+            select: { followingId: true },
+          }),
+        [] as { followingId: string }[]
+      );
       const followedIds = new Set(follows.map((f) => f.followingId));
 
       const hallPool = await db.gatheringPost.findMany({
@@ -342,10 +361,14 @@ export async function GET(req: NextRequest) {
         if (!merged.has(p.id)) merged.set(p.id, p);
       }
 
-      const profile = await db.networkProfile.findUnique({
-        where: { userId: visitor.user.id },
-        select: { interests: true, disciplines: true },
-      });
+      const profile = await graceful(
+        () =>
+          db.networkProfile.findUnique({
+            where: { userId: visitor.user.id },
+            select: { interests: true, disciplines: true },
+          }),
+        null
+      );
       const ranked = rankForYou(Array.from(merged.values()), followedIds, interestTokensOf(profile));
 
       /* the twin-fold and the honest label's own sieve — applied before
@@ -392,10 +415,14 @@ export async function GET(req: NextRequest) {
         /* the paths the visitor chose — their makers' words, and the
            visitor's own, one quiet river; the visitor's own quieter
            rooms stay theirs alone, the hall reads the public words */
-        const follows = await db.networkFollow.findMany({
-          where: { followerId: visitor.user.id },
-          select: { followingId: true },
-        });
+        const follows = await graceful(
+          () =>
+            db.networkFollow.findMany({
+              where: { followerId: visitor.user.id },
+              select: { followingId: true },
+            }),
+          [] as { followingId: string }[]
+        );
         where.userId = { in: [...follows.map((f) => f.followingId), visitor.user.id] };
         where.circleId = null;
         where.OR = [{ visibility: "public" }, { userId: visitor.user.id }];
@@ -429,32 +456,54 @@ export async function GET(req: NextRequest) {
 
     /* the page's own truth — read once, after the slicing, straight
        from the tables: bookmarks, reposts, and the living spaces a
-       post may have opened (question, lab bench, intention) */
+       post may have opened (question, lab bench, intention). Each
+       read degrades gracefully on a sky whose shelves are still
+       being built. */
     const ids = rows.map((p) => p.id);
     const [visitorBookmarks, repostRows, questionRows, labRows, intentionRows] = await Promise.all([
-      db.gatheringBookmark.findMany({
-        where: { userId: visitor.user.id, postId: { in: ids } },
-        select: { postId: true },
-      }),
-      db.gatheringRepost.findMany({
-        where: { postId: { in: ids } },
-        select: { postId: true, userId: true },
-      }),
-      db.networkQuestion.findMany({
-        where: { postId: { in: ids } },
-        select: { postId: true },
-        take: Math.max(1, ids.length),
-      }),
-      db.networkLabProject.findMany({
-        where: { seedPostId: { in: ids } },
-        select: { seedPostId: true },
-        take: Math.max(1, ids.length),
-      }),
-      db.networkIntention.findMany({
-        where: { seedPostId: { in: ids } },
-        select: { seedPostId: true },
-        take: Math.max(1, ids.length),
-      }),
+      graceful(
+        () =>
+          db.gatheringBookmark.findMany({
+            where: { userId: visitor.user.id, postId: { in: ids } },
+            select: { postId: true },
+          }),
+        [] as { postId: string }[]
+      ),
+      graceful(
+        () =>
+          db.gatheringRepost.findMany({
+            where: { postId: { in: ids } },
+            select: { postId: true, userId: true },
+          }),
+        [] as { postId: string; userId: string }[]
+      ),
+      graceful(
+        () =>
+          db.networkQuestion.findMany({
+            where: { postId: { in: ids } },
+            select: { postId: true },
+            take: Math.max(1, ids.length),
+          }),
+        [] as { postId: string }[]
+      ),
+      graceful(
+        () =>
+          db.networkLabProject.findMany({
+            where: { seedPostId: { in: ids } },
+            select: { seedPostId: true },
+            take: Math.max(1, ids.length),
+          }),
+        [] as { seedPostId: string }[]
+      ),
+      graceful(
+        () =>
+          db.networkIntention.findMany({
+            where: { seedPostId: { in: ids } },
+            select: { seedPostId: true },
+            take: Math.max(1, ids.length),
+          }),
+        [] as { seedPostId: string }[]
+      ),
     ]);
 
     const bookmarkedIds = new Set(visitorBookmarks.map((b) => b.postId));
