@@ -216,7 +216,13 @@ export async function GET(
     );
   } catch (err) {
     console.error("gathering GET ONE failed", err);
-    return NextResponse.json({ error: "The offering could not be read." }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: "The offering could not be read.",
+        detail: err instanceof Error ? err.message.slice(0, 240) : String(err).slice(0, 240),
+      },
+      { status: 500 }
+    );
   }
 }
 

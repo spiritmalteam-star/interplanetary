@@ -606,7 +606,15 @@ export async function GET(req: NextRequest) {
     );
   } catch (err) {
     console.error("gathering GET failed", err);
-    return NextResponse.json({ error: "The hall could not be read." }, { status: 500 });
+    /* the honest word — the hall names what took it, so a young sky's
+       missing shelf can be seen and built */
+    return NextResponse.json(
+      {
+        error: "The hall could not be read.",
+        detail: err instanceof Error ? err.message.slice(0, 240) : String(err).slice(0, 240),
+      },
+      { status: 500 }
+    );
   }
 }
 
