@@ -13,6 +13,7 @@
 /* ================================================================== */
 
 import { downloadBookPdf } from "@/lib/book-pdf";
+import { startDownloadWork, isAbortError } from "@/lib/download-works";
 
 const KEY = "mirror-downloads";
 const CAP = 8;
@@ -24,6 +25,14 @@ export interface DownloadEntry {
   subtitle?: string;
   pages: number;
   boundAt: string;
+  /* THE TRUTHFUL MEASUREMENTS — the plan the book promised and the
+     verified count the press bound (targetPages = bound-page plan;
+     words = manuscript words; draft = the manuscript had not passed
+     its gate when this copy was bound). */
+  targetPages?: number;
+  words?: number;
+  contentHash?: string;
+  draft?: boolean;
   /* the volume's own payload — enough to press the same PDF again */
   meta: {
     title: string;
@@ -32,9 +41,11 @@ export interface DownloadEntry {
     axiom?: string;
     dedication?: string;
     totalPages?: number;
+    age?: string;
   };
   pageList: {
     n: number;
+    part?: string;
     chapter?: string;
     paragraphs: string[];
   }[];
@@ -81,13 +92,32 @@ export function recordDownload(
   }
 }
 
+/* THE BIND-AGAIN — the same volume, pressed fresh, as a work of the
+   tray: navigable away from, watched, and cancellable only by the
+   visitor's own hand. Silent on a cancel; rethrows a real stumble so
+   the caller may speak. */
 export async function bindAgain(entry: DownloadEntry): Promise<void> {
-  await downloadBookPdf(
-    entry.meta,
-    entry.pageList.map((p) => ({
-      n: p.n,
-      ...(p.chapter ? { chapter: p.chapter } : {}),
-      paragraphs: p.paragraphs,
-    }))
-  );
+  await startDownloadWork(`Binding again — ${entry.title.slice(0, 48)}`, async (report) => {
+    try {
+      await downloadBookPdf(
+        entry.meta,
+        entry.pageList.map((p) => ({
+          n: p.n,
+          ...(p.part ? { part: p.part } : {}),
+          ...(p.chapter ? { chapter: p.chapter } : {}),
+          paragraphs: p.paragraphs,
+        })),
+        {
+          onProgress: (percent, stage) => {
+            report.progress(percent);
+            report.stage(stage);
+          },
+          signal: report.signal,
+        }
+      );
+    } catch (err) {
+      if (isAbortError(err)) return; /* the visitor's own hand */
+      throw err;
+    }
+  });
 }

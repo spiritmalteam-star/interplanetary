@@ -164,6 +164,69 @@ const walkerScoreLaw = (score: unknown): string => {
   return `\nTHE WALKER'S DEPTH (authoritative): this visitor's expansion score is ${s} — a wide, practiced walker. Grow questions of up to 12 words with real reach: meaningful contrasts, honest connections, bold creations. Never first-door questions.`;
 };
 
+/* ------------------- the sky's patience & the shelf ----------------- */
+/*  A bud that arrives late is a dead branch: the LLM call is capped at
+    12 seconds — past that the same empty-grove shape the silent sky
+    returns flows back at once. And a small in-memory shelf keeps
+    freshly grown sets for ten minutes (max 200 plates, oldest plate
+    makes room), so re-growing the very same conversation's branch
+    doesn't make the sky think twice. Every field that shapes the
+    answer (context, branch, scope, seen, seeds, depth, score) rides
+    the key — the tree never serves one conversation's set to another. */
+
+const BUD_TIMEOUT_MS = 12_000;
+const BUD_SHELF_TTL_MS = 10 * 60 * 1000;
+const BUD_SHELF_MAX = 200;
+
+type GrownBranches = ReturnType<typeof growBranches>;
+
+const budShelf = new Map<string, { at: number; branches: GrownBranches }>();
+
+function budShelfKey(fields: {
+  branch: string;
+  scope: string;
+  context: string;
+  seen: string[];
+  seeds: string[];
+  depth: unknown;
+  score: unknown;
+}): string {
+  /* a stable 64-bit digest (two djb2 passes, different seeds) over the
+     stable JSON of the shaping fields */
+  const json = JSON.stringify(fields);
+  let h1 = 5381;
+  let h2 = 52711;
+  for (let i = 0; i < json.length; i++) {
+    const c = json.charCodeAt(i);
+    h1 = ((h1 << 5) + h1 + c) | 0;
+    h2 = ((h2 << 5) + h2 + c) | 0;
+  }
+  return `${(h1 >>> 0).toString(36)}${(h2 >>> 0).toString(36)}`;
+}
+
+/* THE HOUSE PATIENCE — the same law visual-spec wears on its own
+   fetches, worn here where the sky's own bridge accepts no signal:
+   the completion races a 12-second sandglass, and the glass wins by
+   throwing into the route's own catch (the empty grove). */
+function withSkyTimeout<T>(job: Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error("the bud took too long")),
+      BUD_TIMEOUT_MS
+    );
+    job.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
 async function postImpl(req: NextRequest, _ctx: MeterContext) {
   const body = (await req.json().catch(() => null)) as {
     branch?: unknown;
@@ -206,14 +269,36 @@ async function postImpl(req: NextRequest, _ctx: MeterContext) {
     );
   }
 
+  /* the shelf first — the same conversation's breath asks the sky once */
+  const shelfKey = budShelfKey({
+    branch,
+    scope,
+    context,
+    seen,
+    seeds,
+    depth: body?.depth,
+    score: body?.score,
+  });
+  const shelved = budShelf.get(shelfKey);
+  if (shelved) {
+    if (Date.now() - shelved.at < BUD_SHELF_TTL_MS) {
+      return NextResponse.json({
+        branches: shelved.branches,
+        buds: shelved.branches.map((b) => b.question),
+      });
+    }
+    budShelf.delete(shelfKey); /* a stale plate makes room */
+  }
+
   try {
     const zai = await ZAI.create();
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `BRANCH: ${branch} — speak as ${BRANCH_VOICES[branch]}.
+    const completion = await withSkyTimeout(
+      zai.chat.completions.create({
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `BRANCH: ${branch} — speak as ${BRANCH_VOICES[branch]}.
 ${
   scope
     ? `
@@ -234,15 +319,25 @@ ${
         .join(", ")}. For each seed that is COHERENT and RELEVANT — a real field of inquiry, sensibly phrased — grow at most ONE branch that opens that field wider THROUGH THIS CONVERSATION'S lens (any movement may carry it). A seed that is incoherent, irrelevant or noise grows NOTHING — leave it out entirely.`
     : ""
 }\n\nTHE CONVERSATION'S LAST BREATHS:\n${context}`,
-        },
-      ],
-      thinking: { type: "disabled" },
-      max_tokens: 500,
-      temperature: 0.85,
-    });
+          },
+        ],
+        thinking: { type: "disabled" },
+        max_tokens: 500,
+        temperature: 0.85,
+      })
+    );
 
     const raw = completion.choices[0]?.message?.content ?? "";
     const branches = growBranches(extractJsonArray(raw), seen);
+
+    /* lay the fresh set on the shelf — the oldest plate makes room */
+    if (!budShelf.has(shelfKey)) {
+      if (budShelf.size >= BUD_SHELF_MAX) {
+        const oldest = budShelf.keys().next().value;
+        if (oldest !== undefined) budShelf.delete(oldest);
+      }
+      budShelf.set(shelfKey, { at: Date.now(), branches });
+    }
 
     /* the older plain shape rides too — any existing ear still hears */
     return NextResponse.json({

@@ -47,6 +47,14 @@ interface ZAIClient {
       /* the vision gift — one image seen (cloud path: the vision
          model sees the image through the same multimodal chat) */
       createVision(params: ChatParams): Promise<ChatCompletion>;
+      /* THE STREAMING GIFT — the raw token stream (SSE) of one
+         completion, returned as the live fetch Response. Optional:
+         every sky that can stream offers it — the cloud skies
+         natively, and the atelier sky through its own stream body
+         (the SDK forwards stream:true and answers with the raw SSE
+         stream). A sky without the gift keeps its silence and the
+         routes fall back to the one-breath answer. */
+      createStream?(params: ChatParams): Promise<Response>;
     };
   };
   audio: any;
@@ -110,6 +118,23 @@ function audioExtension(mime?: string): string {
 
 const AUDIO_RETRY_DELAYS_MS = [800, 2000];
 
+/* THE VOICE'S OWN SKY — the open.bigmodel.cn gateway (Zhipu's public
+   platform) serves the SAME house voices (glm-tts: xiaochen / tongtong;
+   glm-asr-2512 for the ear) behind its own key. The international sky
+   (api.z.ai) has no TTS service at all, so in the cloud (Vercel) this
+   door is the ONLY one the house voice can travel through. Its
+   credential is carried in BIGMODEL_API_KEY — never in the code. */
+function bigModelAudioConfig(): { apiKey: string; baseUrl: string } | null {
+  const apiKey = process.env.BIGMODEL_API_KEY?.trim();
+  if (!apiKey) return null;
+  return {
+    apiKey,
+    baseUrl: (
+      process.env.BIGMODEL_BASE_URL ?? "https://open.bigmodel.cn/api/paas/v4"
+    ).replace(/\/$/, ""),
+  };
+}
+
 /* a door of the audio ladder — one full request shape: where it
    points, how it authenticates, what it carries. The ladder walks
    the doors in order and the first that sings wins. */
@@ -127,6 +152,12 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
      an explicit code. */
   const ttsModel = process.env.ZAI_TTS_MODEL?.trim() || null;
   const asrModel = process.env.ZAI_ASR_MODEL?.trim() || null;
+  /* the voice's own sky — its doors are walked right after the inner
+     ones, before every public door that cannot sing */
+  const bm = bigModelAudioConfig();
+  const bmHeaders: Record<string, string> | null = bm
+    ? { Authorization: `Bearer ${bm.apiKey}` }
+    : null;
 
   const baseHeaders: Record<string, string> = {
     Authorization: `Bearer ${cfg.apiKey}`,
@@ -284,6 +315,9 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
         /* THE LADDER — every door the house skies are known to serve:
            0. the INNER sky (the SDK's own gateway): /audio/tts, no
               model code — the house voice's true home door
+           0.5 the voice's own sky (open.bigmodel.cn): /audio/speech
+              naming glm-tts — the ONLY door that sings in the cloud
+              (Vercel), carrying the same xiaochen / tongtong voices
            1. the public sky: /audio/tts, no model code (the SDK
               contract; kept for skies that serve the default)
            2. /audio/tts naming the house code (cogtts)
@@ -301,6 +335,23 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
             url: `${innerBase}/audio/tts`,
             headers: innerHeaders(token),
             body: { ...base },
+          });
+        }
+        if (bm && bmHeaders) {
+          /* the voice's own sky — glm-tts carries the SAME house
+             voices (xiaochen / tongtong) and answers raw WAV bytes;
+             it demands an explicit model code, unlike the SDK doors */
+          candidates.push({
+            label: "bigmodel /audio/speech (glm-tts)",
+            url: `${bm.baseUrl}/audio/speech`,
+            headers: bmHeaders,
+            body: {
+              model: process.env.BIGMODEL_TTS_MODEL?.trim() || "glm-tts",
+              input,
+              voice,
+              speed,
+              response_format: "wav",
+            },
           });
         }
         candidates.push(
@@ -359,14 +410,14 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
           return { text: data?.text ?? "" };
         };
 
-        const multipart = (model: string) => () => {
+        const multipart = (model: string, base?: string, headers?: Record<string, string>) => () => {
           const form = new FormData();
           form.append("file", new Blob([bytes], { type: mime }), `audio.${ext}`);
           form.append("model", model);
           form.append("stream", "false");
-          return fetch(`${cfg.baseUrl}/audio/transcriptions`, {
+          return fetch(`${(base ?? cfg.baseUrl).replace(/\/$/, "")}/audio/transcriptions`, {
             method: "POST",
-            headers: baseHeaders, // the form carries its own boundary
+            headers: headers ?? baseHeaders, // the form carries its own boundary
             body: form,
             signal: AbortSignal.timeout(180_000),
           });
@@ -391,6 +442,19 @@ function zaiAudio(cfg: CloudConfig): AudioEngine {
             url: `${innerBase}/audio/asr`,
             headers: innerHeaders(token),
             body: { file_base64: params.file_base64 },
+          });
+        }
+        if (bm && bmHeaders) {
+          /* the ear's own sky — glm-asr-2512, the one code it serves */
+          candidates.push({
+            label: "bigmodel /audio/transcriptions (glm-asr-2512)",
+            url: `${bm.baseUrl}/audio/transcriptions`,
+            headers: bmHeaders,
+            form: multipart(
+              process.env.BIGMODEL_ASR_MODEL?.trim() || "glm-asr-2512",
+              bm.baseUrl,
+              bmHeaders
+            ),
           });
         }
         candidates.push({
@@ -517,7 +581,13 @@ function zaiCloudConfig(): CloudConfig | null {
   };
 }
 
-function openaiConfig(): CloudConfig | null {
+/* THE OPENAI LAW — OpenAI no longer speaks for the house's words.
+   Its one remaining duty is the CALL'S OWN VOICE: the text-to-speech
+   engine the live call reads aloud through (/api/tts, engine
+   "openai"). Every chat chain, every image brush and every other
+   sky has had the OpenAI rung removed — the words belong to Z.ai
+   and Gemini, the spoken call to OpenAI. */
+export function openaiTtsConfig(): { apiKey: string; baseUrl: string; model: string; voice: string } | null {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
   return {
@@ -525,24 +595,52 @@ function openaiConfig(): CloudConfig | null {
     baseUrl: (
       process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1"
     ).replace(/\/$/, ""),
-    model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
-    allowThinking: false,
-    label: "OpenAI",
+    model: process.env.OPENAI_TTS_MODEL ?? "gpt-4o-mini-tts",
+    voice: process.env.OPENAI_TTS_VOICE ?? "onyx",
   };
 }
 
-export type Provider = "zai-cloud" | "openai" | "zai";
+/* ------------------------- the gemini sky --------------------------- */
+/*  GEMINI 2.5 — the quiet third sky. It stands behind the house's own
+    brains for every slow or spent moment (a Z.ai sky that takes too
+    long to answer, a quota resting, a 5xx storm), and it LEADS the
+    conversation the moment the visitor speaks Albanian — every mirror
+    answers in Albanian through Gemini's own tongue. The key lives in
+    GEMINI_API_KEY (the same key the sound engine and the brush
+    already carry in Vercel's vault). The endpoint is Gemini's own
+    OpenAI-compatible door: the exact request shape every other sky
+    already speaks, so one class serves it too. */
+function geminiConfig(): CloudConfig | null {
+  const apiKey =
+    process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim();
+  if (!apiKey) return null;
+  return {
+    apiKey,
+    baseUrl: (
+      process.env.GEMINI_BASE_URL ??
+      "https://generativelanguage.googleapis.com/v1beta/openai"
+    ).replace(/\/$/, ""),
+    model: process.env.GEMINI_CHAT_MODEL ?? "gemini-2.5-flash",
+    visionModel: process.env.GEMINI_VISION_MODEL ?? "gemini-2.5-flash",
+    allowThinking: false,
+    label: "Gemini",
+  };
+}
+
+export type Provider = "zai-cloud" | "zai";
 
 export function resolveProvider(): Provider {
   const explicit = process.env.LLM_PROVIDER;
-  if (explicit === "zai-cloud" || explicit === "openai" || explicit === "zai") {
+  /* "openai" is no longer an honored provider for the house's words —
+     OpenAI speaks only the call's voice now. An explicit request for
+     it falls through to the house's own skies. */
+  if (explicit === "zai-cloud" || explicit === "zai") {
     return explicit;
   }
   /* in the cloud the Z.ai sky is the default — the same brains as the
-     laboratory; OpenAI serves only when it is the sole key */
+     laboratory; Gemini stands behind it when the quota is spent */
   if (process.env.VERCEL) {
     if (process.env.ZAI_API_KEY) return "zai-cloud";
-    if (process.env.OPENAI_API_KEY) return "openai";
   }
   return "zai";
 }
@@ -652,18 +750,76 @@ class CloudBackend implements ZAIClient {
          itself on OpenAI) */
       createVision: (params: ChatParams) =>
         this.completeWithPatience(params, this.cfg.visionModel),
+      /* THE STREAMING GIFT — the same door, opened with stream:true:
+         the answer's tokens flow home as server-sent events while the
+         sky still writes. One patient retry when the door itself
+         refuses to open; once the stream runs, it is never retried
+         (a mid-flight storm is the route's own weather). */
+      createStream: async (params: ChatParams): Promise<Response> => {
+        const run = () => {
+          const body: Record<string, unknown> = {
+            model: this.cfg.model,
+            messages: params.messages,
+            stream: true,
+          };
+          if (typeof params.max_tokens === "number") {
+            body.max_tokens = params.max_tokens;
+          }
+          if (typeof params.temperature === "number") {
+            body.temperature = params.temperature;
+          }
+          if (this.cfg.allowThinking && params.thinking !== undefined) {
+            body.thinking = params.thinking;
+          }
+          return fetch(`${this.cfg.baseUrl}/chat/completions`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${this.cfg.apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS),
+          });
+        };
+        let res = await run();
+        if (!res.ok && isTransientError(`${res.status}`)) {
+          res = await withRetry(async () => (await run()));
+        }
+        if (!res.ok) {
+          const detail = (await res.text().catch(() => "")).slice(0, 400);
+          throw new Error(
+            `${this.cfg.label} stream ${res.status}: ${detail}`
+          );
+        }
+        return res;
+      },
     },
   };
 
   get audio(): AudioEngine {
-    /* the house voice is the ONLY reader — when the Z.ai sky is not
-       the one behind this brain, the voice politely declines rather
-       than letting a stranger's choir sing */
-    if (this.cfg.label !== "Z.ai")
-      throw new Error(
-        "Voice (tts/asr) speaks only through Z.ai — set ZAI_API_KEY (CogTTS, the house voice) in Vercel's Environment Variables."
+    /* the house voice is the ONLY reader — it sings through the Z.ai
+       skies and, in the cloud, through the voice's own sky
+       (open.bigmodel.cn — the same CogTTS voices). When neither stands
+       behind this brain, the voice politely declines rather than
+       letting a stranger's choir sing. */
+    const engines: AudioEngine[] = [];
+    if (this.cfg.label === "Z.ai") engines.push(zaiAudio(this.cfg));
+    const bm = bigModelAudioConfig();
+    if (bm)
+      engines.push(
+        zaiAudio({
+          apiKey: bm.apiKey,
+          baseUrl: bm.baseUrl,
+          model: this.cfg.model,
+          allowThinking: false,
+          label: "Z.ai",
+        })
       );
-    return chainAudio([zaiAudio(this.cfg)]);
+    if (engines.length === 0)
+      throw new Error(
+        "Voice (tts/asr) speaks only through Z.ai — set BIGMODEL_API_KEY (glm-tts, the house voice's own sky) or ZAI_API_KEY in Vercel's Environment Variables."
+      );
+    return chainAudio(engines);
   }
 }
 
@@ -687,6 +843,35 @@ async function atelierBackend(): Promise<ZAIClient> {
     client.chat.completions.createVision = (params: ChatParams) =>
       withRetry(() => originalVision(params));
   }
+  /* THE STREAMING GIFT, ATELIER EDITION — the SDK's own door forwards
+     stream:true untouched: the shared sky answers with the raw SSE
+     body (an OpenAI-shaped token stream), and the routes read it with
+     the very same reader the cloud skies feed. One patient retry on
+     the opening (the wrapped create carries the house's patience);
+     once the stream runs it is never retried — a mid-flight storm is
+     the route's own weather. A sky that answers one-breath despite
+     the stream ask is refused politely: the route falls through to
+     its own one-breath lane and the words still come home. */
+  client.chat.completions.createStream = async (
+    params: ChatParams
+  ): Promise<Response> => {
+    /* the typed door says ChatCompletion; with stream:true the raw
+       body stream comes home — the cast names the runtime truth */
+    const carried = (await client.chat.completions.create({
+      ...params,
+      stream: true,
+    } as ChatParams)) as unknown;
+    if (
+      typeof ReadableStream !== "undefined" &&
+      carried instanceof ReadableStream
+    ) {
+      return new Response(carried, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      });
+    }
+    throw new Error("atelier stream door refused, one breath follows");
+  };
   /* the voice gets the same patience — the shared atelier sky 429s on
      bursts of long narrations; two short retries (never on validation
      errors) keep a 14-chunk transmission from dying on one breath */
@@ -718,14 +903,80 @@ function skyRefused(err: unknown): boolean {
   return FALLBACK_TRIGGER.test(msg);
 }
 
+/* ---- the patient hourglass ------------------------------------------ */
+/*  THE SLOW SKY'S OWN LAW — a sky that takes too long to answer is its
+    own kind of silence. When the first sky has not spoken within its
+    patience (SLOW_SKY_MS, twenty seconds by nature), the second sky
+    carries the words at once; the first may finish in the background,
+    but no visitor waits on it. The hourglass never shortens a call
+    that already answered. */
+const SLOW_SKY_MS = Number(process.env.SLOW_SKY_MS ?? 20_000);
+const SLOW_SKY = Symbol("slow-sky");
+
+/*  THE LONG ANSWER'S OWN PATIENCE — the hourglass protects the visitor
+    from a sky that hangs, but a sky WRITING a long answer is not hung:
+    it is working. The patience now grows with the generation's own
+    allowance (the base breath + a measured slice per allowed token,
+    capped just beneath the cloud's own 300s ceiling). Without this, a
+    1000-word discovery or a book stride (8192 tokens) could never
+    finish inside twenty seconds — the hourglass killed every long
+    answer mid-flight and the second sky wove the SAME words again
+    from zero: every deep question and every page paid the crossing
+    twice. A hanging sky still falls over in its own first breaths
+    (dead connections error at once); only genuinely slow WORK is
+    now given the room to finish. */
+const SLOW_SKY_TOKEN_MS = Number(process.env.SLOW_SKY_TOKEN_MS ?? 30);
+const SLOW_SKY_CEILING_MS = Number(process.env.SLOW_SKY_CEILING_MS ?? 240_000);
+
+function slowSkyPatience(maxTokens?: number): number {
+  if (!(typeof maxTokens === "number") || !(maxTokens > 0)) return SLOW_SKY_MS;
+  return Math.min(SLOW_SKY_MS + maxTokens * SLOW_SKY_TOKEN_MS, SLOW_SKY_CEILING_MS);
+}
+
+function raceSlow<T>(p: Promise<T>, ms: number): Promise<T> {
+  if (!(ms > 0)) return p;
+  return new Promise<T>((resolve, reject) => {
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      /* the slow sky keeps walking — its answer is simply no longer
+         waited for (and its storms are swallowed, never unhandled) */
+      p.then(
+        () => undefined,
+        () => undefined
+      );
+      reject(SLOW_SKY);
+    }, ms);
+    p.then(
+      (v) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          resolve(v);
+        }
+      },
+      (e) => {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(e);
+        }
+      }
+    );
+  });
+}
+
 function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
   const withFallback = async (
-    run: (sky: ZAIClient) => Promise<ChatCompletion>
+    run: (sky: ZAIClient) => Promise<ChatCompletion>,
+    patience: number
   ): Promise<ChatCompletion> => {
     try {
-      return await run(primary);
+      return await raceSlow(run(primary), patience);
     } catch (err) {
-      if (skyRefused(err)) return run(fallback);
+      /* the slow sky falls to the second exactly like a refused one */
+      if (err === SLOW_SKY || skyRefused(err)) return run(fallback);
       throw err;
     }
   };
@@ -733,9 +984,24 @@ function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
     chat: {
       completions: {
         create: (params: ChatParams) =>
-          withFallback((sky) => sky.chat.completions.create(params)),
+          withFallback(
+            (sky) => sky.chat.completions.create(params),
+            slowSkyPatience(params.max_tokens)
+          ),
         createVision: (params: ChatParams) =>
-          withFallback((sky) => sky.chat.completions.createVision(params)),
+          withFallback(
+            (sky) => sky.chat.completions.createVision(params),
+            slowSkyPatience(params.max_tokens)
+          ),
+        /* the stream rides the PRIMARY sky alone — a fallback sky
+           serves the one-breath answer instead (the routes fall back
+           gracefully when the gift is absent) */
+        ...(primary.chat.completions.createStream
+          ? {
+              createStream: (params: ChatParams) =>
+                primary.chat.completions.createStream!(params),
+            }
+          : {}),
       },
     },
     audio: primary.audio,
@@ -763,6 +1029,24 @@ export default class ZAI {
     return ZAI.sky;
   }
 
+  /* THE LANGUAGE'S OWN DOOR — the visitor's tongue chooses the leading
+     sky. When they speak Albanian, every mirror answers through the
+     Gemini sky (gemini-2.5) in Albanian; every other tongue keeps the
+     house's own brains, with Gemini standing quietly behind them all. */
+  static async createPreferred(language?: string): Promise<ZAIClient> {
+    const lang = (language ?? "en").toLowerCase();
+    const gemini = geminiConfig();
+    if (lang === "sq" && gemini) {
+      const primary = new CloudBackend(gemini);
+      const secondSky = zaiCloudConfig();
+      if (secondSky) {
+        return chainChatBackends(primary, new CloudBackend(secondSky));
+      }
+      return primary;
+    }
+    return ZAI.create();
+  }
+
   private static async build(): Promise<ZAIClient> {
     const provider = resolveProvider();
     if (provider === "zai-cloud") {
@@ -770,22 +1054,12 @@ export default class ZAI {
       if (cfg) {
         const primary = new CloudBackend(cfg);
         /* the quiet second brain — when Z.ai's quota is spent after
-           every patient retry, the OpenAI-compatible sky (if a key
-           exists) carries the words so the chats keep responding.
-           The voice never rides this second sky — only the house
-           voice (Z.ai) reads aloud. */
-        const secondSky = openaiConfig();
-        if (secondSky) {
-          return chainChatBackends(primary, new CloudBackend(secondSky));
-        }
-        return primary;
-      }
-    }
-    if (provider === "openai") {
-      const cfg = openaiConfig();
-      if (cfg) {
-        const primary = new CloudBackend(cfg);
-        const secondSky = zaiCloudConfig();
+           every patient retry, the Gemini sky carries the words so
+           the chats keep responding. The voice never rides this
+           second sky — only the house voice (Z.ai) reads aloud.
+           (OpenAI was removed from every chat chain — its one duty
+           is the call's spoken voice.) */
+        const secondSky = geminiConfig();
         if (secondSky) {
           return chainChatBackends(primary, new CloudBackend(secondSky));
         }
@@ -794,17 +1068,23 @@ export default class ZAI {
     }
     if (!process.env.VERCEL) {
       /* the atelier — and, when the laboratory holds a cloud key, the
-         quiet second sky behind it for the exhausted-quota moments */
+         quiet second sky behind it for the exhausted-quota moments,
+         with Gemini as the patient hand */
       const atelier = await atelierBackend();
-      const secondSky = zaiCloudConfig() ?? openaiConfig();
+      const secondSky = zaiCloudConfig() ?? geminiConfig();
       if (secondSky) {
         return chainChatBackends(atelier, new CloudBackend(secondSky));
       }
       return atelier;
     }
-    /* the cloud can only live from a key — say clearly which one */
+    /* the cloud can only live from a key — say clearly which one.
+       THE GEMINI MERCY — when the house holds no Z.ai key but a
+       Gemini key stands in the vault, the Gemini sky serves
+       the whole house alone rather than letting every chat fall. */
+    const gemini = geminiConfig();
+    if (gemini) return new CloudBackend(gemini);
     throw new Error(
-      "No AI provider is configured on this deployment. Add ZAI_API_KEY (Z.ai — the same GLM brains as the laboratory) or OPENAI_API_KEY in Vercel → Settings → Environment Variables, then redeploy."
+      "No AI provider is configured on this deployment. Add ZAI_API_KEY (Z.ai — the same GLM brains as the laboratory) or GEMINI_API_KEY in Vercel → Settings → Environment Variables, then redeploy."
     );
   }
 }

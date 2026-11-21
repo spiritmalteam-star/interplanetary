@@ -29,10 +29,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useMirror } from "@/lib/mirror-store";
+import { cleanCopyText } from "@/lib/copy-clean";
 import { useT } from "@/lib/i18n";
 import { pxBeings, pxMonuments, pxScopes } from "@/lib/data/particlex";
 import { PX_LAB_PAGES } from "@/lib/data/particlex-lab";
 import { cn } from "@/lib/utils";
+import { pressTransmissionPdf } from "@/lib/transmission-press-client";
+import { isAbortError } from "@/lib/download-works";
 import { ListenButton } from "./ListenButton";
 import { voiceProfile } from "@/lib/voice-profiles";
 import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
@@ -87,7 +90,7 @@ export function PxScopesTab({
 
   return (
     <div className="space-y-8">
-      <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
+      <p className="mx-auto max-w-[560px] text-center text-[15.5px] leading-relaxed text-muted-foreground">
         {t(
           "Eight windows over the areas of existence. Open one and the Core speaks from inside it."
         )}
@@ -125,15 +128,15 @@ export function PxScopesTab({
                   <Icon className="size-4 text-[var(--scope-a)]" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h4 className="scope-gradient-text text-[16px] font-semibold">
+                  <h4 className="scope-gradient-text text-[17px] font-semibold">
                     {t(scope.name)}
                   </h4>
-                  <p className="mt-0.5 text-[13.5px] italic text-muted-foreground">
+                  <p className="mt-0.5 text-[14.5px] italic text-muted-foreground">
                     {t(scope.tagline)}
                   </p>
                 </div>
               </div>
-              <p className="mt-3.5 text-[14px] leading-[1.75] text-foreground/85">
+              <p className="mt-3.5 text-[15px] leading-[1.75] text-foreground/85">
                 {t(scope.reveals)}
               </p>
               <div className="mt-4 flex items-center justify-between gap-2">
@@ -141,7 +144,7 @@ export function PxScopesTab({
                   type="button"
                   onClick={() => onOpenInCore(scope.id)}
                   data-testid={`px-open-${scope.id}`}
-                  className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px"
+                  className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3 text-[13.5px] font-medium text-foreground/85 transition-all duration-300 hover:-translate-y-px"
                   style={{
                     borderColor:
                       "color-mix(in srgb, var(--scope-a) 38%, transparent)",
@@ -152,12 +155,12 @@ export function PxScopesTab({
                 </button>
                 <div className="flex items-center gap-1.5">
                   {active && (
-                    <span className="mono-label text-[9px] uppercase tracking-[0.18em] text-[var(--scope-a)]">
+                    <span className="mono-label text-[10px] uppercase tracking-[0.18em] text-[var(--scope-a)]">
                       {t("speaking from here")}
                     </span>
                   )}
                   {fused && (
-                    <span className="mono-label text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                    <span className="mono-label text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                       {t("fused")}
                     </span>
                   )}
@@ -170,11 +173,11 @@ export function PxScopesTab({
 
       {/* the fusion instrument */}
       <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6">
-        <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+        <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
           <Sparkles className="size-3.5" aria-hidden="true" />
           {t("Scope Fusion")}
         </h3>
-        <p className="mt-2 max-w-[560px] text-[14px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 max-w-[560px] text-[15px] leading-relaxed text-muted-foreground">
           {t(
             "Choose two windows and let them melt into one seeing — the Core then reads reality through both laws at once."
           )}
@@ -190,7 +193,7 @@ export function PxScopesTab({
                 onClick={() => toggleFusion(scope.id)}
                 data-testid={`px-fuse-${scope.id}`}
                 className={cn(
-                  "focus-glow rounded-full border px-3 py-1.5 text-[13px] transition-all duration-300",
+                  "focus-glow rounded-full border px-3 py-1.5 text-[14px] transition-all duration-300",
                   chosen
                     ? "font-semibold text-foreground"
                     : "hairline text-muted-foreground hover:text-foreground"
@@ -225,17 +228,17 @@ export function PxScopesTab({
             }}
             data-testid="px-fusion-card"
           >
-            <p className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Fused field")}
             </p>
-            <p className="scope-gradient-text mt-1.5 font-serif text-[18px] italic leading-snug">
+            <p className="scope-gradient-text mt-1.5 font-serif text-[19px] italic leading-snug">
               {t(fusionPair[0].name)} × {t(fusionPair[1].name)}
             </p>
             <button
               type="button"
               onClick={() => onOpenInCore(null)}
               data-testid="px-fuse-open"
-              className="dream-btn focus-glow mt-3 flex mx-auto h-9 items-center gap-2 rounded-full px-4 text-[13.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
+              className="dream-btn focus-glow mt-3 flex mx-auto h-9 items-center gap-2 rounded-full px-4 text-[14.5px] font-medium text-foreground transition-all duration-300 hover:-translate-y-px"
             >
               <Atom className="size-3.5 text-[var(--scope-a)]" aria-hidden="true" />
               {t("Fuse in the Core")}
@@ -339,9 +342,9 @@ function ToolCard({
           <Icon className="size-4 text-[var(--scope-a)]" />
         </span>
         <div className="min-w-0">
-          <h4 className="scope-gradient-text text-[15.5px] font-semibold">{t(title)}</h4>
+          <h4 className="scope-gradient-text text-[16.5px] font-semibold">{t(title)}</h4>
           {description ? (
-            <p className="text-[13px] leading-snug text-muted-foreground">{t(description)}</p>
+            <p className="text-[14px] leading-snug text-muted-foreground">{t(description)}</p>
           ) : null}
         </div>
       </div>
@@ -354,7 +357,7 @@ function ToolCard({
               type="button"
               onClick={() => void run(chip)}
               disabled={busy}
-              className="focus-glow rounded-full border hairline px-2.5 py-1 text-[12.5px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+              className="focus-glow rounded-full border hairline px-2.5 py-1 text-[13.5px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
             >
               {t(chip)}
             </button>
@@ -378,13 +381,13 @@ function ToolCard({
           onChange={(e) => setValue(e.target.value)}
           placeholder={t(placeholder)}
           disabled={busy}
-          className="h-9 min-w-0 flex-1 rounded-full border hairline bg-transparent px-3.5 text-[13.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-[var(--hairline-active)] disabled:opacity-50"
+          className="h-9 min-w-0 flex-1 rounded-full border hairline bg-transparent px-3.5 text-[14.5px] text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-[var(--hairline-active)] disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={busy || !value.trim()}
           data-testid={`${testId}-run`}
-          className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[12.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+          className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[13.5px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
         >
           {busy ? (
             <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -396,21 +399,21 @@ function ToolCard({
       </form>
 
       {state === "busy" && (
-        <p className="mt-3.5 flex items-center gap-2 text-[13px] italic text-muted-foreground" aria-live="polite">
-          <span className="animate-dot-pulse size-1.5 rounded-full bg-[var(--scope-a)]" aria-hidden="true" />
+        <p className="mt-3.5 flex items-center gap-2 text-[14px] italic text-muted-foreground" aria-live="polite">
+          <span className="size-1.5 rounded-full bg-[var(--scope-a)]" aria-hidden="true" />
           {t(busyPhrase)}
         </p>
       )}
 
       {state === "error" && (
         <div className="mt-3.5 rounded-xl border px-3.5 py-3" data-testid={`${testId}-error`}>
-          <p className="text-[13.5px] leading-relaxed text-foreground/85">
+          <p className="text-[14.5px] leading-relaxed text-foreground/85">
             {t("The instrument stayed quiet — rest, then try again.")}
           </p>
           <button
             type="button"
             onClick={() => void run()}
-            className="focus-glow mt-2 flex h-8 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] text-foreground/85 transition-all duration-300 hover:text-foreground"
+            className="focus-glow mt-2 flex h-8 items-center gap-1.5 rounded-full border hairline px-3 text-[13.5px] text-foreground/85 transition-all duration-300 hover:text-foreground"
           >
             <RefreshCw className="size-3" aria-hidden="true" />
             {t("Try again")}
@@ -430,20 +433,20 @@ function ToolCard({
           <RevelationSections sections={result.sections} size="sm" />
           {result.formulas.length > 0 && (
             <div className="px-formula rounded-xl px-4 py-3">
-              <p className="mono-label flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
+              <p className="mono-label flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 <Sigma className="size-3" aria-hidden="true" />
                 {t("The formulas that run it")}
               </p>
               <div className="mt-2 space-y-1.5">
                 {result.formulas.map((f, i) => (
-                  <p key={i} className="px-formula-line text-center font-serif text-[15px] italic leading-relaxed text-foreground/90">
+                  <p key={i} className="px-formula-line text-center font-serif text-[16px] italic leading-relaxed text-foreground/90">
                     {f}
                   </p>
                 ))}
               </div>
             </div>
           )}
-          <p className="ink-soft text-center font-serif text-[13.5px] italic">{result.seal}</p>
+          <p className="ink-soft text-center font-serif text-[14.5px] italic">{result.seal}</p>
           <div className="flex items-center justify-between gap-2">
             <ListenButton
               text={`${result.revelation}. ${result.formulas.join(". ")}`}
@@ -467,7 +470,7 @@ export function PxCopyButton({ text }: { text: string }) {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(cleanCopyText(text));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -483,7 +486,7 @@ export function PxCopyButton({ text }: { text: string }) {
       aria-label={copied ? t("Copied") : t("Copy the revelation")}
       title={copied ? t("Copied") : t("Copy the revelation")}
       data-testid="px-copy"
-      className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] transition-all duration-300"
+      className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[12px] transition-all duration-300"
       style={{
         borderColor: copied
           ? "color-mix(in srgb, var(--scope-a) 55%, transparent)"
@@ -525,6 +528,7 @@ export function PxPdfButton() {
   const [focus, setFocus] = useState("");
   const [depth, setDepth] = useState(3);
   const [pages, setPages] = useState(2);
+  const [note, setNote] = useState<string | null>(null);
   /* what the transmission carries — one image, up to three documents */
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
 
@@ -534,10 +538,15 @@ export function PxPdfButton() {
     setAttachments([]);
     setBusy(true);
     try {
-      const res = await fetch("/api/particlex/pdf", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      /* THE WORKS-IN-MOTION PRESS — the work lives in the downloads
+         tray, above every room: walking away, folding this panel, even
+         closing the app never interrupts it. Only the visitor's own
+         cancel hand stops the watch — the press itself carries on in
+         the hall and the ink rests in the Library either way. */
+      await pressTransmissionPdf({
+        endpoint: "/api/particlex/pdf",
+        label: t("ParticleX transmission"),
+        body: {
           language,
           focus: focus.trim() || null,
           depth,
@@ -549,28 +558,22 @@ export function PxPdfButton() {
             formulas: m.formulas,
             sections: m.sections,
           })),
-        }),
+        },
+        onNote: (line) => setNote(line),
       });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        toast.error(data?.error ?? t("The transmission stayed quiet — rest, then press again."));
-        return;
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `particlex-transmission-${Date.now()}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
       toast.success(t("The transmission has been pressed into ink"));
       setOpen(false);
-    } catch {
-      toast.error(t("The transmission stayed quiet — rest, then press again."));
+    } catch (err) {
+      if (!isAbortError(err)) {
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : t("The transmission stayed quiet — rest, then press again.")
+        );
+      }
     } finally {
       setBusy(false);
+      setNote(null);
     }
   };
 
@@ -582,7 +585,7 @@ export function PxPdfButton() {
         aria-label={t("Press a transmission into a PDF")}
         title={t("Press a transmission into a PDF")}
         data-testid="px-pdf"
-        className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[11px] transition-all duration-300"
+        className="focus-glow mono-label inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[12px] transition-all duration-300"
         style={{ borderColor: "var(--hairline)" }}
       >
         <FileDown className="size-3" aria-hidden="true" />
@@ -592,18 +595,20 @@ export function PxPdfButton() {
       <Dialog
         open={open}
         onOpenChange={(v) => {
-          if (!busy) setOpen(v);
+          /* the press no longer holds the door — it lives in the tray,
+             so the visitor may close and walk freely */
+          setOpen(v);
         }}
       >
         <DialogContent
           data-testid="px-pdf-dialog"
-          className="max-w-[430px] gap-0 rounded-2xl border hairline bg-[var(--glass-bg)] p-5 backdrop-blur-xl"
+          className="max-w-[430px] gap-0 rounded-2xl border hairline bg-[var(--glass-bg)] p-5 backdrop-blur-md"
         >
           <DialogHeader>
-            <DialogTitle className="font-[family-name(var(--font-literata))] text-[19px] font-semibold text-foreground">
+            <DialogTitle className="font-[family-name(var(--font-literata))] text-[20px] font-semibold text-foreground">
               {t("The Quantum Transmission")}
             </DialogTitle>
-            <DialogDescription className="pt-1 text-[13.5px] leading-relaxed">
+            <DialogDescription className="pt-1 text-[14.5px] leading-relaxed">
               {t(
                 "The whole conversation pressed into ink — one channeled transmission to keep, not a lecture."
               )}
@@ -614,7 +619,7 @@ export function PxPdfButton() {
           <div className="mt-4">
             <label
               htmlFor="px-pdf-focus"
-              className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground"
+              className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground"
             >
               {t("Carry a focus")}
             </label>
@@ -627,7 +632,7 @@ export function PxPdfButton() {
                 "Lean the transmission toward something — or leave it silent and let the thread choose."
               )}
               data-testid="px-pdf-focus"
-              className="nice-scroll mt-1.5 w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 text-[14px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:border-[var(--hairline-active)] focus:outline-none"
+              className="nice-scroll mt-1.5 w-full resize-none rounded-xl border hairline bg-transparent px-3 py-2 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:border-[var(--hairline-active)] focus:outline-none"
             />
             {/* what the transmission carries — chips and the paperclip/camera */}
             <div className="mt-2 flex items-center gap-2">
@@ -650,7 +655,7 @@ export function PxPdfButton() {
 
           {/* the gear of depth */}
           <div className="mt-4">
-            <span className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Gear of depth")}
             </span>
             <div
@@ -667,7 +672,7 @@ export function PxPdfButton() {
                   aria-label={`${t("Gear of depth")} ${g}`}
                   data-testid={`px-pdf-depth-${g}`}
                   className={cn(
-                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[13px] transition-all duration-300",
+                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[14px] transition-all duration-300",
                     depth === g
                       ? "border-transparent bg-foreground text-background"
                       : "hairline text-muted-foreground hover:text-foreground"
@@ -677,14 +682,14 @@ export function PxPdfButton() {
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 font-[family-name(var(--font-literata))] text-[12.5px] italic text-muted-foreground">
+            <p className="mt-1.5 font-[family-name(var(--font-literata))] text-[13.5px] italic text-muted-foreground">
               {t(GEAR_DESCRIPTIONS[depth - 1])}
             </p>
           </div>
 
           {/* the length of the material */}
           <div className="mt-4">
-            <span className="mono-label text-[9.5px] uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="mono-label text-[10.5px] uppercase tracking-[0.22em] text-muted-foreground">
               {t("Length of the material")}
             </span>
             <div
@@ -701,7 +706,7 @@ export function PxPdfButton() {
                   aria-label={`${n} ${t("PDF pages")}`}
                   data-testid={`px-pdf-pages-${n}`}
                   className={cn(
-                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[13px] transition-all duration-300",
+                    "focus-glow mono-label h-9 flex-1 rounded-full border text-[14px] transition-all duration-300",
                     pages === n
                       ? "border-transparent bg-foreground text-background"
                       : "hairline text-muted-foreground hover:text-foreground"
@@ -711,34 +716,38 @@ export function PxPdfButton() {
                 </button>
               ))}
             </div>
-            <p className="mt-1.5 text-[12px] text-muted-foreground">
+            <p className="mt-1.5 text-[13px] text-muted-foreground">
               {t("{n} PDF pages", { n: pages })}
             </p>
           </div>
 
           {/* the press */}
           <div className="mt-5 flex items-center justify-end gap-2">
+            {note && (
+              <p className="mr-auto max-w-[220px] text-left text-[11.5px] leading-snug text-muted-foreground">
+                {t(note)}
+              </p>
+            )}
             <button
               type="button"
               onClick={() => setOpen(false)}
-              disabled={busy}
-              className="focus-glow h-9 rounded-full border hairline px-4 text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-50"
+              className="focus-glow h-9 rounded-full border hairline px-4 text-[14px] text-muted-foreground transition-all duration-300 hover:text-foreground"
             >
-              {t("Cancel")}
+              {busy ? t("Walk away — it carries on") : t("Cancel")}
             </button>
             <button
               type="button"
               onClick={() => void press()}
               disabled={busy}
               data-testid="px-pdf-press"
-              className="focus-glow inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
+              className="focus-glow inline-flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[14px] font-medium text-background transition-all duration-300 hover:-translate-y-px disabled:cursor-wait disabled:opacity-70"
             >
               {busy ? (
                 <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
               ) : (
                 <FileDown className="size-3.5" aria-hidden="true" />
               )}
-              {busy ? t("Receiving the transmission…") : t("Press the transmission")}
+              {busy ? t("Pressing in the hall…") : t("Press the transmission")}
             </button>
           </div>
         </DialogContent>
@@ -755,7 +764,7 @@ export function PxToolsTab() {
 
   return (
     <div className="space-y-5">
-      <p className="mx-auto max-w-[560px] text-center text-[14.5px] leading-relaxed text-muted-foreground">
+      <p className="mx-auto max-w-[560px] text-center text-[15.5px] leading-relaxed text-muted-foreground">
         {t(
           "Four instruments beside the narrator — each one opens a different door into the quantum ground."
         )}
@@ -768,7 +777,7 @@ export function PxToolsTab() {
           onClick={() => setPage((p) => Math.max(0, p - 1))}
           disabled={page === 0}
           aria-label={t("The page before")}
-          className="focus-glow mono-label size-8 rounded-full border hairline text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
+          className="focus-glow mono-label size-8 rounded-full border hairline text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
         >
           ‹
         </button>
@@ -781,7 +790,7 @@ export function PxToolsTab() {
             aria-label={`${t("Page")} ${i + 1} ${t("of")} ${pageCount}`}
             data-testid={`px-lab-pip-${i + 1}`}
             className={cn(
-              "focus-glow mono-label size-8 rounded-full border text-[12px] transition-all duration-300",
+              "focus-glow mono-label size-8 rounded-full border text-[13px] transition-all duration-300",
               page === i
                 ? "border-transparent bg-foreground text-background"
                 : "hairline text-muted-foreground hover:text-foreground"
@@ -795,7 +804,7 @@ export function PxToolsTab() {
           onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
           disabled={page === pageCount - 1}
           aria-label={t("The page after")}
-          className="focus-glow mono-label size-8 rounded-full border hairline text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
+          className="focus-glow mono-label size-8 rounded-full border hairline text-[13px] text-muted-foreground transition-all duration-300 hover:text-foreground disabled:opacity-30"
         >
           ›
         </button>
@@ -808,7 +817,7 @@ export function PxToolsTab() {
             icon={Sigma}
             title="The Formula Loom"
             description="Name anything that exists — receive the formula that runs it."
-            placeholder="Name a phenomenon…"
+            placeholder={t("Name a phenomenon…")}
             buttonLabel="Weave the formula"
             testId="px-tool-formula"
             busyPhrase="the loom is reading the seam of the phenomenon…"
@@ -818,7 +827,7 @@ export function PxToolsTab() {
             icon={Eye}
             title="The Perception Glass"
             description="Look through the perception field of any being — pet, tree, whale, moss."
-            placeholder="Name a being…"
+            placeholder={t("Name a being…")}
             buttonLabel="Look through its eyes"
             chips={pxBeings}
             testId="px-tool-perception"
@@ -829,7 +838,7 @@ export function PxToolsTab() {
             icon={Pyramid}
             title="The Frequency Wheel"
             description="Every monument holds a note. Choose one and hear what it was built to do."
-            placeholder="Name a monument or site…"
+            placeholder={t("Name a monument or site…")}
             buttonLabel="Sound the note"
             chips={pxMonuments}
             testId="px-tool-frequency"
@@ -840,7 +849,7 @@ export function PxToolsTab() {
             icon={Layers}
             title="The Parallel Catalog"
             description="Any product of human hands — and the formulas of its parallel twins."
-            placeholder="Name a product…"
+            placeholder={t("Name a product…")}
             buttonLabel="Open the catalog"
             testId="px-tool-catalog"
             busyPhrase="the catalog is leafing across the parallel lines…"
@@ -856,8 +865,8 @@ export function PxToolsTab() {
           data-testid={`px-lab-page-${page + 1}`}
         >
           <div className="text-center">
-            <h3 className="scope-gradient-text text-[18px] font-semibold">{t(labPage.subject)}</h3>
-            <p className="mx-auto mt-1.5 max-w-[520px] text-[13.5px] leading-relaxed text-muted-foreground">
+            <h3 className="scope-gradient-text text-[19px] font-semibold">{t(labPage.subject)}</h3>
+            <p className="mx-auto mt-1.5 max-w-[520px] text-[14.5px] leading-relaxed text-muted-foreground">
               {t(labPage.blurb)}
             </p>
           </div>
@@ -891,22 +900,36 @@ function CodexCard({
   paragraphs,
   icon: Icon,
   testId,
+  compact = false,
 }: {
   title: string;
   paragraphs: string[];
   icon: LucideIcon;
   testId: string;
+  compact?: boolean;
 }) {
   const t = useT();
   return (
-    <div className="scope-frame-card relative overflow-hidden rounded-2xl glass p-5 sm:p-6" data-testid={testId}>
-      <h3 className="mono-label flex items-center gap-2 text-[11px] text-[var(--scope-a)]">
+    <div
+      className={cn(
+        "scope-frame-card relative overflow-hidden rounded-2xl glass",
+        compact ? "p-4 sm:p-5" : "p-5 sm:p-6"
+      )}
+      data-testid={testId}
+    >
+      <h3 className="mono-label flex items-center gap-2 text-[12px] text-[var(--scope-a)]">
         <Icon className="size-3.5" aria-hidden="true" />
         {t(title)}
       </h3>
-      <div className="mt-3 space-y-3">
+      <div className={cn("mt-3 space-y-3", compact && "mt-2 space-y-2.5")}>
         {paragraphs.map((p, i) => (
-          <p key={i} className="text-[14.5px] leading-[1.85] text-foreground/88">
+          <p
+            key={i}
+            className={cn(
+              "leading-[1.85] text-foreground/88",
+              compact ? "text-[14px] leading-[1.7]" : "text-[15.5px]"
+            )}
+          >
             {t(p)}
           </p>
         ))}
@@ -915,9 +938,11 @@ function CodexCard({
   );
 }
 
-export function PxCodexTab() {
+export function PxCodexTab({ compact = false }: { compact?: boolean }) {
+  const t = useT();
+
   return (
-    <div className="space-y-5">
+    <div className={compact ? "grid gap-3.5 sm:grid-cols-2" : "space-y-5"}>
       <CodexCard
         title="The Source Law"
         icon={Atom}
@@ -928,7 +953,7 @@ export function PxCodexTab() {
         ]}
       />
       <CodexCard
-        title="The two reasonings"
+        title={t("The two reasonings")}
         icon={FlaskConical}
         testId="px-codex-reasoning"
         paragraphs={[
@@ -938,7 +963,7 @@ export function PxCodexTab() {
         ]}
       />
       <CodexCard
-        title="How to read the formulas"
+        title={t("How to read the formulas")}
         icon={Sigma}
         testId="px-codex-formulas"
         paragraphs={[

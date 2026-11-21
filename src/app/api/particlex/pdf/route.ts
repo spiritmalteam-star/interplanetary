@@ -1,7 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import ZAI from "@/lib/zai-client";
 import { renderTransmissionPdf, type Transmission } from "@/lib/transmission-pdf";
 import { meterRoute } from "@/lib/server/meter";
+import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
+import { db } from "@/lib/db";
+import {
+  resolveVisitor,
+  withAnonCookie,
+} from "@/lib/server/access";
 import {
   describeImage,
   documentBlock,
@@ -17,19 +23,6 @@ import {
 /*  a living, flowing reception, never a lecture — and presses it      */
 /*  into a real PDF of the requested length (1–5 pages) at the         */
 /*  requested gear of depth (1–5).                                     */
-/* ------------------------------------------------------------------ */
-
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: "English",
-  sq: "Albanian",
-  it: "Italian",
-  el: "Greek",
-  de: "German",
-  fr: "French",
-  es: "Spanish",
-  tr: "Turkish",
-};
-
 const GEARS: Record<number, string> = {
   1: "GEAR I — THE SURFACE SHIMMER: stay just beneath the veil. The transmission touches the thread's first light — gentle, bright, close to what was already said, only one breath deeper.",
   2: "GEAR II — THE FIRST VEIL LIFTED: descend one layer beneath the thread's words; name the patterns standing just out of its sight and let the visitor feel them turn.",
@@ -113,155 +106,260 @@ function extractTransmission(raw: string): Transmission | null {
 
 export const POST = meterRoute("pdf", postImpl);
 
+/* ---------------- THE ONE INPUT — parsed once, used twice ---------------- */
+interface PxPressInput {
+  language: string;
+  languageName: string;
+  depth: number;
+  pages: number;
+  focus: string | null;
+  thread: PxThreadTurn[];
+  imageDataUrl: string | null;
+  documents: Parameters<typeof documentBlock>[0];
+}
+
+function parsePxInput(
+  body: Record<string, unknown> | null
+): { ok: true; input: PxPressInput } | { ok: false; error: string; status: number } {
+  const requestedLanguage: string =
+    typeof body?.language === "string" ? body.language : "en";
+  const languageName = LANGUAGE_NAMES[requestedLanguage] ?? "English";
+
+  const depth = Math.min(5, Math.max(1, Math.round(Number(body?.depth) || 3)));
+  const pages = Math.min(5, Math.max(1, Math.round(Number(body?.pages) || 2)));
+  const focus: string | null =
+    typeof body?.focus === "string" && body.focus.trim()
+      ? body.focus.trim().slice(0, 400)
+      : null;
+
+  /* the thread — the whole conversation, read with its formulas and
+     its structured movements */
+  const rawThread = Array.isArray(body?.thread) ? (body.thread as unknown[]) : [];
+  const thread: PxThreadTurn[] = rawThread
+    .map((turn) => {
+      const t = turn as {
+        role?: unknown;
+        text?: unknown;
+        formulas?: unknown;
+        sections?: unknown;
+      };
+      const text = typeof t?.text === "string" ? t.text.trim().slice(0, 6000) : "";
+      if (!text) return null;
+      const role = t?.role === "visitor" ? "visitor" : "px";
+      const formulas = Array.isArray(t?.formulas)
+        ? (t.formulas as unknown[])
+            .filter((f): f is string => typeof f === "string")
+            .slice(0, 4)
+            .map((f) => f.trim().slice(0, 200))
+        : undefined;
+      const sections = Array.isArray(t?.sections)
+        ? (t.sections as unknown[])
+            .map((s) => {
+              const rec = (s ?? {}) as { heading?: unknown; body?: unknown };
+              const heading =
+                typeof rec.heading === "string" ? rec.heading.trim().slice(0, 120) : "";
+              const body =
+                typeof rec.body === "string" ? rec.body.trim().slice(0, 900) : "";
+              return heading && body ? { heading, body } : null;
+            })
+            .filter((s): s is { heading: string; body: string } => s !== null)
+            .slice(0, 6)
+        : undefined;
+      return { role, text, formulas, sections } as PxThreadTurn;
+    })
+    .filter((t): t is PxThreadTurn => t !== null)
+    .slice(-14);
+
+  if (thread.length === 0) {
+    return {
+      ok: false,
+      error: "The thread is empty — speak with ParticleX first, then press.",
+      status: 400,
+    };
+  }
+
+  const { imageDataUrl, documents } = parseAttachments(body);
+  return {
+    ok: true,
+    input: { language: requestedLanguage, languageName, depth, pages, focus, thread, imageDataUrl, documents },
+  };
+}
+
+/* ---------------- THE PRESS ITSELF — one transmission ---------------- */
+async function pressPx(input: PxPressInput): Promise<{
+  title: string;
+  filename: string;
+  pdf: Uint8Array;
+}> {
+  const threadBlock = input.thread
+    .map((turn) =>
+      [
+        turn.role === "visitor" ? `THE VISITOR ASKED:` : `PARTICLEX REVEALED:`,
+        turn.text,
+        turn.sections?.length
+          ? `THE REVEALED MOVEMENTS (the structure of that revelation):
+${turn.sections.map((s) => `· ${s.heading} — ${s.body}`).join("\n")}`
+          : "",
+        turn.formulas?.length
+          ? `THE FORMULAS THAT RAN IT:\n${turn.formulas.join("\n")}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n")
+    )
+    .join("\n\n———\n\n");
+
+  const focusLine = input.focus
+    ? `THE FOCUS: the visitor carries this into the transmission — lean toward it wherever the thread allows: "${input.focus}".`
+    : `THE FOCUS: the visitor carries no words — only the thread itself. Let the thread choose where the transmission leans.`;
+
+  const zai = await ZAI.create();
+
+  /* Attachments — one image seen with the vision field, up to three
+     extracted documents — folded into what the transmission reads. */
+  const attachmentBlocks: string[] = [];
+  if (input.imageDataUrl) {
+    const block = imageBlock(await describeImage(zai, input.imageDataUrl));
+    if (block) attachmentBlocks.push(block);
+  }
+  const docBlock = documentBlock(input.documents);
+  if (docBlock) attachmentBlocks.push(docBlock);
+  const attachmentLines =
+    attachmentBlocks.length > 0
+      ? `\n\n${attachmentBlocks.join("\n\n")}`
+      : "";
+
+  /* ---- one quick transmission — retried once should the JSON
+     arrive malformed -------------------------------------------- */
+  let transmission: Transmission | null = null;
+  let lastRaw = "";
+  for (let attempt = 0; attempt < 2 && !transmission; attempt++) {
+    const completion = await zai.chat.completions.create({
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content:
+            `THE TRANSMISSION THREAD (your one source — the conversation to press into ink):\n\n${threadBlock}` +
+            `\n\n${focusLine}` +
+            attachmentLines +
+            `\n\nGEAR OF DEPTH (honor it absolutely): ${GEARS[input.depth]}` +
+            `\n\nLENGTH: exactly ${input.pages} page-block${input.pages > 1 ? "s" : ""} in the "pages" array.` +
+            `\n\nLANGUAGE (CRITICAL): write EVERY word in fluent, natural ${input.languageName}.` +
+            (attempt === 0
+              ? `\n\nReceive the transmission now and return the STRICT JSON.`
+              : `\n\nREMINDER: return STRICT JSON only — {"title","era","pages":[…exactly ${input.pages} strings…],"seal"} — no fences, no commentary.`),
+        },
+      ],
+      thinking: { type: "disabled" },
+    });
+    lastRaw = (completion.choices[0]?.message?.content ?? "").trim();
+    transmission = extractTransmission(lastRaw);
+  }
+
+  if (!transmission) {
+    console.error(
+      "[particlex-pdf] the transmission never arrived. Raw head:",
+      lastRaw.slice(0, 400)
+    );
+    throw new Error("The transmission stayed quiet — rest, then press again.");
+  }
+
+  const pdf = await renderTransmissionPdf(transmission, {
+    header: "ParticleX · A transmission received",
+    producer: "Mirror Entity Digital Chamber — ParticleX",
+    creator: "ParticleX, the quantum narrator",
+  });
+  const filename = `particlex-transmission-${Date.now()}.pdf`;
+  return { title: transmission.title, filename, pdf };
+}
+
+/* ---------------- THE WORKS-IN-MOTION DOOR ---------------- */
+async function runPxPress(jobId: string): Promise<void> {
+  const { runTransmissionJob, readJobInput } = await import("@/lib/server/transmission-press");
+  let job;
+  try {
+    job = await db.processJob.findUnique({ where: { id: jobId }, select: { input: true } });
+  } catch {
+    return;
+  }
+  if (!job) return;
+  const stored = readJobInput(job.input);
+  const parsed = stored ? parsePxInput(stored) : null;
+  if (!parsed || !parsed.ok) {
+    await runTransmissionJob(jobId, {
+      kind: "px-pdf",
+      sector: "quantum",
+      libraryKind: "px-pdf",
+      press: async () => {
+        throw new Error(parsed ? parsed.error : "The press could not read its own instructions.");
+      },
+    });
+    return;
+  }
+  await runTransmissionJob(jobId, {
+    kind: "px-pdf",
+    sector: "quantum",
+    libraryKind: "px-pdf",
+    press: () => pressPx(parsed.input),
+  });
+}
+
 async function postImpl(req: NextRequest): Promise<NextResponse> {
   try {
-    const body = await req.json().catch(() => null);
-    const requestedLanguage: string =
-      typeof body?.language === "string" ? body.language : "en";
-    const languageName = LANGUAGE_NAMES[requestedLanguage] ?? "English";
-
-    const depth = Math.min(5, Math.max(1, Math.round(Number(body?.depth) || 3)));
-    const pages = Math.min(5, Math.max(1, Math.round(Number(body?.pages) || 2)));
-    const focus: string | null =
-      typeof body?.focus === "string" && body.focus.trim()
-        ? body.focus.trim().slice(0, 400)
-        : null;
-
-    /* the thread — the whole conversation, read with its formulas and
-       its structured movements */
-    const rawThread = Array.isArray(body?.thread) ? (body.thread as unknown[]) : [];
-    const thread: PxThreadTurn[] = rawThread
-      .map((turn) => {
-        const t = turn as {
-          role?: unknown;
-          text?: unknown;
-          formulas?: unknown;
-          sections?: unknown;
-        };
-        const text = typeof t?.text === "string" ? t.text.trim().slice(0, 6000) : "";
-        if (!text) return null;
-        const role = t?.role === "visitor" ? "visitor" : "px";
-        const formulas = Array.isArray(t?.formulas)
-          ? (t.formulas as unknown[])
-              .filter((f): f is string => typeof f === "string")
-              .slice(0, 4)
-              .map((f) => f.trim().slice(0, 200))
-          : undefined;
-        const sections = Array.isArray(t?.sections)
-          ? (t.sections as unknown[])
-              .map((s) => {
-                const rec = (s ?? {}) as { heading?: unknown; body?: unknown };
-                const heading =
-                  typeof rec.heading === "string" ? rec.heading.trim().slice(0, 120) : "";
-                const body =
-                  typeof rec.body === "string" ? rec.body.trim().slice(0, 900) : "";
-                return heading && body ? { heading, body } : null;
-              })
-              .filter((s): s is { heading: string; body: string } => s !== null)
-              .slice(0, 6)
-          : undefined;
-        return { role, text, formulas, sections } as PxThreadTurn;
-      })
-      .filter((t): t is PxThreadTurn => t !== null)
-      .slice(-14);
-
-    if (thread.length === 0) {
-      return NextResponse.json(
-        { error: "The thread is empty — speak with ParticleX first, then press." },
-        { status: 400 }
-      );
+    const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
+    const parsed = parsePxInput(body);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: parsed.status });
     }
 
-    const threadBlock = thread
-      .map((turn) =>
-        [
-          turn.role === "visitor" ? `THE VISITOR ASKED:` : `PARTICLEX REVEALED:`,
-          turn.text,
-          turn.sections?.length
-            ? `THE REVEALED MOVEMENTS (the structure of that revelation):
-${turn.sections.map((s) => `· ${s.heading} — ${s.body}`).join("\n")}`
-            : "",
-          turn.formulas?.length
-            ? `THE FORMULAS THAT RAN IT:\n${turn.formulas.join("\n")}`
-            : "",
-        ]
-          .filter(Boolean)
-          .join("\n")
-      )
-      .join("\n\n———\n\n");
-
-    const focusLine = focus
-      ? `THE FOCUS: the visitor carries this into the transmission — lean toward it wherever the thread allows: "${focus}".`
-      : `THE FOCUS: the visitor carries no words — only the thread itself. Let the thread choose where the transmission leans.`;
-
-    const zai = await ZAI.create();
-
-    /* Attachments — one image seen with the vision field, up to three
-       extracted documents — folded into what the transmission reads. */
-    const { imageDataUrl, documents } = parseAttachments(body);
-    const attachmentBlocks: string[] = [];
-    if (imageDataUrl) {
-      const block = imageBlock(await describeImage(zai, imageDataUrl));
-      if (block) attachmentBlocks.push(block);
-    }
-    const docBlock = documentBlock(documents);
-    if (docBlock) attachmentBlocks.push(docBlock);
-    const attachmentLines =
-      attachmentBlocks.length > 0
-        ? `\n\n${attachmentBlocks.join("\n\n")}`
-        : "";
-
-    /* ---- one quick transmission — retried once should the JSON
-       arrive malformed -------------------------------------------- */
-    let transmission: Transmission | null = null;
-    let lastRaw = "";
-    for (let attempt = 0; attempt < 2 && !transmission; attempt++) {
-      const completion = await zai.chat.completions.create({
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content:
-              `THE TRANSMISSION THREAD (your one source — the conversation to press into ink):\n\n${threadBlock}` +
-              `\n\n${focusLine}` +
-              attachmentLines +
-              `\n\nGEAR OF DEPTH (honor it absolutely): ${GEARS[depth]}` +
-              `\n\nLENGTH: exactly ${pages} page-block${pages > 1 ? "s" : ""} in the "pages" array.` +
-              `\n\nLANGUAGE (CRITICAL): write EVERY word in fluent, natural ${languageName}.` +
-              (attempt === 0
-                ? `\n\nReceive the transmission now and return the STRICT JSON.`
-                : `\n\nREMINDER: return STRICT JSON only — {"title","era","pages":[…exactly ${pages} strings…],"seal"} — no fences, no commentary.`),
+    /* THE WORKS-IN-MOTION DOOR — the resilient press: the visitor's
+       page is never held, and the work carries on wherever they walk. */
+    if (body?.mode === "job") {
+      const visitor = await resolveVisitor(req);
+      const lastTurn = parsed.input.thread[parsed.input.thread.length - 1];
+      let job;
+      try {
+        job = await db.processJob.create({
+          data: {
+            userId: visitor.user.id,
+            kind: "px-pdf",
+            title: (parsed.input.focus || lastTurn?.text || "A ParticleX transmission").slice(0, 140),
+            subtitle: `A ParticleX transmission · ${parsed.input.pages} page${parsed.input.pages > 1 ? "s" : ""} · gear of depth ${parsed.input.depth}`,
+            status: "running",
+            progress: 4,
+            stage: "The press is waking…",
+            input: JSON.stringify(body),
           },
-        ],
-        thinking: { type: "disabled" },
-      });
-      lastRaw = (completion.choices[0]?.message?.content ?? "").trim();
-      transmission = extractTransmission(lastRaw);
+        });
+      } catch {
+        /* no hall (a database at rest) — the honest word */
+        return NextResponse.json(
+          {
+            error:
+              "The hall of works rests — the press needs a database to keep its progress. Try again when the vault breathes.",
+          },
+          { status: 503 }
+        );
+      }
+      after(() => runPxPress(job.id));
+      return withAnonCookie(
+        NextResponse.json({
+          id: job.id,
+          status: "running",
+          pages: parsed.input.pages,
+        }),
+        visitor
+      );
     }
 
-    if (!transmission) {
-      console.error(
-        "[particlex-pdf] the transmission never arrived. Raw head:",
-        lastRaw.slice(0, 400)
-      );
-      return NextResponse.json(
-        { error: "The transmission stayed quiet — rest, then press again." },
-        { status: 502 }
-      );
-    }
-
-    const pdf = await renderTransmissionPdf(transmission, {
-      header: "ParticleX · A transmission received",
-      producer: "Mirror Entity Digital Chamber — ParticleX",
-      creator: "ParticleX, the quantum narrator",
-    });
-    const filename = `particlex-transmission-${Date.now()}.pdf`;
-
-    return new NextResponse(new Uint8Array(pdf), {
+    /* the quick hand — one held response, pressed at once */
+    const out = await pressPx(parsed.input);
+    return new NextResponse(new Uint8Array(out.pdf), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `attachment; filename="${out.filename}"`,
         "Cache-Control": "no-store",
       },
     });

@@ -156,7 +156,7 @@ export async function POST(req: NextRequest) {
         latencyMs: Date.now() - started,
       }).catch(() => undefined);
     }
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+    return NextResponse.json({ error: "The field stilled for a breath — speak once more." }, { status: 500 });
   }
 }
 
@@ -165,8 +165,8 @@ export async function GET() {
   return NextResponse.json({
     service: "reflective-me-public-api",
     version: "v1",
-    endpoints: ["POST /api/v1/chat"],
+    endpoints: ["POST /api/v1/chat", "POST /api/v1/channel", "POST /api/v1/images"],
     auth: "Authorization: Bearer mir_live_…",
-    note: "Create keys in the account dashboard.",
+    note: "Create keys in the account dashboard. Every image is channeled through the Higher Self.",
   });
 }

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
-import { ensureWallet, walletEnforced } from "@/lib/server/wallet";
+import {
+  WALLET_PACKS,
+  ensureWallet,
+  servicePrices,
+  walletEnforced,
+} from "@/lib/server/wallet";
+import { getComplimentaryConfig } from "@/lib/server/features";
 
 /* ------------------------------------------------------------------ */
 /*  GET /api/wallet — the visitor's own light, at a glance.            */
@@ -18,9 +24,25 @@ export async function GET(req: NextRequest) {
     if (visitor.user.id.startsWith("stateless:")) {
       return withAnonCookie(NextResponse.json({ wallet: null }), visitor);
     }
-    const wallet = await ensureWallet(visitor.user.id);
+    const [wallet, prices, complimentaryConfig] = await Promise.all([
+      ensureWallet(visitor.user.id),
+      servicePrices(),
+      getComplimentaryConfig(),
+    ]);
     return withAnonCookie(
-      NextResponse.json({ wallet, enforced: walletEnforced() }),
+      NextResponse.json({
+        wallet,
+        enforced: walletEnforced(),
+        prices,
+        packs: WALLET_PACKS,
+        /* THE COMPLIMENTARY DOOR'S OWN ANNOUNCEMENT — whether the FREE
+           activation stands open and which packages it serves; read-only,
+           decided entirely server-side */
+        complimentary: {
+          enabled: complimentaryConfig.complimentaryCheckout || complimentaryConfig.openAccessMode,
+          packages: complimentaryConfig.packages,
+        },
+      }),
       visitor
     );
   } catch (err) {

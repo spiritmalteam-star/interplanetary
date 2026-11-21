@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from "@/lib/i18n";
+import { gateInterval } from "@/lib/page-lifecycle";
 import { cn } from "@/lib/utils";
+import { ZoomableImageSurface } from "./ZoomableLightbox";
 import type { VisualizationArtifact } from "@/lib/visualization";
 
 /* ================================================================== */
@@ -43,7 +45,7 @@ interface CardTheme {
 }
 
 /* ------------------------------------------------------------------ */
-/*  The pending vision — a quiet animation of every process            */
+/*  The pending vision — a quiet reserved square and its stage line    */
 /* ------------------------------------------------------------------ */
 
 const STAGES = [
@@ -66,11 +68,13 @@ export function VisualizationPending({
 
   useEffect(() => {
     if (repaint) return;
-    const id = window.setInterval(
+    /* gated clock — the stage line rests while the tab is hidden and
+       catches up with one tick when the visitor returns */
+    const clearStage = gateInterval(
       () => setStage((s) => (s + 1) % STAGES.length),
       3400
     );
-    return () => window.clearInterval(id);
+    return clearStage;
   }, [repaint]);
 
   return (
@@ -79,71 +83,45 @@ export function VisualizationPending({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="glass relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-5 py-5"
+      className="glass relative overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-4 py-4"
       data-testid={`${testIdPrefix}-pending`}
       aria-busy="true"
       aria-live="polite"
     >
-      <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70">
+      {/* THE SPACE THE CLICK MAKES — the moment the vision is asked for,
+          the place it will occupy stands reserved: a SQUARE section that
+          fills with the coming image while the atelier works. A quiet
+          spinner holds the plate — no wave, no scan, no pulse. */}
+      <div
+        className="vision-filling relative mx-auto aspect-square w-full max-w-[420px] overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)]"
+        style={{ "--vision-accent": accent } as CSSProperties}
+        data-testid={`${testIdPrefix}-pending-plate`}
+        aria-hidden="true"
+      >
+        <span className="absolute inset-0 flex items-center justify-center">
+          <LoaderCircle
+            className="size-5 animate-spin"
+            style={{ color: accent }}
+            aria-hidden="true"
+          />
+        </span>
+      </div>
+      <p className="mono-label mt-3 text-center text-[10px] uppercase tracking-[0.24em] text-muted-foreground/70">
         {repaint ? t("Repainting the vision…") : t("Creating visualization…")}
       </p>
-      <div className="mt-3 flex items-center gap-4">
-        {/* the forming vision */}
-        <span className="relative flex size-14 shrink-0 items-center justify-center">
-          {[0, 1, 2].map((i) => (
-            <motion.span
-              key={i}
-              className="absolute inset-0 rounded-full border"
-              style={{ borderColor: `color-mix(in srgb, ${accent} 45%, transparent)` }}
-              animate={{ scale: [0.5, 1.25], opacity: [0.65, 0] }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                delay: i * 0.7,
-                ease: "easeOut",
-              }}
-            />
-          ))}
-          <motion.span
-            className="flex size-8 items-center justify-center rounded-full"
-            style={{
-              background: `color-mix(in srgb, ${accent} 16%, transparent)`,
-              boxShadow: `0 0 22px -6px color-mix(in srgb, ${accent} 75%, transparent)`,
-            }}
-            animate={{ scale: [1, 1.12, 1] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+      <div className="mt-3 min-w-0">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.p
+            key={repaint ? "repaint" : stage}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="text-[15.5px] italic text-foreground/85"
           >
-            <LoaderCircle
-              className="size-4 animate-[spin-slower_3.2s_linear_infinite]"
-              style={{ color: accent }}
-              aria-hidden="true"
-            />
-          </motion.span>
-        </span>
-        <div className="min-w-0 flex-1">
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.p
-              key={repaint ? "repaint" : stage}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="text-[14.5px] italic text-foreground/85"
-            >
-              {repaint ? t("Repainting the vision…") : t(STAGES[stage])}
-            </motion.p>
-          </AnimatePresence>
-          <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--hairline)_60%,transparent)]">
-            <motion.div
-              className="h-full w-1/3 rounded-full"
-              style={{
-                background: `linear-gradient(90deg, transparent, ${accent}, transparent)`,
-              }}
-              animate={{ x: ["-110%", "330%"] }}
-              transition={{ duration: 2.1, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </div>
-        </div>
+            {repaint ? t("Repainting the vision…") : t(STAGES[stage])}
+          </motion.p>
+        </AnimatePresence>
       </div>
     </motion.div>
   );
@@ -187,21 +165,21 @@ export function PreparedPromptFallback({
       className="glass rounded-2xl border border-[color-mix(in_srgb,var(--hairline)_65%,transparent)] px-5 py-4"
       data-testid={`${testIdPrefix}-fallback`}
     >
-      <p className="mono-label text-[10px] uppercase tracking-[0.24em]" style={{ color: accent }}>
+      <p className="mono-label text-[11px] uppercase tracking-[0.24em]" style={{ color: accent }}>
         {artifact.title}
       </p>
-      <p className="mt-2 text-[14.5px] leading-relaxed text-foreground/85">
+      <p className="mt-2 text-[15.5px] leading-relaxed text-foreground/85">
         {t(
           "The vision was composed, but the brushes rest. Keep this prepared prompt until the painter returns:"
         )}
       </p>
       {(artifact.paintErrors?.length ?? 0) > 0 && (
         <p
-          className="nice-scroll mt-2.5 max-h-20 overflow-y-auto rounded-xl border border-[color-mix(in_srgb,var(--hairline)_45%,transparent)] bg-[color-mix(in_srgb,var(--hairline)_10%,transparent)] px-3.5 py-2 text-[11px] leading-relaxed text-muted-foreground/90"
+          className="nice-scroll mt-2.5 max-h-20 overflow-y-auto rounded-xl border border-[color-mix(in_srgb,var(--hairline)_45%,transparent)] bg-[color-mix(in_srgb,var(--hairline)_10%,transparent)] px-3.5 py-2 text-[12px] leading-relaxed text-muted-foreground/90"
           data-testid={`${testIdPrefix}-paint-errors`}
         >
           <span
-            className="mono-label mr-1.5 text-[9px] uppercase tracking-[0.2em]"
+            className="mono-label mr-1.5 text-[10px] uppercase tracking-[0.2em]"
             style={{ color: accent }}
           >
             {t("Why the brushes rest")} —
@@ -209,7 +187,7 @@ export function PreparedPromptFallback({
           {artifact.paintErrors!.join(" · ")}
         </p>
       )}
-      <p className="nice-scroll mt-2.5 max-h-24 overflow-y-auto rounded-xl border border-[color-mix(in_srgb,var(--hairline)_55%,transparent)] bg-[color-mix(in_srgb,var(--hairline)_16%,transparent)] px-3.5 py-2.5 text-[12.5px] leading-relaxed text-muted-foreground">
+      <p className="nice-scroll mt-2.5 max-h-24 overflow-y-auto rounded-xl border border-[color-mix(in_srgb,var(--hairline)_55%,transparent)] bg-[color-mix(in_srgb,var(--hairline)_16%,transparent)] px-3.5 py-2.5 text-[13.5px] leading-relaxed text-muted-foreground">
         {artifact.prompt}
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -218,7 +196,7 @@ export function PreparedPromptFallback({
             type="button"
             onClick={onPaint}
             data-testid={`${testIdPrefix}-paint-now`}
-            className="focus-glow flex h-9 items-center gap-2 rounded-full px-4 text-[13px] font-semibold transition-all duration-300 hover:-translate-y-px"
+            className="focus-glow flex h-9 items-center gap-2 rounded-full px-4 text-[14px] font-semibold transition-all duration-300 hover:-translate-y-px"
             style={{
               border: `1px solid color-mix(in srgb, ${accent} 45%, transparent)`,
               color: accent,
@@ -232,7 +210,7 @@ export function PreparedPromptFallback({
         <button
           type="button"
           onClick={() => void copyPrompt()}
-          className="focus-glow flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-4 text-[13px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
+          className="focus-glow flex h-9 items-center gap-2 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-4 text-[14px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
           data-testid={`${testIdPrefix}-copy-prompt`}
         >
           <Copy className="size-3.5" aria-hidden="true" />
@@ -297,7 +275,7 @@ function DiagramOverlay({
           initial={{ opacity: 0, scale: 0.85 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.25 + i * 0.09, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border px-2.5 py-1 text-[10.5px] font-medium leading-tight backdrop-blur-md sm:text-[11.5px]"
+          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border px-2.5 py-1 text-[11.5px] font-medium leading-tight backdrop-blur-md sm:text-[12.5px]"
           style={{
             left: `${n.x}%`,
             top: `${n.y}%`,
@@ -347,7 +325,7 @@ function AnnotationMarkers({
             }}
           />
           <span
-            className="max-w-[150px] rounded-full border px-2 py-0.5 text-[9.5px] leading-tight backdrop-blur-md sm:max-w-[190px] sm:text-[10.5px]"
+            className="max-w-[150px] rounded-full border px-2 py-0.5 text-[10.5px] leading-tight backdrop-blur-md sm:max-w-[190px] sm:text-[11.5px]"
             style={{
               borderColor: `color-mix(in srgb, ${accent} 45%, transparent)`,
               background: "color-mix(in srgb, #0a0a0b 58%, transparent)",
@@ -385,9 +363,27 @@ function PresentationDeck({
   const slide = slides[index];
   if (!slide) return null;
 
+  /* the keyboard's own quiet steer — left and right walk the deck
+     when the stage holds the focus */
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      go(-1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      go(1);
+    }
+  };
+
   return (
-    <div data-testid={`${testIdPrefix}-deck`}>
-      <div className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)]">
+    <div data-testid={`${testIdPrefix}-deck`} onKeyDown={onKeyDown}>
+      <div
+        tabIndex={0}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={t("Slide {n} of {total}", { n: index + 1, total })}
+        className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--hairline)_60%,transparent)] outline-none focus-visible:ring-1 focus-visible:ring-[var(--hairline-active)]"
+      >
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={index}
@@ -410,7 +406,7 @@ function PresentationDeck({
                   background: `radial-gradient(circle at 30% 20%, color-mix(in srgb, ${accent} 22%, transparent), transparent 60%), linear-gradient(160deg, #0b0b0c, #161617)`,
                 }}
               >
-                <span className="mono-label text-[11px] tracking-[0.3em]" style={{ color: accent }}>
+                <span className="mono-label text-[12px] tracking-[0.3em]" style={{ color: accent }}>
                   {String(index + 1).padStart(2, "0")}
                 </span>
               </div>
@@ -450,9 +446,9 @@ function PresentationDeck({
           transition={{ duration: 0.35, ease: "easeOut" }}
           className="mt-3"
         >
-          <p className="text-[15px] font-semibold text-foreground/95">{slide.title}</p>
+          <p className="text-[16px] font-semibold text-foreground/95">{slide.title}</p>
           {slide.body && (
-            <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">
+            <p className="mt-1 text-[15px] leading-relaxed text-muted-foreground">
               {slide.body}
             </p>
           )}
@@ -460,7 +456,7 @@ function PresentationDeck({
       </AnimatePresence>
 
       <div className="mt-3 flex items-center justify-between">
-        <span className="mono-label text-[10px] tracking-[0.2em] text-muted-foreground/70">
+        <span className="mono-label text-[11px] tracking-[0.2em] text-muted-foreground/70">
           {t("Slide {n} of {total}", { n: index + 1, total })}
         </span>
         <span className="flex items-center gap-1.5">
@@ -501,7 +497,6 @@ export function VisualizationCard({
   regenerating?: boolean;
 }) {
   const t = useT();
-  const [loaded, setLoaded] = useState(false);
   const [ratio, setRatio] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const modeLabel = MODE_LABELS[artifact.mode];
@@ -589,9 +584,6 @@ export function VisualizationCard({
           }
         : undefined}
     >
-      {!loaded && (
-        <div className="shimmer-bar absolute inset-0" aria-hidden="true" />
-      )}
       {artifact.imageUrl && (
         <img
           src={artifact.imageUrl}
@@ -602,12 +594,8 @@ export function VisualizationCard({
             if (img.naturalWidth > 0 && img.naturalHeight > 0) {
               setRatio(`${img.naturalWidth} / ${img.naturalHeight}`);
             }
-            setLoaded(true);
           }}
-          className={cn(
-            "size-full object-cover transition-[opacity,filter,transform] duration-700 ease-out",
-            loaded ? "scale-100 opacity-100 blur-0" : "scale-[1.045] opacity-0 blur-lg"
-          )}
+          className="size-full object-cover"
         />
       )}
       {!large && (
@@ -629,7 +617,7 @@ export function VisualizationCard({
     >
       {/* the Mirror's whisper above the vision */}
       {artifact.whisper && (
-        <p className="px-5 pt-4 text-[14.5px] italic leading-relaxed text-foreground/80 sm:px-6">
+        <p className="px-5 pt-4 text-[15.5px] italic leading-relaxed text-foreground/80 sm:px-6">
           {artifact.whisper}
         </p>
       )}
@@ -659,29 +647,36 @@ export function VisualizationCard({
             <div className="mt-3.5 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p
-                  className="mono-label text-[9.5px] uppercase tracking-[0.26em]"
+                  className="mono-label text-[10.5px] uppercase tracking-[0.26em]"
                   style={{ color: accent }}
                 >
                   {t(modeLabel)}
                 </p>
                 <h4
-                  className="mt-1 text-[17px] font-semibold leading-snug text-foreground"
+                  className="mt-1 text-[18px] font-semibold leading-snug text-foreground"
                   data-testid={`${testIdPrefix}-title`}
                 >
                   {artifact.title}
                 </h4>
                 {artifact.subtitle && (
-                  <p className="mt-0.5 text-[13.5px] italic text-muted-foreground">
+                  <p className="mt-0.5 text-[14.5px] italic text-muted-foreground">
                     {artifact.subtitle}
                   </p>
                 )}
               </div>
             </div>
             {artifact.explanation && (
-              <p className="mt-2.5 text-[14px] leading-relaxed text-foreground/85">
+              <p className="mt-2.5 text-[15px] leading-relaxed text-foreground/85">
                 {artifact.explanation}
               </p>
             )}
+            {/* THE CHANNEL'S SIGNATURE — the vision arrived through the
+                viewer's own Higher Self, never through the house's energy:
+                the house only carries what the Higher Self answered. */}
+            <p className="mono-label mt-2.5 flex items-center gap-1.5 text-[9.5px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              <span aria-hidden="true" className="text-[var(--gd)]">✧</span>
+              {t("Channeled through your Higher Self")}
+            </p>
           </>
         )}
 
@@ -700,12 +695,12 @@ export function VisualizationCard({
                 )}
               >
                 <p
-                  className="mono-label text-[9.5px] uppercase tracking-[0.2em]"
+                  className="mono-label text-[10.5px] uppercase tracking-[0.2em]"
                   style={{ color: accent }}
                 >
                   {p.heading}
                 </p>
-                <p className="mt-1.5 text-[13.5px] leading-relaxed text-foreground/85">
+                <p className="mt-1.5 text-[14.5px] leading-relaxed text-foreground/85">
                   {p.body}
                 </p>
               </div>
@@ -723,7 +718,7 @@ export function VisualizationCard({
                 aria-label={t("Expand")}
                 title={t("Expand")}
                 data-testid={`${testIdPrefix}-expand`}
-                className="focus-glow flex h-9 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-3.5 text-[12.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
+                className="focus-glow flex h-9 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-3.5 text-[13.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
               >
                 <Maximize2 className="size-3.5" aria-hidden="true" />
                 <span className="hidden sm:inline">{t("Expand")}</span>
@@ -736,7 +731,7 @@ export function VisualizationCard({
                 aria-label={t("Download")}
                 title={t("Download")}
                 data-testid={`${testIdPrefix}-download`}
-                className="focus-glow flex h-9 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-3.5 text-[12.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
+                className="focus-glow flex h-9 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-3.5 text-[13.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
               >
                 <Download className="size-3.5" aria-hidden="true" />
                 <span className="hidden sm:inline">{t("Download")}</span>
@@ -749,7 +744,7 @@ export function VisualizationCard({
                 aria-label={t("Regenerate")}
                 title={t("Regenerate")}
                 data-testid={`${testIdPrefix}-regenerate`}
-                className="focus-glow flex h-9 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-3.5 text-[12.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
+                className="focus-glow flex h-9 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--hairline)_70%,transparent)] px-3.5 text-[13.5px] text-foreground/85 transition-all duration-300 hover:-translate-y-px hover:border-[var(--hairline-hover)]"
               >
                 <RefreshCw className="size-3.5" aria-hidden="true" />
                 <span className="hidden sm:inline">{t("Regenerate")}</span>
@@ -761,7 +756,7 @@ export function VisualizationCard({
         {/* discernment — imagination is never sold as evidence */}
         {artifact.discernment && (
           <p
-            className="mt-3.5 border-t border-[color-mix(in_srgb,var(--hairline)_40%,transparent)] pt-2.5 text-[11.5px] italic leading-relaxed text-muted-foreground/80"
+            className="mt-3.5 border-t border-[color-mix(in_srgb,var(--hairline)_40%,transparent)] pt-2.5 text-[12.5px] italic leading-relaxed text-muted-foreground/80"
             data-testid={`${testIdPrefix}-discernment`}
           >
             ◆ {artifact.discernment}
@@ -782,19 +777,19 @@ export function VisualizationCard({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="fixed inset-0 z-[120] flex flex-col bg-[rgba(4,2,10,0.92)] backdrop-blur-xl"
+                className="fixed inset-0 z-[120] flex flex-col bg-[rgba(4,2,10,0.92)] backdrop-blur-md"
                 data-testid={`${testIdPrefix}-lightbox`}
                 onClick={() => setExpanded(false)}
               >
                 <div className="flex items-center justify-between px-4 py-3 sm:px-6">
                   <div className="min-w-0">
                     <p
-                      className="mono-label text-[9.5px] uppercase tracking-[0.26em]"
+                      className="mono-label text-[10.5px] uppercase tracking-[0.26em]"
                       style={{ color: accent }}
                     >
                       {t(modeLabel)}
                     </p>
-                    <p className="truncate text-[15px] font-semibold text-foreground">
+                    <p className="truncate text-[16px] font-semibold text-foreground">
                       {artifact.title}
                     </p>
                   </div>
@@ -821,11 +816,19 @@ export function VisualizationCard({
                           testIdPrefix={`${testIdPrefix}-lb`}
                         />
                       </div>
+                    ) : artifact.imageUrl ? (
+                      <ZoomableImageSurface
+                        src={artifact.imageUrl}
+                        alt={artifact.title}
+                        testId={`${testIdPrefix}-lb`}
+                        className="mx-auto flex max-w-[1080px] items-center justify-center"
+                        imgClassName="max-h-[72vh] w-auto max-w-full rounded-xl border border-white/15 shadow-[0_30px_90px_-20px_rgba(0,0,0,0.9)]"
+                      />
                     ) : (
                       artwork(true)
                     )}
                     {artifact.explanation && (
-                      <p className="mx-auto mt-4 max-w-[720px] text-[14.5px] leading-relaxed text-foreground/85">
+                      <p className="mx-auto mt-4 max-w-[720px] text-[15.5px] leading-relaxed text-foreground/85">
                         {artifact.explanation}
                       </p>
                     )}
@@ -842,12 +845,12 @@ export function VisualizationCard({
                             )}
                           >
                             <p
-                              className="mono-label text-[9.5px] uppercase tracking-[0.2em]"
+                              className="mono-label text-[10.5px] uppercase tracking-[0.2em]"
                               style={{ color: accent }}
                             >
                               {p.heading}
                             </p>
-                            <p className="mt-1.5 text-[13.5px] leading-relaxed text-foreground/85">
+                            <p className="mt-1.5 text-[14.5px] leading-relaxed text-foreground/85">
                               {p.body}
                             </p>
                           </div>
@@ -855,7 +858,7 @@ export function VisualizationCard({
                       </div>
                     )}
                     {artifact.discernment && (
-                      <p className="mx-auto mt-4 max-w-[720px] border-t border-white/10 pt-3 text-center text-[11.5px] italic text-muted-foreground/80">
+                      <p className="mx-auto mt-4 max-w-[720px] border-t border-white/10 pt-3 text-center text-[12.5px] italic text-muted-foreground/80">
                         ◆ {artifact.discernment}
                       </p>
                     )}

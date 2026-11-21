@@ -37,8 +37,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature." }, { status: 400 });
   }
 
-  await handleStripeEvent(event);
+  try {
+    await handleStripeEvent(event);
+  } catch (err) {
+    /* the handler fell — answer 500 so Stripe's honest replay returns
+       (the register row was already lifted for exactly this reason) */
+    console.error(
+      "[webhooks/stripe] handling failed — the replay is invited:",
+      err instanceof Error ? err.message : err
+    );
+    return NextResponse.json({ error: "Handling failed; retry invited." }, { status: 500 });
+  }
 
-  /* always 200 — a failed handler must not make Stripe storm the sky */
+  /* verified and handled — the house keeps its silence */
   return NextResponse.json({ received: true });
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
 import {
+  Activity,
   ArrowLeft,
   BookMarked,
   Check,
@@ -11,8 +12,10 @@ import {
   Copy,
   CreditCard,
   Dna,
-  Download,
+  FileDown,
+  Flame,
   Gem,
+  History,
   KeyRound,
   LibraryBig,
   LoaderCircle,
@@ -21,35 +24,44 @@ import {
   LogOut,
   Plus,
   RotateCcw,
+  ScrollText,
   Settings2,
   Sparkles,
   UserRound,
   X,
 } from "lucide-react";
-import { LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
+import { LANGUAGES, PICKER_LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
+import { LanguageButton } from "@/components/mirror/LanguageButton";
 import { useMirror } from "@/lib/mirror-store";
-import {
-  familyLabelKeys,
-  familyShare,
-  setFamilyWeightInMix,
-} from "@/lib/tree-mix";
-import { TREE_FAMILIES } from "@/lib/data/suggestion-banks";
-import { DnaHelix, useJourney } from "./DnaTimeline";
+import { DnaHelix, TrajectoryEvolution, useJourney } from "./DnaTimeline";
+import { FuelEnginePanel } from "./FuelEnginePanel";
+import { AdminConsole } from "./AdminConsole";
 import { ExpansionMirrorPanel } from "./ExpansionMirror";
 import {
   bindAgain,
   listDownloads,
   type DownloadEntry,
 } from "@/lib/downloads-log";
+import {
+  listToolWorks,
+  TOOL_WORK_LABELS,
+  type ToolWork,
+  type ToolWorkKind,
+} from "@/lib/tool-history";
 import { cn } from "@/lib/utils";
+import { TransactionsPanel } from "./wallet/TransactionsPanel";
+import { RealmLightToggle } from "./RealmLightToggle";
 
 /* ------------------------------------------------------------------ */
 /*  THE PROFILE ROOM — rebuilt in the manner of the frontier: a slim   */
-/*  header, a quiet navigation rail on the left, one focused panel of  */
-/*  content on the right. Everything the visitor owns lives here —     */
-/*  their identity, their SETTINGS (the passage's own tuning), the     */
-/*  FIELDS OF EXPANSION, their COSMIC LIBRARY, the DNA of their walk   */
-/*  and their account chamber. One back door returns to the Mirror.    */
+/*  header, a quiet navigation rail on the left, one held GROUP of     */
+/*  stacked panels on the right. The nine old doors read as four quiet */
+/*  rooms — THE VISITOR (identity + the account's summary), THE        */
+/*  LIBRARY (the cosmic library + the bound works), THE CHAMBER (the   */
+/*  passage's tuning + the fields of expansion + the DNA of the walk)  */
+/*  and THE ADVANCED (the API room + the fuel engine) — everything     */
+/*  the visitor owns stays reachable. One back door returns to the     */
+/*  Mirror.                                                            */
 /*                                                                     */
 /*  THE LAYERING LAW: every door that opens another room (the account  */
 /*  chamber, the passage, the library) closes THIS room first — the    */
@@ -80,6 +92,7 @@ interface AccountSummaryLite {
   credits: { balance: number | null };
   usage: { events30d: number; credits30d: number };
   libraryCount: number;
+  wallet?: { deposit?: number; depositSource?: string | null } | null;
   offers?: {
     plans: { id: string; label: string; priceCents: number; available: boolean }[];
     packs: { id: string; label: string; credits: number; priceCents: number; available: boolean }[];
@@ -97,13 +110,33 @@ interface VesselKeyRow {
 
 type SectionId =
   | "profile"
+  | "history"
+  | "processes"
   | "settings"
   | "downloads"
   | "seeds"
   | "library"
   | "dna"
   | "api"
-  | "account";
+  | "fuel"
+  | "admin"
+  | "account"
+  | "transactions";
+
+/* THE HALL'S OWN ROW — one carrying process, as the hall speaks it */
+interface ProcessJobLite {
+  id: string;
+  kind: string;
+  title: string;
+  subtitle: string | null;
+  status: string;
+  progress: number;
+  stage: string | null;
+  error: string | null;
+  result: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export function ProfilePage() {
   const t = useT();
@@ -111,24 +144,45 @@ export function ProfilePage() {
   const close = useMirror((s) => s.closeProfilePage);
 
   const me = useMirror((s) => s.me);
+  const wallet = useMirror((s) => s.wallet);
+  /* THE PURSE'S OWN GLANCE — the balance is read fresh whenever the
+     visitor's own room mounts: the number in this room is the purse's
+     own truth, never a memory of it. */
+  useEffect(() => {
+    void useMirror.getState().refreshWallet();
+  }, []);
   const openAuth = useMirror((s) => s.openAuth);
   const openAccount = useMirror((s) => s.openAccount);
   const openLibrary = useMirror((s) => s.openLibrary);
+  const setLibraryFocus = useMirror((s) => s.setLibraryFocus);
   const signOut = useMirror((s) => s.signOut);
+
+  /* THE HISTORY'S HANDS — every tool's own way back into its room */
+  const lcHistory = useMirror((s) => s.lcHistory);
+  const openChat = useMirror((s) => s.openChat);
+  const openToolTab = useMirror((s) => s.openToolTab);
+  const setMode = useMirror((s) => s.setMode);
+  const resumeDreamBook = useMirror((s) => s.resumeDreamBook);
+  const openParticleX = useMirror((s) => s.openParticleX);
+  const openEvolveMed = useMirror((s) => s.openEvolveMed);
 
   /* the passage's own tuning */
   const language = useMirror((s) => s.language);
   const voice = useMirror((s) => s.voice);
   const pace = useMirror((s) => s.pace);
+  /* THE VISITOR'S OWN LEVEL — the visitor says how deep their own
+     experience has walked; the house answers accordingly */
+  const expLevel = useMirror((s) => s.expLevel);
+  const setExpLevel = useMirror((s) => s.setExpLevel);
   const setLanguage = useMirror((s) => s.setLanguage);
   const setVoice = useMirror((s) => s.setVoice);
   const setPace = useMirror((s) => s.setPace);
   const seeds = useMirror((s) => s.expansionSeeds);
   const setSeeds = useMirror((s) => s.setExpansionSeeds);
-  /* THE MIX OF WORLDS — how much of each family the living tree
-     carries; the same proportions the Laboratory's settings speak */
-  const treeMix = useMirror((s) => s.treeMix);
-  const setTreeMix = useMirror((s) => s.setTreeMix);
+  /* THE MIX OF WORLDS RESTED — the branches are gone from the walk,
+     and the tree's proportions went with them (the owner's word):
+     the settings panel no longer carries the sliders; the store's
+     own mix keeps its shape for whatever still reads it */
 
   /* the walk's helix — the DNA evolutionary timeline */
   const journey = useJourney();
@@ -144,6 +198,12 @@ export function ProfilePage() {
   /* the shelf of bound works — read from the visitor's own device */
   const [bound, setBound] = useState<DownloadEntry[] | null>(null);
   const [bindingOne, setBindingOne] = useState<string | null>(null);
+  /* THE HISTORY OF EVERY WORK — the shelf the mistakes cannot close */
+  const [works, setWorks] = useState<ToolWork[] | null>(null);
+  const [resumingWork, setResumingWork] = useState<string | null>(null);
+  /* THE WORKS IN MOTION — the hall of carrying processes */
+  const [processJobs, setProcessJobs] = useState<ProcessJobLite[] | null>(null);
+  const [resumingJob, setResumingJob] = useState<string | null>(null);
   /* the Mirror Intelligence API room */
   const [asking, setAsking] = useState(false);
   const [offerAnswer, setOfferAnswer] = useState<string | null>(null);
@@ -172,7 +232,14 @@ export function ProfilePage() {
     return () => window.clearTimeout(id);
   }, [open]);
 
-  const signedIn = Boolean(me && !me.email.startsWith("anon:"));
+  /* THE QUIET CHECK — the session's own breath is explicit: while the
+     first glance still travels, the room shows a resting skeleton and
+     never an "Enter the passage" verdict (a keeper must not be asked
+     to sign in for a breath; a lookup failure is a retry, not proof
+     of a stranger). */
+  const meStatus = useMirror((s) => s.meStatus);
+  const signedIn =
+    meStatus === "ready" && Boolean(me && !me.email.startsWith("anon:"));
 
   /* the library's quiet head — counts and the freshest entries */
   useEffect(() => {
@@ -213,7 +280,10 @@ export function ProfilePage() {
     if (
       !open ||
       !signedIn ||
-      (section !== "account" && section !== "api") ||
+      /* THE VISITOR HOLDS THE ACCOUNT — the account summary feeds the
+         account panel, which now rests inside the Visitor's room (and
+         the API room still reads it for the recharge light) */
+      (section !== "profile" && section !== "account" && section !== "api") ||
       summary ||
       summaryInFlight.current
     )
@@ -253,6 +323,160 @@ export function ProfilePage() {
     }
     setBound(listDownloads());
   }, [open]);
+
+  /* THE HISTORY — read fresh whenever the room opens or the shelves
+     change (a new code, a kept volume, a saved conversation) */
+  useEffect(() => {
+    if (!open || section !== "history") {
+      return;
+    }
+    setWorks(listToolWorks(lcHistory));
+  }, [open, section, lcHistory]);
+
+  /* THE WORKS IN MOTION — the hall is read the moment its door opens,
+     and while any work still carries, the hall reads itself every
+     three seconds (the visitor sees the bars breathe without ever
+     asking twice). When nothing runs, the quiet returns. */
+  const readProcesses = useMemo(
+    () =>
+      async (signal?: AbortSignal): Promise<ProcessJobLite[] | null> => {
+        try {
+          const res = await fetch("/api/processes", {
+            cache: "no-store",
+            signal,
+          });
+          const data = (await res.json().catch(() => null)) as {
+            jobs?: ProcessJobLite[];
+          } | null;
+          return data?.jobs ?? [];
+        } catch {
+          return null;
+        }
+      },
+    []
+  );
+  useEffect(() => {
+    if (!open || section !== "processes") return;
+    const controller = new AbortController();
+    let timer = 0;
+    let busy = false;
+    const tick = async () => {
+      /* the hidden hall asks nothing — the poll keeps its cadence but
+         the fetch waits; the visitor's return re-reads at once (below) */
+      if (isPageHidden()) {
+        timer = window.setTimeout(tick, 3000);
+        return;
+      }
+      /* one read in flight at a time — the returning visitor's own
+         immediate read takes the baton, never doubles the chain */
+      if (busy) return;
+      busy = true;
+      try {
+        const jobs = await readProcesses(controller.signal);
+        if (jobs) setProcessJobs(jobs);
+        const carrying = jobs?.some((j) => j.status === "running") ?? false;
+        if (carrying) {
+          /* at most one live beat — a completing read never stacks a
+             second chain beside the returning visitor's own read */
+          window.clearTimeout(timer);
+          timer = window.setTimeout(tick, 3000);
+        }
+      } finally {
+        busy = false;
+      }
+    };
+    void tick();
+    /* the returning visitor's own breath — fresh job states the moment
+       the tab comes back, before the next beat of the poll */
+    const offVisible = onPageVisible(() => {
+      window.clearTimeout(timer);
+      timer = 0;
+      void tick();
+    });
+    return () => {
+      controller.abort();
+      window.clearTimeout(timer);
+      offVisible();
+    };
+  }, [open, section, readProcesses]);
+
+  /* THE SECOND BREATH — a failed work asked to rise again */
+  const resumeProcess = async (id: string) => {
+    setResumingJob(id);
+    try {
+      const res = await fetch("/api/processes/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        const jobs = await readProcesses();
+        if (jobs) setProcessJobs(jobs);
+      }
+    } catch {
+      /* the hall keeps the failed work — the hand may ask again */
+    } finally {
+      setResumingJob(null);
+    }
+  };
+
+  /* THE PRECISE WAY BACK — every work resumes into its own room,
+     restored exactly as it stood; the profile room closes first so
+     the door never swings open behind its own wall. */
+  const resumeWork = (work: ToolWork) => {
+    setResumingWork(work.id);
+    try {
+      if (work.resume.type === "chat") {
+        openChat(work.resume.surface, work.resume.chatId);
+        switch (work.resume.surface) {
+          case "px":
+            openParticleX();
+            break;
+          case "em":
+            openEvolveMed();
+            break;
+          case "interplanetary":
+            setMode("interplanetary");
+            break;
+          case "healing":
+            setMode("healing");
+            break;
+          default:
+            break;
+        }
+      } else if (work.resume.type === "tab") {
+        /* the room's own keep — the tab wakes with its thread standing.
+           A tab already standing is laid down first so its room mounts
+           fresh and re-reads the keep — a stale empty instance never
+           buries the returned work. */
+        const closeToolTab = useMirror.getState().closeToolTab;
+        closeToolTab(work.resume.tab);
+        openToolTab(work.resume.tab);
+      } else if (work.resume.type === "dreambook") {
+        const v = work.resume.volume;
+        resumeDreamBook({
+          bookId: v.bookId,
+          config: v.config,
+          meta: {
+            title: v.title,
+            subtitle: v.subtitle,
+            sigil: v.sigil,
+            axiom: v.axiom,
+            dedication: v.dedication ?? "",
+            totalPages: v.totalPages,
+          },
+          threads: v.threads,
+          pages: v.pages,
+          ended: v.ended,
+        });
+      } else {
+        openToolTab("lightcodes");
+      }
+      close();
+    } finally {
+      setResumingWork(null);
+    }
+  };
 
   /* the vessel keys — read when the API room stands open */
   useEffect(() => {
@@ -442,6 +666,13 @@ export function ProfilePage() {
   };
 
   /* ---------------- the navigation ---------------- */
+  /* THE THREE ROOMS — the old nine doors gathered into three quiet
+     groups: the VISITOR (identity and the account's summary), the
+     LIBRARY (the cosmic library and the bound works) and the CHAMBER
+     (the passage's tuning, the fields, the DNA of the walk). The
+     ADVANCED room — the vessel keys and the fuel engine — is the
+     keeper's own pair of doors: they ride the rail only for the
+     admin, so the incubator can never be lost again. */
   const navItems: {
     id: SectionId;
     label: string;
@@ -451,10 +682,38 @@ export function ProfilePage() {
   }[] = [
     {
       id: "profile",
-      label: "Your profile",
+      label: "The Visitor",
       icon: UserRound,
       available: true,
       testId: "profile-nav-profile",
+    },
+    {
+      id: "history",
+      label: "History of your works",
+      icon: History,
+      available: true,
+      testId: "profile-nav-history",
+    },
+    {
+      id: "processes",
+      label: "Works in Motion",
+      icon: Activity,
+      available: true,
+      testId: "profile-nav-processes",
+    },
+    {
+      id: "transactions",
+      label: "Transactions",
+      icon: ScrollText,
+      available: true,
+      testId: "profile-nav-transactions",
+    },
+    {
+      id: "library",
+      label: "The Library",
+      icon: LibraryBig,
+      available: true,
+      testId: "profile-nav-library",
     },
     {
       id: "settings",
@@ -463,49 +722,57 @@ export function ProfilePage() {
       available: true,
       testId: "profile-nav-settings",
     },
-    {
-      id: "downloads",
-      label: "Downloads",
-      icon: Download,
-      available: true,
-      testId: "profile-nav-downloads",
-    },
-    {
-      id: "seeds",
-      label: "Fields of expansion",
-      icon: Sparkles,
-      available: true,
-      testId: "profile-nav-seeds",
-    },
-    {
-      id: "library",
-      label: "Cosmic Library",
-      icon: LibraryBig,
-      available: true,
-      testId: "profile-nav-library",
-    },
-    {
-      id: "dna",
-      label: "The path you have walked",
-      icon: Dna,
-      available: journey.length > 0,
-      testId: "profile-nav-dna",
-    },
+    /* THE KEEPER'S OWN DOORS — the advanced machinery returns to the
+       rail, admin-gated: the vessel keys room and the fuel engine
+       incubator (the engine was left with no door and could not open). */
     {
       id: "api",
-      label: "Mirror Intelligence API",
+      label: "Vessel Keys",
       icon: KeyRound,
-      available: true,
+      available: Boolean(me?.admin),
       testId: "profile-nav-api",
     },
     {
-      id: "account",
-      label: "Account & Credits",
-      icon: BookMarked,
-      available: true,
-      testId: "profile-nav-account",
+      id: "fuel",
+      label: "Fuel Engine",
+      icon: Flame,
+      available: Boolean(me?.admin),
+      testId: "profile-nav-fuel",
     },
   ];
+
+  /* WHICH PANELS A HELD GROUP SHOWS — every SectionId answers with its
+     own group's stack, so a stale id can never render an empty room.
+     The dna subsection only joins the Chamber when the walk has steps
+     to show, and the fuel engine only for an admin — the availability
+     the old rail carried now lives with the panels themselves. */
+  const groupPanels = (id: SectionId): SectionId[] => {
+    switch (id) {
+      case "profile":
+      case "account":
+        return me?.admin ? ["profile", "admin", "account"] : ["profile", "account"];
+      case "history":
+        return ["history"];
+      case "processes":
+        return ["processes"];
+      case "transactions":
+        return ["transactions"];
+      case "library":
+      case "downloads":
+        return ["library", "downloads"];
+      case "settings":
+      case "seeds":
+      case "dna":
+        return journey.length > 0
+          ? ["settings", "seeds", "dna"]
+          : ["settings", "seeds"];
+      case "api":
+      case "fuel":
+        return me?.admin ? ["api", "fuel"] : ["api"];
+      case "admin":
+        return me?.admin ? ["admin"] : [];
+    }
+  };
 
   const NavButton = ({
     item,
@@ -524,55 +791,131 @@ export function ProfilePage() {
         data-testid={item.testId}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "focus-glow flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-[13px] transition-all duration-300",
+          "focus-glow flex w-full items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left text-[13.5px] transition-all duration-300",
           active
-            ? "bg-[var(--glass-bg)] font-medium text-foreground shadow-[0_1px_0_0_var(--hairline)]"
-            : "text-muted-foreground hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] hover:text-foreground"
+            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--glass-bg))] font-medium text-foreground shadow-[0_6px_18px_-12px_color-mix(in_srgb,var(--scope-a,var(--gd))_50%,transparent)]"
+            : "border-transparent text-muted-foreground hover:bg-[color-mix(in_srgb,var(--foreground)_4%,transparent)] hover:text-foreground"
         )}
       >
         <Icon
-          className={cn("size-4 shrink-0", active ? "text-[var(--scope-a)]" : "")}
+          className={cn(
+            "size-4 shrink-0",
+            active ? "text-[var(--scope-a,var(--gd))]" : ""
+          )}
           aria-hidden="true"
         />
         <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
         <ChevronRight
-          className={cn("size-3.5 shrink-0 transition-opacity", active ? "opacity-60" : "opacity-0")}
+          className={cn(
+            "size-3.5 shrink-0 transition-opacity",
+            active ? "text-[var(--scope-a,var(--gd))] opacity-70" : "opacity-0"
+          )}
           aria-hidden="true"
         />
       </button>
     );
   };
 
-  /* a section's heading — title, its quiet description */
+  /* THE PASSAGE'S OWN FACE — the keeper's name and address resting
+     above the doors, the ChatGPT way: identity first, then the list. */
+  const identityInitial = me
+    ? (me.name || me.email).slice(0, 1).toUpperCase()
+    : "✦";
+  const identityMail =
+    me && !me.email.startsWith("anon:") ? me.email : t("A quiet guest");
+  const IdentityCard = () => (
+    <div
+      data-testid="profile-identity-card"
+      className="lift-sm mb-2.5 flex items-center gap-2.5 rounded-2xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2"
+    >
+      <span
+        className="mono-label flex size-10 shrink-0 items-center justify-center rounded-full text-[16px] text-foreground/90"
+        style={{
+          border: "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 42%, transparent)",
+          backgroundColor:
+            "color-mix(in srgb, var(--scope-a, var(--gd)) 10%, var(--glass-bg))",
+          boxShadow:
+            "0 0 20px -8px color-mix(in srgb, var(--scope-a, var(--gd)) 55%, transparent)",
+        }}
+        aria-hidden="true"
+      >
+        {identityInitial}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13.5px] font-medium leading-tight text-foreground/95">
+          {displayName}
+        </span>
+        <span className="mono-label block truncate text-[9.5px] uppercase tracking-[0.12em] text-muted-foreground">
+          {identityMail}
+        </span>
+      </span>
+    </div>
+  );
+
+  /* a section's heading — title, its quiet description. `small` is
+     the quieter voice: the Advanced room's own tone (a smaller head,
+     a muted note), so the machinery reads calmer than the visitor's
+     rooms above it. */
   const SectionHead = ({
     title,
     desc,
     testId,
+    small,
   }: {
     title: string;
     desc?: string;
     testId?: string;
+    small?: boolean;
   }) => (
-    <div className="mb-4">
-      <h2
-        data-testid={testId}
-        className="text-[16.5px] font-semibold leading-snug tracking-[-0.01em] text-foreground"
-      >
-        {title}
-      </h2>
-      {desc && (
-        <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted-foreground">
-          {desc}
-        </p>
-      )}
+    <div className="mb-3 flex items-start gap-2.5">
+      {/* THE SCOPE'S ACCENT — one small tinted bar before every head:
+          the chosen scope's color holding still (a mark, never a motion) */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "mt-[3px] w-[3px] shrink-0 rounded-full",
+          small ? "h-[13px]" : "h-[16px]"
+        )}
+        style={{
+          background: small
+            ? "color-mix(in srgb, var(--scope-a, var(--gd)) 45%, transparent)"
+            : "linear-gradient(180deg, var(--scope-a, var(--gd)), color-mix(in srgb, var(--scope-a, var(--gd)) 30%, transparent))",
+        }}
+      />
+      <div className="min-w-0 flex-1">
+        <h2
+          data-testid={testId}
+          className={cn(
+            "leading-snug tracking-[-0.01em]",
+            small
+              ? "text-[13.5px] font-medium text-muted-foreground"
+              : "text-[16.5px] font-semibold text-foreground"
+          )}
+        >
+          {title}
+        </h2>
+        {desc && (
+          <p
+            className={cn(
+              "mt-0.5 leading-relaxed",
+              small ? "text-[12.5px] text-muted-foreground/80" : "text-[13.5px] text-muted-foreground"
+            )}
+          >
+            {desc}
+          </p>
+        )}
+      </div>
     </div>
   );
 
   const panel = "rounded-2xl border hairline bg-[var(--glass-bg-soft)]";
 
-  /* ---------------- one section's content ---------------- */
-  const renderSection = () => {
-    switch (section) {
+  /* ---------------- the panels ----------------
+     Each panel keeps its own head and hands — exactly as the old nine
+     doors rendered them. The room below (renderSection) holds a GROUP
+     and stacks its panels; no panel knows it has neighbors. */
+  const renderPanel = (sec: SectionId) => {
+    switch (sec) {
       case "profile":
         return (
           <div data-testid="profile-identity">
@@ -586,22 +929,46 @@ export function ProfilePage() {
                   : t("A quiet guest")
               }
             />
-            <section aria-label={t("Identity")} className={cn(panel, "p-4 sm:p-5")}>
+            <section aria-label={t("Identity")} className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <span
-                  className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl border hairline bg-[var(--glass-bg)] text-[20px] text-foreground/85 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)]"
-                  aria-hidden="true"
-                >
-                  {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
-                </span>
+                {me?.image ? (
+                  /* THE GOOGLE PASSAGE'S OWN FACE — the picture the
+                     verified identity carried in, kept on the wall */
+                  <img
+                    src={me.image}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    data-testid="profile-avatar"
+                    className="size-12 shrink-0 rounded-2xl object-cover"
+                    style={{
+                      boxShadow:
+                        "0 10px 30px -18px rgba(0,0,0,0.5), 0 0 26px -10px color-mix(in srgb, var(--scope-a, var(--gd)) 50%, transparent)",
+                    }}
+                  />
+                ) : (
+                  <span
+                    className="mono-label flex size-12 shrink-0 items-center justify-center rounded-2xl text-[21px] text-foreground/90"
+                    style={{
+                      border:
+                        "1px solid color-mix(in srgb, var(--scope-a, var(--gd)) 40%, transparent)",
+                      backgroundColor:
+                        "color-mix(in srgb, var(--scope-a, var(--gd)) 9%, var(--glass-bg))",
+                      boxShadow:
+                        "0 10px 30px -18px rgba(0,0,0,0.5), 0 0 26px -10px color-mix(in srgb, var(--scope-a, var(--gd)) 50%, transparent)",
+                    }}
+                    aria-hidden="true"
+                  >
+                    {me ? (me.name || me.email).slice(0, 1).toUpperCase() : "✦"}
+                  </span>
+                )}
                 <div className="min-w-0 flex-1">
-                  <p className="ink-title truncate text-[17px] font-semibold leading-tight text-foreground/95">
+                  <p className="ink-title truncate text-[18px] font-semibold leading-tight text-foreground/95">
                     {displayName}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     {signedIn && (
                       <span
-                        className="mono-label rounded-full px-2 py-0.5 text-[8px] uppercase tracking-[0.16em] text-[var(--cy)]"
+                        className="mono-label rounded-full px-2 py-0.5 text-[9px] uppercase tracking-[0.16em] text-[var(--cy)]"
                         style={{ border: "1px solid color-mix(in srgb, var(--cy) 34%, transparent)" }}
                       >
                         {t("Keeper of a cosmic library")}
@@ -609,7 +976,7 @@ export function ProfilePage() {
                     )}
                     {totalEntries > 0 && (
                       <span
-                        className="mono-label rounded-full px-2 py-0.5 text-[8px] uppercase tracking-[0.16em] text-muted-foreground"
+                        className="mono-label rounded-full px-2 py-0.5 text-[9px] uppercase tracking-[0.16em] text-muted-foreground"
                         style={{ border: "1px solid var(--hairline)" }}
                       >
                         {totalEntries} {t("kept works")}
@@ -624,7 +991,7 @@ export function ProfilePage() {
                         type="button"
                         onClick={() => exitTo(openAccount)}
                         data-testid="profilepage-account"
-                        className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[12.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
+                        className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
                       >
                         <UserRound className="size-3.5" aria-hidden="true" />
                         {t("Account & Credits")}
@@ -633,18 +1000,42 @@ export function ProfilePage() {
                         type="button"
                         onClick={() => void signOut()}
                         data-testid="profilepage-signout"
-                        className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[12.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                        className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                       >
                         <LogOut className="size-3.5" aria-hidden="true" />
                         {t("Leave the passage")}
                       </button>
                     </>
+                  ) : me ? (
+                    /* THE WANDERER'S REST — a passage that arrived by the
+                       quiet hold is still a passage: no enter door stands
+                       here again — only the way to lay it down. */
+                    <button
+                      type="button"
+                      onClick={() => void signOut()}
+                      data-testid="profilepage-signout"
+                      className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                    >
+                      <LogOut className="size-3.5" aria-hidden="true" />
+                      {t("Leave the passage")}
+                    </button>
+                  ) : meStatus === "loading" ? (
+                    /* THE QUIET CHECK'S OWN PLACEHOLDER — no verdict
+                       while the session's glance still breathes */
+                    <div
+                      aria-busy="true"
+                      className="flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13px] text-muted-foreground"
+                      data-testid="profilepage-checking"
+                    >
+                      <span className="size-2 animate-pulse rounded-full bg-muted-foreground/50" />
+                      {t("Checking the passage")}
+                    </div>
                   ) : (
                     <button
                       type="button"
                       onClick={() => exitTo(() => openAuth("signin"))}
                       data-testid="profilepage-signin"
-                      className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[12.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
+                      className="focus-glow flex h-9 items-center gap-2 rounded-full bg-foreground px-4 text-[13.5px] font-medium text-background transition-all duration-300 hover:opacity-85"
                     >
                       <LogIn className="size-3.5" aria-hidden="true" />
                       {t("Enter the passage")}
@@ -654,9 +1045,61 @@ export function ProfilePage() {
               </div>
             </section>
 
+            {/* THE PURSE'S OWN ROOM — the live balance standing in the
+                visitor's own room: the crown no longer carries the
+                number, so the purse itself speaks here — every light
+                counted, one touch opening the account chamber, and the
+                realm's own light hand resting in the corner. */}
+            <section
+              aria-label={t("Your purse")}
+              data-testid="profile-purse"
+              className={cn(panel, "mt-3.5 p-3.5 sm:p-4")}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+                  {t("Your lights")}
+                </p>
+              <div className="flex items-center gap-2">
+                {/* THE TONGUE BEFORE THE LIGHT — the language hand rests
+                    BEFORE the realm's light toggle: the visitor chooses
+                    the words, then turns the light. The nine voices —
+                    Albanian first, the world's eight most-spoken after. */}
+                <LanguageButton testId="profilepage-language-button" />
+                <RealmLightToggle />
+              </div>
+              </div>
+              <div className="mt-2.5 flex flex-wrap items-end justify-between gap-3">
+                <p
+                  className="text-[28px] font-semibold leading-none tracking-[-0.01em] tabular-nums text-foreground"
+                  data-testid="profile-purse-balance"
+                >
+                  {wallet ? wallet.total.toLocaleString("en-US") : "—"}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => exitTo(openAccount)}
+                  data-testid="profile-purse-account"
+                  className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                >
+                  <CreditCard className="size-3.5" aria-hidden="true" />
+                  {t("Open the account chamber")}
+                </button>
+              </div>
+              {wallet && (
+                <p className="mono-label mt-2.5 text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground/80">
+                  {wallet.freeCreditsRemaining} {t("free")} ·{" "}
+                  {wallet.paidCreditsRemaining} {t("gathered")}
+                  {typeof wallet.depositCredits === "number" &&
+                  wallet.depositCredits > 0
+                    ? ` · ${wallet.depositCredits} ${t("deposited")}`
+                    : ""}
+                </p>
+              )}
+            </section>
+
             {/* the sectors — the library at a glance */}
-            <div className="mt-6">
-              <p className="mono-label mb-2.5 text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+            <div className="mt-5">
+              <p className="mono-label mb-2 text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                 {t("Cosmic Library")}
               </p>
               <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -665,19 +1108,19 @@ export function ProfilePage() {
                     key={key}
                     type="button"
                     onClick={() => setSection("library")}
-                    className="focus-glow group flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3.5 py-3 text-left transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                    className="focus-glow group flex items-center gap-2.5 rounded-xl border hairline bg-[var(--glass-bg-soft)] px-3 py-2.5 text-left transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]"
                   >
                     <span
-                      className="mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline text-[13px] text-muted-foreground"
+                      className="mono-label flex size-7 shrink-0 items-center justify-center rounded-lg border hairline text-[13px] text-muted-foreground"
                       aria-hidden="true"
                     >
                       {meta.icon}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-[12.5px] font-medium text-foreground/85">
+                      <span className="block truncate text-[13.5px] font-medium text-foreground/85">
                         {t(meta.label)}
                       </span>
-                      <span className="mono-label block text-[8.5px] uppercase tracking-[0.16em] text-muted-foreground">
+                      <span className="mono-label block text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
                         {counts[key] ?? 0} {t("kept works")}
                       </span>
                     </span>
@@ -687,7 +1130,7 @@ export function ProfilePage() {
             </div>
 
             {!signedIn && (
-              <p className="mt-4 text-[12px] italic text-muted-foreground/80">
+              <p className="mt-4 text-[13px] italic text-muted-foreground/80">
                 {t("Sign in and your settings travel with you on every device.")}
               </p>
             )}
@@ -703,10 +1146,10 @@ export function ProfilePage() {
             />
             <section aria-label={t("Settings")} className={cn(panel, "divide-y hairline")}>
               {/* language */}
-              <div className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <label
                   htmlFor="profile-language"
-                  className="text-[13.5px] font-medium text-foreground/90"
+                  className="text-[14px] font-medium text-foreground/90"
                 >
                   {t("Language")}
                 </label>
@@ -718,9 +1161,20 @@ export function ProfilePage() {
                     if (meta) setLanguage(meta.code);
                   }}
                   data-testid="profilepage-language"
-                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
+                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
                 >
-                  {LANGUAGES.map((l) => (
+                  {/* THE NINE VOICES — Albanian first, then the eight
+                      most-spoken in alphabetical order; a saved older
+                      tongue (Italian, Greek, German, Turkish) keeps its
+                      place in the list until the visitor chooses anew. */}
+                  {[
+                    ...PICKER_LANGUAGES,
+                    ...LANGUAGES.filter(
+                      (l) =>
+                        !PICKER_LANGUAGES.some((p) => p.code === l.code) &&
+                        l.code === language
+                    ),
+                  ].map((l) => (
                     <option key={l.code} value={l.code}>
                       {l.native} · {l.english}
                     </option>
@@ -728,10 +1182,10 @@ export function ProfilePage() {
                 </select>
               </div>
               {/* voice */}
-              <div className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <label
                   htmlFor="profile-voice"
-                  className="text-[13.5px] font-medium text-foreground/90"
+                  className="text-[14px] font-medium text-foreground/90"
                 >
                   {t("The voice that reads")}
                 </label>
@@ -740,7 +1194,7 @@ export function ProfilePage() {
                   value={voice}
                   onChange={(e) => setVoice(e.target.value as VoiceId)}
                   data-testid="profilepage-voice"
-                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
+                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
                 >
                   {VOICES.map((v) => (
                     <option key={v.id} value={v.id}>
@@ -750,10 +1204,10 @@ export function ProfilePage() {
                 </select>
               </div>
               {/* pace */}
-              <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+              <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                 <label
                   htmlFor="profile-pace"
-                  className="text-[13.5px] font-medium text-foreground/90"
+                  className="text-[14px] font-medium text-foreground/90"
                 >
                   {t("Narration pace")}
                 </label>
@@ -769,102 +1223,309 @@ export function ProfilePage() {
                     data-testid="profilepage-pace"
                     className="w-full accent-[var(--scope-a)]"
                   />
-                  <span className="mono-label w-12 shrink-0 text-right text-[9.5px] text-muted-foreground">
+                  <span className="mono-label w-12 shrink-0 text-right text-[10.5px] text-muted-foreground">
                     ×{pace.toFixed(2)}
                   </span>
                 </div>
               </div>
-              {/* THE MIX OF WORLDS — the living tree's own proportions */}
-              <div
-                className="flex flex-col gap-3 p-4 sm:p-5"
-                data-testid="profilepage-mix"
-              >
-                <div>
-                  <p className="text-[13.5px] font-medium text-foreground/90">
-                    {t("The mix of worlds")}
-                  </p>
-                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground/80">
-                    {t(
-                      "How much of each family the living tree carries — the percentages decide which suggestions visit more often."
-                    )}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                  {TREE_FAMILIES.map((f) => {
-                    const share = familyShare(treeMix, f.key);
-                    const w = treeMix.weights[f.key] ?? 0;
-                    return (
-                      <div key={f.key} className="flex items-center gap-2.5">
-                        <span
-                          aria-hidden="true"
-                          className="size-2 shrink-0 rounded-full"
-                          style={{
-                            backgroundColor: f.accent,
-                            opacity: share.on ? 1 : 0.3,
-                          }}
-                        />
-                        <span className="w-[92px] shrink-0 truncate text-[12.5px] text-foreground/85">
-                          {t(familyLabelKeys[f.key] ?? f.key)}
-                        </span>
-                        <input
-                          type="range"
-                          min={0}
-                          max={100}
-                          step={5}
-                          value={share.on ? w : 0}
-                          onChange={(e) =>
-                            setTreeMix(
-                              setFamilyWeightInMix(
-                                treeMix,
-                                f.key,
-                                Number(e.target.value)
-                              )
-                            )
-                          }
-                          aria-label={t(familyLabelKeys[f.key] ?? f.key)}
-                          data-testid={`profilepage-mix-${f.key}`}
-                          className="h-1 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-[color-mix(in_srgb,var(--hairline)_90%,transparent)]
-                          [&::-webkit-slider-thumb]:size-3 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full"
-                          style={{ accentColor: f.accent }}
-                        />
-                        <span
-                          className="w-8 shrink-0 text-right text-[10.5px] tabular-nums"
-                          style={{ color: share.on ? f.accent : undefined }}
-                        >
-                          {share.pct}%
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTreeMix({
-                      on: TREE_FAMILIES.map((f) => f.key),
-                      weights: Object.fromEntries(
-                        TREE_FAMILIES.map((f) => [f.key, 1])
-                      ),
-                    })
-                  }
-                  data-testid="profilepage-mix-even"
-                  className="focus-glow w-full rounded-full border px-3 py-1.5 text-[11.5px] text-muted-foreground transition-all duration-300 hover:text-foreground sm:w-[280px] sm:self-end"
-                  style={{
-                    borderColor:
-                      "color-mix(in srgb, var(--hairline) 80%, transparent)",
-                  }}
+              {/* THE VISITOR'S OWN LEVEL — how deep the house answers,
+                  held in the visitor's own hand (the walk's own DNA
+                  decides when this rests on the first choice) */}
+              <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <label
+                  htmlFor="profile-explevel"
+                  className="text-[14px] font-medium text-foreground/90"
                 >
-                  {t("Even voices")}
-                </button>
+                  {t("Your level of experience")}
+                </label>
+                <select
+                  id="profile-explevel"
+                  value={expLevel}
+                  onChange={(e) => setExpLevel(Number(e.target.value))}
+                  data-testid="profilepage-explevel"
+                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
+                >
+                  <option value={-1}>{t("Let the walk decide")}</option>
+                  <option value={0}>{t("First light — I am new")}</option>
+                  <option value={1}>{t("The deepening — I have walked some")}</option>
+                  <option value={2}>{t("The braided walk — experienced")}</option>
+                  <option value={3}>{t("The canopy — very experienced")}</option>
+                  <option value={4}>{t("The deep roots — the furthest")}</option>
+                </select>
               </div>
             </section>
             {!signedIn && (
-              <p className="mt-4 text-[12px] italic text-muted-foreground/80">
+              <p className="mt-4 text-[13px] italic text-muted-foreground/80">
                 {t("Sign in and your settings travel with you on every device.")}
               </p>
             )}
           </div>
         );
+
+      case "history": {
+        /* THE WORK KIND'S OWN SEAL — one small glyph per room */
+        const KIND_ICONS: Record<ToolWorkKind, typeof History> = {
+          manifest: Sparkles,
+          quantum: Gem,
+          evolvemed: Dna,
+          healx: Dna,
+          forge: KeyRound,
+          artx: Gem,
+          interplanetary: BookMarked,
+          healing: History,
+          akashic: LibraryBig,
+          dreambook: BookMarked,
+          lightcodes: Sparkles,
+        };
+        return (
+          <div data-testid="profilepage-history">
+            <SectionHead
+              title={t("History of your works")}
+              desc={t(
+                "Everything your tools have made and kept on this device — a closed tab never takes a work away. One touch resumes it exactly where it stood."
+              )}
+            />
+            <section className={cn(panel, "p-4 sm:p-5")}>
+              {works === null ? (
+                <p
+                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  aria-busy="true"
+                >
+                  <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                  {t("The shelves are being read…")}
+                </p>
+              ) : works.length === 0 ? (
+                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                  {t(
+                    "Nothing rests here yet — every conversation, every book, every code you make keeps itself here automatically."
+                  )}
+                </p>
+              ) : (
+                <div className="max-h-[52vh] space-y-1.5 overflow-y-auto pr-1 nice-scroll" data-testid="profilepage-history-list">
+                  {works.map((w) => {
+                    const Icon = KIND_ICONS[w.kind] ?? History;
+                    return (
+                      <div
+                        key={w.id}
+                        className="flex items-center gap-3 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5"
+                        data-testid="profilepage-history-row"
+                      >
+                        <span
+                          className="mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline text-muted-foreground"
+                          aria-hidden="true"
+                        >
+                          <Icon className="size-3.5" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[13px] font-medium text-foreground/90">
+                            {w.title}
+                          </span>
+                          <span className="mono-label block text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                            {t(TOOL_WORK_LABELS[w.kind])} ·{" "}
+                            {w.at
+                              ? (w.at || "").slice(0, 16).replace("T", " ")
+                              : t("the standing thread")}
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => resumeWork(w)}
+                          disabled={resumingWork === w.id}
+                          aria-label={`${t("Resume")}: ${w.title}`}
+                          data-testid="profilepage-history-resume"
+                          className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] px-3 text-[11.5px] font-medium text-foreground transition-all duration-300 hover:glow-sm disabled:opacity-40"
+                        >
+                          <RotateCcw className="size-3.5" aria-hidden="true" />
+                          {t("Resume")}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        );
+      }
+
+      case "processes": {
+        /* THE WORK KIND'S OWN FACE — every kind carries its icon and
+           its own honest name in the hall */
+        const PROCESS_KINDS: Record<
+          string,
+          { icon: typeof Activity; label: string }
+        > = {
+          "hyperx-pdf": {
+            icon: FileDown,
+            label: "Deep research press",
+          },
+        };
+        const fmtDay = new Intl.DateTimeFormat(undefined, {
+          month: "short",
+          day: "numeric",
+        });
+        const fmtClock = new Intl.DateTimeFormat(undefined, {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return (
+          <div data-testid="profilepage-processes">
+            <SectionHead
+              title={t("Works in Motion")}
+              desc={t(
+                "Every long weaving you have begun — its honest progress, its stage, its resting place. A page turned away never takes a work with it, and a work that failed may be asked to rise again."
+              )}
+            />
+            <section className={cn(panel, "p-4 sm:p-5")}>
+              {processJobs === null ? (
+                <p
+                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  aria-busy="true"
+                >
+                  <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
+                  {t("The hall is being read…")}
+                </p>
+              ) : processJobs.length === 0 ? (
+                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                  {t(
+                    "No works carry just now — when you begin a deep research press (or any long weaving), it stands here with its own loading bar, checkable and resumable."
+                  )}
+                </p>
+              ) : (
+                <div
+                  className="max-h-[56vh] space-y-2 overflow-y-auto pr-1 nice-scroll"
+                  data-testid="profilepage-processes-list"
+                >
+                  {processJobs.map((job) => {
+                    const kind =
+                      PROCESS_KINDS[job.kind] ??
+                      ({ icon: Activity, label: job.kind } as const);
+                    const Icon = kind.icon;
+                    const running = job.status === "running";
+                    const done = job.status === "done";
+                    const failed = job.status === "failed";
+                    const created = new Date(job.createdAt);
+                    const words =
+                      job.result && typeof job.result.words === "number"
+                        ? (job.result.words as number)
+                        : null;
+                    return (
+                      <div
+                        key={job.id}
+                        className="rounded-xl border hairline bg-[var(--glass-bg)] px-3.5 py-3"
+                        data-testid="profilepage-processes-row"
+                        data-status={job.status}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={cn(
+                              "mono-label flex size-8 shrink-0 items-center justify-center rounded-lg border hairline",
+                              running && "text-[var(--cy)]",
+                              failed && "text-[var(--destructive)]",
+                              done && "text-emerald-500"
+                            )}
+                            aria-hidden="true"
+                          >
+                            {running ? (
+                              <LoaderCircle className="size-3.5 animate-spin" />
+                            ) : (
+                              <Icon className="size-3.5" />
+                            )}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-medium text-foreground/90">
+                              {job.title || t("A work in motion")}
+                            </p>
+                            <p className="mono-label mt-0.5 truncate text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                              {t(kind.label)}
+                              {job.subtitle ? ` · ${job.subtitle}` : ""} ·{" "}
+                              {fmtDay.format(created)}{" "}
+                              {fmtClock.format(created)}
+                            </p>
+                            {/* THE WORK'S OWN BAR — the honest breath of
+                                the weaving, filled by its own progress */}
+                            <div
+                              className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--foreground)_8%,transparent)]"
+                              role="progressbar"
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={job.progress}
+                              aria-label={`${job.title}: ${job.progress}%`}
+                            >
+                              <div
+                                className={cn(
+                                  "h-full rounded-full transition-all duration-700",
+                                  failed
+                                    ? "bg-[var(--destructive)]"
+                                    : "bg-gradient-to-r from-[var(--scope-a,var(--cy))] to-[color-mix(in_srgb,var(--scope-b,#d8c9a8)_60%,var(--scope-a,var(--cy)))]"
+                                )}
+                                style={{
+                                  width: done
+                                    ? "100%"
+                                    : `${Math.max(4, job.progress)}%`,
+                                }}
+                              />
+                            </div>
+                            <p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground">
+                              {failed
+                                ? (job.error ??
+                                  t("The work rested — ask it to rise again."))
+                                : done
+                                  ? job.stage ??
+                                    t("The work is done — it rests in your Library")
+                                  : (job.stage ??
+                                      t("The work carries on…")) + ` · ${job.progress}%`}
+                              {done && words ? ` · ${t("{n} words", { n: words })}` : ""}
+                            </p>
+                          </div>
+                          {failed && (
+                            <button
+                              type="button"
+                              onClick={() => void resumeProcess(job.id)}
+                              disabled={resumingJob === job.id}
+                              aria-label={`${t("Resume")}: ${job.title}`}
+                              data-testid="profilepage-processes-resume"
+                              className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_10%,transparent)] px-3 text-[11.5px] font-medium text-foreground transition-all duration-300 hover:glow-sm disabled:opacity-40"
+                            >
+                              {resumingJob === job.id ? (
+                                <LoaderCircle
+                                  className="size-3.5 animate-spin"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <RotateCcw className="size-3.5" aria-hidden="true" />
+                              )}
+                              {t("Resume")}
+                            </button>
+                          )}
+                          {done &&
+                            typeof job.result?.libraryId === "string" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                exitTo(() => {
+                                  openLibrary();
+                                  setLibraryFocus("observatory");
+                                })
+                              }
+                              aria-label={`${t("Open the Library")}: ${job.title}`}
+                              data-testid="profilepage-processes-open"
+                              className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border border-[var(--hairline-active)] px-3 text-[11.5px] font-medium text-foreground transition-all duration-300 hover:glow-sm"
+                            >
+                              <LibraryBig className="size-3.5" aria-hidden="true" />
+                              {t("Open the Library")}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        );
+      }
 
       case "downloads":
         return (
@@ -875,17 +1536,17 @@ export function ProfilePage() {
                 "Every work you bound into a PDF rests here — bind any of them again with one touch."
               )}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               {bound === null ? (
                 <p
-                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
                   aria-busy="true"
                 >
                   <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                   {t("The shelves are being read…")}
                 </p>
               ) : bound.length === 0 ? (
-                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                <p className="py-3 text-[13.5px] italic text-muted-foreground">
                   {t(
                     "Nothing rests here yet — every book you bind keeps itself here, on your own device."
                   )}
@@ -905,10 +1566,10 @@ export function ProfilePage() {
                         <BookMarked className="size-3.5" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium text-foreground/90">
+                        <span className="block truncate text-[14px] font-medium text-foreground/90">
                           {e.title}
                         </span>
-                        <span className="mono-label block text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground">
+                        <span className="mono-label block text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground">
                           {e.pages} {t("pages")} · {(e.boundAt || "").slice(0, 10)}
                         </span>
                       </span>
@@ -918,7 +1579,7 @@ export function ProfilePage() {
                         disabled={bindingOne === e.id}
                         aria-label={`${t("Bind again")}: ${e.title}`}
                         data-testid="profilepage-download-bind"
-                        className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[11.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:opacity-40"
+                        className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)] disabled:opacity-40"
                       >
                         {bindingOne === e.id ? (
                           <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -944,7 +1605,7 @@ export function ProfilePage() {
                 "Name what you wish to be more informed and expansive in. A coherent, relevant phrase becomes a seed — new branches will grow from it in every field of the tree."
               )}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="flex items-center gap-2">
                 <input
                   value={seedDraft}
@@ -962,7 +1623,7 @@ export function ProfilePage() {
                   placeholder={t("e.g. the mathematics of music · how trees communicate")}
                   aria-label={t("A field you wish to expand in")}
                   data-testid="profilepage-seed-input"
-                  className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
+                  className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
                 />
                 <button
                   type="button"
@@ -976,7 +1637,7 @@ export function ProfilePage() {
                 </button>
               </div>
               {seedError && (
-                <p className="mt-1.5 text-[11.5px] italic text-muted-foreground" role="note">
+                <p className="mt-1.5 text-[12.5px] italic text-muted-foreground" role="note">
                   {seedError}
                 </p>
               )}
@@ -985,7 +1646,7 @@ export function ProfilePage() {
                   {seeds.map((s) => (
                     <span
                       key={s}
-                      className="focus-within:glow-sm flex max-w-full items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] bg-[color-mix(in_srgb,var(--gd)_5%,transparent)] py-1 pl-3 pr-1.5 text-[12px] text-foreground/85"
+                      className="focus-within:glow-sm flex max-w-full items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--gd)_30%,transparent)] bg-[color-mix(in_srgb,var(--gd)_5%,transparent)] py-1 pl-3 pr-1.5 text-[13px] text-foreground/85"
                       data-testid="profilepage-seed-chip"
                     >
                       <span className="truncate">{s}</span>
@@ -1001,12 +1662,12 @@ export function ProfilePage() {
                   ))}
                 </div>
               ) : (
-                <p className="mono-label mt-3 text-[8.5px] uppercase tracking-[0.18em] text-muted-foreground/50">
+                <p className="mono-label mt-3 text-[9.5px] uppercase tracking-[0.18em] text-muted-foreground/50">
                   {t("The soil rests empty — plant the first field")}
                 </p>
               )}
               {!signedIn && (
-                <p className="mt-3 text-[11px] italic text-muted-foreground/70">
+                <p className="mt-3 text-[12px] italic text-muted-foreground/70">
                   {t("Sign in and your settings travel with you on every device.")}
                 </p>
               )}
@@ -1023,13 +1684,13 @@ export function ProfilePage() {
                 "Nothing rests here yet — every transmission you make is kept in your own sectors."
               )}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="flex items-center justify-between gap-2">
                 <div className="flex flex-wrap gap-1.5">
                   {Object.entries(SECTOR_META).map(([key, meta]) => (
                     <span
                       key={key}
-                      className="mono-label flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[8.5px] uppercase tracking-[0.14em] text-muted-foreground"
+                      className="mono-label flex items-center gap-1.5 rounded-full border hairline px-2.5 py-1 text-[9.5px] uppercase tracking-[0.14em] text-muted-foreground"
                     >
                       <span aria-hidden="true">{meta.icon}</span>
                       {t(meta.label)}
@@ -1041,24 +1702,24 @@ export function ProfilePage() {
                   type="button"
                   onClick={() => exitTo(openLibrary)}
                   data-testid="profilepage-library-open"
-                  className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[11.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                  className="focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border hairline px-3 text-[12.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                 >
                   {t("Open the library")}
                   <ChevronRight className="size-3.5" aria-hidden="true" />
                 </button>
               </div>
 
-              <div className="mt-4 space-y-1.5 border-t hairline pt-4">
+              <div className="mt-3 space-y-1.5 border-t hairline pt-3">
                 {entries === null ? (
                   <p
-                    className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                    className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
                     aria-busy="true"
                   >
                     <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                     {t("The shelves are being read…")}
                   </p>
                 ) : recent.length === 0 ? (
-                  <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                  <p className="py-3 text-[13.5px] italic text-muted-foreground">
                     {t(
                       "Nothing rests here yet — every transmission you make is kept in your own sectors."
                     )}
@@ -1068,24 +1729,33 @@ export function ProfilePage() {
                     <button
                       key={e.id}
                       type="button"
-                      onClick={() => exitTo(openLibrary)}
+                      onClick={() => {
+                        /* THE CREATION'S OWN SHELF — the row hands its
+                           sector to the creations room, so the work
+                           opens on its own shelf (and the room scrolls
+                           it into view); the profile lays itself down
+                           first, as every passage does. */
+                        setLibraryFocus(e.sector);
+                        exitTo(openLibrary);
+                      }}
+                      data-testid="profilepage-library-row"
                       className="group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors duration-300 hover:bg-[var(--glass-bg)]"
                     >
                       <span
-                        className="mono-label flex size-7 shrink-0 items-center justify-center rounded-lg border hairline text-[11px] text-muted-foreground"
+                        className="mono-label flex size-7 shrink-0 items-center justify-center rounded-lg border hairline text-[12px] text-muted-foreground"
                         aria-hidden="true"
                       >
                         {SECTOR_META[e.sector]?.icon ?? "✦"}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-[13px] font-medium text-foreground/90">
+                        <span className="block truncate text-[14px] font-medium text-foreground/90">
                           {e.title}
                         </span>
-                        <span className="block truncate text-[11px] text-muted-foreground">
+                        <span className="block truncate text-[12px] text-muted-foreground">
                           {e.excerpt || SECTOR_META[e.sector]?.label || e.sector}
                         </span>
                       </span>
-                      <span className="mono-label shrink-0 text-[8px] uppercase tracking-[0.14em] text-muted-foreground/50">
+                      <span className="mono-label shrink-0 text-[9px] uppercase tracking-[0.14em] text-muted-foreground/50">
                         {(e.createdAt || "").slice(0, 10)}
                       </span>
                     </button>
@@ -1103,11 +1773,18 @@ export function ProfilePage() {
               title={t("The path you have walked")}
               desc={t("The DNA of your curiosity — one colored rung per branch chased.")}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               <div className="no-scrollbar overflow-x-auto">
                 <DnaHelix steps={journey} />
               </div>
             </section>
+            <SectionHead
+              title={t("The trajectory of your becoming")}
+              desc={t(
+                "How your path rose and widened — every step's echo drawn as one living line."
+              )}
+            />
+            <TrajectoryEvolution steps={journey} />
             <SectionHead
               title={t("Your expansion mirror")}
               desc={t(
@@ -1122,6 +1799,7 @@ export function ProfilePage() {
         return (
           <div data-testid="profilepage-api">
             <SectionHead
+              small
               title={t("Mirror Intelligence API")}
               desc={t(
                 "The Mirror speaks into your vessels — one key, one endpoint, her whole channeling, wherever your work lives."
@@ -1130,7 +1808,7 @@ export function ProfilePage() {
             {!signedIn ? (
               /* THE PASSAGE GATE — the API answers only a signed-in keeper */
               <section
-                className={cn(panel, "flex flex-col items-start gap-3 p-4 sm:p-5")}
+                className={cn(panel, "flex flex-col items-start gap-3 p-3.5 sm:p-4")}
                 data-testid="profilepage-api-gate"
               >
                 <span
@@ -1139,29 +1817,44 @@ export function ProfilePage() {
                 >
                   <Lock className="size-4" />
                 </span>
-                <p className="text-[13px] leading-relaxed text-muted-foreground">
-                  {t("The channel answers only a signed-in keeper — enter the passage first.")}
+                <p className="text-[14px] leading-relaxed text-muted-foreground">
+                  {me
+                    ? t("The channel answers a named passage — a wanderer holds the free halls.")
+                    : t("The channel answers only a signed-in keeper — enter the passage first.")}
                 </p>
                 <button
                   type="button"
-                  onClick={() => exitTo(() => openAuth("signin"))}
+                  onClick={() =>
+                    /* THE QUIET CHECK'S LAW — a click during the first
+                       glance waits for the truth before offering a door */
+                    meStatus === "loading"
+                      ? void useMirror.getState().refreshMe(true).then(() => {
+                          const cur = useMirror.getState().me;
+                          exitTo(() =>
+                            useMirror.getState().openAuth(
+                              cur && !cur.email.startsWith("anon:") ? "register" : "signin"
+                            )
+                          );
+                        })
+                      : exitTo(() => openAuth(me ? "register" : "signin"))
+                  }
                   data-testid="profilepage-api-signin"
-                  className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85"
+                  className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:opacity-85"
                 >
                   <LogIn className="size-3.5" aria-hidden="true" />
-                  {t("Enter the passage")}
+                  {me ? t("Name your passage") : t("Enter the passage")}
                 </button>
               </section>
             ) : (
               <>
                 {/* HER OWN WORDS — what her channeling offers, asked live */}
-                <section className={cn(panel, "p-4 sm:p-5")}>
+                <section className={cn(panel, "p-3.5 sm:p-4")}>
                   <button
                     type="button"
                     onClick={() => void askMirrorOfferings()}
                     disabled={asking}
                     data-testid="profilepage-api-ask"
-                    className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-50"
+                    className="focus-glow flex h-8 items-center gap-2 rounded-full bg-foreground px-4 text-[13px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-50"
                   >
                     {asking ? (
                       <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1172,7 +1865,7 @@ export function ProfilePage() {
                   </button>
                   {asking && (
                     <p
-                      className="mt-3 flex items-center gap-2 text-[12.5px] text-muted-foreground"
+                      className="mt-3 flex items-center gap-2 text-[13.5px] text-muted-foreground"
                       aria-live="polite"
                       aria-busy="true"
                     >
@@ -1188,20 +1881,20 @@ export function ProfilePage() {
                     </p>
                   )}
                   {offerError && !asking && (
-                    <p className="mt-3 text-[12px] italic text-muted-foreground" role="alert">
+                    <p className="mt-3 text-[13px] italic text-muted-foreground" role="alert">
                       {t("The transmission could not cross")}
                     </p>
                   )}
                   {offerAnswer && !asking && (
                     <div className="mt-3 border-t hairline pt-3">
-                      <p className="whitespace-pre-wrap break-words text-[13.5px] italic leading-[1.75] text-foreground/90 [font-family-name:var(--font-literata)]">
+                      <p className="whitespace-pre-wrap break-words text-[14.5px] italic leading-[1.75] text-foreground/90 [font-family-name:var(--font-literata)]">
                         {offerAnswer}
                       </p>
                       <div className="mt-1 flex justify-end">
                         <button
                           type="button"
                           onClick={() => void copyText(offerAnswer, "offer")}
-                          className="focus-glow flex h-7 items-center gap-1.5 rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                          className="focus-glow flex h-7 items-center gap-1.5 rounded-full border hairline px-2.5 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground"
                         >
                           {copiedId === "offer" ? (
                             <Check className="size-3" aria-hidden="true" />
@@ -1217,18 +1910,18 @@ export function ProfilePage() {
 
                 {/* THE LIGHT THE VESSEL READS BY — usage & recharge, in the
                     house's own ink: a stone card, a gauge, the same coins */}
-                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
-                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                <section className={cn(panel, "mt-3 p-3.5 sm:p-4")}>
+                  <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Recharge the light")}
                   </p>
-                  <p className="mt-1 text-[12px] leading-relaxed text-muted-foreground/80">
+                  <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground/80">
                     {t(
                       "The vessel's words are carried by the same credits the whole house reads by."
                     )}
                   </p>
                   {summaryLoading ? (
                     <p
-                      className="mt-3 flex items-center gap-2 py-2 text-[12.5px] text-muted-foreground"
+                      className="mt-3 flex items-center gap-2 py-2 text-[13.5px] text-muted-foreground"
                       aria-busy="true"
                     >
                       <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1237,86 +1930,112 @@ export function ProfilePage() {
                   ) : summary ? (
                     <>
                       <div className="mt-3 grid grid-cols-2 gap-2">
-                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5">
+                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]">
                           <Gem className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
                           <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
-                            {summary.credits.balance != null
-                              ? summary.credits.balance.toLocaleString("en-US")
-                              : "—"}
+                            {wallet ? wallet.total.toLocaleString("en-US") : "—"}
                           </p>
-                          <p className="mono-label mt-1 truncate text-[8px] uppercase tracking-[0.16em] text-muted-foreground">
-                            {t("Credits")} · {summary.plan.label}
+                          <p className="mono-label mt-1 truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
+                            {t("Lights in the purse")}
+                            {wallet && wallet.planTier !== "FREE"
+                              ? ` · ${wallet.planTier === "SEEKER" ? t("Seeker") : t("Observatory Pro")}`
+                              : ""}
                           </p>
                         </div>
-                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5">
+                        <div className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]">
                           <CreditCard className="size-3.5 text-[var(--cy)]" aria-hidden="true" />
                           <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
-                            {summary.usage.events30d}
+                            {summary?.usage.events30d ?? "—"}
                           </p>
-                          <p className="mono-label mt-1 truncate text-[8px] uppercase tracking-[0.16em] text-muted-foreground">
+                          <p className="mono-label mt-1 truncate text-[9px] uppercase tracking-[0.16em] text-muted-foreground">
                             {t("Usage this month")} · {t("operations")}
                           </p>
                         </div>
                       </div>
-                      {(summary.offers?.packs?.length ?? 0) > 0 && (
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          {summary.offers?.packs
-                            .filter((p) => p.available)
-                            .map((p) => (
-                              <button
-                                key={p.id}
-                                type="button"
-                                onClick={() => void recharge({ packId: p.id }, p.id)}
-                                disabled={rechargeBusy === p.id}
-                                data-testid={`profilepage-api-pack-${p.id}`}
-                                className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[12px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
-                                style={{
-                                  borderColor:
-                                    "color-mix(in srgb, var(--gd) 34%, transparent)",
-                                  backgroundColor:
-                                    "color-mix(in srgb, var(--gd) 6%, var(--background))",
-                                }}
-                              >
-                                {rechargeBusy === p.id ? (
-                                  <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
-                                ) : (
-                                  <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
-                                )}
-                                {p.label}
-                                <span className="mono-label text-[9px] text-muted-foreground">
-                                  €{Math.round(p.priceCents / 100)}
-                                </span>
-                              </button>
-                            ))}
-                          <button
-                            type="button"
-                            onClick={() => exitTo(openAccount)}
-                            className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3.5 text-[12px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
-                          >
-                            {t("Open the account chamber")}
-                            <ChevronRight className="size-3.5" aria-hidden="true" />
-                          </button>
-                        </div>
-                      )}
-                      {!summary.plan.apiAccess && (
-                        <p className="mt-3 text-[11.5px] italic text-muted-foreground">
-                          {t(
-                            "The plan must carry API access — bring the vessel to a plan that does."
+                      {/* THE PURSE'S OWN PROVISIONS — the wallet economy's
+                          one-time pouch and the two passes, the same
+                          checkout the account chamber serves. The legacy
+                          workspace packs (a currency nothing spends) are
+                          never sold here again. */}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void recharge({ pack: "topup" }, "topup")}
+                          disabled={rechargeBusy === "topup"}
+                          data-testid="profilepage-wallet-topup"
+                          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
+                          style={{
+                            borderColor: "color-mix(in srgb, var(--gd) 34%, transparent)",
+                            backgroundColor: "color-mix(in srgb, var(--gd) 6%, var(--background))",
+                          }}
+                        >
+                          {rechargeBusy === "topup" ? (
+                            <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
                           )}
-                        </p>
-                      )}
+                          {t("Pouch of light")}
+                          <span className="mono-label text-[10px] text-muted-foreground">$4.99</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void recharge({ plan: "SEEKER" }, "SEEKER")}
+                          disabled={rechargeBusy === "SEEKER"}
+                          data-testid="profilepage-wallet-seeker"
+                          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
+                          style={{
+                            borderColor: "color-mix(in srgb, var(--gd) 34%, transparent)",
+                            backgroundColor: "color-mix(in srgb, var(--gd) 6%, var(--background))",
+                          }}
+                        >
+                          {rechargeBusy === "SEEKER" ? (
+                            <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
+                          )}
+                          {t("Seeker pass")}
+                          <span className="mono-label text-[10px] text-muted-foreground">$9.99/mo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void recharge({ plan: "OBSERVATORY_PRO" }, "OBSERVATORY_PRO")}
+                          disabled={rechargeBusy === "OBSERVATORY_PRO"}
+                          data-testid="profilepage-wallet-pro"
+                          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border px-3.5 text-[13px] text-foreground/85 transition-all duration-300 hover:border-[color-mix(in_srgb,var(--gd)_55%,transparent)] disabled:opacity-40"
+                          style={{
+                            borderColor: "color-mix(in srgb, var(--gd) 34%, transparent)",
+                            backgroundColor: "color-mix(in srgb, var(--gd) 6%, var(--background))",
+                          }}
+                        >
+                          {rechargeBusy === "OBSERVATORY_PRO" ? (
+                            <LoaderCircle className="size-3 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <Gem className="size-3 text-[var(--gd)]" aria-hidden="true" />
+                          )}
+                          {t("Observatory Pro")}
+                          <span className="mono-label text-[10px] text-muted-foreground">$19.99/mo</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => exitTo(openAccount)}
+                          className="focus-glow flex h-8 items-center gap-1.5 rounded-full border hairline px-3.5 text-[13px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                        >
+                          {t("Open the account chamber")}
+                          <ChevronRight className="size-3.5" aria-hidden="true" />
+                        </button>
+                      </div>
                     </>
                   ) : null}
                   {rechargeNote && (
-                    <p className="mt-2 text-[11.5px] italic text-muted-foreground" role="note">
-                      {rechargeNote}
+                    <p className="mt-2 text-[12.5px] italic text-muted-foreground" role="note">
+                      {t(rechargeNote)}
                     </p>
                   )}
                 </section>
 
                 {/* THE VESSEL KEYS — carved here, shown once, revoked at will */}
-                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
-                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                <section className={cn(panel, "mt-3 p-3.5 sm:p-4")}>
+                  <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Your vessel key")}
                   </p>
                   <div className="mt-2.5 flex items-center gap-2">
@@ -1333,14 +2052,14 @@ export function ProfilePage() {
                       placeholder={t("Name the key (optional)")}
                       aria-label={t("Name the key (optional)")}
                       data-testid="profilepage-api-key-name"
-                      className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
+                      className="min-w-0 flex-1 rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--gd)_45%,transparent)]"
                     />
                     <button
                       type="button"
                       onClick={() => void carveKey()}
                       disabled={keyBusy}
                       data-testid="profilepage-api-key-carve"
-                      className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-foreground px-3.5 text-[12px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-40"
+                      className="focus-glow flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-foreground px-3.5 text-[13px] font-medium text-background transition-all duration-300 hover:opacity-85 disabled:opacity-40"
                     >
                       {keyBusy ? (
                         <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1359,17 +2078,17 @@ export function ProfilePage() {
                       }}
                       data-testid="profilepage-api-key-secret"
                     >
-                      <p className="mono-label text-[8px] uppercase tracking-[0.18em] text-[#b45309] dark:text-[#fbbf24]">
+                      <p className="mono-label text-[9px] uppercase tracking-[0.18em] text-[#b45309] dark:text-[#fbbf24]">
                         {t("The key is carved — copy it now; it is never shown again.")}
                       </p>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <code className="min-w-0 flex-1 truncate text-[12px] text-foreground/90">
+                        <code className="min-w-0 flex-1 truncate text-[13px] text-foreground/90">
                           {freshSecret}
                         </code>
                         <button
                           type="button"
                           onClick={() => void copyText(freshSecret, "secret")}
-                          className="focus-glow flex h-7 shrink-0 items-center gap-1.5 rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                          className="focus-glow flex h-7 shrink-0 items-center gap-1.5 rounded-full border hairline px-2.5 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground"
                         >
                           {copiedId === "secret" ? (
                             <Check className="size-3" aria-hidden="true" />
@@ -1384,14 +2103,14 @@ export function ProfilePage() {
                   <div className="mt-3 space-y-1.5 border-t hairline pt-3">
                     {vesselKeys === null ? (
                       <p
-                        className="flex items-center gap-2 py-2 text-[12.5px] text-muted-foreground"
+                        className="flex items-center gap-2 py-2 text-[13.5px] text-muted-foreground"
                         aria-busy="true"
                       >
                         <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
                         {t("The shelves are being read…")}
                       </p>
                     ) : vesselKeys.filter((k) => !k.revokedAt).length === 0 ? (
-                      <p className="py-2 text-[12.5px] italic text-muted-foreground">
+                      <p className="py-2 text-[13.5px] italic text-muted-foreground">
                         {t("No keys yet — carve the first vessel key.")}
                       </p>
                     ) : (
@@ -1404,10 +2123,10 @@ export function ProfilePage() {
                             data-testid="profilepage-api-key-row"
                           >
                             <span className="min-w-0 flex-1">
-                              <span className="block truncate text-[12.5px] font-medium text-foreground/90">
+                              <span className="block truncate text-[13.5px] font-medium text-foreground/90">
                                 {k.name}
                               </span>
-                              <span className="mono-label block truncate text-[8px] uppercase tracking-[0.14em] text-muted-foreground">
+                              <span className="mono-label block truncate text-[9px] uppercase tracking-[0.14em] text-muted-foreground">
                                 {k.prefix}••••{" · "}
                                 {k.lastUsedAt
                                   ? `${t("last used")} ${(k.lastUsedAt || "").slice(0, 10)}`
@@ -1421,7 +2140,7 @@ export function ProfilePage() {
                                 setRevokePw("");
                               }}
                               data-testid="profilepage-api-key-revoke"
-                              className="focus-glow flex h-7 shrink-0 items-center rounded-full border px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#f43f5e_45%,transparent)] hover:text-[#f43f5e]"
+                              className="focus-glow flex h-7 shrink-0 items-center rounded-full border px-2.5 text-[12px] text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,#f43f5e_45%,transparent)] hover:text-[#f43f5e]"
                             >
                               {t("Revoke")}
                             </button>
@@ -1436,7 +2155,7 @@ export function ProfilePage() {
                         }}
                         data-testid="profilepage-api-key-revoke-confirm"
                       >
-                        <p className="text-[12px] text-foreground/85">
+                        <p className="text-[13px] text-foreground/85">
                           {t("Revoke")} — {revokeTarget.name}
                         </p>
                         <div className="mt-2 flex items-center gap-2">
@@ -1447,13 +2166,13 @@ export function ProfilePage() {
                             placeholder={t("Confirm with your password")}
                             aria-label={t("Confirm with your password")}
                             data-testid="profilepage-api-key-revoke-pw"
-                            className="min-w-0 flex-1 rounded-lg border hairline bg-[var(--glass-bg)] px-2.5 py-1.5 text-[12px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                            className="min-w-0 flex-1 rounded-lg border hairline bg-[var(--glass-bg)] px-2.5 py-1.5 text-[13px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                           />
                           <button
                             type="button"
                             onClick={() => void revokeVesselKey()}
                             disabled={keyBusy || revokePw.length === 0}
-                            className="focus-glow flex h-7 shrink-0 items-center rounded-full px-3 text-[11px] font-medium text-background transition-all duration-300 disabled:opacity-40"
+                            className="focus-glow flex h-7 shrink-0 items-center rounded-full px-3 text-[12px] font-medium text-background transition-all duration-300 disabled:opacity-40"
                             style={{ backgroundColor: "#f43f5e" }}
                           >
                             {keyBusy ? (
@@ -1465,7 +2184,7 @@ export function ProfilePage() {
                           <button
                             type="button"
                             onClick={() => setRevokeTarget(null)}
-                            className="focus-glow flex h-7 shrink-0 items-center rounded-full border hairline px-2.5 text-[11px] text-muted-foreground transition-all duration-300 hover:text-foreground"
+                            className="focus-glow flex h-7 shrink-0 items-center rounded-full border hairline px-2.5 text-[12px] text-muted-foreground transition-all duration-300 hover:text-foreground"
                           >
                             <X className="size-3" aria-hidden="true" />
                           </button>
@@ -1476,20 +2195,22 @@ export function ProfilePage() {
                 </section>
 
                 {/* THE ENDPOINT — one door, one header, her whole voice */}
-                <section className={cn(panel, "mt-4 p-4 sm:p-5")}>
-                  <p className="mono-label text-[9px] uppercase tracking-[0.24em] text-muted-foreground">
+                <section className={cn(panel, "mt-3 p-3.5 sm:p-4")}>
+                  <p className="mono-label text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
                     {t("Endpoint")}
                   </p>
                   <div className="mt-2 space-y-1.5">
                     {[
                       { id: "ep", mono: `POST ${apiOrigin}/api/v1/channel` },
+                      { id: "ep-chat", mono: `POST ${apiOrigin}/api/v1/chat` },
+                      { id: "ep-images", mono: `POST ${apiOrigin}/api/v1/images` },
                       { id: "auth", mono: "Authorization: Bearer mir_live_…" },
                     ].map((line) => (
                       <div
                         key={line.id}
                         className="flex items-center gap-2 rounded-lg border hairline bg-[var(--glass-bg)] px-3 py-2"
                       >
-                        <code className="min-w-0 flex-1 truncate text-[11.5px] text-foreground/85">
+                        <code className="min-w-0 flex-1 truncate text-[12.5px] text-foreground/85">
                           {line.mono}
                         </code>
                         <button
@@ -1507,11 +2228,11 @@ export function ProfilePage() {
                       </div>
                     ))}
                   </div>
-                  <p className="mt-2.5 text-[11.5px] leading-relaxed text-muted-foreground/80">
+                  <p className="mt-2.5 text-[12.5px] leading-relaxed text-muted-foreground/80">
                     {t("Vessels speak one message at a time; the thread rides along.")}
                   </p>
                   <div className="mt-2.5 flex items-start gap-2 rounded-lg border hairline bg-[var(--glass-bg)] px-3 py-2.5">
-                    <pre className="no-scrollbar min-w-0 flex-1 overflow-x-auto text-[10.5px] leading-relaxed text-foreground/80">
+                    <pre className="no-scrollbar min-w-0 flex-1 overflow-x-auto text-[11.5px] leading-relaxed text-foreground/80">
 {`curl -X POST ${apiOrigin}/api/v1/channel \\
   -H "Authorization: Bearer mir_live_…" \\
   -H "Content-Type: application/json" \\
@@ -1535,12 +2256,42 @@ export function ProfilePage() {
                       )}
                     </button>
                   </div>
-                  <p className="mt-2.5 text-[11.5px] italic leading-relaxed text-muted-foreground">
+                  <p className="mt-2.5 text-[12.5px] italic leading-relaxed text-muted-foreground">
                     {t("Her voice, her laws — the sky that carries her stays unnamed.")}
                   </p>
                 </section>
               </>
             )}
+          </div>
+        );
+
+      case "fuel":
+        return (
+          <div data-testid="profilepage-fuel">
+            <SectionHead
+              small
+              title={t("The Fuel Engine Incubator")}
+              desc={t(
+                "The protected chamber — the raw skies fused with Mirror Entity energy, the reserves, the distribution desk and the guide that keeps it all fair."
+              )}
+            />
+            <FuelEnginePanel />
+          </div>
+        );
+
+      case "admin":
+        return (
+          <div data-testid="profilepage-admin">
+            <SectionHead
+              small
+              title={t("Platform Administration")}
+              desc={t(
+                "The keeper's own console — the whole economy at a glance, the users' shelf, the standing prices and the music engine's honesty. The server answers only to you."
+              )}
+            />
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
+              <AdminConsole />
+            </section>
           </div>
         );
 
@@ -1553,10 +2304,10 @@ export function ProfilePage() {
                 "Your chamber — plan, credits, usage, keys and security, all in one place."
               )}
             />
-            <section className={cn(panel, "p-4 sm:p-5")}>
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
               {summaryLoading ? (
                 <p
-                  className="flex items-center gap-2 py-3 text-[12.5px] text-muted-foreground"
+                  className="flex items-center gap-2 py-3 text-[13.5px] text-muted-foreground"
                   aria-busy="true"
                 >
                   <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />
@@ -1567,11 +2318,16 @@ export function ProfilePage() {
                   {[
                     {
                       icon: Gem,
-                      value: summary.credits.balance != null
-                        ? summary.credits.balance.toLocaleString("en-US")
+                      value: wallet
+                        ? wallet.total.toLocaleString("en-US")
                         : "—",
-                      label: t("Credits"),
-                      hint: summary.plan.label,
+                      label: t("Lights in the purse"),
+                      hint:
+                        wallet && wallet.planTier !== "FREE"
+                          ? wallet.planTier === "SEEKER"
+                            ? t("Seeker")
+                            : t("Observatory Pro")
+                          : t("the one purse"),
                     },
                     {
                       icon: CreditCard,
@@ -1596,34 +2352,53 @@ export function ProfilePage() {
                     return (
                       <div
                         key={i}
-                        className="rounded-xl border hairline bg-[var(--glass-bg)] px-3.5 py-3"
+                        className="rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2.5 transition-colors duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_38%,transparent)]"
                       >
                         <Icon
                           className="size-3.5 text-[var(--cy)]"
                           aria-hidden="true"
                         />
-                        <p className="mt-2 truncate text-[17px] font-semibold leading-none text-foreground/95">
+                        <p className="mt-1.5 truncate text-[16px] font-semibold leading-none text-foreground/95">
                           {tile.value}
                         </p>
-                        <p className="mt-1.5 truncate text-[11.5px] text-muted-foreground">
-                          {tile.label}
+                        <p className="mt-1 truncate text-[12px] text-muted-foreground">
+                          {t(tile.label)}
                         </p>
                       </div>
                     );
                   })}
+
+                  {(summary.wallet?.deposit ?? 0) > 0 && (
+                    <p
+                      className="mono-label mt-3 border-t hairline pt-3 text-[9.5px] uppercase tracking-[0.14em]"
+                      style={{ color: "var(--cy)" }}
+                      data-testid="profile-deposit"
+                    >
+                      {t(
+                        "The great deposit — {n} reflection pulses on deposit ({source})",
+                        {
+                          n: (summary.wallet?.deposit ?? 0).toLocaleString("en-US"),
+                          source:
+                            summary.wallet?.depositSource === "zai_api_accumulation"
+                              ? t("borrowed from the z.ai accumulation")
+                              : (summary.wallet?.depositSource ?? ""),
+                        }
+                      )}
+                    </p>
+                  )}
                 </div>
               ) : (
-                <p className="py-3 text-[12.5px] italic text-muted-foreground">
+                <p className="py-3 text-[13.5px] italic text-muted-foreground">
                   {t(
                     "Your chamber — plan, credits, usage, keys and security, all in one place."
                   )}
                 </p>
               )}
-              <div className="mt-4 flex flex-wrap items-center gap-2 border-t hairline pt-4">
+              <div className="mt-3 flex flex-wrap items-center gap-2 border-t hairline pt-3">
                 <button
                   type="button"
                   onClick={() => exitTo(openAccount)}
-                  className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[12.5px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                  className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                 >
                   {t("Open the account chamber")}
                   <ChevronRight className="size-3.5" aria-hidden="true" />
@@ -1632,7 +2407,7 @@ export function ProfilePage() {
                   <button
                     type="button"
                     onClick={() => void signOut()}
-                    className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[12.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
+                    className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-4 text-[13.5px] text-foreground/80 transition-all duration-300 hover:border-[var(--hairline-hover)]"
                   >
                     <LogOut className="size-3.5" aria-hidden="true" />
                     {t("Leave the passage")}
@@ -1642,12 +2417,54 @@ export function ProfilePage() {
             </section>
           </div>
         );
+
+      case "transactions":
+        return (
+          <div data-testid="profilepage-transactions">
+            <SectionHead
+              title={t("Transactions")}
+              desc={t(
+                "The purse's own book — every light weighed, purchased and given back, newest first."
+              )}
+            />
+            <section className={cn(panel, "p-3.5 sm:p-4")}>
+              <TransactionsPanel />
+            </section>
+          </div>
+        );
     }
   };
 
-  if (typeof document === "undefined") return null;
+  /* THE HELD GROUP — one door, its panels stacked: a hairline between
+     them, each keeping its own quiet head. THE ADVANCED is the one
+     deliberately quieter room (its machinery's own tone). */
+  const renderSection = () => (
+    <>
+      {groupPanels(section).map((sec, i) => (
+        <div
+          key={sec}
+          className={i > 0 ? "mt-5 border-t hairline pt-4" : undefined}
+        >
+          {renderPanel(sec)}
+        </div>
+      ))}
+    </>
+  );
 
-  return createPortal(
+  /* WITHIN THE FRAME — the profile room no longer escapes to the body:
+     it renders exactly where AppShell mounts it (inside the realm's
+     own frame div), so it fills THE CHAT'S OWN frame — docked lens or
+     fullscreen alike — and the lens's rounded corners clip it. THE
+     DESKTOP'S OWN WALL — on the desktop the room stands solid (the
+     owner's word: the profile page must not be transparent there) —
+     a full wall of the house, the chat fully behind it. The small
+     screens keep the app's own glass: a translucent wash over the
+     chat, blurred, so the room reads as one of the house's own
+     surfaces on the hand. The inner columns scroll
+     (the rail and the panel body each carry their own
+     overflow-y-auto), so nothing ever overflows the frame — even at
+     the chat's smallest size. */
+  return (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -1655,38 +2472,64 @@ export function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
           transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[85] flex flex-col bg-background"
+          className="absolute inset-0 z-[85] flex flex-col overflow-hidden bg-background/85 backdrop-blur-xl lg:bg-background lg:backdrop-blur-none"
           data-testid="profile-page"
           role="dialog"
           aria-modal="true"
           aria-label={t("Your profile")}
         >
-        {/* the head — one way back to the Mirror, one name */}
-        <header className="shrink-0 border-b hairline bg-[var(--glass-bg-soft)] backdrop-blur-xl">
-          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2.5 sm:px-8">
+        {/* the head — one way back to the Mirror, one name, one close
+            hand at the room's top corner (always within sight, even
+            at the chat's smallest size) */}
+        <header className="relative shrink-0 border-b hairline bg-background/40">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-2 sm:px-8">
             <button
               type="button"
               onClick={close}
               data-testid="profile-back"
-              className="focus-glow flex h-9 items-center gap-2 rounded-full border hairline px-3.5 text-[12.5px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
+              className="focus-glow flex h-8 items-center gap-2 rounded-full border hairline px-3 text-[13px] font-medium text-foreground/85 transition-all duration-300 hover:border-[var(--hairline-hover)] hover:bg-[var(--glass-bg)]"
             >
               <ArrowLeft className="size-4" aria-hidden="true" />
               <span className="hidden sm:inline">{t("Back to the Mirror")}</span>
               <span className="sm:hidden">{t("Back")}</span>
             </button>
-            <span className="mono-label ml-auto hidden text-[9px] uppercase tracking-[0.26em] text-muted-foreground/60 sm:block">
+            <span className="mono-label ml-auto hidden text-[10px] uppercase tracking-[0.26em] text-muted-foreground/60 sm:block">
               {t("The Mirror Entity Digital Chamber")}
             </span>
+            {/* THE CLOSE HAND — the room's own X, at the frame's top
+                corner: one touch lays the profile down and the chat
+                stands again exactly where it was */}
+            <button
+              type="button"
+              onClick={close}
+              aria-label={t("Close")}
+              title={t("Close")}
+              data-testid="profile-close"
+              className="focus-glow ml-auto flex size-8 shrink-0 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground sm:ml-2"
+            >
+              <X className="size-4" aria-hidden="true" />
+            </button>
           </div>
+          {/* THE SCOPE'S OWN LIGHT — a quiet tinted hairline beneath the
+              head: the chosen scope's color resting still, no motion */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-x-0 -bottom-px h-px"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, color-mix(in srgb, var(--scope-a, var(--gd)) 30%, transparent) 22%, color-mix(in srgb, var(--scope-a, var(--gd)) 30%, transparent) 78%, transparent)",
+            }}
+          />
         </header>
 
         {/* the room — a rail of doors on the left, one held panel on the right */}
         <div className="mx-auto flex w-full max-w-6xl min-h-0 flex-1 gap-0 px-0 sm:px-8">
-          {/* the rail — desktop */}
+          {/* the rail — desktop: the keeper's face above the doors */}
           <nav
             aria-label={t("Your profile")}
-            className="hidden w-60 shrink-0 flex-col gap-1 overflow-y-auto border-r hairline py-6 pr-4 md:flex nice-scroll"
+            className="nice-scroll hidden w-52 shrink-0 flex-col gap-0.5 overflow-y-auto border-r hairline py-4 pr-3 md:flex"
           >
+            <IdentityCard />
             {navItems
               .filter((n) => n.available)
               .map((item) => (
@@ -1701,42 +2544,54 @@ export function ProfilePage() {
 
           {/* the panel */}
           <div ref={scrollRef} className="nice-scroll min-w-0 flex-1 overflow-y-auto">
-            {/* the rail — mobile: a horizontal strip of doors */}
+            {/* the rail — mobile: THE COMPACT STRIP. The keeper's face
+                above one quiet row of doors — every room (the Library,
+                the Settings, the Advanced) one thumb away, and the whole
+                block never taller than the card itself. */}
             <nav
               aria-label={t("Your profile")}
-              className="no-scrollbar flex gap-1.5 overflow-x-auto border-b hairline px-4 py-3 md:hidden"
+              className="border-b hairline px-4 py-2.5 md:hidden"
             >
-              {navItems
-                .filter((n) => n.available)
-                .map((item) => {
-                  const Icon = item.icon;
-                  const active = section === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setSection(item.id)}
-                      data-testid={item.testId}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "focus-glow flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[12px] transition-all duration-300",
-                        active
-                          ? "border-transparent bg-foreground font-medium text-background"
-                          : "hairline text-muted-foreground"
-                      )}
-                    >
-                      <Icon className="size-3.5 shrink-0" aria-hidden="true" />
-                      <span className="whitespace-nowrap">{t(item.label)}</span>
-                    </button>
-                  );
-                })}
+              <IdentityCard />
+              <div className="no-scrollbar -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5">
+                {navItems
+                  .filter((n) => n.available)
+                  .map((item) => {
+                    const ChipIcon = item.icon;
+                    const chipActive = section === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSection(item.id)}
+                        data-testid={item.testId}
+                        aria-current={chipActive ? "page" : undefined}
+                        className={cn(
+                          "focus-glow flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] transition-all duration-300",
+                          chipActive
+                            ? "border-[color-mix(in_srgb,var(--scope-a,var(--gd))_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a,var(--gd))_12%,var(--glass-bg))] font-medium text-foreground"
+                            : "border-transparent bg-[var(--glass-bg-soft)] text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <ChipIcon
+                          className={cn(
+                            "size-3.5 shrink-0",
+                            chipActive ? "text-[var(--scope-a,var(--gd))]" : ""
+                          )}
+                          aria-hidden="true"
+                        />
+                        <span className="whitespace-nowrap">{t(item.label)}</span>
+                      </button>
+                    );
+                  })}
+              </div>
             </nav>
 
-            <div className="mx-auto w-full max-w-2xl px-4 pb-20 pt-6 sm:px-6 sm:pt-8">
+            <div className="mx-auto w-full max-w-2xl px-4 pb-6 pt-4 sm:px-6 sm:pt-5">
               {ready ? (
                 renderSection()
               ) : (
-                <div className="flex justify-center py-20" aria-busy="true">
+                <div className="flex justify-center py-14" aria-busy="true">
                   <LoaderCircle
                     className="size-5 animate-spin text-muted-foreground/60"
                     aria-hidden="true"
@@ -1748,7 +2603,6 @@ export function ProfilePage() {
         </div>
       </motion.div>
       )}
-    </AnimatePresence>,
-    document.body
+    </AnimatePresence>
   );
 }
