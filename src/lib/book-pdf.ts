@@ -176,6 +176,7 @@ export async function downloadBookPdf(
   const fontkit = (fontkitMod as { default?: unknown }).default ?? fontkitMod;
   pressCancelled(signal);
   say(9, "Opening the press…");
+
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit as Parameters<typeof doc.registerFontkit>[0]);
   const serif = await doc.embedFont(serifBytes, { subset: true });
