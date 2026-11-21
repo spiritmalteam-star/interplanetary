@@ -140,21 +140,26 @@ export interface AdornOutcome {
 /** THE FACE IS WRITTEN through the graceful shelf: a young sky that
     has not built the newest columns yet still receives the picture on
     the column it does carry (cover) — the face walks wherever the
-    offering walks. */
-async function writeFace(postId: string, data: Record<string, unknown>): Promise<boolean> {
+    offering walks. A refused write carries its own honest reason. */
+async function writeFace(
+  postId: string,
+  data: Record<string, unknown>
+): Promise<{ ok: boolean; reason?: string }> {
   try {
     await db.gatheringPost.update({ where: { id: postId }, data: data as never });
-    return true;
-  } catch {
+    return { ok: true };
+  } catch (err) {
+    const first = err instanceof Error ? err.message.slice(0, 160) : String(err).slice(0, 160);
     /* the full dress may not fit this sky — lay the face alone */
     try {
       await db.gatheringPost.update({
         where: { id: postId },
         data: { cover: data.cover as string },
       });
-      return true;
-    } catch {
-      return false;
+      return { ok: true };
+    } catch (err2) {
+      const second = err2 instanceof Error ? err2.message.slice(0, 160) : String(err2).slice(0, 160);
+      return { ok: false, reason: `unwritable: ${second || first}` };
     }
   }
 }
@@ -240,7 +245,8 @@ export async function adornPublication(postId: string): Promise<AdornOutcome> {
         aiStyle: "possibilities-portrait",
         altText: alt,
       });
-      return { ok: written, engine: written ? "sky" : "skipped", reason: written ? undefined : "unwritable" };
+      if (written.ok) return { ok: true, engine: "sky" };
+      return { ok: false, engine: "skipped", reason: written.reason };
     }
   } catch {
     /* the sky stumbled — the keeper's brush stands behind it */
@@ -258,9 +264,11 @@ export async function adornPublication(postId: string): Promise<AdornOutcome> {
       aiStyle: "keeper's brush",
       altText: alt,
     });
-    return { ok: written, engine: written ? "keeper" : "skipped", reason: written ? undefined : "unwritable" };
-  } catch {
-    return { ok: false, engine: "skipped", reason: "unpaintable" };
+    if (written.ok) return { ok: true, engine: "keeper" };
+    return { ok: false, engine: "skipped", reason: written.reason };
+  } catch (err) {
+    const why = err instanceof Error ? err.message.slice(0, 160) : String(err).slice(0, 160);
+    return { ok: false, engine: "skipped", reason: `unpaintable: ${why}` };
   }
 }
 
