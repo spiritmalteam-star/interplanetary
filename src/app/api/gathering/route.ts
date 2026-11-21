@@ -275,6 +275,42 @@ async function graceful<T>(read: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
+/** THE LEAN FALLBACK — the offerings read without the relation shelves
+    (resonances, circle, counts) when a young sky has not built those
+    tables yet: the works still stand in the hall, wearing what the
+    works themselves carry. */
+async function readPosts(
+  args: {
+    where: Prisma.GatheringPostWhereInput;
+    orderBy: Prisma.GatheringPostOrderByWithRelationInput;
+    take: number;
+    cursor?: { id: string };
+    skip?: number;
+  },
+  visitorUserId: string
+): Promise<PostRow[]> {
+  const include = {
+    user: { select: { name: true, email: true, provider: true, image: true } },
+    circle: { select: { id: true, name: true } },
+    resonances: { where: { userId: visitorUserId }, select: { id: true } },
+    _count: { select: { resonances: true, echoes: true } },
+  } satisfies Prisma.GatheringPostInclude;
+  try {
+    return await db.gatheringPost.findMany({ ...args, include });
+  } catch {
+    const lean = await db.gatheringPost.findMany({
+      ...args,
+      include: { user: { select: { name: true, email: true, provider: true, image: true } } },
+    });
+    return lean.map((p) => ({
+      ...p,
+      circle: null,
+      resonances: [],
+      _count: { resonances: 0, echoes: 0 },
+    }));
+  }
+}
+
 /* ---------------- GET /api/gathering — the living exhibition ---------------- */
 export async function GET(req: NextRequest) {
   try {
@@ -302,13 +338,6 @@ export async function GET(req: NextRequest) {
       new Set<string>()
     );
 
-    const include = {
-      user: { select: { name: true, email: true, provider: true, image: true } },
-      circle: { select: { id: true, name: true } },
-      resonances: { where: { userId: visitor.user.id }, select: { id: true } },
-      _count: { select: { resonances: true, echoes: true } },
-    } satisfies Prisma.GatheringPostInclude;
-
     let rows: PostRow[];
     let nextCursor: string | null = null;
     let foldedTwins = 0;
@@ -326,33 +355,37 @@ export async function GET(req: NextRequest) {
       );
       const followedIds = new Set(follows.map((f) => f.followingId));
 
-      const hallPool = await db.gatheringPost.findMany({
-        where: {
-          visibility: "public",
-          status: "published",
-          circleId: null,
-          userId: { notIn: Array.from(walls) },
+      const hallPool = await readPosts(
+        {
+          where: {
+            visibility: "public",
+            status: "published",
+            circleId: null,
+            userId: { notIn: Array.from(walls) },
+          },
+          orderBy: { createdAt: "desc" },
+          take: FORYOU_POOL_PUBLIC,
         },
-        orderBy: { createdAt: "desc" },
-        take: FORYOU_POOL_PUBLIC,
-        include,
-      });
+        visitor.user.id
+      );
       const followedPool =
         followedIds.size > 0
-          ? await db.gatheringPost.findMany({
-              where: {
-                userId: {
-                  in: Array.from(followedIds),
-                  notIn: Array.from(walls),
+          ? await readPosts(
+              {
+                where: {
+                  userId: {
+                    in: Array.from(followedIds),
+                    notIn: Array.from(walls),
+                  },
+                  visibility: "public",
+                  status: "published",
+                  circleId: null,
                 },
-                visibility: "public",
-                status: "published",
-                circleId: null,
+                orderBy: { createdAt: "desc" },
+                take: FORYOU_POOL_FOLLOWED,
               },
-              orderBy: { createdAt: "desc" },
-              take: FORYOU_POOL_FOLLOWED,
-              include,
-            })
+              visitor.user.id
+            )
           : [];
 
       const merged = new Map<string, PostRow>();
@@ -436,13 +469,15 @@ export async function GET(req: NextRequest) {
         where.visibility = "public";
       }
 
-      const fetched = await db.gatheringPost.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        take: take + 40,
-        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-        include,
-      });
+      const fetched = await readPosts(
+        {
+          where,
+          orderBy: { createdAt: "desc" },
+          take: take + 40,
+          ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+        },
+        visitor.user.id
+      );
 
       const walled = fetched.filter((p) => !walls.has(p.userId));
       const folded = foldTwins(walled);

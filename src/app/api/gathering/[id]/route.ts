@@ -13,6 +13,17 @@ import { gatheringName } from "../route";
 /*  connections' works for accepted connections and the maker; the     */
 /*  quiet walls always silence a blocked voice).                       */
 /* ------------------------------------------------------------------ */
+/* THE GRACEFUL SHELF — a young cloud may not carry every side table
+   yet; the offering still opens. Each side read falls back to its
+   honest empty answer instead of closing the reader's door. */
+async function graceful<T>(read: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await read();
+  } catch {
+    return fallback;
+  }
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -27,7 +38,14 @@ export async function GET(
         user: { select: { id: true, name: true, email: true, provider: true, image: true } },
         circle: { select: { id: true, name: true } },
       },
-    });
+    }).catch(() =>
+      db.gatheringPost.findUnique({
+        where: { id },
+        include: {
+          user: { select: { id: true, name: true, email: true, provider: true, image: true } },
+        },
+      })
+    );
     if (!post) {
       return NextResponse.json({ error: "That offering no longer hangs in the hall." }, { status: 404 });
     }
@@ -38,21 +56,29 @@ export async function GET(
     else if (post.visibility === "unlisted") visible = true; // the quiet link — anyone who holds it
     else if (post.userId === visitor.user.id) visible = true; // the maker's own house, always
     else if (post.visibility === "circle" && post.circleId) {
-      const membership = await db.networkCircleMember.findUnique({
-        where: { circleId_userId: { circleId: post.circleId, userId: visitor.user.id } },
-        select: { id: true },
-      });
+      const membership = await graceful(
+        () =>
+          db.networkCircleMember.findUnique({
+            where: { circleId_userId: { circleId: post.circleId!, userId: visitor.user.id } },
+            select: { id: true },
+          }),
+        null
+      );
       visible = Boolean(membership);
     } else if (post.visibility === "connections") {
-      const link = await db.networkConnection.findFirst({
-        where: {
-          OR: [
-            { requesterId: visitor.user.id, addresseeId: post.userId, status: "accepted" },
-            { requesterId: post.userId, addresseeId: visitor.user.id, status: "accepted" },
-          ],
-        },
-        select: { id: true },
-      });
+      const link = await graceful(
+        () =>
+          db.networkConnection.findFirst({
+            where: {
+              OR: [
+                { requesterId: visitor.user.id, addresseeId: post.userId, status: "accepted" },
+                { requesterId: post.userId, addresseeId: visitor.user.id, status: "accepted" },
+              ],
+            },
+            select: { id: true },
+          }),
+        null
+      );
       visible = Boolean(link);
     }
     /* drafts and unpublished hang nowhere — only their maker reads them */
@@ -62,39 +88,72 @@ export async function GET(
       return NextResponse.json({ error: "This offering rests in a room you do not walk." }, { status: 403 });
     }
 
-    const walls = await wallIdsFor(visitor.user.id);
+    const walls = await graceful(() => wallIdsFor(visitor.user.id), new Set<string>());
     if (walls.has(post.userId) && post.userId !== visitor.user.id) {
       return NextResponse.json({ error: "This door rests closed." }, { status: 403 });
     }
 
-    const echoes = await db.gatheringEcho.findMany({
-      where: { postId: id },
-      orderBy: { createdAt: "asc" },
-      take: 100,
-      include: { user: { select: { name: true, email: true, provider: true, image: true } } },
-    });
+    const echoes = await graceful(
+      () =>
+        db.gatheringEcho.findMany({
+          where: { postId: id },
+          orderBy: { createdAt: "asc" },
+          take: 100,
+          include: { user: { select: { name: true, email: true, provider: true, image: true } } },
+        }),
+      [] as {
+        id: string;
+        parentId: string | null;
+        body: string;
+        createdAt: Date;
+        userId: string;
+        user: { name: string; email: string; provider: string | null; image: string | null };
+      }[]
+    );
 
-    const resonated = await db.gatheringResonance.findFirst({
-      where: { postId: id, userId: visitor.user.id },
-      select: { id: true },
-    });
+    const resonated = await graceful(
+      () =>
+        db.gatheringResonance.findFirst({
+          where: { postId: id, userId: visitor.user.id },
+          select: { id: true },
+        }),
+      null
+    );
 
     /* the reader's own shelf and the page's living attachments — read
-       once, straight from the tables, never guessed */
+       once, straight from the tables, never guessed; each shelf
+       degrades gracefully on a young sky */
     const [bookmarked, reposted, repostCount, hasQuestion, hasLab, hasIntentionSpace] =
       await Promise.all([
-        db.gatheringBookmark.findFirst({
-          where: { postId: id, userId: visitor.user.id },
-          select: { id: true },
-        }),
-        db.gatheringRepost.findFirst({
-          where: { postId: id, userId: visitor.user.id },
-          select: { id: true },
-        }),
-        db.gatheringRepost.count({ where: { postId: id } }),
-        db.networkQuestion.findFirst({ where: { postId: id }, select: { id: true } }),
-        db.networkLabProject.findFirst({ where: { seedPostId: id }, select: { id: true } }),
-        db.networkIntention.findFirst({ where: { seedPostId: id }, select: { id: true } }),
+        graceful(
+          () =>
+            db.gatheringBookmark.findFirst({
+              where: { postId: id, userId: visitor.user.id },
+              select: { id: true },
+            }),
+          null
+        ),
+        graceful(
+          () =>
+            db.gatheringRepost.findFirst({
+              where: { postId: id, userId: visitor.user.id },
+              select: { id: true },
+            }),
+          null
+        ),
+        graceful(() => db.gatheringRepost.count({ where: { postId: id } }), 0),
+        graceful(
+          () => db.networkQuestion.findFirst({ where: { postId: id }, select: { id: true } }),
+          null
+        ),
+        graceful(
+          () => db.networkLabProject.findFirst({ where: { seedPostId: id }, select: { id: true } }),
+          null
+        ),
+        graceful(
+          () => db.networkIntention.findFirst({ where: { seedPostId: id }, select: { id: true } }),
+          null
+        ),
       ]);
 
     return withAnonCookie(
