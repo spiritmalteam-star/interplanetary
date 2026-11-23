@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { Readable } from "node:stream";
 
 /* ------------------------------------------------------------------ */
 /*  /gathering-media/<file> — the gathering's own shelf, read aloud.   */
@@ -12,6 +13,15 @@ import path from "path";
 /* ------------------------------------------------------------------ */
 
 const MEDIA_DIR = path.join(process.cwd(), ".gathering-media");
+
+/* a ranged answer never exceeds this many bytes — an open-ended
+   "bytes=0-" gets the first chunk and the player asks again for more,
+   so one request can never pull a whole film into memory */
+const MAX_RANGE_BYTES = 4 * 1024 * 1024;
+
+function streamBody(filePath: string, opts?: { start: number; end: number }): ReadableStream {
+  return Readable.toWeb(fs.createReadStream(filePath, opts)) as unknown as ReadableStream;
+}
 
 const CONTENT_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
@@ -56,40 +66,44 @@ export async function GET(
     if (range) {
       const match = range.match(/bytes=(\d*)-(\d*)/);
       if (match) {
-        const start = match[1] ? Number(match[1]) : 0;
-        const end = match[2] ? Math.min(Number(match[2]), stat.size - 1) : stat.size - 1;
-        if (start >= stat.size || start > end) {
+        let start: number;
+        let end: number;
+        if (!match[1] && match[2]) {
+          /* a suffix range — "the last N bytes" */
+          const n = Number(match[2]);
+          start = Math.max(0, stat.size - n);
+          end = stat.size - 1;
+        } else {
+          start = match[1] ? Number(match[1]) : 0;
+          end = match[2] ? Math.min(Number(match[2]), stat.size - 1) : stat.size - 1;
+        }
+        end = Math.min(end, start + MAX_RANGE_BYTES - 1);
+        if (!Number.isFinite(start) || !Number.isFinite(end) || start >= stat.size || start > end) {
           return new NextResponse(null, {
             status: 416,
             headers: { "Content-Range": `bytes */${stat.size}` },
           });
         }
-        const slice = Buffer.alloc(end - start + 1);
-        const fd = fs.openSync(filePath, "r");
-        try {
-          fs.readSync(fd, slice, 0, slice.length, start);
-        } finally {
-          fs.closeSync(fd);
-        }
-        return new NextResponse(new Uint8Array(slice), {
+        return new NextResponse(streamBody(filePath, { start, end }), {
           status: 206,
           headers: {
             "Content-Type": contentType,
-            "Content-Length": String(slice.length),
+            "Content-Length": String(end - start + 1),
             "Content-Range": `bytes ${start}-${end}/${stat.size}`,
             "Accept-Ranges": "bytes",
+            "X-Content-Type-Options": "nosniff",
             "Cache-Control": "public, max-age=86400, immutable",
           },
         });
       }
     }
 
-    const buffer = fs.readFileSync(filePath);
-    return new NextResponse(new Uint8Array(buffer), {
+    return new NextResponse(streamBody(filePath), {
       headers: {
         "Content-Type": contentType,
-        "Content-Length": String(buffer.length),
+        "Content-Length": String(stat.size),
         "Accept-Ranges": "bytes",
+        "X-Content-Type-Options": "nosniff",
         "Cache-Control": "public, max-age=86400, immutable",
       },
     });

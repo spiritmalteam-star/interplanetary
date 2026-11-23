@@ -4,6 +4,7 @@ import { assertAvailable } from "@/lib/capabilities/registry";
 import { pickScene } from "@/lib/visual-scenes";
 import type { VideoSceneSpec, WorkflowPlan, WorkflowStep } from "@/lib/capabilities/types";
 import { db } from "@/lib/db";
+import { guardCreation, packOwned } from "@/lib/server/creation-guard";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/creation/video/plan — UNDERSTAND · PLAN · SELECT.        */
@@ -100,15 +101,22 @@ function extractJson(raw: string): Record<string, unknown> | null {
 }
 
 export async function POST(req: NextRequest) {
+  /* a planning call spends the house's sky: identity + flood-gates first */
+  const guard = await guardCreation(req, {
+    bucket: "creation-plan",
+    perVisitor: { limit: 8, windowMs: 10 * 60 * 1000 },
+    perIp: { limit: 30, windowMs: 60 * 60 * 1000 },
+  });
+  if (!guard.ok) return guard.res;
   let body: Record<string, unknown>;
   try {
     body = (await req.json()) as Record<string, unknown>;
   } catch {
-    return NextResponse.json({ error: "unreadable body" }, { status: 400 });
+    return guard.reply(NextResponse.json({ error: "unreadable body" }, { status: 400 }));
   }
 
   const topic = clamp(body.topic, 300);
-  if (!topic) return NextResponse.json({ error: "a subject is needed" }, { status: 400 });
+  if (!topic) return guard.reply(NextResponse.json({ error: "a subject is needed" }, { status: 400 }));
   const sceneCount = Math.max(3, Math.min(6, Number(body.sceneCount) || 5));
   const mode = body.mode === "generative" ? "generative" : "motion";
   const sourceConvId = typeof body.sourceConvId === "string" ? body.sourceConvId.slice(0, 64) : null;
@@ -117,7 +125,7 @@ export async function POST(req: NextRequest) {
   try {
     assertAvailable("create.video.motion");
   } catch {
-    return NextResponse.json({ error: "the film studio is not available" }, { status: 503 });
+    return guard.reply(NextResponse.json({ error: "the film studio is not available" }, { status: 503 }));
   }
 
   /* UNDERSTAND · PLAN · SELECT — one planning call */
@@ -226,16 +234,18 @@ export async function POST(req: NextRequest) {
       data: {
         kind: plan.workflow,
         status: "running",
-        input: JSON.stringify({ topic, sceneCount, mode }),
+        input: packOwned({ topic, sceneCount, mode }, guard.userId),
         plan: JSON.stringify(plan),
         steps: JSON.stringify(plan.steps),
         sourceConvId,
         sourceBranch,
       },
     });
-    return NextResponse.json({ jobId: job.id, plan });
+    return guard.reply(NextResponse.json({ jobId: job.id, plan }));
   } catch {
     /* the ledger rested — the walk may continue without it (honest note) */
-    return NextResponse.json({ jobId: null, plan, ledgerNote: "the ledger could not be written — the film may still be made" });
+    return guard.reply(
+      NextResponse.json({ jobId: null, plan, ledgerNote: "the ledger could not be written — the film may still be made" })
+    );
   }
 }

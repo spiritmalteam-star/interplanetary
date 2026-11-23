@@ -459,7 +459,7 @@ function DossierPane({
               ✶
             </span>
           ) : (
-            <img
+            <img loading="lazy" decoding="async"
               src={entityImage(rep.id)}
               alt=""
               className="size-full object-cover"

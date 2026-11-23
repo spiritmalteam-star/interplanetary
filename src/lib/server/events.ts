@@ -119,19 +119,31 @@ export async function deadLetterEvent(
 /** Undelivered events, oldest first — a poller's honest queue. */
 export async function pendingEvents(take = 50) {
   return db.systemEvent.findMany({
-    where: { deliveredAt: null, deadLetter: false },
+    where: { deliveredAt: null, deadLetter: false, ...NOT_BOOKKEEPING },
     orderBy: { createdAt: "asc" },
     take,
   });
 }
 
+/** Operational bookkeeping rows (rate-limit hits, anonymous-gift records)
+    share this table but are not events: they stay out of the counters. */
+const NOT_BOOKKEEPING = {
+  NOT: [
+    { type: { startsWith: "rl:" } },
+    { type: "wallet.anon_birth" },
+    { type: "wallet.refund_claim" },
+    { type: "wallet.idem" },
+  ],
+};
+
 /** Observability counters — never private payloads, only shapes. */
 export async function eventHealth(takeRecent = 20) {
   const [total, undelivered, dead, recent] = await Promise.all([
-    db.systemEvent.count(),
-    db.systemEvent.count({ where: { deliveredAt: null, deadLetter: false } }),
+    db.systemEvent.count({ where: NOT_BOOKKEEPING }),
+    db.systemEvent.count({ where: { deliveredAt: null, deadLetter: false, ...NOT_BOOKKEEPING } }),
     db.systemEvent.count({ where: { deadLetter: true } }),
     db.systemEvent.findMany({
+      where: NOT_BOOKKEEPING,
       orderBy: { createdAt: "desc" },
       take: takeRecent,
       select: {

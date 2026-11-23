@@ -141,6 +141,8 @@ function doorVoice(error: string): string {
     return "The purse has spent its gift — a passage carries the next five hundred lights.";
   if (e === "INSUFFICIENT_CREDITS")
     return "The purse has run dry — bring more light and the mirror keeps speaking.";
+  if (e === "WALLET_UNAVAILABLE")
+    return "The purse could not be weighed just now — nothing was run and nothing was charged. Please try again in a moment.";
   return error;
 }
 

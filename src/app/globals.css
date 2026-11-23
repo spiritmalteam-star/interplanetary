@@ -6507,3 +6507,32 @@ html[data-perf="eco"] .gp-drift-slow {
     radial-gradient(90% 70% at 94% 14%, var(--lg-irid-b) 0%, transparent 58%),
     radial-gradient(110% 90% at 50% 110%, var(--lg-irid-c) 0%, transparent 60%);
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE KEYBOARD LAW — a visible focus ring for keyboard travellers.   */
+/*                                                                     */
+/*  Many controls drop the browser's outline (`outline-none`) without  */
+/*  a replacement, so a keyboard user could not see where they stood.  */
+/*  This baseline restores it for interactive controls ONLY when focus */
+/*  arrives by keyboard (:focus-visible) — mouse and touch users see   */
+/*  nothing new. It is unlayered, so it outranks the outline-none      */
+/*  utility, yet wears zero specificity (:where), so any component's   */
+/*  own focus style (.focus-glow, ring utilities) still wins where it  */
+/*  sets an outline. The colour follows the foreground token, so it    */
+/*  keeps its contrast in both the light and the dark house.           */
+/*  Text inputs are left to their own focus styling.                   */
+/* ------------------------------------------------------------------ */
+:where(
+    button,
+    a[href],
+    summary,
+    [role="button"],
+    [role="tab"],
+    [role="menuitem"],
+    [role="switch"],
+    [role="checkbox"],
+    [tabindex]:not([tabindex="-1"])
+  ):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--foreground) 78%, transparent);
+  outline-offset: 2px;
+}

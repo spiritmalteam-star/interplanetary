@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { openDoor } from "@/lib/server/open-door";
 import ZAI from "z-ai-web-dev-sdk";
 
 import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
@@ -86,6 +87,10 @@ function buildFallback(tool: string, category: string): ToolAnalysis {
 }
 
 export async function POST(req: NextRequest) {
+  /* flood-gates — anonymous exploration stays open, the rate does not */
+  const limited = await openDoor(req, "tool-analysis");
+  if (limited) return limited;
+
   try {
     const body = await req.json().catch(() => null);
 

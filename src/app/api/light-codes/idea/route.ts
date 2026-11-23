@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { openDoor } from "@/lib/server/open-door";
 import ZAI from "@/lib/zai-client";
 import { LANGUAGE_NAMES, isLanguageCode } from "@/lib/i18n/core";
 
@@ -13,6 +14,10 @@ export const maxDuration = 60;
 /* ------------------------------------------------------------------ */
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
+  /* flood-gates — anonymous exploration stays open, the rate does not */
+  const limited = await openDoor(req, "light-codes-idea");
+  if (limited) return limited;
+
   const body = (await req.json().catch(() => null)) as {
     idea?: string;
     language?: string;
