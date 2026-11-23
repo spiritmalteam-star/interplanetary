@@ -1427,7 +1427,7 @@ function PublicationReader({
               </div>
 
               {post.cover && (
-                <img src={post.cover} alt="" className="mt-5 max-h-[420px] w-full rounded-[18px] border border-[#eee5d0] object-cover" />
+                <img loading="lazy" decoding="async" src={post.cover} alt="" className="mt-5 max-h-[420px] w-full rounded-[18px] border border-[#eee5d0] object-cover" />
               )}
               {post.mediaUrl && post.mediaType === "video" && (
                 <video
@@ -1438,7 +1438,7 @@ function PublicationReader({
                 />
               )}
               {!post.cover && post.mediaUrl && post.mediaType !== "video" && (
-                <img src={post.mediaUrl} alt="" className="mt-5 max-h-[420px] w-full rounded-[18px] border border-[#eee5d0] object-cover" />
+                <img loading="lazy" decoding="async" src={post.mediaUrl} alt="" className="mt-5 max-h-[420px] w-full rounded-[18px] border border-[#eee5d0] object-cover" />
               )}
               {post.refUrl && (
                 <a

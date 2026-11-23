@@ -106,7 +106,7 @@ export default function PublishPickerSheet({
       <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border border-white/90 bg-[linear-gradient(150deg,#fffdf8,#f0e6cf)]">
         {m.cover ? (
            
-          <img src={m.cover} alt="" className="size-full object-cover" />
+          <img loading="lazy" decoding="async" src={m.cover} alt="" className="size-full object-cover" />
         ) : m.sourceKind === "music" ? (
           <Music className="size-4 text-[#8a6f46]" aria-hidden="true" />
         ) : (

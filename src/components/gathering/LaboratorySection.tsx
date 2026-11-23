@@ -841,7 +841,7 @@ function LabRoom({
                     className="mt-2.5 max-h-72 w-full rounded-[14px]"
                   />
                 ) : entry.dataUrl ? (
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={entry.dataUrl}
                     alt={t("Experiment attachment")}
                     className="mt-2.5 max-h-72 w-full rounded-[14px] object-cover"
