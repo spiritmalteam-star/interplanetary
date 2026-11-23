@@ -9,13 +9,15 @@ import {
 } from "@/lib/server/access";
 import { costOf } from "@/lib/server/costs";
 import { creditsEnforced, spendCredits } from "@/lib/server/credits";
-import { GATES, rateLimit } from "@/lib/server/rate-limit";
+import { GATES, rateLimit, requestIp } from "@/lib/server/rate-limit";
+import { anonBirthGift } from "@/lib/server/anon-gift";
 import { recordUsage } from "@/lib/server/usage";
 import { depthKeyOf, perPageCredits } from "@/lib/book-pricing";
 import {
   WALLET_COSTS,
   WALLET_OPERATIONS,
   ensureWallet,
+  fullBirthGift,
   refundWalletCredits,
   servicePrices,
   spendWalletCredits,
@@ -23,6 +25,22 @@ import {
   type WalletActionType,
 } from "@/lib/server/wallet";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
+
+/** The wallet cannot be weighed (database unreachable): a paid door
+    FAILS CLOSED — nothing runs, nothing is charged, nothing is assumed.
+    The answer is recoverable: the caller may simply ask again. */
+function walletUnavailable(visitor: Visitor | null): NextResponse {
+  const res = NextResponse.json(
+    {
+      error: "WALLET_UNAVAILABLE",
+      message:
+        "The purse cannot be weighed just now, so nothing was run and nothing was charged. Please try again in a moment.",
+      retryable: true,
+    },
+    { status: 503, headers: { "Retry-After": "5", "cache-control": "private, no-store" } }
+  );
+  return visitor ? withAnonCookie(res, visitor) : res;
+}
 
 /* ------------------------------------------------------------------ */
 /*  THE METERED DOOR — the usage engine every AI route walks through.  */
@@ -290,7 +308,14 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
              walks: pay with the gift while it holds, ask for a
              passage only when the purse stands empty */
           try {
-            const anonSnapshot = await ensureWallet(userId);
+            /* a NEW anonymous passage is born with a gift only within the
+               per-address daily brake (see anon-gift.ts); throws when the
+               database cannot answer, which fails closed below */
+            const birthGift = await anonBirthGift(userId, requestIp(req), fullBirthGift());
+            const anonSnapshot = await ensureWallet(
+              userId,
+              birthGift === undefined ? undefined : { gift: birthGift }
+            );
             /* THE SPENDABLE LAW — the gate and the draw must agree: the
                purse spends free + paid (the deposit well is a store of
                value, not a hand), so the ask is weighed against the
@@ -353,12 +378,26 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
             ctx.walletLedgerId = walletLedgerId;
             walletSpent = weigh.cost;
           } catch (err) {
-            /* the wallet rests (database unreachable) — the door stays
-               open rather than locking a visitor out of a resting vault */
+            /* FAIL CLOSED — the wallet cannot be weighed, so the paid
+               work does not run. A draw that landed before the failure
+               is given back. */
             console.error(
-              `[meter:${operation}] the quiet keeper's weigh rested:`,
+              `[meter:${operation}] the quiet keeper's weigh failed (closed):`,
               err instanceof Error ? err.message : err
             );
+            if (walletLedgerId) {
+              refundWalletCredits(userId, walletLedgerId).catch(() => undefined);
+            }
+            await recordUsage({
+              userId,
+              workspaceId,
+              operation,
+              provider: "none",
+              success: false,
+              error: "wallet_unavailable",
+              latencyMs: Date.now() - started,
+            }).catch(() => undefined);
+            return walletUnavailable(visitor);
           }
         } else {
           try {
@@ -415,12 +454,26 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
             ctx.walletLedgerId = walletLedgerId;
             walletSpent = weigh.cost;
           } catch (err) {
-            /* the wallet rests (database unreachable) — the door stays
-               open rather than locking a visitor out of a resting vault */
+            /* FAIL CLOSED — the wallet cannot be weighed, so the paid
+               work does not run. A draw that landed before the failure
+               is given back. */
             console.error(
-              `[meter:${operation}] wallet weigh rested:`,
+              `[meter:${operation}] wallet weigh failed (closed):`,
               err instanceof Error ? err.message : err
             );
+            if (walletLedgerId) {
+              refundWalletCredits(userId, walletLedgerId).catch(() => undefined);
+            }
+            await recordUsage({
+              userId,
+              workspaceId,
+              operation,
+              provider: "none",
+              success: false,
+              error: "wallet_unavailable",
+              latencyMs: Date.now() - started,
+            }).catch(() => undefined);
+            return walletUnavailable(visitor);
           }
         }
       }

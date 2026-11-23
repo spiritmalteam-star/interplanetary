@@ -5,6 +5,7 @@ import { LoaderCircle, Moon, ShoppingBag, Sparkles, Star } from "lucide-react";
 import { useMirror, type WalletNotice } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { ModalShell } from "./ModalShell";
+import { toast } from "sonner";
 
 /* ------------------------------------------------------------------ */
 /*  THE PURSE KEEPER — the visitor's own light, guarded everywhere.    */
@@ -116,6 +117,19 @@ export function WalletGuard() {
           }
         } catch {
           /* other 401s are none of the purse's business */
+        }
+      } else if (res && res.status === 503) {
+        /* the purse could not be weighed: the paid work did not run and
+           nothing was charged — say so, calmly, and let the visitor retry */
+        try {
+          const data = (await res.clone().json()) as { error?: string; message?: string } | null;
+          if (data?.error === "WALLET_UNAVAILABLE") {
+            toast.message("The purse could not be weighed", {
+              description: data.message ?? "Nothing was run and nothing was charged. Please try again in a moment.",
+            });
+          }
+        } catch {
+          /* other 503s are none of the purse's business */
         }
       } else if (res && res.ok) {
         const method =

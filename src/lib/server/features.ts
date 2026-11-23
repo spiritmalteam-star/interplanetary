@@ -121,9 +121,10 @@ export async function getComplimentaryConfig(): Promise<ComplimentaryConfig> {
   return {
     openAccessMode: openAccess ?? envBool("OPEN_ACCESS_MODE"),
     complimentaryCheckout:
-      /* the development phase's own state: the FREE door stands open
-         unless the owner's hand (env or the console) closes it */
-      complimentary ?? envBool("COMPLIMENTARY_CHECKOUT", true),
+      /* CLOSED unless the owner's hand opens it (the console setting,
+         or COMPLIMENTARY_CHECKOUT=true). It once defaulted open, which
+         let any new account farm free credits. */
+      complimentary ?? envBool("COMPLIMENTARY_CHECKOUT", false),
     credinsEnabled: credins ?? envBool("CREDINS_ENABLED"),
     packages: asStringArray(packages, DEFAULT_PACKAGES),
     allocations: asAllocationRecord(allocations),

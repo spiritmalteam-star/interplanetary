@@ -308,6 +308,11 @@ export interface WalletSnapshot {
 
 const BIRTH_GIFT = intEnvGift("WALLET_BIRTH_GIFT", 500); // the free lights every passage is born holding
 
+/** The full free gift a new passage may be born with (before any brake). */
+export function fullBirthGift(): number {
+  return BIRTH_GIFT;
+}
+
 function intEnvGift(name: string, fallback: number): number {
   const raw = Number(process.env[name]);
   return Number.isFinite(raw) && raw >= 0 ? Math.floor(raw) : fallback;
@@ -315,19 +320,23 @@ function intEnvGift(name: string, fallback: number): number {
 
 /** The passage's wallet, laid down idempotently. Safe to call at every
     door — an existing wallet simply passes through untouched. */
-export async function ensureWallet(userId: string): Promise<WalletSnapshot> {
+export async function ensureWallet(
+  userId: string,
+  opts?: { gift?: number }
+): Promise<WalletSnapshot> {
   const existing = await db.userWallet.findUnique({ where: { userId } });
   if (existing) return snapshotOf(existing);
+  const gift = typeof opts?.gift === "number" && opts.gift >= 0 ? Math.floor(opts.gift) : BIRTH_GIFT;
 
   try {
     const fresh = await db.userWallet.create({
-      data: { userId, planTier: "FREE", freeCreditsRemaining: BIRTH_GIFT },
+      data: { userId, planTier: "FREE", freeCreditsRemaining: gift },
     });
     await db.creditLedger.create({
       data: {
         userId,
         actionType: "SUBSCRIPTION_GRANT",
-        creditsDeducted: BIRTH_GIFT,
+        creditsDeducted: gift,
         metadata: { source: "birth", description: "The passage's first five hundred lights" },
       },
     });
