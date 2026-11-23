@@ -1,4 +1,11 @@
+import {
+  isUniqueViolation,
+  parseIdempotencyKey,
+  spendClaimId,
+  SPEND_CLAIM_TYPE,
+} from "@/lib/server/idempotency-keys";
 import { NextRequest, NextResponse, after } from "next/server";
+import { db } from "@/lib/db";
 import {
   ANON_COOKIE,
   emailGateRequired,
@@ -430,6 +437,41 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
                 ),
                 visitor
               );
+            }
+            /* OPTIONAL IDEMPOTENCY — a client that sends `Idempotency-Key`
+               gets exactly-once spending: the first call claims the key (a
+               unique row), a retry of the same call is refused 409 before it
+               is charged or run. Without the header nothing changes. A retry
+               after a FAILED call must use a new key. */
+            const idemKey = parseIdempotencyKey(req.headers.get("idempotency-key"));
+            if (idemKey) {
+              try {
+                await db.systemEvent.create({
+                  data: {
+                    eventId: spendClaimId(userId, idemKey),
+                    type: SPEND_CLAIM_TYPE,
+                    actorType: "system",
+                    actorId: userId,
+                    source: "wallet",
+                    payload: "{}",
+                    deliveredAt: new Date(),
+                  },
+                });
+              } catch (err) {
+                if (isUniqueViolation(err)) {
+                  return withAnonCookie(
+                    NextResponse.json(
+                      {
+                        error: "DUPLICATE_REQUEST",
+                        message: "This exact request was already received — nothing was charged twice.",
+                      },
+                      { status: 409 }
+                    ),
+                    visitor
+                  );
+                }
+                return walletUnavailable(visitor); // cannot prove it is not a duplicate: fail closed
+              }
             }
             const draw = await spendWalletCredits(userId, weigh.actionType, {
               cost: weigh.cost,

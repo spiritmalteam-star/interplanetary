@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { REFUND_CLAIM_TYPE, isUniqueViolation, refundClaimId } from "@/lib/server/idempotency-keys";
 
 /* ------------------------------------------------------------------ */
 /*  THE VISITOR'S OWN WALLET — the per-user credit pipeline.           */
@@ -552,6 +553,21 @@ export async function refundWalletCredits(userId: string, ledgerId: string): Pro
     if (freePart + paidPart === 0) return;
 
     await db.$transaction(async (tx) => {
+      /* THE CLAIM — one refund per spend, enforced by the database. The
+         unique eventId lets only the first refund through; a concurrent or
+         replayed one hits a unique violation, this transaction rolls back
+         (the wallet increment with it), and nothing is given twice. */
+      await tx.systemEvent.create({
+        data: {
+          eventId: refundClaimId(spend.id),
+          type: REFUND_CLAIM_TYPE,
+          actorType: "system",
+          actorId: userId,
+          source: "wallet",
+          payload: "{}",
+          deliveredAt: new Date(), // bookkeeping, not a message
+        },
+      });
       await tx.userWallet.update({
         where: { userId },
         data: {
@@ -574,6 +590,7 @@ export async function refundWalletCredits(userId: string, ledgerId: string): Pro
       });
     });
   } catch (err) {
+    if (isUniqueViolation(err)) return; // already refunded — the claim held
     console.error("[wallet] refund failed:", err instanceof Error ? err.message : err);
   }
 }

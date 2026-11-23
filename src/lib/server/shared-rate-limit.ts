@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
 import { rateLimit, type RateLimitResult, type RateLimitRule } from "@/lib/server/rate-limit";
+import { SPEND_CLAIM_TTL_MS, SPEND_CLAIM_TYPE } from "@/lib/server/idempotency-keys";
 import { limiterTypeFor, shouldPurge, MAX_WINDOW_MS, PURGE_AFTER_MS } from "@/lib/server/rate-limit-rules";
 
 /* ------------------------------------------------------------------ */
@@ -71,6 +72,11 @@ export async function sharedRateLimit(
             type: { startsWith: "rl:" },
             createdAt: { lt: new Date(now - PURGE_AFTER_MS) },
           },
+        })
+        .catch(() => undefined);
+      void db.systemEvent
+        .deleteMany({
+          where: { type: SPEND_CLAIM_TYPE, createdAt: { lt: new Date(now - SPEND_CLAIM_TTL_MS) } },
         })
         .catch(() => undefined);
     }
