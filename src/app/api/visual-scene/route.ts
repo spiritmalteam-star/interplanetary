@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { openDoor } from "@/lib/server/open-door";
 import ZAI from "@/lib/zai-client";
 import { validateSpec } from "@/lib/visual-spec";
 
@@ -73,6 +74,10 @@ function extractJsonObject(raw: string): unknown | null {
 }
 
 export async function POST(req: NextRequest) {
+  /* flood-gates — anonymous exploration stays open, the rate does not */
+  const limited = await openDoor(req, "visual-scene");
+  if (limited) return limited;
+
   let text = "";
   try {
     const body = (await req.json()) as { text?: unknown };

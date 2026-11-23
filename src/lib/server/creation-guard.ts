@@ -4,7 +4,8 @@ import {
   withAnonCookie,
   type Visitor,
 } from "@/lib/server/access";
-import { rateLimit, requestIp, type RateLimitRule } from "@/lib/server/rate-limit";
+import { requestIp, type RateLimitRule } from "@/lib/server/rate-limit";
+import { sharedRateLimit } from "@/lib/server/shared-rate-limit";
 
 /* ------------------------------------------------------------------ */
 /*  THE CREATION GUARD — identity, ownership and flood-gates for the   */
@@ -79,9 +80,9 @@ export async function guardCreation(
   }
 
   const ip = requestIp(req);
-  const byIp = rateLimit(`${opts.bucket}:ip:${ip}`, opts.perIp);
+  const byIp = await sharedRateLimit(`${opts.bucket}-ip`, ip, opts.perIp);
   if (!byIp.ok) return { ok: false, res: withAnonCookie(tooMany(byIp.retryAfterSec), visitor) };
-  const byUser = rateLimit(`${opts.bucket}:user:${user.id}`, opts.perVisitor);
+  const byUser = await sharedRateLimit(`${opts.bucket}-user`, user.id, opts.perVisitor);
   if (!byUser.ok) return { ok: false, res: withAnonCookie(tooMany(byUser.retryAfterSec), visitor) };
 
   return {

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import ZAI from "z-ai-web-dev-sdk";
 import { guardCreation } from "@/lib/server/creation-guard";
-import { rateLimit, requestIp as requestIpOf } from "@/lib/server/rate-limit";
+import { requestIp as requestIpOf } from "@/lib/server/rate-limit";
+import { sharedRateLimit } from "@/lib/server/shared-rate-limit";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/creation/video/clip — THE GENERATIVE CINEMA'S OWN DOOR.  */
@@ -74,8 +75,8 @@ export async function POST(req: NextRequest) {
     }
 
     /* a fresh clip — count it against the tighter hourly ceilings first */
-    const freshIp = rateLimit(`creation-clip-fresh:ip:${requestIpOf(req)}`, FRESH_PER_IP);
-    const freshUser = rateLimit(`creation-clip-fresh:user:${guard.userId}`, FRESH_PER_VISITOR);
+    const freshIp = await sharedRateLimit("creation-clip-fresh-ip", requestIpOf(req), FRESH_PER_IP);
+    const freshUser = await sharedRateLimit("creation-clip-fresh-user", guard.userId, FRESH_PER_VISITOR);
     if (!freshIp.ok || !freshUser.ok) {
       const wait = Math.max(freshIp.retryAfterSec, freshUser.retryAfterSec);
       return guard.reply(

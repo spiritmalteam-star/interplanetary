@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { openDoor } from "@/lib/server/open-door";
 import ZAI from "z-ai-web-dev-sdk";
 
 import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
@@ -64,6 +65,10 @@ function extractJson(raw: string): Record<string, string> | null {
 }
 
 export async function POST(req: NextRequest) {
+  /* flood-gates — anonymous exploration stays open, the rate does not */
+  const limited = await openDoor(req, "particlex-novel");
+  if (limited) return limited;
+
   try {
     const body = await req.json().catch(() => null);
     const requestedLanguage: string =

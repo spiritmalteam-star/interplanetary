@@ -51,6 +51,8 @@ export async function anonBirthGift(
       actorId: userId,
       source: "wallet",
       payload: JSON.stringify({ ipHash, gift }),
+      /* bookkeeping, not a message: born delivered (see events.ts) */
+      deliveredAt: new Date(),
     },
   });
   return gift;

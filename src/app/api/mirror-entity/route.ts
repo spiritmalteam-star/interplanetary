@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { openDoor } from "@/lib/server/open-door";
 import ZAI from "z-ai-web-dev-sdk";
 import { RELEVANCE_LAW } from "@/lib/relevance-law";
 
@@ -46,6 +47,10 @@ function historyTurns(raw: unknown): HistoryTurn[] {
 }
 
 export async function POST(req: NextRequest) {
+  /* flood-gates — anonymous exploration stays open, the rate does not */
+  const limited = await openDoor(req, "mirror-entity");
+  if (limited) return limited;
+
   try {
     const body = await req.json().catch(() => null);
 
