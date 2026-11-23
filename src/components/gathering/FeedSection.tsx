@@ -803,7 +803,7 @@ function StreamSlide({
                 />
               ) : (
                  
-                <img
+                <img loading="lazy" decoding="async"
                   src={post.mediaType === "image" && post.mediaUrl ? post.mediaUrl : post.cover!}
                   alt={post.title}
                   className="max-h-[420px] w-full rounded-[18px] border border-[#e8dfc9] object-cover"
