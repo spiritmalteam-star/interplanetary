@@ -65,3 +65,7 @@ tool-results/
 skills/
 upload/
 scripts/
+
+# runtime logs and user uploads must never be committed
+dev.log.*
+.gathering-media/
