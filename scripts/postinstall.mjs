@@ -40,6 +40,11 @@ if (schema) {
     const dataLossFlag = process.env.DB_PUSH_ACCEPT_DATA_LOSS === "true"
       ? " --accept-data-loss"
       : "";
+    if (dataLossFlag) {
+      console.warn(
+        "[postinstall] WARNING: db push runs with --accept-data-loss — a schema change that removes a column or table WILL drop its data. Replace with reviewed Prisma migrations (see the engineering roadmap, Phase 2)."
+      );
+    }
     run(
       `npx prisma db push --schema ${schema} --skip-generate${dataLossFlag}`,
       "prisma db push (ensure the passage tables)"
