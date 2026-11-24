@@ -1,0 +1,2228 @@
+[
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "00_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%26nonce%3Db83f76e6f80d3b713639be8469dbe5ac8a20871e5c197a5b91ca619cc84e7a8d",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "00_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 429 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%26nonce%3Deb8ad1a5aa544b99ac8dbe6d2c8318c9ff4454a6cb2be5d6670a1aeeace1dfdf",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "00_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%26nonce%3D0a4390b82712a3a99c93f8ec6e21c157d337ca939f32e7901b8d1972fad62204",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "00_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%26nonce%3D2a83dc5789ddfbffeb19aefd0babbcc778d2370443dafb70ecfc2378d6688cf0",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "00_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%26nonce%3Dbbaf18a074387a852dd1239f4f76d4d0da5ae0a36ed0e7b7e94848c9651ef231",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "00_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%26nonce%3D3f6ab45b87b85a6ed7bf62782357d1e5745f8384f06999c10da4a211c395f199",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=codex",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "01_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dcodex%26nonce%3D41d5f1be5d2f27b14dcf8baf73f1e306ec0538abe262583d3a6923df46d47147",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=codex",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "01_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dcodex%26nonce%3D7001dbb3906880ddcf48535391ed1a211979263d3cbca8f5b5a5715ba6dca434",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=codex",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "01_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dcodex%26nonce%3D530d71bb22a2ffd01532f4aa55ef9521caa5806a1be88ce9d8979c6aa7124272",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=codex",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "01_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dcodex%26nonce%3Dfe4d0f8e6908c1d4da676e6923f78fbcf5a66dd99ebe3e649af45843bd5b64f8",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=codex",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "01_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dcodex%26nonce%3D1bed4fea488edf24799856aea9558ee864bf2c842aa3a081a4e7da66f1aec2c9",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=codex",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "01_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dcodex%26nonce%3Ddd8a287880dbeee53f3a1ef4d82c983a06d1e046de1d5e9b4be177aa5df2d71d",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=books",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "02_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 429 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dbooks%26nonce%3D800b1f63061dd0e1ecef2204b4e3c96e91216946175335367ca871da98490ad4",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=books",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "02_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dbooks%26nonce%3Daa4d226b95d4044b7ec9db950a92a7a9089ca43662fa962e432c833f636d709c",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=books",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "02_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dbooks%26nonce%3Dbc380bb4c4b729e65d8bd4f556a8c6da3a5c561b05476f85ed20bd63aaa331de",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=books",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "02_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dbooks%26nonce%3D1c90070f036a77953c509c459ca9ac10f5ed7fb7f0806f7533dfc8a4758d4178",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=books",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "02_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dbooks%26nonce%3Daf1f94d0f1c555d375b9f520204392b02698056853b2ed239c8559ca4278c428",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=books",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "02_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dbooks%26nonce%3Df0148db9500b9efe898b845462d5c730abcb26fa209147c0d283b180afbb6178",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=music",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "03_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmusic%26nonce%3Dc96e1614e84e0376c33e200c62f2b49797d1f39ef6b04b2dbd31e1fa28be805c",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=music",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "03_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmusic%26nonce%3D1ea8a7ffc180ecf85777aec53f816807ced5053399e7227c79f3b02d957d88b8",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=music",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "03_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmusic%26nonce%3D85c8c593a69e90909e845e3cf9fdff3eaf0529cd0c5096b567aed1f5c7755d31",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=music",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "03_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmusic%26nonce%3D2c15bfb2d25e09961e76e36e0cbd1fe10cb10e5e74e358fc59ae1a3ab192bce8",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=music",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "03_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmusic%26nonce%3D59ac900f68582ae0d84810303d39379e3fa1df148ffa64b7e34ed6594296e2c6",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=music",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "03_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmusic%26nonce%3D6f1d652a8702a423694b83a103311e25fec5596f7553777b135963197fca4c7c",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=akashic",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "04_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dakashic%26nonce%3Dae0d087c99290a080d0e5f00f916590bdb04d08d0d05afba202f84d5ef4cb034",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=akashic",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "04_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dakashic%26nonce%3D5e5a79ce302c759dd9e5a21af6487803b0ec89974f0f9a4911e627ccaececf42",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=akashic",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "04_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dakashic%26nonce%3D8c40e281845e9ea97ad15a995f7e64dbbec16fa3798316d980958ba26a771bd2",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=akashic",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "04_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dakashic%26nonce%3Da3a11ea204a72f07fb17999530a2a1a2926535c9dc7a52e0f7802a295d0d02a3",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=akashic",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "04_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dakashic%26nonce%3D2d3ce55666d35ffee34bbd59bc4320d143a2547e01c0cdb7f31a0d1e2020c40f",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=akashic",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "04_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dakashic%26nonce%3D34d3e2021f4a7044f3f0583e3f0e7438394753347c151df2d14b6cb4f5f5f719",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=invent",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "05_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dinvent%26nonce%3D5ea08b7b5e1c141aec60cfef3dbd5106cb17cfba5756e51802d8235dc0e1e2f7",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=invent",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "05_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dinvent%26nonce%3D86f1e8dff52ffda19998c7b68e4aab2de485dd1ed8568d2aac09169f1861a366",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=invent",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "05_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dinvent%26nonce%3Ddebb502f3c27ccfe6a510a68f2d5df8d9022db932b8577daf987bd5b6dd1c536",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=invent",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "05_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dinvent%26nonce%3Dd4d03a97fde6cdf5a919b9420a8163d2ae792e3d14211e301857d35f7b0d316f",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=invent",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "05_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dinvent%26nonce%3D361792343878fae8c0a466fce769c4b6cd451c8b6542244df7d316ff3034c1e6",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=invent",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "05_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dinvent%26nonce%3Dbb4ca0ca38f8ba25f8c31cdda42ebf2b2d63ea4163fce0ad3d8f2a965327bed9",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=quantum",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "06_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dquantum%26nonce%3D885384a9c751dd0384d6ea5bce9450386ea95c02b90043e4e35a5306d44d4985",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=quantum",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "06_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dquantum%26nonce%3D0a7bd6a92b227546097a8ce56e2d270fec82c94ef4d95e910584a548e292090e",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=quantum",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "06_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dquantum%26nonce%3Dce16a7a13189a7e6e04616c61358c06ef4183a594daa70425efa0c8c556ab0df",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=quantum",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "06_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dquantum%26nonce%3Dd16cd712743319fc948df6c47cb2c002956243733e49b7fde5b63242cbd1cd31",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=quantum",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "06_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dquantum%26nonce%3D8e28d8226e1916988a3383025f00c7b46412e96f1f1932ff915b9bcb75336a7a",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=quantum",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "06_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dquantum%26nonce%3Dd14fe9d3e770f2c7863608ca9e72f2c2316ef2cab0f1b05142b5b868dd4e7c5d",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=healx",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "07_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dhealx%26nonce%3Db7f1faafc8852fc94f63c56a1935890778226a3fc24457627a854805ad75c66d",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=healx",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "07_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dhealx%26nonce%3De61119c7d75533ddb5753ac9bb47f2176f0d1d846a0a264e85d25451cf99611b",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=healx",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "07_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dhealx%26nonce%3D630fafb4ced2b09339c68f8498cd08cf36da3e94c2d089d33b3adc92bfcacbc9",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=healx",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "07_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 429 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dhealx%26nonce%3D445707686d8629d594250e0fbee3dc2012043847855e44d72c503db83e9a7463",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=healx",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "07_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dhealx%26nonce%3Df73a450473f12fada8a180c190c612fdbf2b65b78528368f365494d5ab8ed52a",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=healx",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "07_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dhealx%26nonce%3D0f603b5c1af1562b8a04157c1031df2d9238c1cd44a7c63357a83569d7e4c858",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=atelier",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "08_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Datelier%26nonce%3Da74af3484ee9a58b526ce5af5695d96906de37a11f0e48c7c9f0de3f71ed0074",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=atelier",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "08_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Datelier%26nonce%3Dde4c039e078a1345d095f2c9d5800033fe035cafd8bdd77baa3bd6fa60b80032",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=atelier",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "08_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Datelier%26nonce%3Da901d9bd64fa49db71260d8706316f13ead2b641fe3da61732fdc8758900181a",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=atelier",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "08_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Datelier%26nonce%3D751b02aec29e0b6bfdb55565a8dc983bb23786cf99eba9cb12cf2c4aa9ca0789",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=atelier",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "08_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Datelier%26nonce%3Daa246a37a8b0f2c13e6f26e224fc6be779d070d4e38e652d681d0295868e7a35",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=atelier",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "08_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Datelier%26nonce%3Dba87a55532ff02b017ea548bf13e2ad63339dbd6f709dc52202345f6c4087a25",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=studio",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "09_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dstudio%26nonce%3Dd9c9ff3fc53a97f372c215fc7a8a0fc5553ec5ef40b2d8319ef1933662d9d0f2",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=studio",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "09_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dstudio%26nonce%3D2a44c365b46e702d2c6295499cea39167379a50fec79394a3b09ed8b45e43d2a",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=studio",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "09_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dstudio%26nonce%3D7db4b49a04ccb3a59d6962192fc5c2aa09ee2bfaeca9632751af1ccdfa772f09",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=studio",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "09_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dstudio%26nonce%3Da22d2a7a5f849edc94f520c85f0e6dcb534c730dcde15fb04c0f67973151b7f4",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=studio",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "09_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dstudio%26nonce%3D93a2f83bf7042b716f28f89d47b9ea7c46fbb852f656b75f091219ea95d6140c",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=studio",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "09_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dstudio%26nonce%3D8ab631a73a7222edbd09fb72cb62a3915e9c8bf48aab6e849aa87904c6c07af6",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=library",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "10_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dlibrary%26nonce%3D689fb7852f3d6530c37103224ac0c8fb424a7478fbada587d82fcd7e1528ff6d",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=library",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "10_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dlibrary%26nonce%3D8f260f69dfaba76817186e7b9bf0ae69682b48e994da146ef4951514c7445ddd",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=library",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "10_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dlibrary%26nonce%3D3242c75ff7c1ea75adcbca21dd57373adabe63b7bff952b26bb7a9e51964da57",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=library",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "10_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dlibrary%26nonce%3D7ee2d8d13f120baf9600be8fff5242e152f3bb7af4599c447467e81b530b8cb2",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=library",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "10_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dlibrary%26nonce%3Dc9fcc4d771ded44c9c2f2daa80f70369e33de82b34724504cf460816ba421a35",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=library",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "10_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dlibrary%26nonce%3D8eeb43fa23023a3c5cc671150ef81de87d6d01c5cfc01ad08ff63c84f28ca8c5",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=mirroros",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "11_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmirroros%26nonce%3Df41383599574f68cd05e9e6b6da75ca0dddd761d73a620f7e06d5f0234a8bc5a",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=mirroros",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "11_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmirroros%26nonce%3D18066f22bdd48ff7936af2b5ebf8c6d9ee0cb4ac70a78f26ab2bae686d7b5ddf",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=mirroros",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "11_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmirroros%26nonce%3D60fd0cbc2f9e221eaec26a4496432b4cb4fb14f37db341a461d2df7531656a5d",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=mirroros",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "11_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmirroros%26nonce%3D1c0ee0fd298e3d62af6bcbcaf877568b21bf99cf12b62a000b9f1af51228c4fb",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=mirroros",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "11_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmirroros%26nonce%3D670ba5e6f16993fbae5a6e9f609334d93d9d6b3cac7ddeb486857ca4d55b695e",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=mirroros",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "11_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dmirroros%26nonce%3Da8382b068aa8c3f4a70652cc9c736876062808e5d1cb5323ecfeb8810db1535e",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=scopes",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "12_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dscopes%26nonce%3Dc925000c762648cfeba2232e9a0309bdcdf06e29b58a060d2ab4306166f25ba7",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=scopes",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "12_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dscopes%26nonce%3Da2d5daa37a4f8b2f0d6ad887985aa2c235cb4ec69e84dd63a4b9c17f65bd9f03",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=scopes",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "12_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dscopes%26nonce%3Dc57e8b14bac9467819a9806c86b59600f8c8ec99c2b3165ed8905b8eb6b9f154",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=scopes",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "12_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dscopes%26nonce%3Dfebbd67c6b8e0e8019fdde6552588be11e3a756153b853234645c8983b9e737b",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=scopes",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "12_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dscopes%26nonce%3De7fb2a0fdc294204d76bd18c879ce629373c523ef81b502d9f548b18db2b85d9",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=scopes",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "12_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dscopes%26nonce%3De2bc9e694b1947459d4c1d89ce56c809f9f7c02d0631442c7b72dbd08a6e6c56",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=gathering",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "13_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dgathering%26nonce%3D1e7aed7c04170be4ae5699b11ae28b0ce2d51e974b2740d6941f9e2e004ebbce",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=gathering",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "13_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dgathering%26nonce%3D22d6723781512fade38691caa856ac7a7294c6149c1114f5e40b1ae80d2e26b6",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=gathering",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "13_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dgathering%26nonce%3D3488e22c2f124d5a45dff2cb395ea6ccfc6bf839b03f788c6604cbf80df900e0",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=gathering",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "13_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dgathering%26nonce%3Dd5ce3112b28c4911c9fb30f5319c0645fabe43abc2b314ac9bfdc0379fbb6dcf",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=gathering",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "13_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dgathering%26nonce%3D0eaf1db06f8addf2b5f6950b186a10d7d7e646ae84b9557f4d54093e8f2b5870",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=gathering",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "13_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dgathering%26nonce%3D8574970bf47351053f3bbed88f1e8939086ed8ebf3f3e8e5ce1863a69adae1b4",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=about",
+    "viewport": [
+      320,
+      720
+    ],
+    "id": "14_320x720",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dabout%26nonce%3D851660c1673c2ecb6dd4b6117989873208ba482d1e8d6a2c1c85cc269628c9af",
+    "layout": {
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 721,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=about",
+    "viewport": [
+      360,
+      800
+    ],
+    "id": "14_360x800",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 429 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dabout%26nonce%3Deafdaa399786ae7b5187095d943d106aacc20fc77e964da7bee8e6302cf12088",
+    "layout": {
+      "width": 360,
+      "scrollWidth": 360,
+      "height": 800,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=about",
+    "viewport": [
+      390,
+      844
+    ],
+    "id": "14_390x844",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dabout%26nonce%3Ded2fee55b5396e8b35ccfe021398f2caba1aee89d46e2c8aba174de2c5db7c52",
+    "layout": {
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 844,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=about",
+    "viewport": [
+      430,
+      932
+    ],
+    "id": "14_430x932",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Failed to load resource: the server responded with a status of 429 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dabout%26nonce%3De71c7bea1b688421a4dd29306500120dcc0c53c945a172cbf482f937dabf7dfc",
+    "layout": {
+      "width": 430,
+      "scrollWidth": 430,
+      "height": 932,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=about",
+    "viewport": [
+      768,
+      1024
+    ],
+    "id": "14_768x1024",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty."
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dabout%26nonce%3Dede7cd4617b95ca90a467798845973713da6ddaf891ffef266d5b525d2c5842e",
+    "layout": {
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 1024,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  },
+  {
+    "url": "https://interplanetary-6ok2nlvxs-spiritmals-projects.vercel.app/?room=about",
+    "viewport": [
+      1440,
+      900
+    ],
+    "id": "14_1440x900",
+    "errors": [
+      "Failed to load resource: the server responded with a status of 403 ()",
+      "Provider's accounts list is empty.",
+      "[GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token.",
+      "Failed to load resource: the server responded with a status of 429 ()"
+    ],
+    "failed_requests": [
+      "403 https://vercel.com/api/jwt",
+      "429 https://o205439.ingest.sentry.io/api/1323670/envelope/?sentry_key=d00780d432ac4ccf882f60dd02062e14&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.111.0"
+    ],
+    "status": 200,
+    "final_url": "https://vercel.com/login?next=%2Fsso-api%3Furl%3Dhttps%253A%252F%252Finterplanetary-6ok2nlvxs-spiritmals-projects.vercel.app%252F%253Froom%253Dabout%26nonce%3Dc40a0c669506a1ae262905b1906caff7dbbf1f994d1982c57277c821ed660bca",
+    "layout": {
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 900,
+      "buttons": 7,
+      "scrollRegions": []
+    }
+  }
+]

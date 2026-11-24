@@ -1,0 +1,20 @@
+[
+ {
+  "name": "phone",
+  "title": "Login \u2013 Vercel",
+  "status": 200,
+  "composer_found": false
+ },
+ {
+  "name": "tablet",
+  "title": "Login \u2013 Vercel",
+  "status": 200,
+  "composer_found": false
+ },
+ {
+  "name": "desktop",
+  "title": "Login \u2013 Vercel",
+  "status": 200,
+  "composer_found": false
+ }
+]
