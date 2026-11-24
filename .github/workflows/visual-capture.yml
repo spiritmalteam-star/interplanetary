@@ -21,6 +21,9 @@ jobs:
       - run: pip install playwright
       - run: python -m playwright install --with-deps chromium
       - run: python qa/capture.py --base "${{ inputs.base }}" --out captures --route /?room=codex --route /?room=books --route /?room=music --route /?room=akashic --route /?room=invent --route /?room=quantum --route /?room=healx --route /?room=atelier --route /?room=studio --route /?room=library --route /?room=mirroros --route /?room=scopes --route /?room=gathering --route /?room=about
+      - name: Chronoscope render probe
+        if: always()
+        run: python qa/probe_chronoscope.py "${{ inputs.base }}" captures
       - uses: actions/upload-artifact@v4
         if: always()
         with:
