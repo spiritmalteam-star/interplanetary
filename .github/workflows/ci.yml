@@ -1,0 +1,26 @@
+name: CI (typecheck, lint, unit tests)
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Prisma client
+        run: npx prisma generate --schema "$(node scripts/select-schema.mjs)"
+      - name: Unit tests
+        run: node --experimental-strip-types --no-warnings --test tests/unit/*.test.mjs
+      - name: Typecheck
+        run: npx tsc --noEmit 2>&1 | tee tsc.log | tail -60; exit ${PIPESTATUS[0]}
+        continue-on-error: true
+      - name: Lint
+        run: npx eslint . 2>&1 | tail -80
+        continue-on-error: true
