@@ -20,7 +20,9 @@ with sync_playwright() as pw:
             page=context.new_page(); errors=[]
             page.on('pageerror',lambda e: errors.append(str(e)))
             page.on('console',lambda m: errors.append(m.text) if m.type=='error' else None)
-            row={'url':url,'viewport':[w,h],'id':name,'errors':errors}
+            failed=[]
+            page.on('response',lambda r: failed.append(f'{r.status} {r.url[:200]}') if r.status>=400 else None)
+            row={'url':url,'viewport':[w,h],'id':name,'errors':errors,'failed_requests':failed}
             try:
                 response=page.goto(url,wait_until='domcontentloaded',timeout=45000)
                 page.wait_for_timeout(2500)
