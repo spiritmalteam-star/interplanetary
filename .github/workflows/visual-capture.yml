@@ -1,0 +1,28 @@
+name: Visual capture (public site, read-only)
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Base URL to capture (production or a preview)
+        default: https://www.reflectme.space
+      label:
+        description: Artifact label, e.g. before or after
+        default: before
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright
+      - run: python -m playwright install --with-deps chromium
+      - run: python qa/capture.py --base "${{ inputs.base }}" --out captures --route /?room=codex --route /?room=books --route /?room=music --route /?room=akashic --route /?room=invent --route /?room=quantum --route /?room=healx --route /?room=atelier --route /?room=studio --route /?room=library --route /?room=mirroros --route /?room=scopes --route /?room=gathering --route /?room=about
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reflectme-captures-${{ inputs.label }}
+          path: captures/
