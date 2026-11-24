@@ -71,6 +71,7 @@ import { skyWord } from "@/lib/i18n/sky-words";
 import { LanguageButton } from "./LanguageButton";
 import { HyperXFusionBadge } from "./HyperXFusion";
 import { FloorAskForm } from "./FloorAskForm";
+import { ComposerField } from "./ComposerField";
 import { useLandingThreadBridge } from "@/lib/spatial/thread-bridge";
 
 /* THE SCOPES' OWN LAB — the three family fields' instruments ride as
@@ -2344,7 +2345,7 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
   const bridgeDraft = useMirror((s) => s.bridgeDraft);
   const consumeBridgeDraft = useMirror((s) => s.consumeBridgeDraft);
   const [carriedAt, setCarriedAt] = useState(0);
-  const replyRef = useRef<HTMLInputElement | null>(null);
+  const replyRef = useRef<HTMLTextAreaElement | null>(null);
   if (bridgeDraft && bridgeDraft.at !== carriedAt) {
     setDraft(bridgeDraft.text);
     setCarriedAt(bridgeDraft.at);
@@ -2380,8 +2381,10 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
           send();
         }}
         className={cn(
-          "flex items-center gap-1.5 rounded-full border py-1 pl-2 pr-1 transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]",
-          bare && "floor-glow"
+          "flex items-end gap-1.5 py-1 pl-2 pr-1",
+          bare
+            ? "composer-shell"
+            : "rounded-[1.4rem] border transition-colors duration-300 focus-within:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)]"
         )}
         style={{
           borderColor: bare
@@ -2403,18 +2406,17 @@ const ZoomReplyForm = memo(function ZoomReplyForm({
         <label htmlFor={`${testIdPrefix}-zoom-reply`} className="sr-only">
           {bare ? t("Whisper to the mirror…") : t("Speak with the transmission…")}
         </label>
-        <input
+        <ComposerField
           id={`${testIdPrefix}-zoom-reply`}
           ref={replyRef}
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={setDraft}
+          onSubmit={send}
           placeholder={
             bare ? t("Whisper to the mirror…") : t("Speak with the transmission…")
           }
           disabled={disabled}
-          autoComplete="off"
           data-testid={`${testIdPrefix}-zoom-reply`}
-          className="min-w-0 flex-1 bg-transparent py-1 text-[14px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
         <button
           type="submit"
@@ -6731,7 +6733,7 @@ export function BranchCanopy({
             button inside the room; one touch continues the walk
             without ever leaving */}
         {zoom && (
-          <div className="pointer-events-none absolute inset-0 z-30 flex justify-center p-1.5 sm:p-2.5">
+          <div className="pointer-events-none absolute inset-0 z-30 flex justify-center p-1 sm:p-2.5">
             <section
               ref={zoomSectionRef}
               data-testid={`${testIdPrefix}-zoom`}
@@ -6745,7 +6747,7 @@ export function BranchCanopy({
                   room it always was. */
               data-chat-yield={bare ? "" : undefined}
               className={cn(
-                "canopy-panel flex min-h-0 w-full max-w-[860px] flex-col overflow-hidden rounded-3xl border bg-background shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]",
+                "canopy-panel flex min-h-0 w-full max-w-[860px] flex-col overflow-hidden rounded-[1.6rem] border bg-background sm:rounded-3xl shadow-[0_28px_80px_-32px_rgba(0,0,0,0.65)]",
                 bare ? "pointer-events-none" : "pointer-events-auto",
                 /* THE FIELD'S OWN VOICE — the standing scope's own way
                     of expressing: the room wears the field's voice class,
@@ -6772,7 +6774,7 @@ export function BranchCanopy({
                   inside it changes — the transmission glides, no flicker */}
               <header
                 className={cn(
-                  "flex shrink-0 items-start justify-between gap-3 border-b px-4 py-2.5 pr-11 sm:px-5 sm:pr-12",
+                  "flex shrink-0 items-center justify-between gap-2 border-b px-3 py-1.5 pr-10 sm:items-start sm:gap-3 sm:px-5 sm:py-2.5 sm:pr-12",
                   /* THE HEADER'S OWN TOUCH — docked or full, the room's
                      crown of hands answers every pointer: the fine
                      desktop click never falls through the docked panel
@@ -6844,7 +6846,7 @@ export function BranchCanopy({
                 <div
                   ref={roomHandsRef}
                   className={cn(
-                    "flex shrink-0 items-center gap-1.5 transition-all duration-500",
+                    "room-hands flex shrink-0 items-center transition-all duration-500",
                     roomHandsHidden &&
                       "pointer-events-none translate-y-1 opacity-0"
                   )}
@@ -7015,7 +7017,7 @@ export function BranchCanopy({
                 onScroll={onBodyScroll}
                 data-testid={`${testIdPrefix}-zoom-answer`}
                 className={cn(
-                  "nice-scroll min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-6 sm:py-4",
+                  "nice-scroll chat-reading min-h-0 flex-1 overflow-y-auto px-3.5 py-3 sm:px-6 sm:py-4",
                   /* THE ROOM'S OWN SCROLL — docked in the threshold the
                      reading space keeps its touch: the visitor scrolls
                      WITHIN the chat now — the words move under their
@@ -7620,7 +7622,7 @@ export function BranchCanopy({
                   single flicker. */}
               <footer
                 className={cn(
-                  "flex shrink-0 flex-col gap-2.5 border-t px-4 py-2.5 sm:px-6 sm:py-3",
+                  "flex shrink-0 flex-col gap-2 border-t px-2.5 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:gap-2.5 sm:px-6 sm:py-3",
                   /* THE FOOTER'S OWN TOUCH — the reply line and every
                      branch hand keep their click on the desk: the room
                      is never lost to a stray fall-through again (the

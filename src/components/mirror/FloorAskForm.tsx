@@ -33,6 +33,7 @@ import {
   FUSION_MAX,
 } from "./HyperXFusion";
 import { ChatInputExtras, AttachmentChips } from "./ChatInputExtras";
+import { ComposerField } from "./ComposerField";
 import { filterStyles, isStyleSlashQuery } from "@/lib/image-styles";
 import { SCOPE_META } from "@/lib/mirror/workspaces";
 import type { LandingScopeKey } from "@/lib/mirror-store";
@@ -177,7 +178,7 @@ export const FloorAskForm = memo(function FloorAskForm({
   return (
     <div
       data-testid={`${testIdPrefix}-askbar`}
-      className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-2 px-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] sm:px-3"
     >
       {introNote}
       {atts.length > 0 && (
@@ -280,15 +281,12 @@ export const FloorAskForm = memo(function FloorAskForm({
           send();
         }}
         className={cn(
-          "pointer-events-auto flex w-full max-w-[560px] items-center gap-2 rounded-full border py-1.5 pl-2.5 pr-1.5 transition-colors duration-300",
-          /* THE CRYSTAL FOCUS — the line's own focus tint follows the
-             blue crystal. */
-          "focus-within:border-[rgba(148,190,224,0.5)]",
-          /* THE COOL FLOOR — in both its dockings (the threshold and
-             the realm) the line wears an opaque coat and no backdrop
-             blur: a live blur over a scrolling page is heat the phone
-             must not pay for a lens. */
-          "bg-background floor-glow"
+          /* THE GOLD-AND-MERCURY SHELL — the composer is one soft vessel:
+             a gilded-silver hairline, an opaque coat (no backdrop blur —
+             a live blur over a scrolling page is heat the phone must not
+             pay for), and a bottom-aligned row of hands that stays put
+             while the words grow upward. */
+          "composer-shell pointer-events-auto flex w-full max-w-[640px] items-end gap-1.5 py-1.5 pl-2 pr-1.5"
         )}
       >
         {/* THE INPUT'S OWN CALM — the reload and the star have left the
@@ -405,15 +403,14 @@ export const FloorAskForm = memo(function FloorAskForm({
         <label htmlFor={`${testIdPrefix}-ask`} className="sr-only">
           {placeholder}
         </label>
-        <input
+        <ComposerField
           id={`${testIdPrefix}-ask`}
           value={draft}
-          onChange={(e) => setDraft(e.target.value)}
+          onChange={setDraft}
+          onSubmit={send}
           placeholder={placeholder}
           disabled={disabled}
-          autoComplete="off"
           data-testid={`${testIdPrefix}-ask-input`}
-          className="min-w-0 flex-1 bg-transparent py-1 text-[14.5px] text-foreground placeholder:text-muted-foreground/55 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
         {/* THE ASK'S OWN STOP — while the crossing streams, the ask hand
             offers the quiet stop: one touch lays the stream down, the
