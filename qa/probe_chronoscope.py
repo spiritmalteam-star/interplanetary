@@ -14,6 +14,8 @@ with sync_playwright() as p:
         pg.on('response', lambda r: failed.append(f'{r.status} {r.url[:120]}') if r.status >= 400 else None)
         pg.goto(base + '/', wait_until='networkidle', timeout=60000)
         pg.wait_for_timeout(1500)
+        pg.keyboard.press('Escape')
+        pg.wait_for_timeout(800)
         stage = pg.locator('.codex-stage').first
         info = {'viewport': w, 'stage_found': stage.count() > 0, 'failed': failed}
         if stage.count():
