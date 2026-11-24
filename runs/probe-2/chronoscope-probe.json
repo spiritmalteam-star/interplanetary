@@ -1,0 +1,34 @@
+[
+ {
+  "viewport": 390,
+  "stage_found": true,
+  "failed": [],
+  "winding": false,
+  "load_error": false,
+  "text_len": 259,
+  "text_head": "The bridge\n\nCIV-0001 / 3,212\n\nAlpha Centauri Apunian Hominids\n\nNearest Stellar Kin & Solar-Neighborhood Observers\n\n4 LY\nType II (Stellar)\nCarbon-Water (Human-Kin)\nDiscover\nOpen the chronoscope\n\nTHE LANE BREATHES \u2014 A FEATURED WORLD RISES EVERY FIVE HEARTBEATS.",
+  "imgs": 1,
+  "box": {
+   "x": 16,
+   "y": 101.109375,
+   "width": 358,
+   "height": 641.328125
+  }
+ },
+ {
+  "viewport": 1440,
+  "stage_found": true,
+  "failed": [],
+  "winding": false,
+  "load_error": false,
+  "text_len": 376,
+  "text_head": "The Interplanetary Bridge\n\nTHE CHRONOSCOPE \u00b7 A TIME MACHINE FOR DISCOVERY\n\n3,212 CIVILISATIONS \u00b7 8 HYPERSPACE \u00b7 6 FULLY ILLUSTRATED\n\nCIV-0002 / 3,212\n\nPleiadian Taygetan Harmonists\n\nAncestral Hominid Cousins of the Seven Sisters\n\n444 LY\nType II (Stellar)\nCarbon-Water (Human-Kin)\nDiscover\nOpen the ch",
+  "imgs": 1,
+  "box": {
+   "x": 120,
+   "y": 187.734375,
+   "width": 1200,
+   "height": 524.453125
+  }
+ }
+]
