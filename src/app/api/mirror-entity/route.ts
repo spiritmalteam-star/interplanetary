@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openDoor } from "@/lib/server/open-door";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import { RELEVANCE_LAW } from "@/lib/relevance-law";
 
 import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";

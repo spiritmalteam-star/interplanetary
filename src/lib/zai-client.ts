@@ -896,7 +896,7 @@ async function atelierBackend(): Promise<ZAIClient> {
     channel never dies. The first sky always stays the voice of the
     house; the second only catches what would otherwise be silence. */
 const FALLBACK_TRIGGER =
-  /\b429\b|too many requests|rate.?limit|quota|exceeded|\b50[034]\b|overloaded/i;
+  /\b429\b|too many requests|rate.?limit|quota|exceeded|\b50[034]\b|overloaded|the house is unbodied|no ai provider is configured|\b402\b|payment required|insufficient balance|no resource package|arrears|insufficient_credits|energy_exhausted|\b401\b|unauthori[sz]ed|\b403\b|forbidden/i;
 
 function skyRefused(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);

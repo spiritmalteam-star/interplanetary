@@ -33,6 +33,10 @@ export function classifyAiError(err: unknown): AiFailure {
   if (/no ai provider is configured/i.test(msg)) return { code: "AI_NOT_CONFIGURED", retryable: false };
   if (/1113|insufficient balance|no resource package|recharge|arrears|quota|insufficient_credits|energy_exhausted/i.test(msg))
     return { code: "AI_QUOTA", retryable: false, upstreamStatus: status };
+  /* the sky's own purse — 402 is the payment wall: the account stands
+     but carries no credits. Honest code, not a generic bad response. */
+  if (status === 402 || /payment required/i.test(msg))
+    return { code: "AI_QUOTA", retryable: false, upstreamStatus: 402 };
   if (status === 401 || status === 403 || /invalid api key|unauthori[sz]ed|authentication/i.test(msg))
     return { code: "AI_AUTH", retryable: false, upstreamStatus: status };
   if (status === 429 || /rate limit|too many requests|1302|1305|concurrency/i.test(msg))

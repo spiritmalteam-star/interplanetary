@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import ZAI from "z-ai-web-dev-sdk";
+import ZAI from "@/lib/zai-client";
 import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
