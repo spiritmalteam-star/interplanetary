@@ -152,3 +152,26 @@
 - **Founder ops change (see HANDOFF):** funding Gemini no longer heals the words — only a
   Z.ai credit top-up (or a fresh `ZAI_API_KEY`) returns prose to production. Gemini funding
   serves only the paintings and the music.
+
+## 2026-11-25 (night, finale) — Z.ai (ZAI-14: the build healed, the threshold revealed)
+
+- **"No changes visible" — ROOT CAUSE FOUND AND FIXED:** Vercel was NOT ignoring pushes — it built
+  and FAILED every deployment since the 16:44 batch. Commit-status forensics (GitHub API):
+  `71cd484f` = last success; everything after = "Vercel failure". A local production build
+  reproduced it deterministically: `network/questions/[id]/branch/route.ts` (new in the batch)
+  imported `questionDetail, QUESTION_INCLUDE` from `../../route` — exports that existed NOWHERE
+  (route modules may not lend exports to each other anyway; the builder refuses).
+- **The fix:** the question's own shape now lives in `src/lib/server/question-detail.ts`
+  (`QUESTION_INCLUDE` + `questionDetail(q, viewerId)` matching the detail route's GET figure);
+  the branch hand serves from it. Full local build now GREEN (Turbopack, standalone output).
+- **"Default preview must reveal the website":** the welcome walk (About Us · 1 of 8) auto-rose
+  1.2 s after load on every first visit and covered the site. The auto-open is gone (founder's
+  law): the website IS the default preview; the walk opens only when a hand asks (About hand,
+  question mark, canopy doors all keep working). Dead guards removed.
+- **PRODUCTION VERIFIED LIVE:** push `c93809d3` → Vercel status flipped failure→success (poll 4);
+  landing HTML carries `banner-profile-mark` (mobile top bar LIVE at last, age 0 fresh); probe
+  speaks the words' law — omni returns the honest purse word (AI_QUOTA) instead of the leaked
+  "Gemini chat 402: prepayment credits are depleted".
+- **The one remaining founder action:** top up Z.ai credits (or set a funded ZAI_API_KEY on
+  Vercel) — per the words' law this is the ONLY path to prose; Gemini's funding feeds only the
+  painters and musicians.
