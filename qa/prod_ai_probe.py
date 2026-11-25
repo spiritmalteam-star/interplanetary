@@ -16,7 +16,7 @@ def call(path, body=None, method='POST', stream=False):
     out = {'path': path, 'status': st, 'ct': ct[:40], 'len': len(raw)}
     try:
         j = json.loads(raw); out['json_keys'] = list(j)[:8]
-        for k in ('error', 'code', 'message'):
+        for k in ('error', 'code', 'message', 'retryable', 'upstreamStatus'):
             if k in j: out[k] = str(j[k])[:140]
         if 'transmission' in j: out['answer_len'] = len(j['transmission'])
     except Exception:

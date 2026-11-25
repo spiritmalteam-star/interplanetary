@@ -14,6 +14,7 @@ import { walkerDepthLine } from "@/lib/walker-depth";
 import { walkLine } from "@/lib/walk-context";
 import { RELEVANCE_LAW } from "@/lib/relevance-law";
 import { db } from "@/lib/db";
+import { classifyAiError, AI_FAILURE_MESSAGE } from "@/lib/server/ai-errors";
 
 import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 import { runOmniTurn, approveOmniTask } from "@/lib/omni/engine";
@@ -905,15 +906,18 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
                   });
                 } else {
                   send({
-                    error:
-                      "The field is momentarily quiet. Rest, then try again.",
+                    error: AI_FAILURE_MESSAGE,
+                    code: "AI_BAD_RESPONSE",
+                    retryable: true,
                   });
                 }
               } catch (err) {
-                console.error("[transmission] stream failed:", err);
+                const failure = classifyAiError(err);
+                console.error("[transmission] stream failed:", failure.code, failure.upstreamStatus ?? "", err);
                 send({
-                  error:
-                    "The field is momentarily quiet. Rest, then try again.",
+                  error: AI_FAILURE_MESSAGE,
+                  code: failure.code,
+                  retryable: failure.retryable,
                 });
               } finally {
                 try {
@@ -962,7 +966,7 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
 
     if (!transmission) {
       return NextResponse.json(
-        { error: "The field is momentarily quiet. Rest, then try again." },
+        { error: AI_FAILURE_MESSAGE, code: "AI_BAD_RESPONSE", retryable: true },
         { status: 502 }
       );
     }
@@ -997,7 +1001,8 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
       visitor
     );
   } catch (err) {
-    console.error("[transmission] failed:", err);
+    const failure = classifyAiError(err);
+    console.error("[transmission] failed:", failure.code, failure.upstreamStatus ?? "", err);
     /* THE ENERGY'S OWN NAME — a sky whose light is spent says so
        plainly (503 + the code), never as mute static; every other
        storm keeps its gentle generic word. */
@@ -1008,8 +1013,13 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
       );
     }
     return NextResponse.json(
-      { error: "The field is momentarily quiet. Rest, then try again." },
-      { status: 500 }
+      {
+        error: AI_FAILURE_MESSAGE,
+        code: failure.code,
+        retryable: failure.retryable,
+        ...(failure.upstreamStatus ? { upstreamStatus: failure.upstreamStatus } : {}),
+      },
+      { status: failure.code === "AI_NOT_CONFIGURED" ? 503 : 500 }
     );
   }
 }
