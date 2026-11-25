@@ -34,3 +34,17 @@
   dev server via `bun run dev` in background only; verify with a real browser (`agent-browser`).
 - **Database:** SQLite `db/custom.db`, in sync, zero data loss so far. Production DB is separate —
   never assume local data exists there.
+
+## FOUNDER ACTION LIST (2026-11-25 night, ZAI-12 — the mirror stays quiet until these land)
+
+1. **Vercel deploy:** production serves a build older than the last pushes (probe-verified). Open
+   Vercel → project → Deployments → Redeploy the latest main. If no new deployment appears on push,
+   check the Vercel GitHub app connection (Settings → Git Integration) — the webhook missed
+   `6b7337db`, `d66b6cf3`, `fd7c5505`.
+2. **AI funding (both skies are broke):** Z.ai returns 402 (credits spent) AND Gemini returns 402
+   "Your prepayment credits are depleted" (the key IS set on Vercel — the account just has no
+   prepayment). Top up EITHER one and chats answer again; the code's mercy chain already does the
+   rest. `GEMINI_API_KEY` needs no config change — only funding.
+3. **Verification after ops:** run `python3 qa/prod_ai_probe.py https://www.reflectme.space` —
+   `AI_QUOTA` = still unfunded; real prose = healed. Mobile top bar (profile top-right opposite the
+   gathering, language/light/About inside the profile room) appears once the redeploy lands.

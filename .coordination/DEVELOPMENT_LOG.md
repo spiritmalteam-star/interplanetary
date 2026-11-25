@@ -98,3 +98,28 @@
 
 - Threshold reborn (biotechnological landing, miniature portal, creation room rebuild) — tasks 54–62.
 - Flora X greenhouse, music engine, transmission classification (PR #17 by Claude).
+
+## 2026-11-25 (night) — Z.ai (ZAI-12: production forensics + redeploy trigger)
+
+- **Founder reports:** "No changes visible" + mirror still "The field is momentarily quiet."
+- **Probe evidence (read-only, qa/prod_ai_probe.py against www.reflectme.space):**
+  - `/api/transmission` returns structured `code/retryable/upstreamStatus` → deployed build HAS
+    Claude's classification (post PR #17 / `a0260ef7`), but 402 classifies as `AI_BAD_RESPONSE` —
+    the `402 → AI_QUOTA` rule only exists since `6b7337db` (16:44 UTC) → **deployed build predates
+    the last three pushes** (6b7337db, d66b6cf3, fd7c5505).
+  - Landing HTML lacks `data-testid="banner-profile-mark"` (added in `d66b6cf3`) → mobile top-bar
+    rework NOT on production. Edge cache `age≈13.8k s` predates the commit time (secondary signal).
+  - omni mode leaks upstream truth: `Gemini chat 402: "Your prepayment credits are depleted…"` →
+    **the Gemini key IS configured on Vercel and reachable — its account is ALSO out of credits.**
+    Combined with Z.ai's 402: both skies are broke; no code path can answer until either is funded.
+- **Conclusion:** two independent causes — (1) Vercel did not deploy the latest pushes (GitHub
+  auto-deploy missed them; no vercel.json/hook in repo to force it), (2) billing: Z.ai credits
+  spent AND Gemini AI Studio prepayment depleted.
+- **Founder ops (ordered):** 1) Vercel → Deployments → Redeploy latest main (or verify the GitHub
+  app/webhook) so `fd7c5505`+ goes live; 2) top up Z.ai credits AND/OR fund Gemini AI Studio
+  prepayment; 3) re-run the probe — expect `AI_QUOTA` while unfunded, real prose after funding.
+- **Local verification of the undeployed work:** sandbox healed c873b47 → fd7c5505 (0 unique
+  commits proven first); ZAI-11 mobile top bar browser-verified on iPhone-14 viewport (gathering
+  sigil top-left, profile mark top-right, language/light/About inside the profile room, desktop
+  `display:none`, zero console errors).
+- Docs push (this commit) doubles as the Vercel redeploy trigger.
