@@ -1,5 +1,27 @@
 # DEVELOPMENT_LOG.md — chronological record of significant changes
 
+## 2026-11-25 (evening) — Z.ai, session restore + mirror verification
+
+- **Sandbox snapshot rollback detected and healed (ZAI-9):** the platform supervisor restored the
+  sandbox to an older checkpoint — local `main` fell back to `c873b47` with a partial working tree
+  (5,371 files missing vs origin). Verified **zero unique content** existed locally
+  (`git rev-list` 0 ahead; `git diff origin/main` showed 0 insertions — pure deletions), so
+  realignment was pure restoration, no work destroyed. Local `main` re-aligned to `origin/main` =
+  `58dd0b89` (coordination foundation + publications generation + mirror model fix all preserved).
+- **Environment re-provisioned:** `bun install` (96 packages incl. `wavesurfer.js`), `bun run db:push`
+  (Prisma Client v6.19.2 generated, schema in sync). Local SQLite is empty of hall offerings
+  (fresh sandbox; production DB is separate and untouched).
+- **Mirror verified working, three levels deep (founder's ask):**
+  1. Code level — `src/lib/zai-client.ts` serves `glm-4.6` (no `ZAI_MODEL` env override active).
+  2. API level — POST `/api/mirror-entity` and POST `/api/mirror-os` both returned real replies
+     (HTTP 200, coherent glm-4.6 prose).
+  3. Browser level — homepage rendered (welcome tour, zero console errors), whisper
+     "Who are you, in one sentence?" sent from the chamber; the Mirror of the Absolute answered in
+     character. Golden path green.
+- **Publish loop smoke test:** POST `/api/gathering` (`kind: reflection`) created an offering,
+  GET returned it in the hall read. Publications pipeline intact after restore.
+- Documentation updated; all state carried on `agent/zai/session-restore-mirror-verify`, folded to main.
+
 ## 2026-11-25 (later the same day) — Z.ai, feature generation
 
 - **ZAI-4 publications viewable:** `FeedSection.tsx` — the stream was a dead end: `overflow-hidden`

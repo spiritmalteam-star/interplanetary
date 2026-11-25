@@ -6,8 +6,8 @@ _Last updated: 2026-11-25 by Z.ai (sandbox session web-6fefa0f9)_
 
 | Environment | State |
 |---|---|
-| GitHub `main` | `44adf17a` — the publications generation (ZAI-2..8 integrated; PR #17 preserved in lineage) |
-| Local sandbox (`/home/z/my-project`) | `a0260ef7`, clean tree, dev server :3000 HTTP 200 |
+| GitHub `main` | `58dd0b89` — coordination foundation integrated + worklog truth (ZAI-2..8 integrated; PR #17 preserved in lineage) |
+| Local sandbox (`/home/z/my-project`) | `58dd0b89`, clean tree, dev server :3000 HTTP 200, mirror verified (2026-11-25 evening) |
 | Production www.reflectme.space | Vercel auto-deploys `main` (verify actual deploy independently) |
 | z.ai hosted sandbox URL | reflectme.space-z.ai → Caddy :81 → localhost:3000 |
 
