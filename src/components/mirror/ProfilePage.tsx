@@ -22,6 +22,7 @@ import {
   Lock,
   LogIn,
   LogOut,
+  CircleQuestionMark,
   Plus,
   RotateCcw,
   ScrollText,
@@ -1063,9 +1064,26 @@ export function ProfilePage() {
                 {/* THE TONGUE BEFORE THE LIGHT — the language hand rests
                     BEFORE the realm's light toggle: the visitor chooses
                     the words, then turns the light. The nine voices —
-                    Albanian first, the world's eight most-spoken after. */}
+                    Albanian first, the world's eight most-spoken after.
+                    THE PHONE'S OWN TRIO — the About door stands beside
+                    them now: on mobile the profile room is the only
+                    home these three hands have (the threshold's top bar
+                    keeps just the gathering and the profile), so the
+                    question mark lives here, one touch from the
+                    eight-slide welcome. */}
                 <LanguageButton testId="profilepage-language-button" />
                 <RealmLightToggle />
+                <button
+                  type="button"
+                  onClick={() => exitTo(() => useMirror.getState().openTour())}
+                  aria-haspopup="dialog"
+                  aria-label={t("About Us")}
+                  title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
+                  data-testid="profilepage-about-question"
+                  className="focus-glow pm-tap flex size-7 items-center justify-center rounded-full border hairline text-muted-foreground transition-all duration-300 hover:border-[var(--hairline-hover)] hover:text-foreground"
+                >
+                  <CircleQuestionMark className="size-3.5" aria-hidden="true" />
+                </button>
               </div>
               </div>
               <div className="mt-2.5 flex flex-wrap items-end justify-between gap-3">

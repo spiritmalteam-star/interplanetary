@@ -6184,8 +6184,16 @@ export function BranchCanopy({
           {/* THE VISITOR'S OWN MARK — the profile icon stands at the
               crown's very BEGINNING, before the light's toggle: an icon
               (never a pill), the same in both gears, opening the
-              visitor's own room within the frame. */}
-          {realm && <CrownProfileIcon testIdPrefix={testIdPrefix} />}
+              visitor's own room within the frame. THE PHONE'S OWN LAW
+              — on mobile the profile has left the chat's top bar for
+              good: it stands opposite the gathering's sigil at the
+              threshold's very top now (the landing's own mark), and
+              the crown keeps only the conversation's hands. */}
+          {realm && (
+            <div className="max-md:hidden">
+              <CrownProfileIcon testIdPrefix={testIdPrefix} />
+            </div>
+          )}
 
           {/* THE LIGHT'S OWN HAND HAS MOVED INDOORS — at the visitor's
               word the crown carries only the profile, the making rooms

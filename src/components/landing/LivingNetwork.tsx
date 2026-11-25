@@ -36,13 +36,17 @@ const CORNER_AFTER_PX = 48;
    deeper rooms stand open: a workplace (the codex register among
    them), a room zoomed to its own sky, or the Gathering's hall
    itself. The door tells no lie about the room it opens — when the
-   visitor walks in a deeper room, the threshold's doorway rests. */
+   visitor walks in a deeper room, the threshold's doorway rests.
+   (Shared with the phone's profile mark — both top hands obey the
+   same law: when a deeper room stands open, the doorway rests.) */
 function useVeiledDoor(): boolean {
   const workplaceOpen = useMirror((s) => s.activeToolTab !== null);
   const zoomed = useMirror((s) => s.workspaceZoomed);
   const gatheringOpen = useMirror((s) => s.gatheringPortalOpen);
   return workplaceOpen || zoomed || gatheringOpen;
 }
+
+export { useVeiledDoor };
 
 export default function LivingNetwork() {
   const t = useT();
