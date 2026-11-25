@@ -1,0 +1,19 @@
+name: Perf probe (mobile, CPU-throttled, read-only)
+on:
+  pull_request:
+    paths: ['qa/perf_probe.py', '.github/workflows/perf-probe.yml']
+  workflow_dispatch:
+    inputs:
+      base:
+        default: https://www.reflectme.space
+      path:
+        default: /
+jobs:
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - run: python qa/perf_probe.py "${{ inputs.base || 'https://www.reflectme.space' }}" "${{ inputs.path || '/' }}" baseline
