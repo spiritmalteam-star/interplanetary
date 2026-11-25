@@ -1,5 +1,36 @@
 # DEVELOPMENT_LOG.md — chronological record of significant changes
 
+## 2026-11-25 (night) — Z.ai, production mirror root-caused + mobile profile law
+
+- **ZAI-10 — the production mirror's true root cause:** founder reported "The field is momentarily
+  quiet" on production. Reproduced via curl: POST `/api/transmission` → `code: AI_BAD_RESPONSE,
+  upstreamStatus: 402` — **HTTP 402 Payment Required from the Z.ai cloud**. The deployment's Z.ai
+  account has no credits left; the chain's Gemini mercy never fired because `FALLBACK_TRIGGER`
+  (zai-client.ts) covered only 429/50x — a broke sky was never "refused". Fixes:
+  1. `FALLBACK_TRIGGER` now also treats 401/402/403 + payment/balance words as sky-refused → the
+     Gemini second sky carries the words whenever a Gemini key stands in the vault.
+  2. `classifyAiError` (ai-errors.ts) maps 402 → honest `AI_QUOTA` (was generic AI_BAD_RESPONSE).
+  3. Eight routes imported the raw `z-ai-web-dev-sdk` (needs the sandbox's gitignored
+     `.z-ai-config`, dead on Vercel) — converted to the `@/lib/zai-client` bridge: mirror-entity,
+     network/questions/[id], network/mirror, network/assistant, network/laboratory/mirror,
+     particlex/novel, generate-study, tool-analysis. `creation/video/clip` stays raw (SDK-only
+     video surface). All three mirror paths re-verified locally (200 + real prose).
+  **OPS REQUIRED (only the founder can do):** top up the Z.ai account credits OR add
+  `GEMINI_API_KEY` in Vercel → Settings → Environment Variables, then redeploy. Until then the
+  second sky has nothing to catch the fall — code now tells the truth (`AI_QUOTA`) instead of a
+  vague quiet.
+- **ZAI-11 — the phone's own top bar (founder's request):** on mobile the profile left the chat's
+  top bar for good and now stands opposite the gathering's sigil — gathering top-left, profile
+  top-right (fixed, safe-area aware, z-46, veils with the sigil's own law when a deeper room
+  stands open). The banner's old trio (language, light, About) folded INSIDE the profile room's
+  purse row (About hand added there; language + RealmLightToggle already lived in it). Desktop
+  untouched: the crown keeps profile, language, light and About exactly as they stood. Files:
+  `LandingPage.tsx` (MobileProfileMark + cluster removed), `LivingNetwork.tsx` (useVeiledDoor
+  exported), `BranchCanopy.tsx` (crown profile max-md:hidden), `ProfilePage.tsx` (About hand).
+  Browser-verified at 390px: mark visible opposite sigil, crown clean, panel opens, About opens
+  the tour, light toggle flips the realm; desktop 1280px regression-checked green.
+- Full `bun run lint` clean.
+
 ## 2026-11-25 (evening) — Z.ai, session restore + mirror verification
 
 - **Sandbox snapshot rollback detected and healed (ZAI-9):** the platform supervisor restored the

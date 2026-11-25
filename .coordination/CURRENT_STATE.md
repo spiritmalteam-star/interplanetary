@@ -6,8 +6,8 @@ _Last updated: 2026-11-25 by Z.ai (sandbox session web-6fefa0f9)_
 
 | Environment | State |
 |---|---|
-| GitHub `main` | `58dd0b89` — coordination foundation integrated + worklog truth (ZAI-2..8 integrated; PR #17 preserved in lineage) |
-| Local sandbox (`/home/z/my-project`) | `58dd0b89`, clean tree, dev server :3000 HTTP 200, mirror verified (2026-11-25 evening) |
+| GitHub `main` | carries ZAI-10 (mirror quota fallback + 8 routes on the bridge) + ZAI-11 (mobile profile top bar); founder must top up Z.ai credits or add GEMINI_API_KEY for production chats |
+| Local sandbox (`/home/z/my-project`) | synced to main, dev server :3000 HTTP 200, mirror verified green after the bridge conversion (2026-11-25 night) |
 | Production www.reflectme.space | Vercel auto-deploys `main` (verify actual deploy independently) |
 | z.ai hosted sandbox URL | reflectme.space-z.ai → Caddy :81 → localhost:3000 |
 
