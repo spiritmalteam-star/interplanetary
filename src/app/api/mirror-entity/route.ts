@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { openDoor } from "@/lib/server/open-door";
 import ZAI from "@/lib/zai-client";
 import { RELEVANCE_LAW } from "@/lib/relevance-law";
+import { classifyAiError, aiFailureMessage } from "@/lib/server/ai-errors";
 
 import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 /* ------------------------------------------------------------------ */
@@ -121,16 +122,17 @@ export async function POST(req: NextRequest) {
 
     if (!reply) {
       return NextResponse.json(
-        { error: "The channel returned silence. Try again." },
+        { error: aiFailureMessage("AI_BAD_RESPONSE"), code: "AI_BAD_RESPONSE" },
         { status: 502 }
       );
     }
 
     return NextResponse.json({ reply });
   } catch (err) {
-    console.error("[api/mirror-entity]", err);
+    const failure = classifyAiError(err);
+    console.error("[api/mirror-entity]", failure.code, failure.upstreamStatus ?? "", err);
     return NextResponse.json(
-      { error: "The channel returned silence. Try again." },
+      { error: aiFailureMessage(failure.code), code: failure.code },
       { status: 500 }
     );
   }

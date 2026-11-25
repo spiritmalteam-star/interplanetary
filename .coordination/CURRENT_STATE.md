@@ -6,7 +6,7 @@ _Last updated: 2026-11-25 by Z.ai (sandbox session web-6fefa0f9)_
 
 | Environment | State |
 |---|---|
-| GitHub `main` | carries ZAI-10 (mirror quota fallback + 8 routes on the bridge) + ZAI-11 (mobile profile top bar); founder must top up Z.ai credits or add GEMINI_API_KEY for production chats |
+| GitHub `main` | carries ZAI-10 (quota fallback + bridge) + ZAI-11 (mobile top bar) + ZAI-12 (forensics) + ZAI-13 (the words' law: Z.ai only for chat, honest per-code failure words); founder must top up Z.ai credits — Gemini funding now serves only paintings/music, never the words |
 | Local sandbox (`/home/z/my-project`) | synced to main, dev server :3000 HTTP 200, mirror verified green after the bridge conversion (2026-11-25 night) |
 | Production www.reflectme.space | Vercel auto-deploys `main` (verify actual deploy independently) |
 | z.ai hosted sandbox URL | reflectme.space-z.ai → Caddy :81 → localhost:3000 |
@@ -16,8 +16,10 @@ _Last updated: 2026-11-25 by Z.ai (sandbox session web-6fefa0f9)_
 - Next.js 16.1.3 (App Router, Turbopack dev), TypeScript 5, Tailwind CSS 4, shadcn/ui (New York).
 - Prisma ORM, SQLite at `db/custom.db` (canonical schema `prisma/schema.prisma`; postgres twin derived
   by `scripts/select-schema.mjs` when `DATABASE_URL` is postgres).
-- Intelligence bridge `src/lib/zai-client.ts`: Z.ai cloud (api.z.ai) primary; Gemini fallback for chat;
-  atelier (SDK gateway) in dev; Albanian visitor tongue prefers Gemini sky. Voice (TTS/ASR) rides Z.ai only.
+- Intelligence bridge `src/lib/zai-client.ts`: THE WORDS' LAW (founder decree, ZAI-13) — every word
+  rides a Z.ai sky only: integrated SDK atelier in dev, Z.ai cloud (api.z.ai) key on Vercel.
+  Gemini is banished from chat entirely (no fallback, no Albanian primary, no mercy) — it keeps
+  only the paintings (image engines) and the music (Lyria) through its own doors. Voice (TTS/ASR) rides Z.ai only.
 - Chat model default: `glm-4.6` (upgraded from `glm-4.5-flash`; re-fixed after a platform checkout silently reverted it; env `ZAI_MODEL` overrides).
 - Vision model: `glm-4.6v`. Image generation: `@google/genai` via `src/lib/image-engine.ts`.
 - Mini services under `mini-services/` (own ports, started by `.zscripts/dev.sh`).

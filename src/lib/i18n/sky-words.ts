@@ -11,6 +11,10 @@ import { translate, type LanguageCode } from "./core";
 export const SKY_WORDS: readonly string[] = [
   /* the field's rest — the one-breath doors' gentle storm word */
   "The field is momentarily quiet. Rest, then try again.",
+  /* the lasting storms' own honest words (per code) */
+  "The sky's own light is spent — the keeper must tend its purse before the field speaks again.",
+  "The sky's door does not know the house's key — the keeper must mend it.",
+  "No sky stands above this deployment yet — the keeper must raise one before the field speaks.",
   /* the spent light — the energy's own name */
   "The mirror's energy ran out momentarily — it will speak again once the light returns.",
   /* the watchful field's two-minute word */

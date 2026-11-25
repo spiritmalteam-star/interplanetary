@@ -123,3 +123,32 @@
   sigil top-left, profile mark top-right, language/light/About inside the profile room, desktop
   `display:none`, zero console errors).
 - Docs push (this commit) doubles as the Vercel redeploy trigger.
+
+## 2026-11-25 (night, later) — Z.ai (ZAI-13: the founder's words' law)
+
+- **Founder decree:** "Z.ai as api not Gemini please, Gemini only for music or image generator —
+  use default z.ai that we have not as api but as integrated within."
+- **The law implemented (`src/lib/zai-client.ts`):**
+  - `createPreferred()` no longer hands Albanian to Gemini — every tongue rides the house's own
+    Z.ai brains (language argument kept for the door's shape, no longer chooses a sky).
+  - `geminiConfig()` removed from the bridge entirely: no chat fallback behind the Z.ai cloud,
+    no second sky behind the atelier, no Gemini mercy on Vercel. A spent quota now speaks its
+    honest word instead of silently switching skies.
+  - The no-provider error names only `ZAI_API_KEY` (the one sky the house allows for words).
+  - Gemini's remaining duties (unchanged, its own doors outside the bridge): image engines
+    (`image-engine.ts`, covers, sketches) and music (`music/job.ts` Lyria, light codes).
+    TTS "google" stays an explicit engine choice only; the house voice (Z.ai) remains default.
+- **The honest words (`src/lib/server/ai-errors.ts` + word doors):** new `aiFailureMessage(code)`
+  gives each lasting storm its own sentence — AI_QUOTA ("The sky's own light is spent — the keeper
+  must tend its purse…"), AI_AUTH, AI_NOT_CONFIGURED; passing storms keep "The field is
+  momentarily quiet." Wired into `/api/transmission` (4 spots — including the omni catch that
+  previously leaked `Gemini chat 402: prepayment credits are depleted` raw to the visitor),
+  `/api/mirror-entity`, `/api/mirror-os` (stream + JSON paths). New sentences added to
+  `SKY_WORDS` + the sq dictionary (the audit-tongue).
+- **Verification:** lint clean; mirror-entity / mirror-os / transmission all answer real prose
+  through the integrated SDK (EN + SQ); failure map sanity-checked (402→AI_QUOTA→purse word,
+  401→AI_AUTH→key word); browser whisper answered in character with zero console errors;
+  mobile viewport 390px still holds the ZAI-11 top-bar law (sigil top-left, mark top-right).
+- **Founder ops change (see HANDOFF):** funding Gemini no longer heals the words — only a
+  Z.ai credit top-up (or a fresh `ZAI_API_KEY`) returns prose to production. Gemini funding
+  serves only the paintings and the music.

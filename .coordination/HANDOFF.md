@@ -41,10 +41,13 @@
    Vercel → project → Deployments → Redeploy the latest main. If no new deployment appears on push,
    check the Vercel GitHub app connection (Settings → Git Integration) — the webhook missed
    `6b7337db`, `d66b6cf3`, `fd7c5505`.
-2. **AI funding (both skies are broke):** Z.ai returns 402 (credits spent) AND Gemini returns 402
-   "Your prepayment credits are depleted" (the key IS set on Vercel — the account just has no
-   prepayment). Top up EITHER one and chats answer again; the code's mercy chain already does the
-   rest. `GEMINI_API_KEY` needs no config change — only funding.
+2. **AI funding (UPDATED by the founder's words' law, ZAI-13):** the words now ride Z.ai ONLY —
+   Gemini is banished from chat (its duties: paintings + music, through its own doors). So the
+   mirror stays quiet until **Z.ai credits are topped up** (or a fresh funded `ZAI_API_KEY` is
+   set on Vercel). Funding Gemini no longer returns prose to production — it only feeds the
+   painters and the musicians. Until funded, every word door speaks its honest per-code word
+   ("The sky's own light is spent — the keeper must tend its purse…") instead of the old
+   misleading "momentarily quiet".
 3. **Verification after ops:** run `python3 qa/prod_ai_probe.py https://www.reflectme.space` —
    `AI_QUOTA` = still unfunded; real prose = healed. Mobile top bar (profile top-right opposite the
    gathering, language/light/About inside the profile room) appears once the redeploy lands.

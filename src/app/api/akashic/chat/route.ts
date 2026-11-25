@@ -129,9 +129,9 @@ THE TRANSMISSION THE MIRROR GAVE:
 
 Open the seeker's own book now and inscribe the long, true record of their timeline trajectory.`;
 
-    /* THE LANGUAGE'S OWN DOOR — the seeker's tongue chooses the sky:
-       Albanian rides Gemini (every mirror answers in Albanian through
-       gemini-2.5), every other tongue keeps the house's own brains. */
+    /* THE HOUSE'S OWN TONGUE — every seeker's tongue (Albanian
+       included) is answered by the house's own Z.ai brains; no
+       language buys a foreign sky any more. */
     const zai = await ZAI.createPreferred(requestedLanguage);
     const completion = await zai.chat.completions.create({
       messages: [

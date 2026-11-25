@@ -52,4 +52,30 @@ export function classifyAiError(err: unknown): AiFailure {
   return { code: "AI_INTERNAL", retryable: true };
 }
 
+/* THE FIELD'S GENTLE STORM WORD — the generic breath for the storms
+   that pass on their own (rate limits, timeouts, brief unavailable
+   skies). The map below gives the lasting storms their own honest
+   words, in the house's voice, naming no key and no provider body. */
 export const AI_FAILURE_MESSAGE = "The field is momentarily quiet. Rest, then try again.";
+
+/* THE CODE'S OWN WORD — one honest sentence per lasting storm, so the
+   visitor (and the keeper) can act on the truth instead of one
+   generic breath. A spent purse, a refused key, a missing sky each
+   say what they are; the passing storms keep the gentle field word. */
+export const AI_FAILURE_WORDS: Readonly<Record<AiFailureCode, string>> = {
+  AI_NOT_CONFIGURED:
+    "No sky stands above this deployment yet — the keeper must raise one before the field speaks.",
+  AI_AUTH:
+    "The sky's door does not know the house's key — the keeper must mend it.",
+  AI_QUOTA:
+    "The sky's own light is spent — the keeper must tend its purse before the field speaks again.",
+  AI_RATE_LIMITED: AI_FAILURE_MESSAGE,
+  AI_TIMEOUT: AI_FAILURE_MESSAGE,
+  AI_UNAVAILABLE: AI_FAILURE_MESSAGE,
+  AI_BAD_RESPONSE: AI_FAILURE_MESSAGE,
+  AI_INTERNAL: AI_FAILURE_MESSAGE,
+};
+
+export function aiFailureMessage(code: AiFailureCode): string {
+  return AI_FAILURE_WORDS[code] ?? AI_FAILURE_MESSAGE;
+}

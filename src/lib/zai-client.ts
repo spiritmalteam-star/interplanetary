@@ -9,11 +9,17 @@
 /*                                                                    */
 /*  Provider selection:                                               */
 /*    LLM_PROVIDER=zai-cloud → Z.ai's public API (api.z.ai, GLM)      */
-/*    LLM_PROVIDER=openai    → OpenAI-compatible endpoint             */
 /*    LLM_PROVIDER=zai       → the z-ai-web-dev-sdk atelier           */
 /*    unset                  → on Vercel: Z.ai key when ZAI_API_KEY   */
-/*                             exists, else OpenAI when OPENAI_API_KEY*/
 /*                             exists; in the laboratory: the atelier */
+/*                                                                    */
+/*  THE WORDS' LAW (the founder's own decree) — every word this house */
+/*  speaks or writes — chat, vision-chat, streaming — rides a Z.ai    */
+/*  sky and no other: the integrated atelier here, the Z.ai cloud     */
+/*  key there. Gemini is banished from the words entirely. Its only   */
+/*  duties in the house are the ones it was born for: the paintings   */
+/*  (image engines) and the music (Lyria) it serves through its own   */
+/*  doors, outside this bridge.                                       */
 /*                                                                    */
 /*  The cloud skies speak exactly the shapes the routes already use:  */
 /*  OpenAI-style messages (including multimodal image_url parts),     */
@@ -600,32 +606,9 @@ export function openaiTtsConfig(): { apiKey: string; baseUrl: string; model: str
   };
 }
 
-/* ------------------------- the gemini sky --------------------------- */
-/*  GEMINI 2.5 — the quiet third sky. It stands behind the house's own
-    brains for every slow or spent moment (a Z.ai sky that takes too
-    long to answer, a quota resting, a 5xx storm), and it LEADS the
-    conversation the moment the visitor speaks Albanian — every mirror
-    answers in Albanian through Gemini's own tongue. The key lives in
-    GEMINI_API_KEY (the same key the sound engine and the brush
-    already carry in Vercel's vault). The endpoint is Gemini's own
-    OpenAI-compatible door: the exact request shape every other sky
-    already speaks, so one class serves it too. */
-function geminiConfig(): CloudConfig | null {
-  const apiKey =
-    process.env.GEMINI_API_KEY?.trim() || process.env.GOOGLE_API_KEY?.trim();
-  if (!apiKey) return null;
-  return {
-    apiKey,
-    baseUrl: (
-      process.env.GEMINI_BASE_URL ??
-      "https://generativelanguage.googleapis.com/v1beta/openai"
-    ).replace(/\/$/, ""),
-    model: process.env.GEMINI_CHAT_MODEL ?? "gemini-2.5-flash",
-    visionModel: process.env.GEMINI_VISION_MODEL ?? "gemini-2.5-flash",
-    allowThinking: false,
-    label: "Gemini",
-  };
-}
+/* (the gemini sky was dismissed from the words — the founder's law:
+   every word rides Z.ai; Gemini paints and sings elsewhere, through
+   its own doors, never through this bridge) */
 
 export type Provider = "zai-cloud" | "zai";
 
@@ -638,7 +621,8 @@ export function resolveProvider(): Provider {
     return explicit;
   }
   /* in the cloud the Z.ai sky is the default — the same brains as the
-     laboratory; Gemini stands behind it when the quota is spent */
+     laboratory. No second sky stands behind it: the words' law keeps
+     the line pure (a spent quota speaks its honest word instead). */
   if (process.env.VERCEL) {
     if (process.env.ZAI_API_KEY) return "zai-cloud";
   }
@@ -1029,21 +1013,12 @@ export default class ZAI {
     return ZAI.sky;
   }
 
-  /* THE LANGUAGE'S OWN DOOR — the visitor's tongue chooses the leading
-     sky. When they speak Albanian, every mirror answers through the
-     Gemini sky (gemini-2.5) in Albanian; every other tongue keeps the
-     house's own brains, with Gemini standing quietly behind them all. */
-  static async createPreferred(language?: string): Promise<ZAIClient> {
-    const lang = (language ?? "en").toLowerCase();
-    const gemini = geminiConfig();
-    if (lang === "sq" && gemini) {
-      const primary = new CloudBackend(gemini);
-      const secondSky = zaiCloudConfig();
-      if (secondSky) {
-        return chainChatBackends(primary, new CloudBackend(secondSky));
-      }
-      return primary;
-    }
+  /* THE HOUSE'S OWN TONGUE — every language, Albanian included, is
+     answered by the house's own Z.ai brains. No visitor's tongue buys
+     a foreign sky: one house, one line of words. The language argument
+     remains part of the door's shape (callers pass it), but it no
+     longer chooses a sky. */
+  static async createPreferred(_language?: string): Promise<ZAIClient> {
     return ZAI.create();
   }
 
@@ -1052,39 +1027,30 @@ export default class ZAI {
     if (provider === "zai-cloud") {
       const cfg = zaiCloudConfig();
       if (cfg) {
-        const primary = new CloudBackend(cfg);
-        /* the quiet second brain — when Z.ai's quota is spent after
-           every patient retry, the Gemini sky carries the words so
-           the chats keep responding. The voice never rides this
-           second sky — only the house voice (Z.ai) reads aloud.
-           (OpenAI was removed from every chat chain — its one duty
-           is the call's spoken voice.) */
-        const secondSky = geminiConfig();
-        if (secondSky) {
-          return chainChatBackends(primary, new CloudBackend(secondSky));
-        }
-        return primary;
+        /* one sky, no second brain — when Z.ai's quota is spent the
+           honest word is spoken, and the keeper tends the purse.
+           The voice never rode a foreign sky and the words never
+           will. (OpenAI was removed from every chat chain long ago
+           — its one duty is the call's spoken voice.) */
+        return new CloudBackend(cfg);
       }
     }
     if (!process.env.VERCEL) {
       /* the atelier — and, when the laboratory holds a cloud key, the
-         quiet second sky behind it for the exhausted-quota moments,
-         with Gemini as the patient hand */
+         quiet second sky behind it for the exhausted-quota moments.
+         The second sky is Z.ai's own cloud — the words' law allows
+         no other hand. */
       const atelier = await atelierBackend();
-      const secondSky = zaiCloudConfig() ?? geminiConfig();
+      const secondSky = zaiCloudConfig();
       if (secondSky) {
         return chainChatBackends(atelier, new CloudBackend(secondSky));
       }
       return atelier;
     }
-    /* the cloud can only live from a key — say clearly which one.
-       THE GEMINI MERCY — when the house holds no Z.ai key but a
-       Gemini key stands in the vault, the Gemini sky serves
-       the whole house alone rather than letting every chat fall. */
-    const gemini = geminiConfig();
-    if (gemini) return new CloudBackend(gemini);
+    /* the cloud can only live from a Z.ai key — say so plainly, and
+       name only the sky the house allows. */
     throw new Error(
-      "No AI provider is configured on this deployment. Add ZAI_API_KEY (Z.ai — the same GLM brains as the laboratory) or GEMINI_API_KEY in Vercel → Settings → Environment Variables, then redeploy."
+      "No AI provider is configured on this deployment. Add ZAI_API_KEY (Z.ai — the same GLM brains as the laboratory) in Vercel → Settings → Environment Variables, then redeploy."
     );
   }
 }

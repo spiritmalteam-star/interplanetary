@@ -14,7 +14,7 @@ import { walkerDepthLine } from "@/lib/walker-depth";
 import { walkLine } from "@/lib/walk-context";
 import { RELEVANCE_LAW } from "@/lib/relevance-law";
 import { db } from "@/lib/db";
-import { classifyAiError, AI_FAILURE_MESSAGE } from "@/lib/server/ai-errors";
+import { classifyAiError, aiFailureMessage } from "@/lib/server/ai-errors";
 
 import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
 import { runOmniTurn, approveOmniTask } from "@/lib/omni/engine";
@@ -522,9 +522,13 @@ async function postImpl(
           visitor
         );
       } catch (err) {
-        console.error("[transmission] omni turn failed:", err);
+        /* THE HONEST WORD, NEVER THE RAW STORM — the sky's own error
+           body stays behind the veil; the visitor reads the code's
+           own sentence (a spent purse says so plainly). */
+        const failure = classifyAiError(err);
+        console.error("[transmission] omni turn failed:", failure.code, failure.upstreamStatus ?? "", err);
         return NextResponse.json(
-          { error: err instanceof Error && err.message ? err.message : "The prime field is momentarily quiet. Rest, then try again." },
+          { error: aiFailureMessage(failure.code), code: failure.code },
           { status: 502 }
         );
       }
@@ -906,7 +910,7 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
                   });
                 } else {
                   send({
-                    error: AI_FAILURE_MESSAGE,
+                    error: aiFailureMessage("AI_BAD_RESPONSE"),
                     code: "AI_BAD_RESPONSE",
                     retryable: true,
                   });
@@ -915,7 +919,7 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
                 const failure = classifyAiError(err);
                 console.error("[transmission] stream failed:", failure.code, failure.upstreamStatus ?? "", err);
                 send({
-                  error: AI_FAILURE_MESSAGE,
+                  error: aiFailureMessage(failure.code),
                   code: failure.code,
                   retryable: failure.retryable,
                 });
@@ -966,7 +970,7 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
 
     if (!transmission) {
       return NextResponse.json(
-        { error: AI_FAILURE_MESSAGE, code: "AI_BAD_RESPONSE", retryable: true },
+        { error: aiFailureMessage("AI_BAD_RESPONSE"), code: "AI_BAD_RESPONSE", retryable: true },
         { status: 502 }
       );
     }
@@ -1014,7 +1018,7 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
     }
     return NextResponse.json(
       {
-        error: AI_FAILURE_MESSAGE,
+        error: aiFailureMessage(failure.code),
         code: failure.code,
         retryable: failure.retryable,
         ...(failure.upstreamStatus ? { upstreamStatus: failure.upstreamStatus } : {}),

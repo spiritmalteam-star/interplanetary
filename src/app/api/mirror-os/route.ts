@@ -12,6 +12,7 @@ import {
 } from "@/lib/server/attachments";
 import { resolveVisitor, saveLibrary, withAnonCookie } from "@/lib/server/access";
 import { meterRoute } from "@/lib/server/meter";
+import { classifyAiError, aiFailureMessage } from "@/lib/server/ai-errors";
 import { ENERGY_CODE, ENERGY_NOTICE, isEnergyError } from "@/lib/server/energy";
 
 import { LANGUAGE_NAMES } from "@/lib/server/akashic-record";
@@ -199,7 +200,7 @@ async function postImpl(req: NextRequest): Promise<Response> {
               .replace(/\n{3,}/g, "\n\n")
               .trim();
             if (!reply) {
-              send({ type: "error", error: "The OS is momentarily quiet. Rest, then reach again." });
+              send({ type: "error", error: aiFailureMessage("AI_BAD_RESPONSE"), code: "AI_BAD_RESPONSE" });
               return;
             }
             /* the words the held tail still owed the visitor */
@@ -213,8 +214,9 @@ async function postImpl(req: NextRequest): Promise<Response> {
               { query: query.trim().slice(0, 4000), reply }
             );
             send({ type: "done", reply, ...(vision ? { vision } : {}) });
-          } catch {
-            send({ type: "error", error: "The OS is momentarily quiet. Rest, then reach again." });
+          } catch (streamErr) {
+            const failure = classifyAiError(streamErr);
+            send({ type: "error", error: aiFailureMessage(failure.code), code: failure.code });
           } finally {
             controller.close();
           }
@@ -246,7 +248,7 @@ async function postImpl(req: NextRequest): Promise<Response> {
     const raw = (completion.choices[0]?.message?.content ?? "").trim();
     if (!raw) {
       return NextResponse.json(
-        { error: "The OS is momentarily quiet. Rest, then reach again." },
+        { error: aiFailureMessage("AI_BAD_RESPONSE"), code: "AI_BAD_RESPONSE" },
         { status: 502 }
       );
     }
@@ -269,7 +271,6 @@ async function postImpl(req: NextRequest): Promise<Response> {
 
     return withAnonCookie(NextResponse.json({ reply, vision }), visitor);
   } catch (err) {
-    console.error("[mirror-os] failed:", err);
     /* THE ENERGY'S OWN NAME — a spent sky says so plainly */
     if (isEnergyError(err)) {
       return NextResponse.json(
@@ -277,8 +278,10 @@ async function postImpl(req: NextRequest): Promise<Response> {
         { status: 503, headers: { "retry-after": "120" } }
       );
     }
+    const failure = classifyAiError(err);
+    console.error("[mirror-os] failed:", failure.code, failure.upstreamStatus ?? "", err);
     return NextResponse.json(
-      { error: "The OS is momentarily quiet. Rest, then reach again." },
+      { error: aiFailureMessage(failure.code), code: failure.code },
       { status: 500 }
     );
   }
