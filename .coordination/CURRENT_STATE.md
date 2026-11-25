@@ -6,7 +6,7 @@ _Last updated: 2026-11-25 by Z.ai (sandbox session web-6fefa0f9)_
 
 | Environment | State |
 |---|---|
-| GitHub `main` | `a0260ef7` — Merge PR #17 (`fix/mirror-intelligence`, authored by Claude) |
+| GitHub `main` | `44adf17a` — the publications generation (ZAI-2..8 integrated; PR #17 preserved in lineage) |
 | Local sandbox (`/home/z/my-project`) | `a0260ef7`, clean tree, dev server :3000 HTTP 200 |
 | Production www.reflectme.space | Vercel auto-deploys `main` (verify actual deploy independently) |
 | z.ai hosted sandbox URL | reflectme.space-z.ai → Caddy :81 → localhost:3000 |
@@ -18,13 +18,18 @@ _Last updated: 2026-11-25 by Z.ai (sandbox session web-6fefa0f9)_
   by `scripts/select-schema.mjs` when `DATABASE_URL` is postgres).
 - Intelligence bridge `src/lib/zai-client.ts`: Z.ai cloud (api.z.ai) primary; Gemini fallback for chat;
   atelier (SDK gateway) in dev; Albanian visitor tongue prefers Gemini sky. Voice (TTS/ASR) rides Z.ai only.
-- Chat model default: `glm-4.6` (upgraded from `glm-4.5-flash` on 2026-11-25 by Z.ai; env `ZAI_MODEL` overrides).
+- Chat model default: `glm-4.6` (upgraded from `glm-4.5-flash`; re-fixed after a platform checkout silently reverted it; env `ZAI_MODEL` overrides).
 - Vision model: `glm-4.6v`. Image generation: `@google/genai` via `src/lib/image-engine.ts`.
 - Mini services under `mini-services/` (own ports, started by `.zscripts/dev.sh`).
 
-## Working features (verified 2026-11-25)
+## Working features (verified 2026-11-25, browser)
 
 - Homepage renders, HTTP 200, landing gate loads.
+- Publications viewable end-to-end: gallery tile → stream (back/prev/next + count) → mine wall → own stream.
+- Retroactive painter heals faceless publications on hall reads (keeper fallback local; CogView/Gemini in production).
+- Possibilities realm: featured publications, TikTok-true walk, gaze counter (Eye) verified 0→1.
+- Download works: beforeunload guard, tray-cancelled only, Library carries resilient, resume re-kindles all presses.
+- Workplace Labs: flask hand on the portal crown opens each room's own lab; tools navigate/open real surfaces.
 
 ## Known technical limitations
 

@@ -9,9 +9,10 @@
   500 → user saw endless "Deploying...". Root-caused, preserved, aligned to origin, verified 200.
 - **Model upgrade:** Z.ai cloud chat default is now `glm-4.6` (`ZAI_MODEL` env overrides). If you pin
   models anywhere new, keep them env-overridable.
-- **In flight:** coordination foundation (`.coordination/*`), publications evolution (viewability,
-  AI cover images retroactive + new, Possibilities TikTok-style feed), book download durability,
-  Gathering Workplace Labs. See `TASK_REGISTRY.md` for live statuses — claim before overlapping.
+- **Integrated (main @ `44adf17a`):** coordination foundation; publications viewable (stream walk + mine wall);
+  retroactive publication faces (self-healing sweep); Possibilities featured feed + gaze counts;
+  download durability (beforeunload guard, resilient carries, all-press resume); per-room Workplace Labs.
+  Schema: one additive column `GatheringPost.viewCount` (default 0, zero data loss). Claim before overlapping.
 - **Sandbox traps:** ~3.9GB memory ceiling silently kills `next-server`; never run `next build` casually;
   dev server via `bun run dev` in background only; verify with a real browser (`agent-browser`).
 - **Database:** SQLite `db/custom.db`, in sync, zero data loss so far. Production DB is separate —
