@@ -125,7 +125,9 @@ function computeGeo(): Geo {
          visitor's word to 0.670 (twelve percent taller): the whole
          chamber inside a taller glass, the crown and the whisper
          line never slipping beneath the fold. */
-      h: Math.round(vh * 0.670),
+      /* THE COMPACT HERO'S GIFT — the phone's banner now stands ~90px
+         shorter, and the glass takes that room: 0.74 of the height. */
+      h: Math.round(vh * 0.74),
       radius: 26,
     };
   }
@@ -146,7 +148,7 @@ function computeGeo(): Geo {
   const clear = vw >= 1024 ? 2 * rail + 44 : 44;
   return {
     w: Math.max(420, Math.min(880, Math.floor(vw * 0.86) - 24, vw - clear)),
-    h: Math.max(414, Math.min(506, Math.round(vh * 0.6))),
+    h: Math.max(414, Math.min(620, Math.round(vh * 0.66))),
     radius: 26,
   };
 }
