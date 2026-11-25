@@ -6641,3 +6641,16 @@ html[data-perf="eco"] .gp-drift-slow {
     transition: none;
   }
 }
+
+/* THE ANSWER'S ROW — the copy and share hands drop BELOW the words
+   instead of squeezing the text into a narrow column beside them. */
+.scope-voice-mirror [data-room-turn] > div.flex.items-start {
+  flex-wrap: wrap;
+}
+.scope-voice-mirror [data-room-turn] .sv-answer {
+  flex: 1 1 100%;
+}
+.scope-voice-mirror .canopy-answer,
+.scope-voice-mirror .sv-answer {
+  letter-spacing: normal;
+}
