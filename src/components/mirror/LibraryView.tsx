@@ -20,6 +20,11 @@ import {
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import {
+  isAbortError,
+  saveBlob,
+  startDownloadWork,
+} from "@/lib/download-works";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ModalShell } from "./ModalShell";
 
@@ -89,27 +94,37 @@ interface LibraryEntry {
 }
 
 /** THE PDF'S OWN HAND — a kept treatise is carried back to the
-    visitor's device: base64 → bytes → a real download, named by the
-    press that made it. */
+    visitor's device under the download works' own watch: the tray
+    speaks its progress, the visitor's cancel hand is the only stop,
+    and a stray navigation never interrupts the carrying. */
 function downloadKeptPdf(entry: LibraryEntry): void {
   const b64 = entry.content?.pdf;
   if (!b64) return;
-  try {
-    const bin = atob(b64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    const blob = new Blob([bytes], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = entry.content?.filename ?? "HyperX-Deep-Research.pdf";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 20_000);
-  } catch {
-    /* a plate that cannot be read stays quietly on the shelf */
-  }
+  const filename = entry.content?.filename ?? "HyperX-Deep-Research.pdf";
+  void startDownloadWork(
+    entry.title || filename.replace(/\.pdf$/i, ""),
+    async (report) => {
+      report.stage("Gathering the pressed pages…");
+      report.progress(20);
+      report.throwIfCancelled();
+      try {
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        report.progress(72);
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        report.stage("Placing it in your hands…");
+        report.throwIfCancelled();
+        saveBlob(blob, filename);
+        report.progress(100);
+      } catch (err) {
+        if (isAbortError(err)) throw err;
+        throw new Error("The pressed pages could not be read from the shelf.");
+      }
+    }
+  ).catch(() => {
+    /* a cancelled or failed carry speaks through the tray itself */
+  });
 }
 
 const SECTORS: { id: string; label: string; icon: typeof Atom }[] = [

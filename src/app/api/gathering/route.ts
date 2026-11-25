@@ -1,10 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
 import { networkName, notify, wallIdsFor } from "@/lib/server/network";
 import { isCoverStyle } from "./cover/route";
+import { adornPublicationsBatch } from "@/lib/server/publication-art";
 
 /* ------------------------------------------------------------------ */
 /*  THE GATHERING'S DOORS — the shared hall's own API.                 */
@@ -400,6 +401,35 @@ async function readPosts(
   throw new Error("The offerings' shelf could not be read on this sky.");
 }
 
+/* ---------------- the retroactive painter — every published offering
+   walks with a face ----------------
+   Already-published works that predate the painter are healed here:
+   each hall read, at most one small batch, behind a cooldown, painted
+   after the response has flown — new publishes paint at publish time
+   (POST /api/publications), old ones heal the first time their hall is
+   walked. In production the sky's own painter (CogView/Gemini) paints;
+   when the sky is quiet, the keeper's brush gives a deterministic ink
+   painting — a publication never stands faceless. */
+let lastAdornSweepAt = 0;
+const ADORN_SWEEP_COOLDOWN_MS = 45_000;
+
+function sweepFacelessPublications() {
+  const now = Date.now();
+  if (now - lastAdornSweepAt < ADORN_SWEEP_COOLDOWN_MS) return;
+  lastAdornSweepAt = now;
+  void adornPublicationsBatch(3)
+    .then((out) => {
+      if (out.painted > 0) {
+        console.log(
+          `[publication-art] healed ${out.painted} faceless offering(s), ${out.remaining} remain`
+        );
+      }
+    })
+    .catch(() => {
+      /* the sweep never disturbs the hall */
+    });
+}
+
 /* ---------------- GET /api/gathering — the living exhibition ---------------- */
 export async function GET(req: NextRequest) {
   try {
@@ -414,6 +444,12 @@ export async function GET(req: NextRequest) {
     const epistemicRaw = url.searchParams.get("epistemic");
     const epistemicLevel = isGatheringEpistemic(epistemicRaw) ? epistemicRaw : null;
     const take = Math.min(30, Math.max(5, Number(url.searchParams.get("take") ?? 15)));
+    /* THE REALM'S OWN STAND — featured=1 asks the hall for its published
+       works only: the offerings hung by the publication house (a source
+       portal named, a picture, a playable ref). The realm walks these
+       full-screen; a young hall falls back to every public word so the
+       stage never stands empty while the first works are still few. */
+    const featured = url.searchParams.get("featured") === "1";
 
     /* a tab only steers the open hall — a maker's own shelf, a circle's
        wall or a search keeps its own ordering */
@@ -559,6 +595,11 @@ export async function GET(req: NextRequest) {
         where.visibility = "public";
       }
 
+      /* the realm's featured stand — only true publications rise here */
+      if (featured && !mine && !circleId && !q && tab === "latest") {
+        where.sourcePortal = { not: null };
+      }
+
       const fetched = await readPosts(
         {
           where,
@@ -569,7 +610,23 @@ export async function GET(req: NextRequest) {
         visitor.user.id
       );
 
-      const walled = fetched.filter((p) => !walls.has(p.userId));
+      /* the young hall's fallback — a featured stand that found nothing
+         yet reads the whole public hall instead of standing empty */
+      let candidates = fetched;
+      if (featured && !mine && !circleId && !q && tab === "latest" && candidates.length === 0) {
+        delete where.sourcePortal;
+        candidates = await readPosts(
+          {
+            where,
+            orderBy: { createdAt: "desc" },
+            take: take + 40,
+            ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+          },
+          visitor.user.id
+        );
+      }
+
+      const walled = candidates.filter((p) => !walls.has(p.userId));
       const folded = foldTwins(walled);
       foldedTwins = folded.folded;
       const safe = folded.rows.slice(0, take + 1);
@@ -680,10 +737,16 @@ export async function GET(req: NextRequest) {
       altText: p.altText,
       aiMedia: p.aiMedia,
       aiStyle: p.aiStyle,
+      viewCount: Number((p as PostRow & { viewCount?: number }).viewCount ?? 0),
       hasQuestion: questionPostIds.has(p.id),
       hasLab: labPostIds.has(p.id),
       hasIntentionSpace: intentionPostIds.has(p.id),
     }));
+
+    /* the retroactive painter — old offerings gain their faces while
+       the hall is being read (bounded, cooldown-guarded, after the
+       response) */
+    after(() => sweepFacelessPublications());
 
     return withAnonCookie(
       NextResponse.json({

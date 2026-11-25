@@ -5,6 +5,7 @@ import dynamicImport from "next/dynamic";
 import {
   Bookmark,
   BookmarkCheck,
+  Eye,
   Heart,
   Loader2,
   MessagesSquare,
@@ -117,10 +118,14 @@ export default function PossibilitiesRealm({
       setLoading(true);
       if (fresh) setError(null);
       try {
-        /* the whole hall's stream — every work the house holds, the
-           newest first: the realm is the platform's creations walked
-           one full screen at a time, not one kind's shelf */
-        const params = new URLSearchParams({ tab: "latest", take: "12" });
+        /* the featured stand — the realm walks the house's published
+           works (a source portal named): the hall's true publications,
+           newest first, the TikTok-true walk of what was made */
+        const params = new URLSearchParams({
+          tab: "latest",
+          take: "12",
+          featured: "1",
+        });
         if (!fresh && cursor) params.set("cursor", cursor);
         const data = await netFetch<{ posts: RealmPost[]; nextCursor: string | null }>(
           `/api/gathering?${params.toString()}`
@@ -160,6 +165,32 @@ export default function PossibilitiesRealm({
     bootedRef.current = true;
     void read(true);
   }, [active, read]);
+
+  /* THE GAZE — the slide that lands speaks one gaze to its offering,
+     at most once per work per visit; the counter measures being seen,
+     never scrolling. Fire-and-forget: the walk is never disturbed. */
+  const gazedRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const post = posts[index];
+    if (!post || gazedRef.current.has(post.id)) return;
+    gazedRef.current.add(post.id);
+    netFetch<{ ok: boolean; viewCount?: number }>(
+      `/api/gathering/${post.id}/view`,
+      { method: "POST" }
+    )
+      .then((out) => {
+        if (typeof out.viewCount === "number") {
+          setPosts((prev) =>
+            prev.map((p) =>
+              p.id === post.id ? { ...p, viewCount: out.viewCount } : p
+            )
+          );
+        }
+      })
+      .catch(() => {
+        /* an uncounted gaze — the realm stays quiet */
+      });
+  }, [index, posts]);
 
   /* ------------------------- the walk's ear -------------------------
      the stage reports which slide stands; near the horizon the
@@ -407,6 +438,16 @@ export default function PossibilitiesRealm({
 
               {/* the walk's hands — the quiet rail at the right edge */}
               <div className="absolute right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-1">
+                {(post.viewCount ?? 0) > 0 && (
+                  <RealmAction
+                    label={t("Seen")}
+                    count={post.viewCount}
+                    onClick={() => {}}
+                    testId={`possibilities-seen-${post.id}`}
+                    icon={<Eye className="size-5" aria-hidden="true" />}
+                    muted
+                  />
+                )}
                 <RealmAction
                   label={post.resonated ? t("Resonated") : t("Resonate")}
                   count={post.resonanceCount}
@@ -617,6 +658,8 @@ function RealmAction({
   active,
   onClick,
   testId,
+  /* a muted action speaks its number but is not a hand — the gaze */
+  muted,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -624,6 +667,7 @@ function RealmAction({
   active?: boolean;
   onClick: () => void;
   testId: string;
+  muted?: boolean;
 }) {
   return (
     <button
@@ -633,7 +677,11 @@ function RealmAction({
       title={label}
       aria-pressed={active}
       data-testid={testId}
-      className="flex flex-col items-center gap-0.5 rounded-full px-1.5 py-1.5 transition-transform duration-200 hover:scale-105 active:scale-95"
+      disabled={muted}
+      className={cn(
+        "flex flex-col items-center gap-0.5 rounded-full px-1.5 py-1.5 transition-transform duration-200",
+        !muted && "hover:scale-105 active:scale-95"
+      )}
     >
       <span
         className={cn(

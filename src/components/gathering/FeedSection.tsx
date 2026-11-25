@@ -12,6 +12,8 @@ import {
   ArrowLeft,
   Bookmark,
   BookmarkCheck,
+  ChevronDown,
+  ChevronUp,
   Clock,
   CornerDownRight,
   Film,
@@ -31,6 +33,7 @@ import {
   SlidersHorizontal,
   Trash2,
   User,
+  UserRound,
   Waves,
   Waypoints,
   X,
@@ -147,7 +150,17 @@ function grownChipFor(post: GatheringPost): GrowVariant | null {
 /* ------------------------------------------------------------------ */
 
 /* =============== THE FEED READER — one honest reader =============== */
-function useGatheringFeed(mine: boolean, circleId: string | null, tab: FeedTab | null) {
+function useGatheringFeed(
+  mine: boolean,
+  circleId: string | null,
+  tab: FeedTab | null,
+  /* THE KEPT NAMES — posts that must never be washed away by a fresh
+     reading: the deep-linked offering the hall was asked to open. A
+     fresh read that lands after the focus upsert used to replace the
+     list and the named work vanished mid-view; now the reader carries
+     it back into every fresh pour. */
+  preserve?: () => GatheringPost[]
+) {
   const [posts, setPosts] = useState<GatheringPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -205,7 +218,15 @@ function useGatheringFeed(mine: boolean, circleId: string | null, tab: FeedTab |
         if (fresh && typeof data.foldedTwins === "number") {
           setFoldedTwins(data.foldedTwins);
         }
-        setPosts((prev) => (fresh ? data.posts : [...prev, ...data.posts]));
+        setPosts((prev) => {
+          if (!fresh) return [...prev, ...data.posts];
+          /* the kept names ride the fresh pour — never duplicated,
+             never displaced */
+          const kept = (preserve?.() ?? []).filter(
+            (p) => !data.posts.some((x) => x.id === p.id)
+          );
+          return kept.length > 0 ? [...kept, ...data.posts] : data.posts;
+        });
       } catch {
         setError(true);
       } finally {
@@ -1798,7 +1819,12 @@ export default function FeedSection({
   const [filterOpen, setFilterOpen] = useState(false);
   const [reportPost, setReportPost] = useState<GatheringPost | null>(null);
 
-  const hall = useGatheringFeed(false, null, tab);
+  /* THE DEEP LINK'S KEEPER — the focused offering is remembered so the
+     hall's first reading can never wash it away (the boot-vs-focus race) */
+  const focusKeepRef = useRef<GatheringPost | null>(null);
+  const hall = useGatheringFeed(false, null, tab, () =>
+    focusKeepRef.current ? [focusKeepRef.current] : []
+  );
   const mine = useGatheringFeed(true, null, null);
 
   /* the readers carry their own first breath — the section only
@@ -2030,10 +2056,20 @@ export default function FeedSection({
     return () => window.clearTimeout(id);
   }, [composeIntent, openComposer, onComposeConsumed]);
 
+  /* THE STREAM'S OWN COMPASS — which shelf the slides pour from, which
+     slide the visitor stands on, and the slide the deep link named.
+     Drafts, circle works and connections offerings now view from the
+     maker's own wall — the stream pours from the list the tile was
+     opened from, so a private offering is never a dead end again. */
+  const [streamSource, setStreamSource] = useState<"hall" | "mine">("hall");
+  const [streamPos, setStreamPos] = useState(0);
   const streamIndexRef = useRef(0);
   const streamRef = useRef<HTMLDivElement>(null);
-  const openInStream = useCallback((index: number) => {
+  const streamTargetIdRef = useRef<string | null>(null);
+  const openInStream = useCallback((index: number, source: "hall" | "mine" = "hall") => {
     streamIndexRef.current = index;
+    setStreamSource(source);
+    setStreamPos(index);
     setView("stream");
   }, []);
 
@@ -2054,9 +2090,15 @@ export default function FeedSection({
         );
         if (!alive) return;
         const post = data.post;
+        /* the keeper holds the named work above every fresh pour until
+           the visitor's gaze has landed */
+        focusKeepRef.current = post;
         /* upsert, never duplicate: the feed may have already poured the
            same offering while the focus read was in flight */
         const existingIndex = hall.posts.findIndex((p) => p.id === post.id);
+        streamTargetIdRef.current = post.id;
+        /* the stream may already be open — the landing must walk again */
+        lastReadyRef.current = false;
         if (existingIndex >= 0) {
           openInStream(existingIndex);
         } else {
@@ -2077,16 +2119,42 @@ export default function FeedSection({
     // the hall's posts array is read once at focus time on purpose
   }, [focusPostId]);
 
+  /* the hall's own shelf and the stream's pour source — declared before
+     the landing effect reads them */
+  const feedList = view === "mine" ? mine : hall;
+  const streamList = streamSource === "mine" ? mine : hall;
+
+  /* the stream's landing — when the view opens (or the first slides
+     arrive while a deep link waits), the container walks to the named
+     slide by index arithmetic: every slide is exactly one viewport
+     tall, so offset math can never overshoot again. The named post's
+     own index wins over any remembered number. */
+  const streamReady = view === "stream" && streamList.posts.length > 0;
+  const lastReadyRef = useRef(false);
   useEffect(() => {
-    if (view !== "stream") return;
+    if (view !== "stream") {
+      lastReadyRef.current = false;
+      return;
+    }
+    if (!streamReady || lastReadyRef.current) return;
+    lastReadyRef.current = true;
     const el = streamRef.current;
     if (!el) return;
-    const target = el.querySelector<HTMLElement>(
-      `[data-slide-index="${streamIndexRef.current}"]`
-    );
-    if (target) el.scrollTo({ top: target.offsetTop, behavior: "auto" });
-    streamIndexRef.current = 0;
-  }, [view]);
+    let index = streamIndexRef.current;
+    const targetId = streamTargetIdRef.current;
+    if (targetId) {
+      const byId = streamList.posts.findIndex((p) => p.id === targetId);
+      if (byId >= 0) {
+        index = byId;
+        streamIndexRef.current = byId;
+        streamTargetIdRef.current = null;
+        setStreamPos(byId);
+        /* the gaze has landed — the keeper may rest */
+        focusKeepRef.current = null;
+      }
+    }
+    el.scrollTo({ top: el.clientHeight * index, behavior: "auto" });
+  }, [view, streamReady, streamList]);
 
   /* THE THREE CURRENTS — the hall reads itself the three honest ways:
      for you, the ones you follow, the newest words. Discoveries live
@@ -2125,10 +2193,38 @@ export default function FeedSection({
     primary,
   }));
 
-  const feedList = view === "mine" ? mine : hall;
-
   const filtersOn = kind !== null || epistemic !== null;
   const filterCount = (kind !== null ? 1 : 0) + (epistemic !== null ? 1 : 0);
+
+  /* the stream's steps — one hand-walk or one wheel-flick per slide,
+     the count always honest to the eye */
+  const streamStep = useCallback(
+    (dir: 1 | -1) => {
+      const el = streamRef.current;
+      if (!el) return;
+      const next = Math.min(
+        Math.max(streamIndexRef.current + dir, 0),
+        streamList.posts.length - 1
+      );
+      streamIndexRef.current = next;
+      setStreamPos(next);
+      el.scrollTo({ top: el.clientHeight * next, behavior: "smooth" });
+    },
+    [streamList.posts.length]
+  );
+
+  const onStreamScroll = useCallback(() => {
+    const el = streamRef.current;
+    if (!el || el.clientHeight === 0) return;
+    const pos = Math.min(
+      streamList.posts.length - 1,
+      Math.max(0, Math.round(el.scrollTop / el.clientHeight))
+    );
+    if (pos !== streamIndexRef.current) {
+      streamIndexRef.current = pos;
+      setStreamPos(pos);
+    }
+  }, [streamList.posts.length]);
 
   return (
     <div className="relative flex h-full flex-col">
@@ -2139,8 +2235,33 @@ export default function FeedSection({
           in the filter's drawer, wrapped where every hand reaches them. */}
       <div className="mx-auto w-full max-w-[1200px] shrink-0 px-3 pt-2 sm:px-6 sm:pt-3" data-testid="gathering-three-hands">
         <div className="gp-scroll flex items-center justify-center gap-2 overflow-x-auto pb-0.5">
+          {view === "mine" && (
+            <button
+              type="button"
+              onClick={() => setView("gallery")}
+              data-testid="gath-mine-back"
+              className={cn(GP_GHOST, "mx-auto shrink-0 px-3 py-2 text-[12px]")}
+            >
+              <ArrowLeft className="size-3.5" aria-hidden="true" />
+              {t("Back to the hall")}
+            </button>
+          )}
           {view !== "mine" && (
             <>
+              <button
+                type="button"
+                onClick={() => setView("mine")}
+                data-testid="gath-mine-open"
+                aria-label={t("My own hanging wall")}
+                title={t("My own hanging wall")}
+                className={cn(
+                  "focus-glow flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-[11px] font-semibold transition-all duration-300",
+                  "border-[#e8dfc9] bg-white/55 text-[#7c715f] hover:border-[#d3c39c]"
+                )}
+              >
+                <UserRound className="size-3.5" aria-hidden="true" />
+                {t("My wall")}
+              </button>
               <div
                 role="tablist"
                 aria-label={t("The gathering's currents")}
@@ -2212,12 +2333,12 @@ export default function FeedSection({
         className="gp-scroll min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3 pb-28 pt-3 sm:px-6 sm:pt-4"
       >
         {view === "stream" ? (
-          hall.loading ? (
+          streamList.loading ? (
             <p className="flex items-center justify-center gap-2 py-24 text-[13.5px] text-[#a2947c]">
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               {t("The exhibition arrives…")}
             </p>
-          ) : hall.posts.length === 0 ? (
+          ) : streamList.posts.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center">
               <EmptyRoom
                 icon={filtersOn ? SlidersHorizontal : Play}
@@ -2239,25 +2360,79 @@ export default function FeedSection({
               />
             </div>
           ) : (
-            <div ref={streamRef} className="gp-stream h-full overflow-hidden" data-testid="gp-stream">
-              {hall.posts.map((p, i) => (
-                <div key={p.id} data-slide-index={i} className="h-full">
-                  <StreamSlide
-                    post={p}
-                    onResonate={() => void resonate(p)}
-                    onBookmark={() => void toggleBookmark(p)}
-                    onEcho={() => setEchoPost(p)}
-                    onRepost={() => setRepostPost(p)}
-                    onGrow={() => openGrow(p)}
-                    onTakeBack={() => void takeBack(p)}
-                    strikeId={strikeId}
-                    armedId={armedId}
-                    setArmedId={setArmedId}
-                    onWeave={onWeaveFrom}
-                    onLibrary={onLibraryFrom}
-                  />
+            <div className="mx-auto flex h-full w-full max-w-[820px] flex-col">
+              {/* THE STREAM'S OWN CROWN — the way back, the step hands and
+                  the honest count: a reader can always leave, always walk,
+                  and always knows where they stand. */}
+              <div
+                className="flex shrink-0 items-center justify-between gap-2 px-1 pb-1.5"
+                data-testid="gp-stream-crown"
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    setView(streamSource === "mine" ? "mine" : "gallery")
+                  }
+                  data-testid="gp-stream-back"
+                  className={cn(GP_GHOST, "px-3 py-2 text-[12px]")}
+                >
+                  <ArrowLeft className="size-3.5" aria-hidden="true" />
+                  {t(streamSource === "mine" ? "Back to my wall" : "Back to the hall")}
+                </button>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="rounded-full border border-[#e8dfc9] bg-white/60 px-2.5 py-1 text-[10.5px] font-semibold tabular-nums text-[#7c715f]"
+                    data-testid="gp-stream-count"
+                  >
+                    {Math.min(streamPos + 1, streamList.posts.length)} / {streamList.posts.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => streamStep(-1)}
+                    disabled={streamPos <= 0}
+                    aria-label={t("The offering before")}
+                    data-testid="gp-stream-prev"
+                    className="focus-glow flex size-8 items-center justify-center rounded-full border border-[#e8dfc9] bg-white/60 text-[#7c715f] transition-colors duration-300 hover:text-[#3d3428] disabled:opacity-35"
+                  >
+                    <ChevronUp className="size-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => streamStep(1)}
+                    disabled={streamPos >= streamList.posts.length - 1}
+                    aria-label={t("The offering after")}
+                    data-testid="gp-stream-next"
+                    className="focus-glow flex size-8 items-center justify-center rounded-full border border-[#e8dfc9] bg-white/60 text-[#7c715f] transition-colors duration-300 hover:text-[#3d3428] disabled:opacity-35"
+                  >
+                    <ChevronDown className="size-4" aria-hidden="true" />
+                  </button>
                 </div>
-              ))}
+              </div>
+              <div
+                ref={streamRef}
+                onScroll={onStreamScroll}
+                className="gp-stream min-h-0 flex-1 snap-y snap-mandatory overflow-y-auto overscroll-y-contain"
+                data-testid="gp-stream"
+              >
+                {streamList.posts.map((p, i) => (
+                  <div key={p.id} data-slide-index={i} className="h-full snap-start">
+                    <StreamSlide
+                      post={p}
+                      onResonate={() => void resonate(p)}
+                      onBookmark={() => void toggleBookmark(p)}
+                      onEcho={() => setEchoPost(p)}
+                      onRepost={() => setRepostPost(p)}
+                      onGrow={() => openGrow(p)}
+                      onTakeBack={() => void takeBack(p)}
+                      strikeId={strikeId}
+                      armedId={armedId}
+                      setArmedId={setArmedId}
+                      onWeave={onWeaveFrom}
+                      onLibrary={onLibraryFrom}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           )
         ) : (
@@ -2362,12 +2537,13 @@ export default function FeedSection({
                       key={p.id}
                       post={p}
                       onOpen={() => {
+                        /* the maker's own wall opens its own stream — a
+                           private draft is viewable from where it lives,
+                           never a dead end */
                         if (view === "mine") {
-                          const idx = hall.posts.findIndex((x) => x.id === p.id);
-                          if (idx >= 0) openInStream(idx);
-                          else setView("gallery");
+                          openInStream(i, "mine");
                         } else {
-                          openInStream(i);
+                          openInStream(i, "hall");
                         }
                       }}
                       onResonate={() => void resonate(p)}

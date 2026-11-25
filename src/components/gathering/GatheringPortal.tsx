@@ -41,6 +41,7 @@ import {
   netFetch,
 } from "./shared";
 import MirrorAssistant from "./MirrorAssistant";
+import WorkplaceLab from "./WorkplaceLab";
 import FirstVisitSheet from "./FirstVisitSheet";
 
 /* THE LAZY STREETS — every room of the network is lifted in only when
@@ -566,6 +567,10 @@ export default function GatheringPortal() {
      bar mounts only while it stands, so folding it rests the sound */
   const [radioOpen, setRadioOpen] = useState(false);
 
+  /* THE WORKPLACE LAB — every room carries its own bench of tools and
+     services; one flask hand on the crown opens the current room's lab */
+  const [labOpen, setLabOpen] = useState(false);
+
   const closePortal = useCallback(() => {
     useMirror.getState().closeGatheringPortal();
   }, []);
@@ -674,12 +679,16 @@ export default function GatheringPortal() {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       if (firstVisit) return;
+      if (labOpen) {
+        setLabOpen(false);
+        return;
+      }
       if (overlay === "none") closePortal();
       else setOverlay("none");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [overlay, firstVisit, closePortal]);
+  }, [overlay, firstVisit, closePortal, labOpen]);
 
   const firstVisitDone = useCallback(() => {
     setFirstVisit(false);
@@ -836,6 +845,27 @@ export default function GatheringPortal() {
               {t("the network of becoming")}
             </p>
           </div>
+          {/* THE ROOM'S OWN LAB — one flask hand at the crown's right
+              edge: every room of the hall carries its own workplace lab
+              of tools and services, one touch away. */}
+          <button
+            type="button"
+            onClick={() => setLabOpen(true)}
+            aria-label={t(`Open this room's workplace lab`)}
+            title={t(`Open this room's workplace lab`)}
+            data-testid="gath-room-lab"
+            className="focus-glow absolute right-2 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/90 transition-all duration-300 hover:shadow-[0_4px_16px_-6px_rgba(122,103,70,0.6)] sm:right-4"
+            style={{
+              background: "linear-gradient(150deg,#fffdf8 0%,#f0e6cf 100%)",
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.95), 0 3px 8px -3px rgba(122,103,70,0.4)",
+            }}
+          >
+            <FlaskConical
+              className="gp-pearl size-[18px] text-[#8a6f46]"
+              aria-hidden="true"
+            />
+          </button>
         </div>
       </header>
 
@@ -982,6 +1012,17 @@ export default function GatheringPortal() {
             )}
           </motion.section>
         </AnimatePresence>
+
+        {/* THE ROOM'S WORKPLACE LAB — the sheet every room owns */}
+        {labOpen && (
+          <WorkplaceLab
+            room={section}
+            roomLabel={ROOMS[section].label}
+            onNavigate={(next) => goSection(isSection(next) ? next : "gathering")}
+            onPublishWork={() => setPickerOpen(true)}
+            onClose={() => setLabOpen(false)}
+          />
+        )}
       </div>
 
       {/* ---------- the palm's own streets — five streets, the whole

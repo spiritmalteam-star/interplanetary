@@ -282,7 +282,7 @@ ${turn.sections.map((s) => `· ${s.heading} — ${s.body}`).join("\n")}`
    behind the response, speaks its progress into the hall, and rests
    the finished ink on the Library's own shelf. A closed tab, a walked
    away visitor: none of it interrupts the press. */
-async function runEmPress(jobId: string): Promise<void> {
+export async function runEmPress(jobId: string): Promise<void> {
   const { runTransmissionJob, readJobInput } = await import("@/lib/server/transmission-press");
   let job;
   try {

@@ -43,6 +43,22 @@ interface WorkEntry extends DownloadWork {
 const works = new Map<string, WorkEntry>();
 const watchers = new Set<() => void>();
 
+/* THE DOOR'S OWN COURTESY — while a download is in motion, a hand on
+   the tab's close or a refresh is met with the browser's own leave
+   warning: a book in the binding is never lost to a stray gesture.
+   The only honest stop stays the tray's cancel hand. */
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", (e) => {
+    for (const entry of works.values()) {
+      if (entry.state === "running") {
+        e.preventDefault();
+        e.returnValue = ""; /* the browser speaks its own leave warning */
+        return;
+      }
+    }
+  });
+}
+
 function emit(): void {
   for (const w of watchers) {
     try {
@@ -270,7 +286,7 @@ export async function resilientFetch(
     method = "GET",
     headers,
     body,
-    retries = 2,
+    retries = 4,
     onProgress,
     signal,
     timeoutMs = 0,

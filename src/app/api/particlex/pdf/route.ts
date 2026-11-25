@@ -275,7 +275,7 @@ ${turn.sections.map((s) => `· ${s.heading} — ${s.body}`).join("\n")}`
 }
 
 /* ---------------- THE WORKS-IN-MOTION DOOR ---------------- */
-async function runPxPress(jobId: string): Promise<void> {
+export async function runPxPress(jobId: string): Promise<void> {
   const { runTransmissionJob, readJobInput } = await import("@/lib/server/transmission-press");
   let job;
   try {

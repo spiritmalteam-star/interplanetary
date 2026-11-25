@@ -203,6 +203,8 @@ export interface GatheringPost {
   altText?: string | null;
   aiMedia?: boolean;
   aiStyle?: string | null;
+  /* the realm's honest gaze counter — how many landings the work has seen */
+  viewCount?: number;
   /* the rooms a work can grow into */
   hasQuestion?: boolean;
   hasLab?: boolean;

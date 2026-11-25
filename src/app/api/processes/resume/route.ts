@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { meterRoute } from "@/lib/server/meter";
 import { resolveVisitor, withAnonCookie } from "@/lib/server/access";
 import { runDeepPress } from "@/lib/server/deep-press";
+import { runEmPress } from "@/app/api/evolve-med/pdf/route";
+import { runPxPress } from "@/app/api/particlex/pdf/route";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/processes/resume — THE SECOND BREATH.                    */
@@ -10,7 +12,9 @@ import { runDeepPress } from "@/lib/server/deep-press";
 /*  A work that failed may be asked to rise again: the hall keeps its  */
 /*  own stored input, so a resume re-kindles the same press from       */
 /*  exactly where its instructions stand — no question re-asked, no    */
-/*  answer re-pasted.                                                  */
+/*  answer re-pasted. Every press the house holds can rise here: the   */
+/*  HyperX deep-research treatise, the Evolve Med transmission, the    */
+/*  ParticleX transmission.                                            */
 /*                                                                     */
 /*  Body: { id: "<the work's own id>" }                                */
 /* ------------------------------------------------------------------ */
@@ -51,7 +55,18 @@ export const POST = meterRoute("processes-resume", async (req: NextRequest) => {
     }
 
     /* the second breath — the row returns to the running light and
-       the press re-kindles behind the response */
+       the press re-kindles behind the response, each kind by its own
+       press hand */
+    let rekindle: (jobId: string) => Promise<void>;
+    if (job.kind === "em-pdf") rekindle = runEmPress;
+    else if (job.kind === "px-pdf") rekindle = runPxPress;
+    else if (job.kind === "hyperx-pdf") rekindle = runDeepPress;
+    else {
+      return NextResponse.json(
+        { error: "This work's press cannot rise again — begin it fresh." },
+        { status: 400 }
+      );
+    }
     await db.processJob.update({
       where: { id: job.id },
       data: {
@@ -62,7 +77,7 @@ export const POST = meterRoute("processes-resume", async (req: NextRequest) => {
         result: null,
       },
     });
-    after(() => runDeepPress(job.id));
+    after(() => rekindle(job.id));
 
     return withAnonCookie(
       NextResponse.json({ id: job.id, status: "running" }),

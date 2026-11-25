@@ -685,6 +685,7 @@ model GatheringPost {
   aiMedia      Boolean @default(false) // the picture was painted by an engine — the hall says so, always
   aiStyle      String? // which style the maker chose (editorial | ethereal-pearl | observatory | diagram | book-cover | music-atmosphere | custom)
   publishKey   String? @unique // the offering's own idempotency key — one key hangs one offering, however many times the hand retries
+  viewCount    Int      @default(0) // the possibilities realm's honest gaze counter — one landing, one gaze
 
   @@unique([userId, sourcePortal, sourceId]) // publication idempotency — one source, one offering per maker
   @@index([createdAt])
