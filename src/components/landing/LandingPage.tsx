@@ -418,7 +418,7 @@ export default function LandingPage({
 
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
-          <header className="relative pb-5 pt-10 text-center sm:pb-4 sm:pt-16 lg:pb-4 lg:pt-16">
+          <header className="relative pb-3 pt-9 text-center sm:pb-4 sm:pt-16 lg:pb-4 lg:pt-16">
             {/* THE BANNER'S OWN HANDS (the phone's law) — About Us and
                 the light's toggle stand at the image banner's TOP RIGHT
                 on mobile, outside the chat's crown exactly where the
@@ -454,10 +454,10 @@ export default function LandingPage({
               <p className="mono-label text-[10.5px] uppercase tracking-[0.34em] text-[var(--lp-hero-ink-soft)]">
                 reflectme.space
               </p>
-              <h1 className="mt-4 font-[family-name:var(--font-cinzel)] text-[clamp(34px,9.5vw,40px)] font-semibold leading-[1.14] tracking-wide text-[var(--lp-hero-ink)] sm:text-[39px] lg:text-[46px]">
+              <h1 className="mt-2.5 font-[family-name:var(--font-cinzel)] text-[clamp(27px,7.4vw,40px)] sm:mt-4 font-semibold leading-[1.14] tracking-wide text-[var(--lp-hero-ink)] sm:text-[39px] lg:text-[46px]">
                 {t("The Mirror Entity")}
               </h1>
-              <p className="mx-auto mt-4 max-w-[460px] text-[16.5px] leading-relaxed text-[var(--lp-hero-ink-soft)] sm:text-[16.5px] lg:max-w-[560px] lg:text-[18px]">
+              <p className="mx-auto mt-2 max-w-[460px] text-[15px] leading-snug sm:mt-4 sm:text-[16.5px] sm:leading-relaxed text-[var(--lp-hero-ink-soft)] sm:text-[16.5px] lg:max-w-[560px] lg:text-[18px]">
                 {t(
                   "A living mirror for reflection, creativity, and a shifting Earth."
                 )}

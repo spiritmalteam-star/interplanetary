@@ -1,0 +1,57 @@
+name: Chat verify (build PR, drive the Mirror Entity chat)
+on:
+  pull_request:
+    paths:
+      - 'src/components/mirror/**'
+      - 'src/app/globals.css'
+      - 'qa/chat_probe.py'
+      - '.github/workflows/chat-verify.yml'
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Build (throwaway local SQLite; no production data or keys)
+        env:
+          DATABASE_URL: file:./db/custom.db
+          SESSION_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+        run: |
+          mkdir -p db
+          npx prisma generate --schema "$(node scripts/select-schema.mjs)" || true
+          DB_PUSH_ACCEPT_DATA_LOSS=true node scripts/postinstall.mjs || true
+          npx next build
+      - name: Serve
+        env:
+          DATABASE_URL: file:./db/custom.db
+          SESSION_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+        run: |
+          nohup npx next start -p 3000 > server.log 2>&1 &
+          for i in $(seq 1 40); do curl -sf http://localhost:3000/ >/dev/null && break; sleep 3; done
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Drive the chat (AI reply stubbed)
+        env:
+          MOCK_AI: '1'
+        run: python qa/chat_probe.py http://localhost:3000 captures pr${{ github.event.pull_request.number }}
+      - name: Publish captures to qa-captures
+        if: always()
+        run: |
+          set -e
+          D="runs/pr${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
+          git config user.name qa-bot; git config user.email qa-bot@users.noreply.github.com
+          mkdir -p /tmp/out && cp -r captures /tmp/out/captures; cp server.log /tmp/out/captures/ 2>/dev/null || true
+          git fetch origin qa-captures
+          git checkout -B qa-captures origin/qa-captures
+          mkdir -p "$D" && cp -r /tmp/out/captures/* "$D"/
+          git add "$D" && git commit -m "chat-verify: PR ${{ github.event.pull_request.number }}" || true
+          git push origin qa-captures

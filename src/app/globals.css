@@ -6536,3 +6536,121 @@ html[data-perf="eco"] .gp-drift-slow {
   outline: 2px solid color-mix(in srgb, var(--foreground) 78%, transparent);
   outline-offset: 2px;
 }
+
+/* ======================================================================
+   THE MIRROR ENTITY'S OWN CHAT — composer vessel, grouped hands, and the
+   Mirror's reading typography. Gold and liquid mercury; still, calm,
+   opaque (no backdrop blur on a scrolling page).
+   ====================================================================== */
+
+/* THE COMPOSER'S VESSEL — a gilded-silver hairline around an opaque
+   coat; the words grow upward while the hands stay seated at the base. */
+.composer-shell {
+  border: 1px solid transparent;
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(var(--background), var(--background)) padding-box,
+    linear-gradient(
+        135deg,
+        rgba(216, 181, 113, 0.75),
+        rgba(203, 213, 225, 0.6) 46%,
+        rgba(148, 190, 224, 0.7)
+      )
+      border-box;
+  box-shadow:
+    0 12px 34px -16px rgba(0, 0, 0, 0.5),
+    0 0 26px -12px rgba(216, 181, 113, 0.4);
+  transition: box-shadow 0.35s ease;
+}
+.composer-shell:focus-within {
+  box-shadow:
+    0 14px 38px -16px rgba(0, 0, 0, 0.55),
+    0 0 30px -8px rgba(216, 181, 113, 0.55),
+    0 0 22px -8px rgba(148, 190, 224, 0.5);
+}
+.composer-field {
+  scrollbar-width: none;
+}
+.composer-field::-webkit-scrollbar {
+  display: none;
+}
+
+/* THE ROOM'S HANDS — reload, narrator and history stand as ONE
+   segmented pill instead of three separate bordered buttons. */
+.room-hands {
+  gap: 1px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hairline) 85%, transparent);
+  background: color-mix(in srgb, var(--foreground) 3%, var(--background));
+}
+.room-hands button {
+  border-color: transparent !important;
+  background-color: transparent;
+}
+.room-hands button:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 7%, transparent);
+}
+
+/* THE MIRROR'S READING — the default field gets its own grammar:
+   the visitor's first words as an italic gold-edged line, follow-ups
+   as soft vessels, and the answer in the house serif at a generous,
+   even measure. */
+.scope-voice-mirror .sv-turn-q {
+  border-left: 2px solid color-mix(in srgb, var(--scope-a, #d8b571) 65%, transparent);
+  padding-left: 12px;
+}
+.scope-voice-mirror .sv-question {
+  font-family: var(--font-literata), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 15.5px;
+  line-height: 1.55;
+  text-wrap: balance;
+}
+.scope-voice-mirror [data-room-turn] > p.mirror-fused {
+  align-self: flex-end;
+  padding: 8px 14px;
+  border-radius: 18px 18px 6px 18px;
+  border: 1px solid color-mix(in srgb, var(--scope-a, #d8b571) 28%, transparent);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--scope-a, #d8b571) 11%, var(--background)),
+    color-mix(in srgb, var(--scope-b, #94bee0) 9%, var(--background))
+  );
+  margin-left: 0;
+}
+.scope-voice-mirror .canopy-answer,
+.scope-voice-mirror .sv-answer {
+  font-family: var(--font-literata), Georgia, serif;
+  font-size: 16px;
+  line-height: 1.8;
+  letter-spacing: 0.003em;
+  text-wrap: pretty;
+  max-width: 68ch;
+}
+@media (max-width: 639px) {
+  .scope-voice-mirror .canopy-answer,
+  .scope-voice-mirror .sv-answer {
+    font-size: 16.5px;
+    line-height: 1.75;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .composer-shell {
+    transition: none;
+  }
+}
+
+/* THE ANSWER'S ROW — the copy and share hands drop BELOW the words
+   instead of squeezing the text into a narrow column beside them. */
+.scope-voice-mirror [data-room-turn] > div.flex.items-start {
+  flex-wrap: wrap;
+}
+.scope-voice-mirror [data-room-turn] .sv-answer {
+  flex: 1 1 100%;
+}
+.scope-voice-mirror .canopy-answer,
+.scope-voice-mirror .sv-answer {
+  letter-spacing: normal;
+}
