@@ -1,0 +1,14 @@
+name: Production AI probe (read-only, status codes only)
+on:
+  pull_request:
+    paths: ['qa/prod_ai_probe.py', '.github/workflows/prod-ai-probe.yml']
+  workflow_dispatch:
+    inputs:
+      base:
+        default: https://www.reflectme.space
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 qa/prod_ai_probe.py "${{ inputs.base || 'https://www.reflectme.space' }}"
