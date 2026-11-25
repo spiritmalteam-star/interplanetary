@@ -574,7 +574,7 @@ function zaiCloudConfig(): CloudConfig | null {
     baseUrl: (
       process.env.ZAI_BASE_URL ?? "https://api.z.ai/api/paas/v4"
     ).replace(/\/$/, ""),
-    model: process.env.ZAI_MODEL ?? "glm-4.5-flash",
+    model: process.env.ZAI_MODEL ?? "glm-4.6",
     visionModel: process.env.ZAI_VISION_MODEL ?? "glm-4.6v",
     allowThinking: true,
     label: "Z.ai",
