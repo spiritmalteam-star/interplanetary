@@ -22,17 +22,33 @@ export interface AiFailure {
   retryable: boolean;
   /** the upstream HTTP status when one was reported (a number, never a body) */
   upstreamStatus?: number;
+  /** the second sky's status, when both skies spoke (a number, never a body) */
+  fallbackStatus?: number;
 }
 
 export function classifyAiError(err: unknown): AiFailure {
+  const full = err instanceof Error ? err.message : String(err ?? "");
+  /* two skies spoke: "primary: … || fallback: …" — classify the FIRST
+     sky's verdict (the house's own brain), and keep the second's status */
+  const parts = /^primary: ([\s\S]*?) \|\| fallback: ([\s\S]*)$/.exec(full);
+  const msg = parts ? parts[1] : full;
+  const fb = parts ? /\bchat (\d{3})\b/i.exec(parts[2]) : null;
+  const fallbackStatus = fb ? Number(fb[1]) : undefined;
+  const base = classifyOne(err, msg);
+  return fallbackStatus ? { ...base, fallbackStatus } : base;
+}
+
+function classifyOne(err: unknown, msg: string): AiFailure {
   const name = err instanceof Error ? err.name : "";
-  const msg = err instanceof Error ? err.message : String(err ?? "");
   const m = /\bchat (\d{3})\b/i.exec(msg) ?? /\b(?:status|http)[ :]*(\d{3})\b/i.exec(msg);
   const status = m ? Number(m[1]) : undefined;
 
   if (/no ai provider is configured/i.test(msg)) return { code: "AI_NOT_CONFIGURED", retryable: false };
   if (/1113|insufficient balance|no resource package|recharge|arrears|quota|insufficient_credits|energy_exhausted/i.test(msg))
     return { code: "AI_QUOTA", retryable: false, upstreamStatus: status };
+  if (status === 402 || /credits are depleted|prepayment/i.test(msg))
+    return { code: "AI_QUOTA", retryable: false, upstreamStatus: status };
+  if (/slow sky/i.test(msg)) return { code: "AI_TIMEOUT", retryable: true };
   if (status === 401 || status === 403 || /invalid api key|unauthori[sz]ed|authentication/i.test(msg))
     return { code: "AI_AUTH", retryable: false, upstreamStatus: status };
   if (status === 429 || /rate limit|too many requests|1302|1305|concurrency/i.test(msg))

@@ -19,3 +19,14 @@ test("never leaks the provider body", () => {
   assert.equal(JSON.stringify(f).includes("SECRET"), false);
   assert.equal(f.upstreamStatus, 401);
 });
+
+test("two skies: the first sky's verdict leads, the second's status is kept", () => {
+  const f = classifyAiError(new Error("primary: Z.ai chat 429: busy || fallback: Gemini chat 402: Your prepayment credits are depleted"));
+  assert.equal(f.code, "AI_RATE_LIMITED");
+  assert.equal(f.upstreamStatus, 429);
+  assert.equal(f.fallbackStatus, 402);
+  const g = classifyAiError(new Error("primary: slow sky (no answer inside its patience) || fallback: Gemini chat 402: x"));
+  assert.equal(g.code, "AI_TIMEOUT");
+  assert.equal(g.fallbackStatus, 402);
+  assert.equal(classifyAiError(new Error("Gemini chat 402: credits are depleted")).code, "AI_QUOTA");
+});

@@ -896,7 +896,19 @@ async function atelierBackend(): Promise<ZAIClient> {
     channel never dies. The first sky always stays the voice of the
     house; the second only catches what would otherwise be silence. */
 const FALLBACK_TRIGGER =
-  /\b429\b|too many requests|rate.?limit|quota|exceeded|\b50[034]\b|overloaded/i;
+  /\b429\b|\b402\b|too many requests|rate.?limit|quota|exceeded|\b50[034]\b|overloaded|credits are depleted/i;
+
+/* THE TWO SKIES' OWN WORD — when both skies fail, the error carries
+   both verdicts (status codes and the providers' short notes), so the
+   failure can be classified honestly instead of showing only the
+   last sky's complaint. Never contains a key or a header. */
+function skyMsg(err: unknown): string {
+  if (err === SLOW_SKY) return "slow sky (no answer inside its patience)";
+  return err instanceof Error ? err.message : String(err);
+}
+function chainError(primaryErr: unknown, fallbackErr: unknown): Error {
+  return new Error(`primary: ${skyMsg(primaryErr)} || fallback: ${skyMsg(fallbackErr)}`.slice(0, 1400));
+}
 
 function skyRefused(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err);
@@ -972,12 +984,29 @@ function chainChatBackends(primary: ZAIClient, fallback: ZAIClient): ZAIClient {
     run: (sky: ZAIClient) => Promise<ChatCompletion>,
     patience: number
   ): Promise<ChatCompletion> => {
+    const primaryCall = run(primary);
     try {
-      return await raceSlow(run(primary), patience);
+      return await raceSlow(primaryCall, patience);
     } catch (err) {
       /* the slow sky falls to the second exactly like a refused one */
-      if (err === SLOW_SKY || skyRefused(err)) return run(fallback);
-      throw err;
+      if (err !== SLOW_SKY && !skyRefused(err)) throw err;
+      try {
+        return await run(fallback);
+      } catch (fallbackErr) {
+        /* THE SECOND SKY IS DARK TOO — a slow first sky is still
+           writing (raceSlow only stopped WAITING for it, it never
+           stopped it): when the fallback cannot answer, the visitor
+           keeps waiting for the first sky's own words instead of
+           receiving the dark fallback's refusal. */
+        if (err === SLOW_SKY) {
+          try {
+            return await primaryCall;
+          } catch (primaryErr) {
+            throw chainError(primaryErr, fallbackErr);
+          }
+        }
+        throw chainError(err, fallbackErr);
+      }
     }
   };
   return {

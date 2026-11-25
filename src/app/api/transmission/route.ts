@@ -1006,7 +1006,7 @@ FUSION MODE (AUTHORITATIVE — shapes THIS revelation): the visitor has armed th
     /* THE ENERGY'S OWN NAME — a sky whose light is spent says so
        plainly (503 + the code), never as mute static; every other
        storm keeps its gentle generic word. */
-    if (isEnergyError(err)) {
+    if (failure.code === "AI_QUOTA" && isEnergyError(err)) {
       return NextResponse.json(
         { error: ENERGY_NOTICE, code: ENERGY_CODE },
         { status: 503, headers: { "retry-after": "120" } }
