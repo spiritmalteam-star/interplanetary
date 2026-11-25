@@ -15,7 +15,13 @@ with sync_playwright() as p:
                       'In the quiet, the reflection is less a copy than a conversation: the surface listens, and what returns is the part of you that is usually too busy to be noticed.\n\n'
                       'Sit with it a moment. Ask not what the glass shows, but what in you leans forward to look.')
             body = 'data: ' + json.dumps({'t': ANSWER[:60]}) + '\n\n' + 'data: ' + json.dumps({'done': {'transmission': ANSWER}}) + '\n\n'
-            pg.route('**/api/transmission', lambda route: route.fulfill(status=200, headers={'content-type': 'text/event-stream'}, body=body))
+            def _mock(route, _b=body, _a=ANSWER):
+                pd = route.request.post_data or ''
+                if '"stream":true' in pd.replace(' ', ''):
+                    route.fulfill(status=200, headers={'content-type': 'text/event-stream'}, body=_b)
+                else:
+                    route.fulfill(status=200, content_type='application/json', body=json.dumps({'transmission': _a}))
+            pg.route('**/api/transmission', _mock)
         try:
             r = pg.goto(base + '/', wait_until='networkidle', timeout=60000)
             info['status'] = r.status if r else None
