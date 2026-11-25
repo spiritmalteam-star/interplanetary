@@ -108,38 +108,9 @@ const SLIDES: TourSlide[] = [
   },
 ];
 
-/* THE FIRST VISIT'S OWN GUARD — the tour is offered once, and never on
-   a sensitive return flow: a Google passage coming home, a verified or
-   reset email, a Stripe return, a deep-linked room or an already open
-   dialog all keep the tour silent (the visitor's task comes first). */
-function sensitiveReturnUnderway(): boolean {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    if (
-      params.has("google") ||
-      params.has("verified") ||
-      params.has("reset") ||
-      params.has("billing") ||
-      params.has("room")
-    )
-      return true;
-  } catch {
-    /* no window words — stay quiet */
-  }
-  const s = useMirror.getState();
-  return Boolean(
-    s.authOpen || s.profilePageOpen || s.accountOpen || s.walletModalOpen
-  );
-}
-
-function readTourFlag(): boolean {
-  try {
-    return window.localStorage.getItem(TOUR_FLAG) === "done";
-  } catch {
-    return false; // storage closed — the tour is simply offered (and still closes normally)
-  }
-}
-
+/* THE TOUR'S OWN KEEPING — the dismissal flag is carved when the
+   visitor finishes or closes the walk, so a finished tour is not
+   offered again. */
 function markTourDone() {
   try {
     window.localStorage.setItem(TOUR_FLAG, "done");
@@ -157,27 +128,15 @@ export function WelcomeTour() {
   const tourOpen = useMirror((s) => s.tourOpen);
   const closeTour = useMirror((s) => s.closeTour);
   const openAbout = useMirror((s) => s.openAbout);
-  const meStatus = useMirror((s) => s.meStatus);
   const [slide, setSlide] = useState(0);
   const restoreFocus = useRef<HTMLElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
-  /* THE FIRST VISIT — offered once, after the session's own glance has
-     settled, never during a sensitive return flow, and never over an
-     already-open room: the Gathering's portal (a body-level window)
-     stands above every dialog the shell carries, so the tour keeps
-     silent while a room is open and steps aside the moment one opens. */
-  useEffect(() => {
-    if (meStatus !== "ready") return;
-    if (readTourFlag()) return;
-    const id = window.setTimeout(() => {
-      if (sensitiveReturnUnderway()) return;
-      const s = useMirror.getState();
-      if (s.gatheringPortalOpen || s.communionOpen || s.aboutOpen) return;
-      s.openTour();
-    }, 1200);
-    return () => window.clearTimeout(id);
-  }, [meStatus]);
+  /* THE THRESHOLD REVEALS ITSELF (the founder's law) — the website is
+     the default preview: no tour ever rises on its own to cover it.
+     The welcome walk keeps every door it had (the About hand in the
+     profile room, the question mark, the canopy) and only opens when
+     a visitor's own hand asks for it. */
 
   /* THE ROOM'S OWN PRIORITY — if the Gathering's portal (or the About
      room) opens while the tour stands, the tour folds at once (the

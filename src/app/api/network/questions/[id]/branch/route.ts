@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie, STATELESS_PREFIX } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
 import { cleanStr, errorJson } from "@/lib/server/net-helpers";
-import { questionDetail, QUESTION_INCLUDE } from "../../route";
+import { questionDetail, QUESTION_INCLUDE } from "@/lib/server/question-detail";
 
 /* ------------------------------------------------------------------ */
 /*  THE BRANCH HAND — POST /api/network/questions/[id]/branch          */
