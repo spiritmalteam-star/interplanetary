@@ -1,0 +1,59 @@
+[
+ {
+  "name": "phone",
+  "title": "Mirror Entity Digital Chamber \u2014 Interplanetary Channel",
+  "status": 200,
+  "composer_found": true,
+  "field_tag": "TEXTAREA",
+  "field_font_px": "16px",
+  "grown_height": 100,
+  "reply_tag": "TEXTAREA",
+  "header_h": 47,
+  "zoom_box": {
+   "x": 17,
+   "y": 311.90625,
+   "width": 358,
+   "height": 517
+  },
+  "answer_text_len": 122,
+  "overflowX": false
+ },
+ {
+  "name": "tablet",
+  "title": "Mirror Entity Digital Chamber \u2014 Interplanetary Channel",
+  "status": 200,
+  "composer_found": true,
+  "field_tag": "TEXTAREA",
+  "field_font_px": "14.5px",
+  "grown_height": 91,
+  "reply_tag": "TEXTAREA",
+  "header_h": 55,
+  "zoom_box": {
+   "x": 80.5,
+   "y": 305.921875,
+   "width": 661,
+   "height": 446
+  },
+  "answer_text_len": 122,
+  "overflowX": false
+ },
+ {
+  "name": "desktop",
+  "title": "Mirror Entity Digital Chamber \u2014 Interplanetary Channel",
+  "status": 200,
+  "composer_found": true,
+  "field_tag": "TEXTAREA",
+  "field_font_px": "14.5px",
+  "grown_height": 91,
+  "reply_tag": "TEXTAREA",
+  "header_h": 55,
+  "zoom_box": {
+   "x": 292,
+   "y": 273.53125,
+   "width": 858,
+   "height": 446
+  },
+  "answer_text_len": 122,
+  "overflowX": false
+ }
+]
