@@ -10,6 +10,12 @@ with sync_playwright() as p:
     for name, vp, mobile in [('phone', (390, 844), True), ('tablet', (820, 1180), True), ('desktop', (1440, 900), False)]:
         ctx = b.new_context(viewport={'width': vp[0], 'height': vp[1]}, device_scale_factor=1, has_touch=mobile, is_mobile=mobile)
         pg = ctx.new_page(); info = {'name': name, 'title': None}
+        if os.environ.get('MOCK_AI') == '1':
+            ANSWER = ('A mirror at night keeps no image of its own; it holds the dark so that whatever stands before it can be seen more plainly.\n\n'
+                      'In the quiet, the reflection is less a copy than a conversation: the surface listens, and what returns is the part of you that is usually too busy to be noticed.\n\n'
+                      'Sit with it a moment. Ask not what the glass shows, but what in you leans forward to look.')
+            body = 'data: ' + json.dumps({'t': ANSWER[:60]}) + '\n\n' + 'data: ' + json.dumps({'done': {'transmission': ANSWER}}) + '\n\n'
+            pg.route('**/api/transmission', lambda route: route.fulfill(status=200, headers={'content-type': 'text/event-stream'}, body=body))
         try:
             r = pg.goto(base + '/', wait_until='networkidle', timeout=60000)
             info['status'] = r.status if r else None
@@ -31,10 +37,16 @@ with sync_playwright() as p:
                 inp.fill(Q); inp.press('Enter')
                 try:
                     pg.wait_for_selector('[data-testid="realm-tree-zoom-answer"] .canopy-answer, [data-testid="realm-tree-zoom"]', timeout=20000)
-                    pg.wait_for_timeout(25000)
+                    pg.wait_for_timeout(6000 if os.environ.get('MOCK_AI') == '1' else 25000)
                 except Exception as e:
                     info['answer_wait'] = str(e)[:80]
                 pg.screenshot(path=f'{out}/{tag}-{name}-3-answer.png')
+                rep = pg.locator('[data-testid="realm-tree-zoom-reply"]').first
+                if rep.count():
+                    info['reply_tag'] = rep.evaluate('e=>e.tagName')
+                    rep.click(); rep.fill('And what if the mirror is broken?'); rep.press('Enter')
+                    pg.wait_for_timeout(6000)
+                    pg.screenshot(path=f'{out}/{tag}-{name}-4-followup.png')
                 z = pg.locator('[data-testid="realm-tree-zoom"]').first
                 if z.count():
                     hd = z.locator('header').first
