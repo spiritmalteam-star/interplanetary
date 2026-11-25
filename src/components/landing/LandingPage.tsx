@@ -10,18 +10,15 @@ import {
 import Image from "next/image";
 import {
   ChevronDown,
-  CircleQuestionMark,
-  Moon,
-  Sun,
+  UserRound,
 } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useT } from "@/lib/i18n";
-import { LanguageButton } from "@/components/mirror/LanguageButton";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
 import LivingNetwork from "./LivingNetwork";
 import SideRail from "./SideRail";
+import { useVeiledDoor } from "./LivingNetwork";
 import GuideShowcase from "./GuideShowcase";
 import dynamic from "next/dynamic";
 
@@ -98,36 +95,36 @@ const SIGILS = {
   grandWave: "/sigils/intricate_02.png",
 } as const;
 
-/* THE BANNER'S OWN LIGHT (the phone's law) — the same sun/moon hand
-   the crown wears, standing over the image banner's top right on
-   mobile (About beside it). The CSS-driven swap avoids hydration
-   mismatch, exactly like the crown's own hand. */
-function BannerLightHand() {
-  const { resolvedTheme, setTheme } = useTheme();
+/* THE VISITOR'S OWN MARK — the phone's top-right profile hand: the
+   same quiet circle the gathering's sigil wears, standing opposite
+   it at the very top of the threshold (the sigil top-left, the
+   mark top-right). One touch opens the visitor's own room — where
+   the tongue, the light and the About door now live. It veils with
+   the sigil's own law when a deeper room stands open. */
+function MobileProfileMark() {
   const t = useT();
-  const toggle = () => {
-    const root = document.documentElement;
-    root.classList.add("theme-anim");
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
-    window.setTimeout(() => root.classList.remove("theme-anim"), 560);
-  };
+  const veiled = useVeiledDoor();
   return (
     <button
       type="button"
-      onClick={toggle}
-      aria-label={t("Toggle between deep space and daylight laboratory")}
-      title={t("Toggle theme")}
-      data-testid="banner-light-hand"
-      className="focus-glow group flex size-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white/90 backdrop-blur-sm transition-all duration-300 hover:border-white/60 hover:text-white"
+      onClick={() => useMirror.getState().openProfilePage()}
+      aria-haspopup="dialog"
+      aria-label={t("Profile")}
+      title={t("Profile")}
+      data-testid="banner-profile-mark"
+      className={cn(
+        "focus-glow pm-tap fixed z-[46] flex items-center rounded-full border border-white/14 bg-[rgba(7,10,17,0.82)] text-[#d9c99a] shadow-[0_8px_28px_-14px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.55)] md:hidden",
+        veiled && "pointer-events-none opacity-0 scale-[0.72]"
+      )}
+      style={{
+        top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
+        right: "max(0.75rem, env(safe-area-inset-right))",
+        width: "2.25rem",
+        height: "2.25rem",
+        justifyContent: "center",
+      }}
     >
-      <Sun
-        className="hidden size-4 transition-transform duration-500 group-hover:rotate-45 dark:block"
-        aria-hidden="true"
-      />
-      <Moon
-        className="size-4 transition-transform duration-500 group-hover:-rotate-12 dark:hidden"
-        aria-hidden="true"
-      />
+      <UserRound className="size-4" aria-hidden="true" />
     </button>
   );
 }
@@ -387,6 +384,15 @@ export default function LandingPage({
           into, one touch away, never in the way. */}
       <LivingNetwork />
 
+      {/* THE VISITOR'S OWN MARK ON THE PHONE'S TOP BAR — the profile
+          stands alone at the top-right, opposite the gathering's
+          sigil (top-left): one quiet pair at the very top of the
+          phone's threshold. The tongue, the light and the About door
+          live inside the profile's own room now. The same veiled law
+          as the sigil: when a deeper room stands open, the mark
+          rests. */}
+      <MobileProfileMark />
+
       <div className="relative z-10 flex min-h-full flex-col">
         {/* THE OPEN BANNER — the artwork stands nearly bare (the veil
             is a thin wash at the very top alone), so the image at the
@@ -419,30 +425,6 @@ export default function LandingPage({
         <main className="mx-auto w-full max-w-[900px]">
           {/* ============================ HERO ============================ */}
           <header className="relative pb-3 pt-9 text-center sm:pb-4 sm:pt-16 lg:pb-4 lg:pt-16">
-            {/* THE BANNER'S OWN HANDS (the phone's law) — About Us and
-                the light's toggle stand at the image banner's TOP RIGHT
-                on mobile, outside the chat's crown exactly where the
-                visitor asked them to live; the desk keeps them in the
-                crown's corner as they always stood. */}
-            <div className="absolute right-3 top-3 z-20 flex items-center gap-1.5 md:hidden">
-              {/* THE TONGUE BEFORE THE LIGHT — the language hand rests
-                  before the banner's sun/moon, on every surface where
-                  both stand together; at the screen's very top edge the
-                  menu keeps its downward fall (no room to rise above) */}
-              <LanguageButton onImage testId="banner-language-button" dropUp={false} />
-              <BannerLightHand />
-              <button
-                type="button"
-                onClick={() => useMirror.getState().openTour()}
-                aria-haspopup="dialog"
-                aria-label={t("About Us")}
-                title={t("About Us — our purpose, the Mirror Entity, and how we hold your data")}
-                data-testid="banner-about-question"
-                className="focus-glow flex size-8 items-center justify-center rounded-full border border-white/30 bg-black/25 text-white/90 backdrop-blur-sm transition-all duration-300 hover:border-white/60 hover:text-white"
-              >
-                <CircleQuestionMark className="size-4" aria-hidden="true" />
-              </button>
-            </div>
             {/* the hero's sky stays untouched — no mark rests upon the
                 background image; the light language lives in the empty
                 shoulders further down the walk */}
