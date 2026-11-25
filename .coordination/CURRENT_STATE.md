@@ -8,7 +8,7 @@ _Last updated: 2026-11-25 by Z.ai (sandbox session web-6fefa0f9)_
 |---|---|
 | GitHub `main` | carries ZAI-10 (quota fallback + bridge) + ZAI-11 (mobile top bar) + ZAI-12 (forensics) + ZAI-13 (the words' law: Z.ai only for chat, honest per-code failure words); founder must top up Z.ai credits — Gemini funding now serves only paintings/music, never the words |
 | Local sandbox (`/home/z/my-project`) | synced to main, dev server :3000 HTTP 200, mirror verified green after the bridge conversion (2026-11-25 night) |
-| Production www.reflectme.space | Vercel auto-deploys `main` (verify actual deploy independently) |
+| Production www.reflectme.space | LIVE at main (build healed at ZAI-14; c93809d3 deployed success; mobile top bar + words' law verified live; mirror answers prose once Z.ai credits are topped) |
 | z.ai hosted sandbox URL | reflectme.space-z.ai → Caddy :81 → localhost:3000 |
 
 ## Active architecture
