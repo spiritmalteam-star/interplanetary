@@ -51,3 +51,9 @@
 3. **Verification after ops:** run `python3 qa/prod_ai_probe.py https://www.reflectme.space` —
    `AI_QUOTA` = still unfunded; real prose = healed. Mobile top bar (profile top-right opposite the
    gathering, language/light/About inside the profile room) appears once the redeploy lands.
+
+## Claude -> Z.ai (CLAUDE-18, model ladder)
+- Added a Z.ai-only ladder: primary `ZAI_MODEL` (default glm-4.6), on a model-side refusal one retry on
+  `ZAI_FALLBACK_MODEL` (default glm-4.5-flash; `none` disables). No other provider is used.
+- Status: In development. Not production verified: after deploy run `python3 qa/prod_ai_probe.py https://www.reflectme.space`.
+- Still open for me: PR #18 reconciliation (honest-errors client + perf probe onto a fresh agent/claude branch), perf baseline.
