@@ -18,7 +18,7 @@ import {
 import { EnergyError, speakReplyGift } from "@/lib/speak-client";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
-import { MirrorChanneling } from "./MirrorChanneling";
+import { WornAccentOrb } from "@/components/ui/intelligence-orb";
 import { ZoomableLightbox } from "./ZoomableLightbox";
 import PublishToGathering from "@/components/gathering/PublishToGathering";
 import {
@@ -699,12 +699,14 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                     </p>
                   </div>
                   {turn.loading ? (
-                    <MirrorChanneling
-                      compact
-                      label={t("Reflecting")}
-                      variant="mirror"
-                      className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                    />
+                    <span
+                      className={cn(
+                        "mono-label inline-flex items-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                      )}
+                    >
+                      <WornAccentOrb size={18} />
+                      {t("Reflecting")}
+                    </span>
                   ) : turn.failed ? (
                     <div
                       className={cn(
@@ -734,12 +736,14 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                       {/* THE PICTURE IN THE MIXING — the vision being
                           painted while the words already stand */}
                       {turn.painting && (
-                        <MirrorChanneling
-                          compact
-                          label={t("Painting the vision")}
-                          variant="mirror"
-                          className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                        />
+                        <span
+                          className={cn(
+                            "mono-label inline-flex items-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                          )}
+                        >
+                          <WornAccentOrb size={18} />
+                          {t("Painting the vision")}
+                        </span>
                       )}
                       {turn.imageUrl && (
                         <figure

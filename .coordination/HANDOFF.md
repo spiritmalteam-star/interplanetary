@@ -57,3 +57,42 @@
   `ZAI_FALLBACK_MODEL` (default glm-4.5-flash; `none` disables). No other provider is used.
 - Status: In development. Not production verified: after deploy run `python3 qa/prod_ai_probe.py https://www.reflectme.space`.
 - Still open for me: PR #18 reconciliation (honest-errors client + perf probe onto a fresh agent/claude branch), perf baseline.
+
+## Z.AI CAPABILITY REPORT — the handshake (2026-11-26, session web-6fefa0f9)
+
+Recorded per the master directive §2. All items VERIFIED this session, not assumed.
+
+| Capability | Status | Evidence |
+|---|---|---|
+| Repository access | VERIFIED | fetch + push to `spiritalmalteam-star/interplanetary` (dry-run `751f37ad..17a736be` accepted) |
+| Current branch / HEAD | VERIFIED | `main` @ `17a736be` (supervisor auto-commits untracked assets; protocol: task branches → ff → main → push) |
+| Create/review/merge PRs | VERIFIED (API) | token holds repo scope; PR list readable (#1 open, #17–#21 merged); PRs created via API when owner wants PR-flow |
+| Run tests | PARTIAL | no test infra on main; gates are `bun run lint` + real-browser verification (`agent-browser`) + `qa/prod_ai_probe.py`; `next build` forbidden in sandbox (~3.9 GB memory ceiling silently kills it) |
+| Profiling | VERIFIED | Performance API + performance.measureUserAgentSpecificMemory via agent-browser (Claude's `qa/perf_probe.py` methodology reproducible); real-device testing NOT possible |
+| Inspect deployments | VERIFIED (probe) | production HTML/API probes (`banner-profile-mark` deploy markers, AI prose probe); no Vercel dashboard access |
+| Persist context | VERIFIED | `.coordination/*` (registry/log/handoff/current-state) + repo memory across sessions |
+| Receive repository events | NOT AVAILABLE | no webhooks into the sandbox; each session begins with `git fetch origin` (manual activation per §3) |
+| Direct agent-to-agent channel | NOT AVAILABLE | coordination flows only through `.coordination/` handovers + owner relay; review requests marked "pending" rather than invented |
+| Automatic invocation | NOT AVAILABLE | manual activation only; no GitHub-event orchestration from this side |
+
+**Proposed complementary responsibilities** (based on verified capabilities, per §2):
+- **Z.ai:** runtime-adjacent surfaces — chat/streaming, orbs, profile, landing/threshold, Gathering rooms, Codex, performance work in-sandbox, production probes.
+- **Claude:** CI-run perf probes (`perf-chat.yml` exists), failure-classification/ladder logic, production deployment verification, PR-flow reviews.
+- **Both:** registry-claimed independent tasks; overlapping files negotiated via HANDOFF, never parallel-edited.
+
+No runtime configuration was changed during this handshake (§2 law held).
+
+## From Z.ai to Claude (2026-11-26, master directive session)
+
+- The owner delivered the shared master directive; Z.ai executed its foundation stages this session.
+- **Claimed by Z.ai:** §2 handshake (report in this file above), §10 room sweep (all rooms lean,
+  see DEVELOPMENT_LOG), §5 Mirror Glass tokens + primitives (`--mg-*`, `src/components/ui/glass.tsx`),
+  §7 intelligence orbs (`src/components/ui/intelligence-orb.tsx`, wired to real events in
+  BranchCanopy/SimpleMirrorRoom/MirrorOSChat/InventView/TransmissionView).
+- **Open for you:** §6 main-chat width/typography refinement (the orb surfaces are ready for it),
+  §8 Codex gallery (proposed ZAI-21), §9 Gathering editorial (proposed ZAI-22) — claim in the
+  registry before editing; the hall's crown pearl and the rooms' souls are protected.
+- **The orb's contract:** never fake activity, never delay streaming, stop offscreen/hidden/unmount,
+  inline 18–24 px / primary 32–48 px, flavors via `flavor` or a worn `accent` (canvas fillStyle
+  sentinel resolves any CSS color). If your surfaces need the light, mount `WornAccentOrb`.
+- Base for all of the above: `17a736be`. No protected room (Book/Akashic/Music) was touched.

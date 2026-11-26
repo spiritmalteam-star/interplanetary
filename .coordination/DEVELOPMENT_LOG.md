@@ -280,3 +280,46 @@ Tools: `qa/perf_probe.py` (production landing, mobile, 4x CPU throttle) and `qa/
 - ~7 layout passes/s at idle come from the Chronoscope's 5 s featured-world rotation (module childList/style churn); about 3% of one throttled core. Candidate: pause when off-screen.
 - `document.getAnimations()` grows 2/turn: finished `forwards` one-shot animations (mirror-fuse-*), not running loops.
 - No freeze reproduced on these paths. NOT yet profiled: IWork, Scopes, Invent, Manifest, Codex, Gathering, Book, Music rooms (rAF/canvas loops there are visibility-guarded per static scan).
+
+## 2026-11-26 — Z.ai: the master directive's foundation (ZAI-17 → ZAI-20)
+
+Session web-6fefa0f9, base `17a736be` (owner delivered the shared MIRROR_MASTER_DEVELOPMENT
+directive — "Evolve and collaborate"). Four stages landed:
+
+- **§2 HANDSHAKE (ZAI-17):** capability report verified and appended to HANDOFF.md — push/PR
+  confirmed live, webhook events and agent-to-agent channel confirmed ABSENT (manual activation),
+  tests = lint + real-browser + prod probes (no unit infra), profiling reproducible in-sandbox.
+  Responsibilities split proposed; no runtime configuration touched during the handshake.
+- **§10 ROOM SWEEP (ZAI-18):** read-only probe of every remaining room (Scopes, Invent, Manifest,
+  Book, Music, Akashic, ArtX, Gathering) at 1280×720 after settle: heap 42–56 MB with no growth,
+  DOM 670–1476, **zero** backdrop filters, ≤18 running animations (Music's player the busiest),
+  0 long tasks. No freeze indicators; nothing to fix — the rooms are lean. Combined with Claude's
+  landing + chat baselines, the profiling stage of §11 is complete.
+- **§5 MIRROR GLASS (ZAI-19):** the shared liquid-glass vocabulary — `--mg-*` tokens for both skies
+  (milky vanilla + lit crystal), `.mg-material` (one composited blur layer, conic-gradient silver
+  rim, inset depth), the restrained hover sweep (transform-only), the tactile press, focus law,
+  solid `@supports` fallback, reduced-motion rest. Compact primitives in `src/components/ui/glass.tsx`
+  (button sm/default/lg/icon, input, textarea, card, tabs+tab, panel) — additive, nothing retrofitted,
+  real elements only (never a styled div). Computed-style verified in both skies.
+- **§7 THE INTELLIGENCE ORB (ZAI-20):** `src/components/ui/intelligence-orb.tsx` — one canvas, dots
+  seeded on a Fibonacci lattice by the golden angle (cached per size, capped 96), depth-lit, wearing
+  four room flavors (pearl/silver mirror, worn scope accent, champagne/amber invent, opalescent
+  banded manifest) and SEVEN honest states. The laws held: IntersectionObserver + visibilitychange
+  stop the loop offscreen/hidden, frame gap capped 100 ms, dpr ≤ 2, reduced-motion paints one frame
+  and never loops, unmount cancels everything. Accent resolution via the canvas fillStyle sentinel —
+  any CSS color accepted, invalid falls back to the flavor. Wired ONLY to real events:
+  - BranchCanopy main chat: the three per-turn tells (full-size, thread compact, painting) —
+    the orb replaces the compact channeling light, labels kept (HyperX ladder + making sigils untouched);
+  - SimpleMirrorRoom: its two tells now wear the orb (WornAccentOrb reading the inherited --scope-a);
+  - MirrorOSChat OsThinking: primary 44 px orb replaces ManifestLoading + inline 20 px error orb;
+  - InventView: 44 px forge orb + inline error (ForgeLoading retired from the chat path);
+  - TransmissionView (Manifest forming): inline 22 px opalescent orb beside the cryptic phrases —
+    the little visitor preserved (the room's soul is protected by the non-destructive law).
+- **Verification:** lint clean; dev server 200; orb CAUGHT LIVE in the docked mirror chat
+  (state=working, 18 px) and in the Quantum scope (violet accent); mobile 390 px caught it too
+  (visible, correct size); after the answer the canvas count returns to 0 (no lingering loops);
+  heap 49 MB / DOM 705 / 0 long tasks after the sweep. Glass probe verified: milky veil + blur(14px)
+  saturate(1.15) light, crystal veil dark, warm/icy hairlines, inset depth.
+
+**Next (proposed in the registry):** ZAI-21 Codex dimensional gallery and ZAI-22 Gathering editorial —
+each needs its own dedicated session; both claimed with scope notes so Claude can pick either up.

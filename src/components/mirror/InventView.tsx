@@ -36,7 +36,7 @@ import {
   isVisualIntent,
 } from "@/lib/visual-intent";
 import { cn } from "@/lib/utils";
-import { ForgeLoading } from "./ThemedLoadings";
+import { IntelligenceOrb } from "@/components/ui/intelligence-orb";
 import { ListenButton } from "./ListenButton";
 import { voiceProfile } from "@/lib/voice-profiles";
 import {
@@ -1241,7 +1241,9 @@ function BenchChat() {
                   {activeQuery}
                 </p>
                 <div className="mt-3 flex flex-col items-center gap-2.5">
-                  <ForgeLoading className="size-16 text-foreground sm:size-20" />
+                  {/* THE FORGE'S OWN LIGHT (directive §7) — the intelligence
+                      orb in champagne/amber, mapped to the real live event */}
+                  <IntelligenceOrb state="working" flavor="invent" size={44} />
                   <span className="mono-label text-center text-[11px] text-muted-foreground">
                     {t(forgeChatPhases[phase] ?? forgeChatPhases[0])}
                   </span>
@@ -1250,8 +1252,9 @@ function BenchChat() {
             )}
 
             {status === "error" && error && (
-              <div className="rounded-xl border hairline px-4 py-3.5 text-[13.5px] leading-relaxed text-foreground/85">
-                {t(error)}
+              <div className="flex items-start gap-3 rounded-xl border hairline px-4 py-3.5 text-[13.5px] leading-relaxed text-foreground/85">
+                <IntelligenceOrb state="error" flavor="invent" size={20} className="mt-1 shrink-0" />
+                <span>{t(error)}</span>
               </div>
             )}
           </div>

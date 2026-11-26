@@ -154,6 +154,7 @@ import { useWorkspaceMemory } from "@/lib/workspace-memory";
 import { TAB_META } from "./living/ToolWorkspace";
 import { attachmentsToPayload, type ChatAttachment } from "./attachments";
 import { MirrorChanneling, SCOPE_CHANNELING } from "./MirrorChanneling";
+import { WornAccentOrb } from "@/components/ui/intelligence-orb";
 import { ChannelingSigil } from "./ChannelingSigils";
 import {
   CHANNELING_KINDS,
@@ -7165,12 +7166,10 @@ export function BranchCanopy({
                             </div>
                           )}
                           {turn.painting && (
-                            <MirrorChanneling
-                              compact
-                              label={t("Painting the vision")}
-                              variant="mirror"
-                              className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                            />
+                            <span className="mono-label inline-flex items-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                              <WornAccentOrb size={18} />
+                              {t("Painting the vision")}
+                            </span>
                           )}
                           <LandingPainting
                             turn={turn}
@@ -7383,21 +7382,20 @@ export function BranchCanopy({
                             </ShimmerLabel>
                           </div>
                         ) : (
-                          <MirrorChanneling
-                            label={t(
+                          /* THE HOUSE'S THINKING LIGHT (directive §7) —
+                             the intelligence orb wearing the room's own
+                             worn light, mapped to the one real event:
+                             the request is live and no words stand yet */
+                          <span className="mono-label inline-flex items-center gap-2.5 text-[11px] uppercase tracking-[0.22em]">
+                            <WornAccentOrb size={24} />
+                            {t(
                               lastLandingTurn?.painting
                                 ? "Painting the vision"
                                 : realm
                                   ? "Reflecting"
                                   : "Channeling"
                             )}
-                            variant={
-                              realm
-                                ? "mirror"
-                                : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
-                            }
-                            className="mono-label text-[11px] uppercase tracking-[0.22em]"
-                          />
+                          </span>
                         )}
                       </div>
                     )
@@ -7566,28 +7564,20 @@ export function BranchCanopy({
                                 </ShimmerLabel>
                               </span>
                             ) : (
-                              <MirrorChanneling
-                                compact
-                                label={t(
+                              <span className="mono-label inline-flex items-center gap-2 py-1 text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
+                                <WornAccentOrb size={18} />
+                                {t(
                                   realm
                                     ? "Reflecting"
                                     : "The transmission is listening…"
                                 )}
-                                variant={
-                                  realm
-                                    ? "mirror"
-                                    : SCOPE_CHANNELING[roomLiveScope] ?? "orbs"
-                                }
-                                className="py-1 mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground"
-                              />
+                              </span>
                             )
                           ) : turn.painting ? (
-                            <MirrorChanneling
-                              compact
-                              label={t("Painting the vision")}
-                              variant="mirror"
-                              className="mono-label py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
-                            />
+                            <span className="mono-label inline-flex items-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                              <WornAccentOrb size={18} />
+                              {t("Painting the vision")}
+                            </span>
                           ) : turn.failed ? (
                             <div
                               className={`rounded-xl border px-3 py-2 ${

@@ -26,6 +26,7 @@ import { ListenButton } from "./ListenButton";
 import { ShareButton } from "./ShareButton";
 import { voiceProfile } from "@/lib/voice-profiles";
 import { AlienLoading } from "./AlienLoading";
+import { IntelligenceOrb } from "@/components/ui/intelligence-orb";
 import { TermPopover } from "./TermPopover";
 import { SideArtifact } from "./ChatArtifacts";
 import { ReplyBranches } from "./ReplyBranches";
@@ -175,13 +176,17 @@ export function LoadingTransmission({
           </div>
         </div>
       )}
-      {/* no circle, no spinner, no skeleton — only the little visitor
-          and the cryptic phrases keep the seeker company */}
+      {/* no circle, no spinner, no skeleton — the little visitor and
+          the cryptic phrases keep the seeker company, and beside the
+          phrase the house's intelligence orb (directive §7) wears the
+          manifest's opalescent light, mapped to the one real event:
+          the request is live and the mirror is weaving */}
       <AlienLoading />
       <div
-        className="mt-4 flex h-6 items-center justify-center px-4 text-center"
+        className="mt-4 flex h-6 items-center justify-center gap-2.5 px-4 text-center"
         aria-hidden="true"
       >
+        <IntelligenceOrb state="working" flavor="manifest" size={22} />
         {/* initial={false} — the first phrase is on stage at once, so
             the reveal's dissolving echo is pixel-identical from its
             very first frame */}

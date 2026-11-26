@@ -25,7 +25,8 @@ import {
   VisualizationPending,
 } from "./VisualizationCard";
 import { AttachmentChips, ChatInputExtras } from "./ChatInputExtras";
-import { ManifestLoading } from "./ThemedLoadings";
+import { SCOPE_META } from "@/lib/mirror/workspaces";
+import { IntelligenceOrb } from "@/components/ui/intelligence-orb";
 import {
   hasPendingAttachments,
   type ChatAttachment,
@@ -44,15 +45,22 @@ function visitorBefore(
   return "";
 }
 
+/* THE ONE THINKING LIGHT (directive §7) — the house's intelligence orb
+   stands where the loader stood: a dotted sphere wearing the active
+   field's own light, turning briskly while the sky computes. It maps
+   to a REAL event only — it mounts while the request is live, and the
+   moment words stream, the answer itself is the indicator. */
 function OsThinking() {
   const t = useT();
+  const scope = useMirror((s) => s.landingScope);
+  const accent = SCOPE_META[scope]?.dot;
   return (
     <div
       className="flex flex-col items-center gap-2 py-1"
       aria-live="polite"
       aria-busy="true"
     >
-      <ManifestLoading className="size-16 text-foreground sm:size-20" />
+      <IntelligenceOrb state="working" accent={accent} size={44} />
       <span className="mono-label text-[11px] text-muted-foreground">
         {t("the OS is refining its answer")}
       </span>
@@ -539,12 +547,21 @@ export function MirrorOSChat() {
             )}
             {osStatus === "error" && osError && (
               <div className="ml-11 rounded-xl border border-[var(--destructive)]/25 bg-[color-mix(in_srgb,var(--destructive)_6%,transparent)] px-4 py-3">
-                <p className="text-[14.5px] leading-relaxed text-foreground/85">
-                  {t("The OS could not complete the refinement.")}
-                </p>
-                <p className="mt-1 text-[14px] italic text-muted-foreground">
-                  {osError}
-                </p>
+                <div className="flex items-start gap-3">
+                  <IntelligenceOrb
+                    state="error"
+                    size={20}
+                    className="mt-1"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[14.5px] leading-relaxed text-foreground/85">
+                      {t("The OS could not complete the refinement.")}
+                    </p>
+                    <p className="mt-1 text-[14px] italic text-muted-foreground">
+                      {osError}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </>
