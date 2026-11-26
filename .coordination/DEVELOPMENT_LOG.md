@@ -323,3 +323,38 @@ directive — "Evolve and collaborate"). Four stages landed:
 
 **Next (proposed in the registry):** ZAI-21 Codex dimensional gallery and ZAI-22 Gathering editorial —
 each needs its own dedicated session; both claimed with scope notes so Claude can pick either up.
+
+## ZAI-23 — 30626e99 — the gathering keeps the top's own law, the plain question, the grown globes, the straight thread (owner's four words)
+
+**Owner's words:** gathering stays at top same as icon · remove the flashy flicker at the question
+we send to the mirror · make the globe animations a bit bigger · remove the horizontal scroll from
+chats · push to git.
+
+**What was done (all four, one commit):**
+1. **The gathering's scroll law** — the sigil left `fixed` for `absolute`: it now lives in the
+   threshold's own flow exactly like the visitor's mark (top-left opposite top-right, both 14 px
+   at rest), carried away by the page's native scroll. Verified: scrollTop 900 → sigil & mark both
+   at -886 px (desktop) / -686 px (mobile 390 px). The old "TOP LAW" comment rewritten to record
+   the owner's newer word (the scroll law supersedes the fixed law).
+2. **THE MIRROR'S FUSION RETIRED** — `.mirror-fused::before` (the silver-gold sweep) and
+   `::after` (the delayed ◈ glyph) removed with both keyframes. The question the visitor sends
+   now stands plain. CRITICAL FINDING: the sweep's transformed pseudo-layer was stretching the
+   paragraph's scrollable overflow (706 px paragraph reported 1219 px scrollWidth) — the sweep
+   WAS the horizontal scroll in every chat wearing the class (zoom header, sv-question ×2,
+   room-turn). One removal cured two complaints.
+3. **The globes grow a breath** — WornAccentOrb default 18→22; every explicit site bumped:
+   SimpleMirrorRoom 18→22 ×2, BranchCanopy 18→22 ×3 + 24→28, MirrorOSChat OsThinking 44→52 +
+   error 20→24, InventView 44→52 + 20→24, TransmissionView 22→26. Caught live: working orb at
+   22 px during Reflecting.
+4. **No chat scrolls sideways** — `overflow-x-hidden` on every chat thread container
+   (BranchCanopy `.chat-reading`, MirrorOSChat direct line, SimpleMirrorRoom room thread,
+   Gathering MessagesSection thread) + `break-words` on the OS's own paragraphs and the
+   visitor's direct-line bubble. Verified with a deliberately unbreakable 100-char word:
+   desktop 854==854, mobile 356==356, page-level h-scroll false on both.
+
+**Verification:** lint clean; dev 200; console clean; desktop 1280 + mobile 390 both exercised
+(two sends each, long-word stress included); screenshots archived under /tmp/verify-*.
+**Pushed:** `30626e99` → origin/main (Vercel auto-deploy picks it up).
+
+**Next (still in the registry):** ZAI-21 Codex dimensional gallery and ZAI-22 Gathering editorial —
+each needs its own dedicated session.
