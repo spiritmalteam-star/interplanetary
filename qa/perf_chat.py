@@ -22,7 +22,7 @@ def mock(route):
 SAMPLE = '''()=>({heapMB:(performance.memory?performance.memory.usedJSHeapSize/1048576:0),
  nodes:document.getElementsByTagName("*").length,
  backdrop:[...document.querySelectorAll("*")].filter(e=>{const s=getComputedStyle(e);return (s.backdropFilter&&s.backdropFilter!=="none")||(s.webkitBackdropFilter&&s.webkitBackdropFilter!=="none")}).length,
- anims:document.getAnimations().length, canvases:document.querySelectorAll("canvas").length,
+ anims:document.getAnimations().length, animBreak:Object.entries(document.getAnimations().reduce((a,x)=>{const n=(x.animationName||(x.effect&&x.effect.getKeyframes&&Object.keys(x.effect.getKeyframes()[0]||{}).filter(k=>!['offset','easing','composite','computedOffset'].includes(k)).join('+'))||'?')+' @'+((x.effect&&x.effect.target&&(x.effect.target.getAttribute('data-testid')||String(x.effect.target.className).slice(0,40)))||'');a[n]=(a[n]||0)+1;return a},{})).sort((a,b)=>b[1]-a[1]).slice(0,8), canvases:document.querySelectorAll("canvas").length,
  overflowX:document.documentElement.scrollWidth>document.documentElement.clientWidth})'''
 res = {'turns': []}
 with sync_playwright() as p:
