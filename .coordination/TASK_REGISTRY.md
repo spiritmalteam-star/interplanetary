@@ -24,3 +24,4 @@ Statuses: Proposed / In development / Blocked / Ready for review / Integrated / 
 
 **Environment note:** the platform supervisor checked `main` back out mid-session while feature work sat
 uncommitted in the tree; the dirty state survived and was re-homed on this branch. Push early, push often.
+| ZAI-16 | Z.ai | The top that stays (icons fixed, scroll law gone) · settings carries tongue+light · slim non-symmetric codex rail · ONE simple animation per channeling/reveal · each book its own resonance bones (draw re-wired, echo refusal proven live) · M.E. pearl seated in the hall's crown (no overlap) + whole-app context and discover/create/suggest/link/publish hands | `agent/zai/one-simple-light` | `5024c659` | Deployed | Browser-verified 390px+1440px; two live weaves prove zero shared bones; lint clean |

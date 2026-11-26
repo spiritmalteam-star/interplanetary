@@ -4,11 +4,12 @@ import { useId, useMemo } from "react";
 
 /* ------------------------------------------------------------------ */
 /*  THE INVENTION DRAFT — the drawing of an invention, drafted live.   */
-/*  A blueprint that breathes: two counter-turning rings, motes in     */
-/*  orbit, a pulsing core, a flowing line of force, and the            */
-/*  invention's own body drafted per its form, so the visitor can SEE  */
-/*  the invention while they read it. Transform/opacity/stroke only —  */
-/*  the compositor owns every frame.                                   */
+/*  A blueprint with ONE breath: a single ring turning slowly around   */
+/*  the invention's own body drafted per its form, so the visitor can  */
+/*  SEE the invention while they read it — the owner's word: one       */
+/*  simple authentic motion, never five dancing at once. Everything    */
+/*  else stands still and lets the drawing speak. Transform/opacity    */
+/*  only — the compositor owns the frame.                              */
 /*                                                                     */
 /*  Born beside the forge's mystery chamber: the invention revealed    */
 /*  on the Invent page arrives with its own animated drawing.          */
@@ -110,17 +111,16 @@ export function InventionDraft({
         </defs>
         <rect width="320" height="210" fill={`url(#grid-${uid})`} />
 
-        {/* the force line — flowing through the whole drawing */}
+        {/* the force line — a still guide through the drawing */}
         <path
           d={`M 18 ${CY + 62} C 90 ${CY + 44}, 230 ${CY + 44}, 302 ${CY + 62}`}
           fill="none"
           stroke={`color-mix(in srgb, ${stroke} 42%, transparent)`}
           strokeWidth="1.1"
           strokeDasharray="3 7"
-          className="draft-flow"
         />
 
-        {/* the outer ring — turning one way */}
+        {/* the ONE breath — the outer ring turning, slowly */}
         <g className="draft-spin-rev">
           <circle
             cx={CX}
@@ -146,8 +146,8 @@ export function InventionDraft({
           })}
         </g>
 
-        {/* the inner ring — turning the other way */}
-        <g className="draft-spin">
+        {/* the inner ring — a still counter-frame */}
+        <g>
           <circle
             cx={CX}
             cy={CY}
@@ -159,13 +159,12 @@ export function InventionDraft({
           />
         </g>
 
-        {/* the core — the invention's heart, breathing */}
+        {/* the core — the invention's heart, still */}
         <circle
           cx={CX}
           cy={CY}
           r="5"
           fill={`color-mix(in srgb, ${stroke} 70%, transparent)`}
-          className="draft-pulse"
         />
 
         {/* the body — drafted per the invention's own form */}
@@ -181,7 +180,7 @@ export function InventionDraft({
               <rect x="106" y="82" width="56" height="40" rx="7" />
               <path d="M118 82 V 66 h 12 v 16" />
               <line x1="162" y1="102" x2="196" y2="102" />
-              <g className="draft-spin-fast">
+              <g>
                 <circle cx="208" cy="102" r="12" />
                 <line x1="208" y1="90" x2="208" y2="114" />
                 <line x1="196" y1="102" x2="220" y2="102" />
@@ -197,7 +196,7 @@ export function InventionDraft({
               <path d={`M ${CX - 22} 56 a 22 22 0 0 1 44 0`} />
               <ellipse cx={CX} cy="76" rx="15" ry="4.5" />
               <ellipse cx={CX} cy="92" rx="11" ry="3.5" />
-              <g className="draft-swing" style={{ transformOrigin: `${CX}px 56px` }}>
+              <g style={{ transformOrigin: `${CX}px 56px` }}>
                 <line x1={CX} y1="56" x2={CX + 38} y2="126" />
                 <circle cx={CX + 38} cy="126" r="6.5" />
               </g>
@@ -219,7 +218,6 @@ export function InventionDraft({
                 cx={CX}
                 cy="44"
                 r="5.5"
-                className="draft-pulse"
                 fill={`color-mix(in srgb, ${stroke} 55%, transparent)`}
                 stroke="none"
               />
@@ -229,17 +227,9 @@ export function InventionDraft({
           )}
           {form === "signal" && (
             <>
-              <path d={`M ${CX + 16} ${CY - 42} a 44 44 0 0 1 0 84`} className="draft-pulse" />
-              <path
-                d={`M ${CX + 30} ${CY - 26} a 28 28 0 0 1 0 52`}
-                className="draft-pulse"
-                style={{ animationDelay: "0.7s" }}
-              />
-              <path
-                d={`M ${CX + 42} ${CY - 12} a 13 13 0 0 1 0 24`}
-                className="draft-pulse"
-                style={{ animationDelay: "1.4s" }}
-              />
+              <path d={`M ${CX + 16} ${CY - 42} a 44 44 0 0 1 0 84`} />
+              <path d={`M ${CX + 30} ${CY - 26} a 28 28 0 0 1 0 52`} />
+              <path d={`M ${CX + 42} ${CY - 12} a 13 13 0 0 1 0 24`} />
               <path d={`M ${CX - 34} ${CY - 20} a 34 34 0 0 0 0 40`} />
               <line x1={CX - 34} y1={CY} x2={CX - 12} y2={CY} />
             </>
@@ -254,13 +244,12 @@ export function InventionDraft({
                 d="M 84 156 C 120 148, 200 148, 236 156"
                 strokeDasharray="4 6"
                 strokeWidth="1.1"
-                className="draft-flow"
               />
             </>
           )}
           {form === "plaything" && (
             <>
-              <g className="draft-wobble" style={{ transformOrigin: `${CX}px 100px` }}>
+              <g style={{ transformOrigin: `${CX}px 100px` }}>
                 <line x1={CX} y1="58" x2={CX} y2="140" />
                 <path
                   d={`M ${CX} 66 C ${CX + 38} 92, ${CX + 38} 112, ${CX} 136 C ${CX - 38} 112, ${CX - 38} 92, ${CX} 66 Z`}

@@ -32,7 +32,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { LANGUAGES, PICKER_LANGUAGES, VOICES, useT, type VoiceId } from "@/lib/i18n";
+import { VOICES, useT, type VoiceId } from "@/lib/i18n";
 import { LanguageButton } from "@/components/mirror/LanguageButton";
 import { useMirror } from "@/lib/mirror-store";
 import { DnaHelix, TrajectoryEvolution, useJourney } from "./DnaTimeline";
@@ -176,7 +176,6 @@ export function ProfilePage() {
      experience has walked; the house answers accordingly */
   const expLevel = useMirror((s) => s.expLevel);
   const setExpLevel = useMirror((s) => s.setExpLevel);
-  const setLanguage = useMirror((s) => s.setLanguage);
   const setVoice = useMirror((s) => s.setVoice);
   const setPace = useMirror((s) => s.setPace);
   const seeds = useMirror((s) => s.expansionSeeds);
@@ -1164,41 +1163,36 @@ export function ProfilePage() {
               desc={t("Your settings — they travel with your passage")}
             />
             <section aria-label={t("Settings")} className={cn(panel, "divide-y hairline")}>
-              {/* language */}
+              {/* THE TONGUE — the nine voices at home in the settings:
+                  the same floating hand the purse knows, one touch and
+                  the whole house speaks the chosen tongue. */}
               <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-                <label
-                  htmlFor="profile-language"
+                <span
+                  id="profile-language-label"
                   className="text-[14px] font-medium text-foreground/90"
                 >
                   {t("Language")}
-                </label>
-                <select
-                  id="profile-language"
-                  value={language}
-                  onChange={(e) => {
-                    const meta = LANGUAGES.find((l) => l.code === e.target.value);
-                    if (meta) setLanguage(meta.code);
-                  }}
-                  data-testid="profilepage-language"
-                  className="w-full rounded-xl border hairline bg-[var(--glass-bg)] px-3 py-2 text-[14.5px] text-foreground transition-colors focus:outline-none focus-visible:border-[color-mix(in_srgb,var(--scope-a)_45%,transparent)] sm:w-[280px]"
+                </span>
+                <LanguageButton
+                  testId="profilepage-language"
+                  labelledBy="profile-language-label"
+                  dropUp={false}
+                />
+              </div>
+              {/* THE REALM'S LIGHT — the sun/moon rests in the settings
+                  too: one touch turns the realm, deep space ⟷ daylight,
+                  beside the tongue that names it. */}
+              <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                <span
+                  id="profile-light-label"
+                  className="text-[14px] font-medium text-foreground/90"
                 >
-                  {/* THE NINE VOICES — Albanian first, then the eight
-                      most-spoken in alphabetical order; a saved older
-                      tongue (Italian, Greek, German, Turkish) keeps its
-                      place in the list until the visitor chooses anew. */}
-                  {[
-                    ...PICKER_LANGUAGES,
-                    ...LANGUAGES.filter(
-                      (l) =>
-                        !PICKER_LANGUAGES.some((p) => p.code === l.code) &&
-                        l.code === language
-                    ),
-                  ].map((l) => (
-                    <option key={l.code} value={l.code}>
-                      {l.native} · {l.english}
-                    </option>
-                  ))}
-                </select>
+                  {t("The realm's light")}
+                </span>
+                <RealmLightToggle
+                  label="The realm's light"
+                  testId="profilepage-light-toggle"
+                />
               </div>
               {/* voice */}
               <div className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">

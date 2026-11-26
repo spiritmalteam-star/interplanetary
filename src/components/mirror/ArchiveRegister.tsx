@@ -890,7 +890,7 @@ function ArchiveList({
             <p className="max-w-[760px] text-[13px] leading-relaxed text-muted-foreground lg:mt-1 lg:text-[12.5px]">
               {t(meta.subtitle)}
             </p>
-            <div className="shrink-0">
+            <div className="lg:max-w-[540px]">
               <CodexTabs registerKind={registerKind} />
             </div>
           </div>

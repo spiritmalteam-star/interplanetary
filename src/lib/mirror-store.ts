@@ -388,6 +388,9 @@ export interface DreamBookResume {
     /** What the drawing was seen to hold — the transcribed elements
      *  ("a little bird", "golden coins") the volume was born from. */
     sketchSubjects?: string[];
+    /** The volume's own resonance — the blind skeleton drawn at its
+     *  birth (volumes conjured before the draw returned rest bare). */
+    resonance?: Record<string, string>;
   };
   meta: {
     title: string;

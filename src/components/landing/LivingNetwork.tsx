@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useT } from "@/lib/i18n";
 import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
@@ -22,15 +21,13 @@ import { cn } from "@/lib/utils";
 /*  folds it — and the sigil always tells the truth about which way    */
 /*  the door stands.                                                   */
 /*                                                                     */
-/*  THE SCROLL LAW — the hand reads the reader: at the very top of     */
-/*  the threshold the sigil stands at the very top, full and warm;     */
-/*  the moment the visitor walks down among the sections, it slides    */
-/*  into the screen's very corner and shrinks to its quiet mark,      */
-/*  covering nothing — and one upward breath brings the whole hand    */
-/*  back to the top. Transform and opacity only; stillness honored.   */
+/*  THE TOP LAW — the doorway has ONE home: the very top of the        */
+/*  house, opposite the visitor's own mark. It is FIXED there and it   */
+/*  never follows the reader: walking down among the sections, the     */
+/*  sigil stays exactly where it stands (the owner's word: when we     */
+/*  scroll it must stay where it is and not follow). Only the deeper  */
+/*  rooms can rest it.                                                 */
 /* ------------------------------------------------------------------ */
-
-const CORNER_AFTER_PX = 48;
 
 /* THE VEILED DOOR — the sigil steps out of the eye when the house's
    deeper rooms stand open: a workplace (the codex register among
@@ -57,20 +54,6 @@ export default function LivingNetwork() {
   const openGatheringPortal = useMirror((s) => s.openGatheringPortal);
   const veiled = useVeiledDoor();
 
-  /* THE SCROLL EAR — the landing root is the scroller; one capture
-     listener hears every scroll beneath it and tracks the depth. */
-  const [inCorner, setInCorner] = useState(false);
-  useEffect(() => {
-    const onScroll = (e: Event) => {
-      const el = e.target;
-      if (!(el instanceof Element)) return;
-      if (!el.closest('[data-testid="landing-root"]')) return;
-      setInCorner(el.scrollTop > CORNER_AFTER_PX);
-    };
-    document.addEventListener("scroll", onScroll, { capture: true, passive: true });
-    return () => document.removeEventListener("scroll", onScroll, { capture: true });
-  }, []);
-
   return (
     <>
       {/* ============== THE SIGIL — the doorway at the edge ============== */}
@@ -93,34 +76,25 @@ export default function LivingNetwork() {
           veiled && "pointer-events-none"
         )}
         style={{
-          /* THE TOP HAND — full pill at the very top; the corner hand —
-             a quiet mark in the screen's very corner while the visitor
-             walks the sections. THE VEILED DOOR — transform and opacity
-             only: the doorway folds away while a deeper room stands
-             open and returns the breath the visitor walks home; never
-             unmounted, so the house never re-renders a single word. */
+          /* THE TOP HAND — the sigil stands at the very top, full and
+             warm, on every device, at every depth of the walk. THE
+             VEILED DOOR — transform and opacity only: the doorway
+             folds away while a deeper room stands open and returns
+             the breath the visitor walks home; never unmounted, so
+             the house never re-renders a single word. */
           ...(veiled
             ? {
                 opacity: 0,
                 transform: "scale(0.72)",
               }
-            : inCorner
-              ? {
-                  bottom: "max(0.75rem, env(safe-area-inset-bottom))",
-                  right: "max(0.75rem, env(safe-area-inset-right))",
-                  paddingLeft: "0.5rem",
-                  paddingRight: "0.5rem",
-                  opacity: 0.72,
-                  transform: "scale(0.82)",
-                }
-              : {
-                  top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
-                  left: "max(0.75rem, env(safe-area-inset-left))",
-                  paddingLeft: "0.625rem",
-                  paddingRight: "0.75rem",
-                  opacity: 1,
-                  transform: "scale(1)",
-                }),
+            : {
+                top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
+                left: "max(0.75rem, env(safe-area-inset-left))",
+                opacity: 1,
+                transform: "scale(1)",
+              }),
+          paddingLeft: "0.625rem",
+          paddingRight: "0.75rem",
           height: "2.25rem",
         }}
       >
@@ -152,11 +126,9 @@ export default function LivingNetwork() {
           <circle cx="21.5" cy="17" r="1.6" fill="rgba(159,216,220,0.55)" />
           <circle cx="14" cy="9" r="2.5" fill="#e8d9b0" className="ln-star-core" />
         </svg>
-        {!inCorner && (
-          <span className="mono-label hidden text-[9.5px] uppercase tracking-[0.26em] text-[#d9c99a] sm:inline">
-            {t("The Gathering")}
-          </span>
-        )}
+        <span className="mono-label hidden text-[9.5px] uppercase tracking-[0.26em] text-[#d9c99a] sm:inline">
+          {t("The Gathering")}
+        </span>
       </button>
     </>
   );

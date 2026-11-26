@@ -3720,18 +3720,12 @@ html:not(.dark) .lp-sigil-img {
   box-shadow: 0 0 8px -2px rgba(125, 189, 248, 0.7);
   animation: mc-mirror-b 1.6s ease-in-out infinite;
 }
-.mc-mirror-ring-inner {
-  inset: 3.5px;
-  border-color: rgba(255, 122, 145, 0.75);
-  box-shadow: 0 0 8px -2px rgba(255, 77, 109, 0.6);
-  animation: mc-mirror-a 1.6s ease-in-out infinite reverse;
-}
 .mc-mirror-heart {
   width: 3.5px;
   height: 3.5px;
   border-radius: 9999px;
   background: linear-gradient(135deg, #7dd3fc, #ff7a91);
-  animation: mc-heart 1.6s ease-in-out infinite;
+  /* the still heart — the ring is the one motion */
 }
 @keyframes mc-mirror-a {
   0%,
@@ -3753,17 +3747,6 @@ html:not(.dark) .lp-sigil-img {
   50% {
     transform: scale(0.86);
     opacity: 0.5;
-  }
-}
-@keyframes mc-heart {
-  0%,
-  100% {
-    transform: scale(0.75);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.25);
-    opacity: 1;
   }
 }
 
@@ -3795,14 +3778,6 @@ html:not(.dark) .lp-sigil-img {
   left: 7px;
   animation-delay: 0.5s;
   transform-origin: center;
-}
-.mc-star:nth-child(3) {
-  left: 13px;
-  animation-delay: 1s;
-}
-.mc-star:nth-child(4) {
-  left: 18px;
-  animation-delay: 1.45s;
 }
 @keyframes mc-rise {
   0% {
@@ -3886,7 +3861,7 @@ html:not(.dark) .lp-sigil-img {
   height: 5px;
   border-radius: 9999px;
   background: var(--scope-a, #9fd8dc);
-  animation: mc-pupil 1.8s ease-in-out infinite;
+  /* the still pupil — the ring's turn is the one motion */
 }
 @keyframes mc-turn {
   from {
@@ -3894,17 +3869,6 @@ html:not(.dark) .lp-sigil-img {
   }
   to {
     transform: rotate(360deg);
-  }
-}
-@keyframes mc-pupil {
-  0%,
-  100% {
-    transform: scale(0.7);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 1;
   }
 }
 
@@ -3922,7 +3886,7 @@ html:not(.dark) .lp-sigil-img {
   height: 3.5px;
   border-radius: 9999px;
   background: var(--scope-a, #9fd8dc);
-  animation: mc-heart 1.4s ease-in-out infinite;
+  /* the still nucleus — the particle's orbit is the one motion */
 }
 .mc-orbit-dot {
   position: absolute;
@@ -3939,14 +3903,6 @@ html:not(.dark) .lp-sigil-img {
   margin-left: -1.5px;
   border-radius: 9999px;
   background: color-mix(in srgb, var(--scope-a, #9fd8dc) 75%, white);
-}
-.mc-orbit-dot-2 {
-  animation-duration: 2.3s;
-  animation-direction: reverse;
-  transform: scale(0.72);
-}
-.mc-orbit-dot-2::before {
-  background: color-mix(in srgb, var(--scope-b, #f0abfc) 70%, white);
 }
 @keyframes mc-spin {
   from {
@@ -3982,10 +3938,6 @@ html:not(.dark) .lp-sigil-img {
 .mc-spark:nth-child(2) {
   left: 8px;
   animation-delay: 0.35s;
-}
-.mc-spark:nth-child(3) {
-  left: 12px;
-  animation-delay: 0.7s;
 }
 @keyframes mc-spark {
   0% {
@@ -4118,21 +4070,6 @@ html:not(.dark) .lp-sigil-img {
   left: 1px;
   top: 5px;
   animation-delay: 0.44s;
-}
-.mc-helix-bead:nth-child(4) {
-  left: 8px;
-  top: 5px;
-  animation-delay: 0.66s;
-}
-.mc-helix-bead:nth-child(5) {
-  left: 1px;
-  top: 10px;
-  animation-delay: 0.88s;
-}
-.mc-helix-bead:nth-child(6) {
-  left: 8px;
-  top: 10px;
-  animation-delay: 1.1s;
 }
 @keyframes mc-helix {
   0%,
@@ -5031,12 +4968,6 @@ html:not(.dark) .lp-sigil-img {
   border-right-color: color-mix(in srgb, #e879f9 55%, transparent);
   animation: mc-hyperx-spin 1.15s linear infinite;
 }
-.mc-hyperx-ring-inner {
-  inset: 4px;
-  border-top-color: #22d3ee;
-  border-right-color: color-mix(in srgb, #22d3ee 55%, transparent);
-  animation: mc-hyperx-spin-rev 0.85s linear infinite;
-}
 .mc-hyperx-heart {
   width: 6px;
   height: 6px;
@@ -5044,19 +4975,11 @@ html:not(.dark) .lp-sigil-img {
   background: linear-gradient(135deg, #fbbf24, #e879f9);
   box-shadow: 0 0 10px 0 color-mix(in srgb, #fbbf24 70%, transparent);
   transform: rotate(45deg);
-  animation: mc-hyperx-pulse 1.6s ease-in-out infinite;
+  /* the still heart — the ring's spin is the one motion */
 }
 @keyframes mc-hyperx-spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-@keyframes mc-hyperx-spin-rev {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
-}
-@keyframes mc-hyperx-pulse {
-  0%, 100% { transform: rotate(45deg) scale(1); }
-  50% { transform: rotate(45deg) scale(1.35); }
 }
 
 /* THE WAITING ROOM — the worlds' true facts turn beneath the light */

@@ -571,6 +571,11 @@ export function DreamBookView() {
   /* the X of the weaving room — one press arms it, a second confirms */
   const [cancelArmed, setCancelArmed] = useState(false);
   const rewritesRef = useRef<string[]>([]);
+  /* THE BIRTH ECHO — the resonance of the volume just woven: kept so
+     this volume's skeleton holds on every stride, and so the NEXT
+     conjuring refuses every one of these bones (the owner's word:
+     each book its own names, its own techniques, its own situations) */
+  const resonanceRef = useRef<Record<string, string> | null>(null);
   const configRef = useRef<{
     age: string;
     tale: string;
@@ -847,6 +852,9 @@ export function DreamBookView() {
       };
       sketchVisionRef.current =
         typeof r.config.sketchVision === "string" ? r.config.sketchVision : "";
+      /* the volume's own resonance returns with it (volumes woven
+         before the draw returned rest bare) */
+      resonanceRef.current = r.config.resonance ?? null;
       sketchSubjectsRef.current = Array.isArray(r.config.sketchSubjects)
         ? r.config.sketchSubjects
             .filter((s): s is string => typeof s === "string" && s.trim().length > 0)
@@ -1311,7 +1319,19 @@ export function DreamBookView() {
             /* the exact second of this conjuring — a seed that has never
                been woven and will never be woven again */
             seed: strideSeed,
+            /* THE RESONANCE'S HOLD — on every stride after the birth,
+               the volume's own skeleton rides inside the config so the
+               loom keeps the bones it drew */
+            ...(phase !== "open" && resonanceRef.current
+              ? { resonance: resonanceRef.current }
+              : {}),
           },
+          /* THE PREVIOUS VOLUME'S ECHO — on a fresh conjuring, the last
+             book's resonance rides with the asking so the new draw
+             refuses every bone the previous volume drew */
+          ...(phase === "open" && resonanceRef.current
+            ? { resonance: resonanceRef.current }
+            : {}),
           /* THE VISITOR'S DRAWING — the book drawn into existence by
              hand: the sketch rides only the opening breath, and the
              vision's reading of it (sketchVision) carries the drawn
@@ -1406,6 +1426,17 @@ export function DreamBookView() {
         if (phase === "open" && typeof data.libraryId === "string") {
           bookIdRef.current = data.libraryId;
           setSavedBookId(data.libraryId);
+        }
+
+        /* THE BIRTH ECHO — the volume's own resonance returns with it:
+           kept so the skeleton holds on every stride, and so the next
+           conjuring refuses every one of these bones */
+        if (
+          phase === "open" &&
+          data.resonance &&
+          typeof data.resonance === "object"
+        ) {
+          resonanceRef.current = data.resonance as Record<string, string>;
         }
 
         /* THE LEDGER — the loom's updated memory of the volume */

@@ -162,27 +162,26 @@ function DialGroup({
   );
 }
 
-/* ---------------- the forging ember — strike animation ---------------- */
+/* ---------------- the forging ember — strike animation ----------------
+   THE ONE LIGHT — the owner's word: when the forge channels, ONE
+   simple authentic light breathes — a quiet ember swelling inside
+   its calm ring frame, and nothing else dances with it. */
 
 function ForgingEmber({ phase }: { phase: number }) {
   const t = useT();
   return (
     <div className="py-5 text-center" aria-live="polite" aria-busy="true">
       <div className="relative mx-auto size-24" aria-hidden="true">
+        {/* the calm frame — a still dashed ring, never turning */}
         <div
-          className="scope-halo absolute inset-0 rounded-full border border-dashed"
+          className="absolute inset-0 rounded-full border border-dashed"
           style={{
-            borderColor: "color-mix(in srgb, var(--scope-a) 50%, transparent)",
+            borderColor: "color-mix(in srgb, var(--scope-a) 46%, transparent)",
           }}
         />
+        {/* the ONE breath — the ember itself, swelling and settling */}
         <div
-          className="scope-halo-rev absolute inset-3 rounded-full border"
-          style={{
-            borderColor: "color-mix(in srgb, var(--scope-b) 38%, transparent)",
-          }}
-        />
-        <div
-          className="animate-charge-pulse absolute inset-6 rounded-full"
+          className="animate-charge-pulse absolute inset-5 rounded-full"
           style={{
             background:
               "radial-gradient(circle, color-mix(in srgb, var(--scope-a) 55%, transparent), transparent 72%)",

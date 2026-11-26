@@ -1123,8 +1123,9 @@ export default function GatheringPortal() {
         </div>
       )}
 
-      {/* M.E. listens in every room — it suggests, never acts */}
-      <MirrorAssistant section={section} me={me} radioOpen={radioOpen} />
+      {/* M.E. listens in every room — from its seat at the crown it
+          suggests, never acts */}
+      <MirrorAssistant section={section} me={me} />
 
       {/* the first welcome — once, honestly, never again */}
       <FirstVisitSheet

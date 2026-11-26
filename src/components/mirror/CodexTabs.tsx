@@ -13,6 +13,13 @@ import { cn } from "@/lib/utils";
 /*  INSIDE the codex as its own category, never as a door of its       */
 /*  own at the top of the chat). Every register branch wears the       */
 /*  same rail, so the codex is one room with four categories.          */
+/*                                                                     */
+/*  THE MARGIN'S OWN HAND — the rail no longer stands as a centered    */
+/*  row of fat identical pills: it sits at the margin like index       */
+/*  tags laid by hand — each wing a slim card with a hairline rim,     */
+/*  a small brass tick and its own slight lean and offset, so the      */
+/*  row reads as scattered slips in a codex, never a machine row.      */
+/*  (The lean rests on the palm — straight tags tap truer there.)      */
 /* ------------------------------------------------------------------ */
 
 export const CODEX_TABS: {
@@ -30,6 +37,14 @@ export const CODEX_TABS: {
   { kind: "archive", label: "Interdim. Archive", count: idmArchiveTotal },
 ];
 
+/* each wing's own lean and offset — the hand-laid, non-symmetric row */
+const TAB_POSTURE = [
+  "sm:-rotate-[0.8deg] sm:translate-y-[1px]",
+  "sm:rotate-[0.6deg] sm:-translate-y-[2px] sm:translate-x-[2px]",
+  "sm:-rotate-[0.4deg] sm:translate-y-[2px]",
+  "sm:rotate-[1deg] sm:-translate-y-[1px] sm:translate-x-[1px]",
+] as const;
+
 export function CodexTabs({
   registerKind,
   className,
@@ -42,14 +57,14 @@ export function CodexTabs({
   return (
     <div
       className={cn(
-        "flex w-full max-w-full flex-wrap items-stretch justify-center gap-1.5",
+        "flex max-w-full flex-wrap items-start gap-x-2 gap-y-2.5 sm:gap-x-3",
         className
       )}
       role="tablist"
       aria-label={t("The codex registers")}
       data-testid="codex-rail"
     >
-      {CODEX_TABS.map((tab) => {
+      {CODEX_TABS.map((tab, i) => {
         const active = registerKind === tab.kind;
         return (
           <button
@@ -60,14 +75,25 @@ export function CodexTabs({
             onClick={() => openRegister(tab.kind)}
             data-testid={`codex-kind-${tab.kind}`}
             className={cn(
-              "focus-glow flex min-w-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] transition-all duration-300",
+              "focus-glow group flex min-w-0 origin-center items-center gap-1.5 rounded-[9px] border px-2 py-1 text-[10.5px] transition-all duration-300",
+              TAB_POSTURE[i % TAB_POSTURE.length],
               active
-                ? "border-[var(--hairline-active)] bg-[color-mix(in_srgb,var(--cy)_12%,transparent)] font-semibold text-foreground"
-                : "hairline text-muted-foreground hover:text-foreground"
+                ? "border-[rgba(196,158,110,0.5)] bg-[color-mix(in_srgb,var(--cy)_9%,transparent)] font-semibold text-foreground shadow-[0_6px_18px_-10px_rgba(20,12,5,0.55)]"
+                : "border-[var(--hairline)] bg-transparent text-muted-foreground hover:border-[rgba(196,158,110,0.4)] hover:text-foreground"
             )}
           >
-            <span className="truncate">{t(tab.label)}</span>
-            <span className="mono-label shrink-0 tabular-nums text-[9.5px] text-muted-foreground/75">
+            {/* the brass tick — a small seal mark before the name */}
+            <span
+              aria-hidden="true"
+              className={cn(
+                "block size-[4px] shrink-0 rounded-[1px] transition-all duration-300",
+                active
+                  ? "bg-[rgba(196,158,110,0.95)] shadow-[0_0_6px_rgba(196,158,110,0.6)]"
+                  : "bg-[rgba(196,158,110,0.35)] group-hover:bg-[rgba(196,158,110,0.6)]"
+              )}
+            />
+            <span className="mono-label truncate tracking-[0.05em]">{t(tab.label)}</span>
+            <span className="mono-label shrink-0 tabular-nums text-[8.5px] text-muted-foreground/70">
               {tab.count}
             </span>
           </button>

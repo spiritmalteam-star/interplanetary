@@ -7,14 +7,15 @@ import { isPageHidden } from "@/lib/page-lifecycle";
 
 /* ------------------------------------------------------------------ */
 /*  THE CHANNELING LIGHTS — every chat of the house channels in its    */
-/*  own authentic way. No two rooms breathe the same tell: the         */
-/*  landing's mirror wakes as a breathing double-crystal ring, the     */
-/*  interplanetary floor carries drifting stars, healing breathes      */
-/*  tides, the OS opens an aperture, the quantum narrator orbits,      */
-/*  the forge throws sparks, the library blooms ink, the atelier       */
-/*  blooms paint, the nexus climbs a helix. Transform-and-opacity      */
-/*  only; the stillness law (and the lens's dormant law) rest every    */
-/*  variant entirely.                                                  */
+/*  own authentic way — and each carries exactly ONE motion (the       */
+/*  owner's word: one simple authentic light per room, never five      */
+/*  dancing for the same telling). The landing's mirror wakes as one   */
+/*  breathing crystal ring around a still heart, the interplanetary    */
+/*  floor carries drifting stars, healing breathes a tide, the OS      */
+/*  opens an aperture, the quantum narrator orbits, the forge throws   */
+/*  sparks, the library blooms ink, the atelier blooms paint, the      */
+/*  nexus climbs a helix. Transform-and-opacity only; the stillness    */
+/*  law (and the lens's dormant law) rest every variant entirely.      */
 /* ------------------------------------------------------------------ */
 
 export type ChannelingVariant =
@@ -46,38 +47,34 @@ export const SCOPE_CHANNELING: Record<LiveScopeKey, ChannelingVariant> = {
 function VariantLight({ variant }: { variant: ChannelingVariant }) {
   switch (variant) {
     case "mirror":
-      /* the landing's own mirror — a double-crystal ring waking around
-         one still point: blue and rose breathing in opposite phase */
+      /* the landing's own mirror — ONE crystal ring breathing around a
+         still gradient heart: the room's single, quiet tell */
       return (
         <span className="mc-mirror" aria-hidden="true">
           <i className="mc-mirror-ring" />
-          <i className="mc-mirror-ring mc-mirror-ring-inner" />
           <i className="mc-mirror-heart" />
         </span>
       );
     case "starfall":
-      /* the interplanetary floor — four small stars drifting upward
-         like slow prayers, each with its own delay */
+      /* the interplanetary floor — two small stars drifting upward
+         like slow prayers, one breath shared between them */
       return (
         <span className="mc-stars" aria-hidden="true">
-          <i className="mc-star" />
-          <i className="mc-star" />
           <i className="mc-star" />
           <i className="mc-star" />
         </span>
       );
     case "tide":
-      /* the healing hearth — three soft waves passing through, unhurried */
+      /* the healing hearth — one soft wave passing through, unhurried */
       return (
         <span className="mc-tides" aria-hidden="true">
-          <i className="mc-tide" />
           <i className="mc-tide" />
           <i className="mc-tide" />
         </span>
       );
     case "aperture":
       /* the manifest OS — an iris opening: a dashed ring turning while
-         its center breathes wider and narrower */
+         its pupil rests at the center (the ring is the one motion) */
       return (
         <span className="mc-aperture" aria-hidden="true">
           <i className="mc-aperture-ring" />
@@ -85,19 +82,17 @@ function VariantLight({ variant }: { variant: ChannelingVariant }) {
         </span>
       );
     case "orbit":
-      /* the quantum narrator — two particles circling a quiet nucleus */
+      /* the quantum narrator — one particle circling a quiet nucleus */
       return (
         <span className="mc-orbit" aria-hidden="true">
           <i className="mc-orbit-dot" />
-          <i className="mc-orbit-dot mc-orbit-dot-2" />
           <i className="mc-orbit-core" />
         </span>
       );
     case "sparks":
-      /* the forge — sparks rising from a seam of coals */
+      /* the forge — one spark rising from a seam of coals */
       return (
         <span className="mc-sparks" aria-hidden="true">
-          <i className="mc-spark" />
           <i className="mc-spark" />
           <i className="mc-spark" />
         </span>
@@ -108,14 +103,12 @@ function VariantLight({ variant }: { variant: ChannelingVariant }) {
         <span className="mc-inks" aria-hidden="true">
           <i className="mc-ink" />
           <i className="mc-ink" />
-          <i className="mc-ink" />
         </span>
       );
     case "bloom":
-      /* the atelier — three pigment dots blooming out of the canvas */
+      /* the atelier — pigment dots blooming out of the canvas */
       return (
         <span className="mc-blooms" aria-hidden="true">
-          <i className="mc-bloom" />
           <i className="mc-bloom" />
           <i className="mc-bloom" />
         </span>
@@ -127,27 +120,22 @@ function VariantLight({ variant }: { variant: ChannelingVariant }) {
           <i className="mc-helix-bead" />
           <i className="mc-helix-bead" />
           <i className="mc-helix-bead" />
-          <i className="mc-helix-bead" />
-          <i className="mc-helix-bead" />
-          <i className="mc-helix-bead" />
         </span>
       );
     case "hyperx":
-      /* HyperX — the discovery light: two electric rings spinning in
-         opposite directions around a lightning heart, the crystal of
-         the unseen charging while the deep voice gathers */
+      /* HyperX — the discovery light: one electric ring spinning around
+         a still lightning heart, the crystal of the unseen charging
+         while the deep voice gathers */
       return (
         <span className="mc-hyperx" aria-hidden="true">
           <i className="mc-hyperx-ring" />
-          <i className="mc-hyperx-ring mc-hyperx-ring-inner" />
           <i className="mc-hyperx-heart" />
         </span>
       );
     default:
-      /* the standing tell — three soft orbs rippling in the scope's hue */
+      /* the standing tell — soft orbs rippling in the scope's hue */
       return (
         <span className="mc-orbs" aria-hidden="true">
-          <i className="mc-orb" />
           <i className="mc-orb" />
           <i className="mc-orb" />
         </span>

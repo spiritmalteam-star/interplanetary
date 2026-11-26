@@ -22,7 +22,16 @@ const QUESTION_MAX = 600;
 const HISTORY_MAX = 8;
 const HISTORY_TURN_MAX = 700;
 
-const ASSISTANT_ACTIONS = ["summarize", "explain", "find", "suggest", "draft", "next"] as const;
+const ASSISTANT_ACTIONS = [
+  "summarize",
+  "explain",
+  "find",
+  "suggest",
+  "draft",
+  "next",
+  "link",
+  "publish",
+] as const;
 
 interface HistoryTurn {
   role: "user" | "assistant";
@@ -49,25 +58,47 @@ function historyTurns(raw: unknown): HistoryTurn[] {
   return out;
 }
 
-/** the real context, read from the tables — never fabricated */
+/** the real context, read from the tables — never fabricated.
+ *  THE WHOLE HOUSE'S EAR — M.E. reads the living state of the entire
+ *  app before it speaks: the hall's open questions, its circles, the
+ *  intentions being carried, the gatherings being scheduled — so it
+ *  can help the visitor discover, create, suggest, link and publish
+ *  with what is actually alive right now, never from invention. */
 async function gatherRealContext(
-  visitorId: string,
-  wantsLists: boolean
-): Promise<{ questionTitles: string[]; circles: Array<{ name: string; focus: string }> }> {
-  if (!wantsLists) return { questionTitles: [], circles: [] };
+  visitorId: string
+): Promise<{
+  questionTitles: string[];
+  circles: Array<{ name: string; focus: string }>;
+  intentions: Array<{ title: string; purpose: string }>;
+  events: Array<{ title: string; when: string }>;
+}> {
   const walls = await wallIdsFor(visitorId);
 
-  const questions = await db.networkQuestion.findMany({
-    where: { status: "open" },
-    orderBy: { updatedAt: "desc" },
-    take: 24,
-    include: { post: { select: { title: true } }, owner: { select: { id: true } } },
-  });
-  const circles = await db.networkCircle.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 24,
-    select: { name: true, focus: true, ownerId: true },
-  });
+  const [questions, circles, intentions, events] = await Promise.all([
+    db.networkQuestion.findMany({
+      where: { status: "open" },
+      orderBy: { updatedAt: "desc" },
+      take: 24,
+      include: { post: { select: { title: true } }, owner: { select: { id: true } } },
+    }),
+    db.networkCircle.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 24,
+      select: { name: true, focus: true, ownerId: true },
+    }),
+    db.networkIntention.findMany({
+      where: { status: { in: ["open", "active"] } },
+      orderBy: { updatedAt: "desc" },
+      take: 12,
+      select: { title: true, purpose: true, ownerId: true },
+    }),
+    db.networkEvent.findMany({
+      where: { status: { in: ["scheduled", "live"] } },
+      orderBy: { scheduledFor: "asc" },
+      take: 8,
+      select: { title: true, scheduledFor: true, hostId: true },
+    }),
+  ]);
 
   return {
     questionTitles: questions
@@ -78,6 +109,14 @@ async function gatherRealContext(
       .filter((c) => !walls.has(c.ownerId))
       .slice(0, 8)
       .map((c) => ({ name: c.name, focus: c.focus })),
+    intentions: intentions
+      .filter((i) => !walls.has(i.ownerId))
+      .slice(0, 6)
+      .map((i) => ({ title: i.title, purpose: i.purpose })),
+    events: events
+      .filter((e) => !walls.has(e.hostId))
+      .slice(0, 6)
+      .map((e) => ({ title: e.title, when: e.scheduledFor.toISOString() })),
   };
 }
 
@@ -153,12 +192,9 @@ export async function POST(req: NextRequest) {
        M.E. proceeds the thread instead of restarting it cold */
     const history = historyTurns(raw.history);
 
-    /* the real lists — fetched only when the hand asks for finding,
-       suggesting, or the visitor's own words point at the questions
-       and circles of the network */
-    const wantsLists =
-      action === "find" || action === "suggest" || /question|circle/i.test(question);
-    const real = await gatherRealContext(visitor.user.id, wantsLists);
+    /* the real state of the house — always read before M.E. speaks,
+       so every answer knows what is actually alive in the app */
+    const real = await gatherRealContext(visitor.user.id);
 
     const contextLines: string[] = [];
     contextLines.push(`Section: ${section}`);
@@ -172,7 +208,7 @@ export async function POST(req: NextRequest) {
       contextLines.push(
         `Open questions living in the network right now (real titles): ${real.questionTitles.join(" | ")}`
       );
-    } else if (wantsLists) {
+    } else {
       contextLines.push("No open questions are living in the network right now.");
     }
     if (real.circles.length > 0) {
@@ -181,8 +217,22 @@ export async function POST(req: NextRequest) {
           .map((c) => `${c.name} (${c.focus})`)
           .join(" | ")}`
       );
-    } else if (wantsLists) {
+    } else {
       contextLines.push("No circles exist in the network yet.");
+    }
+    if (real.intentions.length > 0) {
+      contextLines.push(
+        `Collective intentions being carried: ${real.intentions
+          .map((i) => `${i.title} — ${i.purpose}`)
+          .join(" | ")}`
+      );
+    }
+    if (real.events.length > 0) {
+      contextLines.push(
+        `Gatherings scheduled or live: ${real.events
+          .map((e) => `${e.title} (at ${e.when})`)
+          .join(" | ")}`
+      );
     }
 
     try {
@@ -196,7 +246,7 @@ export async function POST(req: NextRequest) {
           {
             role: "system",
             content:
-              "You are M.E., the Mirror Entity: the warm, precise, honest facilitator of ReflectMe's Gathering. You suggest; you never act, never publish, never message anyone, and you never pretend you contacted people or did anything — you only offer words. You never claim things are scientifically verified; you speak of interpretation as interpretation. Speak in plain kind words, at most 180 words, no markdown headings, at most 4 short bullets. Mention only real titles and names you were given in the context — never invent people, circles, questions or features." +
+              "You are M.E., the Mirror Entity: the warm, precise, honest facilitator of ReflectMe's Gathering — and the one presence that knows the WHOLE app. ReflectMe holds two worlds: the landing chamber (the Mirror's own rooms — the scopes where visitors channel and reflect, the Invent forge where inventions are struck, the Manifest rooms, the Dream Book loom where whole books are woven, and the Cosmic Library where everything made is kept) and this Gathering hall (the Gather, Explore, Living Questions, Resonance Circles, the Possibilities Realm, the composer, the Workshops, Collective Intentions, Gather Live events, Connections, the Creation Commons). You are aware of what is alive in both — the context below carries the real, current state of the network. Your work is to help the visitor DISCOVER what exists, CREATE what they imagine, SUGGEST people/circles/questions/works that genuinely fit, LINK together the people, works and circles that belong beside one another, and PUBLISH what they have made (you explain how and where; you never publish yourself). You suggest; you never act, never publish, never message anyone, and you never pretend you contacted people or did anything — you only offer words. When the hall holds little, say so honestly and invite the visitor to begin it. You never claim things are scientifically verified; you speak of interpretation as interpretation. Speak in plain kind words, at most 180 words, no markdown headings, at most 4 short bullets. Mention only real titles and names you were given in the context — never invent people, circles, questions or features." +
               memoryLine,
           },
           ...history.map((turn) => ({

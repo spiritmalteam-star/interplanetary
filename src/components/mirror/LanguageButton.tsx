@@ -41,6 +41,9 @@ export function LanguageButton({
   compact = false,
   onImage = false,
   dropUp = true,
+  /* an outer label's id — the hand then speaks with the row's own
+     name (the settings' rows label their hands this way) */
+  labelledBy,
 }: {
   testId?: string;
   compact?: boolean;
@@ -50,6 +53,7 @@ export function LanguageButton({
   /* the list rises above the hand by default; the banner (at the
      screen's top edge) asks for the downward fall instead */
   dropUp?: boolean;
+  labelledBy?: string;
 }) {
   const t = useT();
   const language = useMirror((s) => s.language);
@@ -215,6 +219,7 @@ export function LanguageButton({
         }}
         aria-haspopup="listbox"
         aria-expanded={open}
+        {...(labelledBy ? { "aria-labelledby": labelledBy } : {})}
         /* the visible word stands inside the name — voice-control
            speakers may say what they see ("Deutsch") and be heard */
         aria-label={`${current.native} — ${t("Choose the language of everything")}`}

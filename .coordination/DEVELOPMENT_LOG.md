@@ -212,3 +212,63 @@
   clean, page 390×844; gathering hall opens (z-90) with both doors veiled, closes, doors return.
   Zero console errors / page errors. Lint clean. SSR HTML still carries `banner-profile-mark`
   (the production probe keeps working).
+
+## 2026-11-26 — Z.ai (ZAI-16: the top that stays, the settings at home, the slim codex rail, the one simple light, each book its own bones, the mirror at the crown)
+
+- **THE TOP HANDS STAY (the owner's word):** the gathering sigil's scroll law (slide to the
+  bottom-right corner after 48px) is gone — `LivingNetwork` no longer carries a scroll listener
+  at all. Both top hands (sigil top-left, profile mark top-right) are `fixed` at the very top on
+  every device and never follow the walk; only the deeper rooms can veil them. Verified: icons
+  fixed at top 14.4px with opacity 1 at 390px and 1440px.
+- **THE SETTINGS AT HOME (the owner's word):** the profile page's Settings section now carries
+  the tongue and the light: the language row speaks with the same floating nine-voice
+  `LanguageButton` (falls below the hand in settings; new `labelledBy` prop binds the row's
+  label) and a new "The realm's light" row holds the sun/moon toggle. Verified: toggle turns
+  dark ⟷ daylight live; the menu opens with 11 tongues (Albanian first).
+- **THE CODEX'S SLIM RAIL (the owner's word):** `CodexTabs` redesigned from a centered row of
+  fat pills into hand-laid index tags at the margin: slim cards (`px-2 py-1`, 10.5px mono
+  labels, hairline rims), a small brass tick before each name, and per-tab leans/offsets
+  (sm-only) so the row reads scattered, never machine-symmetric; left-aligned (no
+  justify-center), content-sized (`max-w-full`, the `w-full` squeeze removed) and the
+  ArchiveRegister header row bounds the rail (`lg:max-w-[540px]`) so the intro paragraph reads
+  full-width again. Verified in the codex room: readable 3-line intro + staggered two-line tag
+  rail.
+- **THE ONE SIMPLE LIGHT (the owner's word: not 5 animations for the same revealing):**
+  - Every channeling variant now carries exactly ONE motion: mirror = one breathing ring around
+    a still heart (inner ring removed); aperture = turning ring, still pupil; orbit = one
+    particle, still nucleus; hyperx = one spinning ring, still heart; starfall/tide/spark/ink/
+    bloom/helix/orb counts thinned to 2 (helix 3); dead CSS (inner rings, `-2` dots, pupil/heart
+    keyframes, nth-child 3–6 rules) deleted.
+  - The forge's `ForgingEmber` = one breathing ember inside a still dashed ring frame
+    (halo/halo-rev rotations removed); the invention's blueprint keeps ONE motion (the outer
+    ring turning — counter-ring, pulsing core, flowing force line, spinning flywheel, swinging
+    pendulum and wobbling plaything all stand still); the mystery card keeps its single
+    fade-rise.
+  - `CreationReveal` trimmed from ~7 actors to ONE authentic reveal: a single ring of gold
+    breathes outward and the making rises inside that breath (seal, violet echo, sparks and the
+    two curtains retired; ceremony 1.6s → 1.1s).
+- **EACH BOOK ITS OWN BONES (the owner's word):** the resonance draw is wired back into the
+  dream-book loom — `drawResonance` + `resonanceCharter` speak the volume's blind skeleton into
+  every opening breath (bias line binds the drawn axes to the visitor's chosen kind of tale),
+  `resonanceEcho` returns as `out.resonance` and rides the volume's saved config; the client
+  keeps the birth echo (`resonanceRef`), sends it as `resonance` on the next conjuring (the new
+  draw refuses every bone) and inside the config on every stride (a one-line "the resonance
+  still holds" keeps the skeleton without re-announcing it). `sanitizeEcho` guards the carried
+  echo. LIVE PROOF (integrated Z.ai): two `open` weaves, same topic — book one "The Valley of
+  Weather Reports" (heartbeat "wyrd that trades with the warm window"), book two "The Ledger of
+  Falling Light" (heartbeat "chimney that carries the open ledger"); ZERO of 21 axes identical.
+- **THE MIRROR AT THE CROWN (the owner's word: no overlap, aware of everything):** the hall's
+  floating pearl left the foot (where it rode over the radio band, the Possibilities player and
+  the lab sheet) and now sits INSIDE the crown bar, left of the lab hand (fixed top-right,
+  z-30 — below every sheet/modal); its compact drawer falls from under the crown; all
+  bottom-juggling (radio lifts) removed. The assistant API now ALWAYS reads the whole house
+  before it speaks — open questions, circles, collective intentions, scheduled/live gatherings —
+  and its system prompt names both worlds (chamber scopes/invent/manifest/books/library + the
+  hall) with the five hands: DISCOVER, CREATE, SUGGEST, LINK, PUBLISH (new `link` and `publish`
+  actions + quick hands "Link people & works" / "Publish a work"). Verified live: M.E. read the
+  empty network and answered honestly, pointing at real rooms; pearl at (1336,12) overlaps
+  nothing (back/lab/nav/name all clear) at 1440px and 390px.
+- **Verification:** lint clean; dev server 200; agent-browser runs at 390px + 1440px across
+  landing, profile (settings rows, toggle, tongue menu), hall (crown pearl, panel, M.E. answer),
+  codex (new rail) and Invent (clean render); dream-book route compiled and proven with two real
+  weaves. HMR ChunkLoadError during a hot rebuild was transient (fresh load clean).

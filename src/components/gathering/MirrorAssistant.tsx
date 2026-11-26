@@ -14,15 +14,27 @@ import { type MeState, GP_GHOST, GP_ICON_BTN, GP_INPUT, netFetch } from "./share
 /*  suggestion by definition; every error it meets is shown verbatim,  */
 /*  prefixed honestly.                                                 */
 /*                                                                     */
-/*  THE COMPACT DRAWER — on the palm it rests at the screen's foot, a  */
-/*  quiet sheet; on the desk it keeps its side seat. The scope it      */
-/*  reads is spoken in its own crown — the room, and any offering      */
-/*  the visitor carried to it — never guessed, never hidden.           */
-/*  THE FULL CONVERSATION — one expand hand opens the keyboard-safe    */
-/*  room-wide dialogue; one fold returns to the sheet.                 */
+/*  THE CROWN'S OWN SEAT — the pearl lives at the hall's crown, left   */
+/*  of the lab hand, INSIDE the quiet top bar: it covers nothing —    */
+/*  not the streets, not the radio, not one card of the room (the     */
+/*  owner's word: the mirror's icon must never overlap anything).     */
+/*  It reads every sheet's level beneath it, so when a deeper sheet   */
+/*  stands open the pearl rests with the rest. The compact drawer     */
+/*  falls from under the crown like a note slipped from a book; the   */
+/*  full conversation takes the whole room. The scope it reads is    */
+/*  spoken in its own crown — the room, and any offering the visitor */
+/*  carried to it — never guessed, never hidden.                      */
 /* ------------------------------------------------------------------ */
 
-type AssistantAction = "summarize" | "explain" | "find" | "suggest" | "draft" | "next";
+type AssistantAction =
+  | "summarize"
+  | "explain"
+  | "find"
+  | "suggest"
+  | "draft"
+  | "next"
+  | "link"
+  | "publish";
 
 interface Turn {
   who: "me" | "mirror";
@@ -91,10 +103,12 @@ function memoryOf(turns: Turn[]): { role: "user" | "assistant"; text: string }[]
 
 const QUICK_HANDS: Array<{ action: AssistantAction; label: string }> = [
   { action: "summarize", label: "Summarize this room" },
+  { action: "find", label: "Discover" },
+  { action: "suggest", label: "Suggest" },
+  { action: "draft", label: "Create with me" },
+  { action: "link", label: "Link people & works" },
+  { action: "publish", label: "Publish a work" },
   { action: "explain", label: "Explain a concept" },
-  { action: "find", label: "Find questions" },
-  { action: "suggest", label: "Suggest circles" },
-  { action: "draft", label: "Draft a post" },
   { action: "next", label: "Next steps" },
 ];
 
@@ -123,14 +137,9 @@ const ROOM_NAMES: Record<string, string> = {
 export default function MirrorAssistant({
   section,
   me,
-  radioOpen = false,
 }: {
   section: string;
   me: MeState | null;
-  /** the frequency radio stands at the hall's foot — the mirror
-      lifts itself above its band on the palm, and comes back down
-      when the radio folds away */
-  radioOpen?: boolean;
 }) {
   const t = useT();
   const [open, setOpen] = useState(false);
@@ -403,10 +412,10 @@ export default function MirrorAssistant({
 
   return (
     <>
-      {/* the floating pearl — the one mirror presence in the hall:
-          it rests just above the palm's streets (and above the safe
-          area, always), lifts over the radio while it plays, and
-          never covers community content */}
+      {/* the crown's own pearl — the one mirror presence in the hall:
+          seated INSIDE the quiet top bar, left of the lab hand, it
+          covers nothing of the room beneath; every deeper sheet (the
+          lab, the composer's sheets, the first visit) rises above it */}
       <motion.button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -416,34 +425,27 @@ export default function MirrorAssistant({
         title={t("Ask M.E.")}
         aria-expanded={open}
         data-testid="gath-assistant-open"
-        className={cn(
-          "gp-pearl focus-glow fixed right-4 z-50 flex size-12 items-center justify-center rounded-full border border-white/90 transition-[bottom] duration-300 sm:right-6 lg:bottom-[84px]",
-          radioOpen ? "bottom-[196px]" : "bottom-[84px]"
-        )}
+        className="gp-pearl focus-glow fixed right-[54px] top-2 z-30 flex size-10 items-center justify-center rounded-full border border-white/90 transition-all duration-300 sm:right-16 sm:top-3"
         style={{
-          bottom: `calc(${radioOpen ? "196px" : "84px"} + env(safe-area-inset-bottom, 0px))`,
           background: "linear-gradient(150deg,#fdf9ef 0%,#f3ead6 100%)",
           boxShadow:
             "inset 0 1px 0 rgba(255,255,255,0.95), 0 8px 20px -8px rgba(122,103,70,0.55)",
         }}
       >
-        <Sparkles className="size-5 text-[#8a6f46]" aria-hidden="true" />
+        <Sparkles className="size-[18px] text-[#8a6f46]" aria-hidden="true" />
       </motion.button>
 
       <AnimatePresence>
         {open && !full && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
+            exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             role="dialog"
             aria-label={t("The mirror — M.E.")}
             data-testid="gath-assistant-panel"
-            className={cn(
-              "fixed right-4 z-40 flex max-h-[64vh] w-[min(92vw,380px)] flex-col overflow-hidden shadow-xl transition-[bottom] duration-300 sm:right-6",
-              radioOpen ? "bottom-[260px] lg:bottom-[148px]" : "bottom-[148px]"
-            )}
+            className="fixed right-4 top-[60px] z-30 flex max-h-[64vh] w-[min(92vw,380px)] flex-col overflow-hidden shadow-xl sm:right-6 sm:top-[68px]"
             style={{
               borderRadius: 22,
               border: "1px solid rgba(228,217,189,0.7)",

@@ -29,6 +29,13 @@ import {
   gateCheck,
   type PressPage,
 } from "@/lib/book-press";
+import {
+  drawResonance,
+  resonanceCharter,
+  resonanceEcho,
+  sanitizeEcho,
+  type ResonanceDraw,
+} from "@/lib/book-resonance";
 
 /* ------------------------------------------------------------------ */
 /*  POST /api/dream-book — THE REAL-TIME DYNAMIC CODEX ENGINE.         */
@@ -36,12 +43,16 @@ import {
 /*  and the Mirror Entity alone imagines, directs and writes the       */
 /*  book. USER → MIRROR ENTITY → CREATION — there is no other         */
 /*  author in this room: no story bible, no hidden architect, no      */
-/*  editor-in-chief, no mender, no resonance skeleton, no naming      */
-/*  charter, no plot machinery of any kind. The application supplies  */
-/*  ONLY what the visitor chose (age band, genre, length, depth,      */
-/*  vein, topic, wishes, drawings, rewrites) and what the craft of    */
-/*  book-making technically needs (the page's binding measure, the    */
-/*  printed-book format, the JSON contract, the honest seal).         */
+/*  editor-in-chief, no mender, no plot machinery of any kind. The    */
+/*  application supplies ONLY what the visitor chose (age band,       */
+/*  genre, length, depth, vein, topic, wishes, drawings, rewrites),   */
+/*  what the craft of book-making technically needs (the page's       */
+/*  binding measure, the printed-book format, the JSON contract, the  */
+/*  honest seal), and ONE blind resonance draw per volume — the       */
+/*  founder's own word: every book must carry different names,        */
+/*  different techniques, different connections, different            */
+/*  situations, matched to its own kind — so two volumes asked back   */
+/*  to back share not a single bone.                                  */
 /*                                                                     */
 /*  Continuity is the Mirror's OWN memory: the compact "thread" it     */
 /*  writes itself, the slim ledger of facts it keeps itself, and the   */
@@ -180,10 +191,11 @@ const VERSE_LAW = `THE LAW OF VERSE (this volume is written in verse — AUTHORI
 - Rhyme gently, by the volume's own law (couplets, cross-rhyme or near-chime), but STRUCTURE outranks rhyme: stanzas, refrains, turns and the closing cadence must exist even where a rhyme is softened.
 - For riddle volumes: each page poses its riddles in verse, and every riddle is answered by the following stanza or the following page — a riddle is never left hanging beyond the next page.`;
 
-/* THE NAMES HOLD — the one name law that remains: continuity of the
-   cast the Mirror itself coins. No app-drawn syllable seeds, no
-   charter, no sealed drawer, no mechanical re-forging: the Mirror
-   names its own world, and keeps its own names true. */
+/* THE NAMES HOLD — the one name law that remains beside the draw:     */
+/*   continuity of the cast the Mirror itself coins. The resonance     */
+/*   draw (below) seeds each volume with its own blind skeleton — its  */
+/*   own world, its own devices, its own tensions — so no two books    */
+/*   walk the same bones; once drawn, the volume's names stay true.    */
 const NAMES_CONTINUE_LAW = `THE NAMES HOLD: keep every name already coined in this volume exactly as it is, so the cast never drifts.`;
 
 function strictJsonLine(languageName: string): string {
@@ -264,6 +276,12 @@ function buildUserPrompt(body: {
   sketchSubjects?: string[];
   sketchFresh?: boolean;
   storyWordsPerPage?: number;
+  /* THE RESONANCE DRAW — the volume's own blind skeleton. On the
+     opening breath the full charter speaks (a fresh draw, refusing
+     the previous volume's bones); on every stride after, one quiet
+     line keeps the skeleton's hold without re-announcing it. */
+  resonanceCharter?: string;
+  resonanceHold?: string;
 }): string {
   const { phase, age, tale, volume, topic, wishes, languageName, rewrites } = body;
   const span = Math.min(
@@ -330,6 +348,7 @@ function buildUserPrompt(body: {
       `OPEN A NEW BOOK. ${hasTopic ? "The visitor has spoken a subject — the WHAT is theirs; the HOW, the story and every surprise are yours." : "No subject is spoken — imagine freely and open a book worth existing."}`,
       ...topicLines,
       ...sketchLines,
+      ...(body.resonanceCharter ? [``, body.resonanceCharter] : []),
       ``,
       `- Reader: ${ageLine}`,
       ...(levelLine ? [`- Depth of the telling (the visitor's own choice): ${levelLine}`] : []),
@@ -378,6 +397,7 @@ function buildUserPrompt(body: {
       `CONTINUE THE BOOK. The reader has just finished page ${(body.pageNumber ?? 2) - 1} and quietly turned the page.`,
       ...topicLines,
       ...sketchLines,
+      ...(body.resonanceHold ? [body.resonanceHold] : []),
       `- Reader: ${ageLine}`,
       ...(levelLine ? [`- Depth of the telling (the visitor's own choice): ${levelLine}`] : []),
       `- Kind of tale: ${taleLine}`,
@@ -415,6 +435,7 @@ function buildUserPrompt(body: {
       `THE READER WISHES THE BOOK TO GO ON — extend the volume.`,
       ...topicLines,
       ...sketchLines,
+      ...(body.resonanceHold ? [body.resonanceHold] : []),
       `- Reader: ${ageLine}`,
       ...(levelLine ? [`- Depth of the telling (the visitor's own choice): ${levelLine}`] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
@@ -440,6 +461,7 @@ function buildUserPrompt(body: {
       `WRITE THE FINAL TWO PAGES (${body.pageNumber} and ${(body.pageNumber ?? 2) + 1}) — the reader has chosen to let the volume complete itself, and the ending is yours to land.`,
       ...topicLines,
       ...sketchLines,
+      ...(body.resonanceHold ? [body.resonanceHold] : []),
       ...(levelLine ? [`- Depth of the telling (the visitor's own choice): ${levelLine}`] : []),
       ...(isVerse ? [``, VERSE_LAW] : []),
       body.threads ? `- THE THREAD (your own memory of the volume): ${body.threads}` : "",
@@ -1068,6 +1090,39 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
         Array.isArray((p as Record<string, unknown>).paragraphs)
     );
 
+    /* THE RESONANCE DRAW — the founder's own word: every book must use
+       different names, different techniques, different connections and
+       different situations, matched to the kind of story asked for. On
+       the opening breath the laboratory draws the volume's skeleton
+       BLIND — nothing read from any shelf, any record, any past — and
+       refuses every bone the visitor's previous conjuring drew (the
+       echo rides with the asking). On every stride after, the skeleton
+       rides inside the volume's own config and keeps its hold. */
+    let resonanceDraw: ResonanceDraw | null = null;
+    let resonanceCharterText = "";
+    let resonanceHoldText = "";
+    if (phase === "open") {
+      const previousEcho = sanitizeEcho(body?.resonance);
+      resonanceDraw = drawResonance(
+        Object.keys(previousEcho).length > 0 ? previousEcho : undefined
+      );
+      const taleBias = TALE_HINTS[taleKey] ?? "";
+      resonanceCharterText =
+        resonanceCharter(resonanceDraw) +
+        (taleBias
+          ? `\n- THE KIND OF TALE THE VISITOR CHOSE: ${taleBias} — every drawn axis above is bent to serve THIS kind of tale: its names, its techniques, its connections and its situations must all feel born for a ${taleBias.split(" — ")[0]}, never borrowed from another kind of book.`
+          : "");
+    } else {
+      /* the skeleton's hold — spoken from the volume's own kept draw */
+      const held = {
+        ...sanitizeEcho(body?.bookConfig?.resonance),
+        ...sanitizeEcho(body?.config?.resonance),
+      };
+      if (typeof held.heartbeat === "string" && held.heartbeat) {
+        resonanceHoldText = `THE RESONANCE STILL HOLDS (the skeleton drawn at this volume's birth is still law): the secret heartbeat is "a ${held.heartbeat}" — never printed, only followed; the vessel: ${held.vessel ?? "as drawn"}; the shape of the telling: ${held.device ?? "as drawn"}; the engine: ${held.tension ?? "as drawn"}; the forbidden: ${held.forbidden ?? "as drawn"}. Keep the skeleton's bones — its imagery, its cadence, its quiet object — without re-announcing any of it.`;
+      }
+    }
+
     const askLoom = async (reminder: boolean, suffix = ""): Promise<string> => {
       const completion = await zai.chat.completions.create({
         messages: [
@@ -1100,6 +1155,8 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
                 sketchSubjects: sketchSubjects.length ? sketchSubjects : undefined,
                 sketchFresh: phase === "open" && !!sketch,
                 storyWordsPerPage: specForAge(age).storyWordsPerPage,
+                resonanceCharter: resonanceCharterText || undefined,
+                resonanceHold: resonanceHoldText || undefined,
               }) +
               suffix +
               (reminder
@@ -1313,6 +1370,13 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
          keeps it in the config and speaks it on every page after */
       if (sketchVision) out.sketchVision = sketchVision;
       if (sketchSubjects.length) out.sketchSubjects = sketchSubjects;
+      /* THE BIRTH ECHO — the volume's own resonance, carried back so the
+         visitor's next conjuring refuses every one of these bones, and
+         kept in the volume's config so the skeleton holds on every
+         page this book will ever weave */
+      if (resonanceDraw) {
+        out.resonance = resonanceEcho(resonanceDraw);
+      }
 
       /* the whole living volume enters the library — pages, thread,
          config — so it can be brought back and continued any evening */
@@ -1333,6 +1397,7 @@ async function postImpl(req: NextRequest): Promise<NextResponse> {
               topic,
               ...(sketchVision ? { sketchVision } : {}),
               ...(sketchSubjects.length ? { sketchSubjects } : {}),
+              ...(resonanceDraw ? { resonance: resonanceEcho(resonanceDraw) } : {}),
             },
             title: out.title,
             subtitle: out.subtitle,
