@@ -10,15 +10,12 @@ import {
 import Image from "next/image";
 import {
   ChevronDown,
-  UserRound,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
-import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
 import LivingNetwork from "./LivingNetwork";
 import SideRail from "./SideRail";
-import { useVeiledDoor } from "./LivingNetwork";
 import GuideShowcase from "./GuideShowcase";
 import dynamic from "next/dynamic";
 
@@ -95,40 +92,11 @@ const SIGILS = {
   grandWave: "/sigils/intricate_02.png",
 } as const;
 
-/* THE VISITOR'S OWN MARK — the phone's top-right profile hand: the
-   same quiet circle the gathering's sigil wears, standing opposite
-   it at the very top of the threshold (the sigil top-left, the
-   mark top-right). One touch opens the visitor's own room — where
-   the tongue, the light and the About door now live. It veils with
-   the sigil's own law when a deeper room stands open. */
-function MobileProfileMark() {
-  const t = useT();
-  const veiled = useVeiledDoor();
-  return (
-    <button
-      type="button"
-      onClick={() => useMirror.getState().openProfilePage()}
-      aria-haspopup="dialog"
-      aria-label={t("Profile")}
-      title={t("Profile")}
-      data-testid="banner-profile-mark"
-      className={cn(
-        "focus-glow pm-tap fixed z-[46] flex items-center rounded-full border border-white/14 bg-[rgba(7,10,17,0.82)] text-[#d9c99a] shadow-[0_8px_28px_-14px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.55)] md:hidden",
-        veiled && "pointer-events-none opacity-0 scale-[0.72]"
-      )}
-      style={{
-        top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
-        right: "max(0.75rem, env(safe-area-inset-right))",
-        width: "2.25rem",
-        height: "2.25rem",
-        justifyContent: "center",
-      }}
-    >
-      <UserRound className="size-4" aria-hidden="true" />
-    </button>
-  );
-}
-
+/* THE VISITOR'S OWN MARK has climbed to the gate — the profile icon
+   now lives beside the gathering's sigil at the website's very top
+   (rendered by the threshold's gate, in every gear and on every
+   device): one pair of top hands, the hall's door top-left and the
+   visitor's page top-right. See LandingGate's TopProfileMark. */
 function Sigil({
   src,
   className,
@@ -383,15 +351,6 @@ export default function LandingPage({
           threshold's top-left corner: the vision this house is growing
           into, one touch away, never in the way. */}
       <LivingNetwork />
-
-      {/* THE VISITOR'S OWN MARK ON THE PHONE'S TOP BAR — the profile
-          stands alone at the top-right, opposite the gathering's
-          sigil (top-left): one quiet pair at the very top of the
-          phone's threshold. The tongue, the light and the About door
-          live inside the profile's own room now. The same veiled law
-          as the sigil: when a deeper room stands open, the mark
-          rests. */}
-      <MobileProfileMark />
 
       <div className="relative z-10 flex min-h-full flex-col">
         {/* THE OPEN BANNER — the artwork stands nearly bare (the veil

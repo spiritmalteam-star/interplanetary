@@ -43,7 +43,10 @@ function useVeiledDoor(): boolean {
   const workplaceOpen = useMirror((s) => s.activeToolTab !== null);
   const zoomed = useMirror((s) => s.workspaceZoomed);
   const gatheringOpen = useMirror((s) => s.gatheringPortalOpen);
-  return workplaceOpen || zoomed || gatheringOpen;
+  /* THE VISITOR'S OWN PAGE — while the profile stands as its own
+     individual page over the house, the doorway rests with the rest. */
+  const profileOpen = useMirror((s) => s.profilePageOpen);
+  return workplaceOpen || zoomed || gatheringOpen || profileOpen;
 }
 
 export { useVeiledDoor };
@@ -82,7 +85,11 @@ export default function LivingNetwork() {
         title={t("The Gathering")}
         data-testid="living-network-gate"
         className={cn(
-          "focus-glow fixed z-[46] flex items-center rounded-full border border-white/14 bg-[rgba(7,10,17,0.82)] shadow-[0_8px_28px_-14px_rgba(0,0,0,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.55)] hover:shadow-[0_10px_34px_-14px_rgba(232,217,176,0.35)]",
+          /* THE BROWNISH GLASS — the doorway wears warm amber-brown
+             glass (the owner's word: never black), a translucent
+             walnut wash blurred over the threshold, its rim a soft
+             brass hairline that warms on the hover. */
+          "focus-glow fixed z-[46] flex items-center rounded-full border border-[rgba(196,158,110,0.34)] bg-[rgba(64,45,27,0.62)] shadow-[0_8px_28px_-14px_rgba(20,12,5,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.6)] hover:shadow-[0_10px_34px_-14px_rgba(232,217,176,0.35)]",
           veiled && "pointer-events-none"
         )}
         style={{

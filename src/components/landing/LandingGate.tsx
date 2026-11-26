@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState, type ComponentType, type CSSProperties } from "react";
 import { useTheme } from "next-themes";
-import { X } from "lucide-react";
+import { X, UserRound } from "lucide-react";
 import { bootUiLanguage, useDocumentLang, useT } from "@/lib/i18n";
 import { toast } from "sonner";
 import { useMirror, LANDING_SCOPES } from "@/lib/mirror-store";
 import { SCOPE_META } from "@/lib/mirror/workspaces";
 import { cn } from "@/lib/utils";
 import LandingPage from "./LandingPage";
+import { useVeiledDoor } from "./LivingNetwork";
 
 /* ------------------------------------------------------------------ */
 /*  THE THRESHOLD'S GATE.                                              */
@@ -40,6 +41,50 @@ import LandingPage from "./LandingPage";
 /* ------------------------------------------------------------------ */
 
 type Phase = "landing" | "opening" | "through";
+
+/* ------------- THE VISITOR'S OWN MARK — the top of the house --------
+   THE PROFILE ICON HAS ONE HOME: the website's very top right,
+   opposite the gathering's sigil (the sigil top-left, the mark
+   top-right) — on every device, never inside the chat's frame. One
+   touch opens the visitor's own page (the profile — now an
+   individual page over the whole website). THE BROWNISH GLASS — the
+   same warm amber-brown glass the sigil wears (the owner's word:
+   never black), a translucent walnut wash with a brass hairline.
+   THE VEILED LAW — the mark rests while a deeper room stands open
+   (a workplace, the hall, the guide's page, the tunnel's crossing)
+   and while the profile page itself stands; in the fullscreen realm
+   the crown's own profile icon takes the door (the chat IS the top
+   there) and the mark yields to it. */
+function TopProfileMark({ phase, guideOpen }: { phase: Phase; guideOpen: boolean }) {
+  const t = useT();
+  const deeper = useVeiledDoor();
+  const veiled = deeper || guideOpen || phase !== "landing";
+  return (
+    <button
+      type="button"
+      onClick={() => useMirror.getState().openProfilePage()}
+      aria-haspopup="dialog"
+      aria-label={t("Profile")}
+      title={t("Profile")}
+      data-testid="banner-profile-mark"
+      className={cn(
+        "focus-glow pm-tap fixed z-[46] flex items-center rounded-full border border-[rgba(196,158,110,0.34)] bg-[rgba(64,45,27,0.62)] text-[#d9c99a] shadow-[0_8px_28px_-14px_rgba(20,12,5,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.6)] hover:shadow-[0_10px_34px_-14px_rgba(232,217,176,0.35)]",
+        veiled && "pointer-events-none opacity-0 scale-[0.72]"
+      )}
+      style={{
+        top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
+        right: "max(0.75rem, env(safe-area-inset-right))",
+        width: "2.25rem",
+        height: "2.25rem",
+        justifyContent: "center",
+      }}
+      aria-hidden={veiled || undefined}
+      tabIndex={veiled ? -1 : 0}
+    >
+      <UserRound className="size-4" aria-hidden="true" />
+    </button>
+  );
+}
 
 type ChamberModule = {
   default: ComponentType<{
@@ -830,6 +875,12 @@ export default function LandingGate() {
           slotChildren={lens}
         />
       </div>
+
+      {/* THE VISITOR'S OWN MARK — the profile icon at the website's very
+          top right, opposite the gathering's sigil, on every device and
+          in every gear (docked). Rendered BESIDE the threshold — never
+          inside it — so no visibility of the landing ever touches it. */}
+      <TopProfileMark phase={phase} guideOpen={guideOpen} />
 
       {/* THE RETURN HAND — the portal's own crown carries it now: the
           landing control stands at the crown's corner, one touch

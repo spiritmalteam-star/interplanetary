@@ -356,9 +356,10 @@ function AppShellViews({
   }, []);
 
   /* The passage modals ride above every world — the profile (the
-     visitor's own room, framed like the chat), the passage, the
-     account, and the branches' hub (a branch's own link in any chat
-     still summons the tree over the room). */
+     visitor's own INDIVIDUAL page — it portals itself to the body
+     and fills the viewport, never confined to the chat's frame), the
+     passage, the account, and the branches' hub (a branch's own link
+     in any chat still summons the tree over the room). */
   const passageModals = (
     <>
       <ProfilePage />

@@ -2468,11 +2468,15 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
 }
 
 /* ------------- the visitor's own mark — the crown's icon -------------
-   The profile icon stands at the crown's very beginning, BEFORE the
-   light's toggle — an icon (never a pill), the same quiet circle as
-   the toggle itself, in both of the chat's gears (desktop and mobile
-   alike). One touch opens the visitor's own room within the frame. */
-
+   THE FULLSCREEN REALM'S OWN DOOR — the profile icon stands in the
+   crown only while the portal fills the screen (there the chat IS
+   the page, and its top bar IS the top of the house). Docked, the
+   door belongs to the threshold's own top mark (the gate's
+   TopProfileMark, opposite the gathering's sigil) — the profile
+   icon lives ONLY at the top, never inside the docked frame. One
+   touch opens the visitor's own individual page. THE BROWNISH
+   GLASS — the same warm amber-brown glass the threshold's top pair
+   wears (the owner's word: never black). */
 function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
   const t = useT();
   const openProfilePage = useMirror((s) => s.openProfilePage);
@@ -2484,13 +2488,7 @@ function CrownProfileIcon({ testIdPrefix }: { testIdPrefix: string }) {
       aria-label={t("Profile")}
       title={t("Profile")}
       data-testid={`${testIdPrefix}-profile-icon`}
-      className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border text-muted-foreground transition-all duration-300 hover:border-[color-mix(in_srgb,var(--scope-a,var(--gd))_55%,transparent)] hover:text-foreground"
-      style={{
-        borderColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 34%, transparent)",
-        backgroundColor:
-          "color-mix(in srgb, var(--scope-a,var(--gd)) 8%, var(--background))",
-      }}
+      className="focus-glow pm-tap pm-breath flex size-7 items-center justify-center rounded-full border border-[rgba(196,158,110,0.4)] bg-[rgba(64,45,27,0.55)] text-[#d9c99a] shadow-[0_6px_20px_-10px_rgba(20,12,5,0.8)] backdrop-blur-md transition-all duration-300 hover:border-[rgba(232,217,176,0.6)] hover:text-[#e8d9b0]"
     >
       <UserRound className="size-3.5" aria-hidden="true" />
     </button>
@@ -6181,19 +6179,15 @@ export function BranchCanopy({
           </>) }
           </div>
 
-          {/* THE VISITOR'S OWN MARK — the profile icon stands at the
-              crown's very BEGINNING, before the light's toggle: an icon
-              (never a pill), the same in both gears, opening the
-              visitor's own room within the frame. THE PHONE'S OWN LAW
-              — on mobile the profile has left the chat's top bar for
-              good: it stands opposite the gathering's sigil at the
-              threshold's very top now (the landing's own mark), and
-              the crown keeps only the conversation's hands. */}
-          {realm && (
-            <div className="max-md:hidden">
-              <CrownProfileIcon testIdPrefix={testIdPrefix} />
-            </div>
-          )}
+          {/* THE VISITOR'S OWN MARK — THE FULLSCREEN REALM ONLY: while
+              the portal fills the screen its crown carries the profile
+              icon (the chat's top bar IS the top of the house there,
+              phone and desk alike). Docked, the icon rests — the
+              threshold's own top mark (the gate's TopProfileMark,
+              opposite the gathering's sigil) is the one door, so the
+              profile icon lives ONLY at the top, never inside the
+              docked frame. */}
+          {realm && !bare && <CrownProfileIcon testIdPrefix={testIdPrefix} />}
 
           {/* THE LIGHT'S OWN HAND HAS MOVED INDOORS — at the visitor's
               word the crown carries only the profile, the making rooms
@@ -6276,9 +6270,10 @@ export function BranchCanopy({
             "flex min-w-0 flex-1 items-center justify-end gap-1.5",
             /* the vertical arm owns the corner — the row yields its
                width so no crown button ever slides beneath it (the
-               phone keeps a slimmer reserve: the same corner, a
-               smaller walk) */
-            realm && "pr-7 sm:pr-14"
+               phone keeps a slimmer reserve docked, and a wider one
+               fullscreen — the crown's own profile icon stands beside
+               the corner's gear hand there) */
+            realm && (bare ? "pr-7 sm:pr-14" : "pr-12 sm:pr-14")
           )}>
             {headerExtra && (
               <div className="hidden items-center gap-1.5 sm:flex">{headerExtra}</div>

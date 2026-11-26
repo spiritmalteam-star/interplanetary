@@ -4318,8 +4318,9 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openAuth: (mode = "signin") => set({ authOpen: true, authMode: mode }),
   closeAuth: () => set({ authOpen: false }),
 
-  /* the full-screen profile room — the visitor's own room within the
-     chat's frame (mounted inside AppShell's passageModals) */
+  /* the visitor's own page — an INDIVIDUAL page over the whole website
+     (it portals itself to the body; mounted inside AppShell's
+     passageModals, never confined to the chat's frame) */
   openProfilePage: () =>
     set({ profilePageOpen: true, authOpen: false, mobileNavOpen: false }),
   closeProfilePage: () => set({ profilePageOpen: false }),

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
 import {
@@ -2469,20 +2470,18 @@ export function ProfilePage() {
     </>
   );
 
-  /* WITHIN THE FRAME — the profile room no longer escapes to the body:
-     it renders exactly where AppShell mounts it (inside the realm's
-     own frame div), so it fills THE CHAT'S OWN frame — docked lens or
-     fullscreen alike — and the lens's rounded corners clip it. THE
-     DESKTOP'S OWN WALL — on the desktop the room stands solid (the
-     owner's word: the profile page must not be transparent there) —
-     a full wall of the house, the chat fully behind it. The small
-     screens keep the app's own glass: a translucent wash over the
-     chat, blurred, so the room reads as one of the house's own
-     surfaces on the hand. The inner columns scroll
-     (the rail and the panel body each carry their own
-     overflow-y-auto), so nothing ever overflows the frame — even at
-     the chat's smallest size. */
-  return (
+  /* THE VISITOR'S OWN PAGE — the profile no longer plays inside the
+     chat's frame: it portals itself to the body and stands as ONE
+     INDIVIDUAL PAGE over the whole website (fixed inset-0), whatever
+     gear the chat wears — docked lens or fullscreen alike. The lens's
+     rounded corners hold it no more; the room fills the viewport,
+     opaque, a full wall of the house (the owner's word: the profile
+     is its own page, never a window of the chat). Portaling also
+     frees it from every transformed ancestor (the zoomed-sky law),
+     so the page always measures the true viewport. The inner columns
+     scroll (the rail and the panel body each carry their own
+     overflow-y-auto), so nothing ever overflows the screen. */
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -2490,7 +2489,7 @@ export function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 12 }}
           transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute inset-0 z-[85] flex flex-col overflow-hidden bg-background/85 backdrop-blur-xl lg:bg-background lg:backdrop-blur-none"
+          className="fixed inset-0 z-[92] flex flex-col overflow-hidden bg-background"
           data-testid="profile-page"
           role="dialog"
           aria-modal="true"
@@ -2621,6 +2620,7 @@ export function ProfilePage() {
         </div>
       </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

@@ -175,3 +175,40 @@
 - **The one remaining founder action:** top up Z.ai credits (or set a funded ZAI_API_KEY on
   Vercel) — per the words' law this is the ONLY path to prose; Gemini's funding feeds only the
   painters and musicians.
+
+## 2026-11-26 — Z.ai (ZAI-15: the visitor's own page — the profile leaves the chat's frame)
+
+- **THE PROFILE IS AN INDIVIDUAL PAGE (the owner's word):** `ProfilePage` no longer plays
+  `absolute inset-0` inside AppShell's frame div (where the docked lens's rounded corners clipped
+  it). It now `createPortal`s itself to `document.body` and stands `fixed inset-0 z-[92]`,
+  fully opaque (`bg-background`) — one full page of the house over the whole website, in BOTH
+  gears (docked lens and fullscreen realm), measuring the true viewport regardless of any
+  transformed ancestor (the zoomed-sky law). Verified geometry: 1280×800 desktop, 390×844 phone,
+  `parentElement === document.body`.
+- **THE PROFILE ICON HAS ONE HOME — THE TOP (the owner's word):** the icon is no longer inside
+  the chat's frame. The threshold's gate (`LandingGate`) now renders a universal
+  `TopProfileMark` (`banner-profile-mark` kept for the prod probe) at the website's top-right —
+  opposite the gathering's sigil (top-left), on EVERY device (the old `md:hidden` mobile-only
+  mark is gone from `LandingPage`). It is rendered BESIDE the landing root (never inside it), so
+  the landing's through-phase `invisible` can never hide it. Docked gear: the mark is the one
+  door. Fullscreen realm: the mark veils (phase !== landing) and the crown's own
+  `CrownProfileIcon` takes over (`realm && !bare`, now on the phone too — the crown IS the top
+  there), with the crown row reserve widened fullscreen (`pr-12`) so nothing slides beneath the
+  corner's gear hand.
+- **THE BROWNISH GLASS (the owner's word — never black):** the gathering sigil
+  (`LivingNetwork`) and both profile marks (gate's `TopProfileMark`, crown's
+  `CrownProfileIcon`) exchanged the near-black glass `rgba(7,10,17,0.82)` / scope-tinted
+  backgrounds for warm amber-brown glass: `rgba(64,45,27,0.62)` (crown icon 0.55), brass
+  hairline `rgba(196,158,110,0.34–0.4)`, warm shadow, `backdrop-blur-md`, hover warms to
+  `rgba(232,217,176,0.6)`. One family look for the whole top pair.
+- **The veil law grew one clause:** `useVeiledDoor` now also rests both top doors while the
+  profile page itself stands (`profilePageOpen`) — verified in the hall (both opacity 0) and
+  after (both opacity 1).
+- **Verification (agent-browser):** landing 1280px — brownish sigil top-left + brownish mark
+  top-right, NO profile icon in the docked crown; mark opens the individual page (portal to
+  body, fixed, z-92, opaque); X and Escape both close clean, landing returns; fullscreen realm —
+  mark veiled, brownish crown icon at top, opens the same individual page; minimize returns and
+  the mark comes back; mobile 390px — pair at the top (both `rgba(64,45,27,0.62)`), docked crown
+  clean, page 390×844; gathering hall opens (z-90) with both doors veiled, closes, doors return.
+  Zero console errors / page errors. Lint clean. SSR HTML still carries `banner-profile-mark`
+  (the production probe keeps working).
