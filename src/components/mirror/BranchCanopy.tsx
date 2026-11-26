@@ -4526,7 +4526,11 @@ export function BranchCanopy({
                   ...turn,
                   loading: false,
                   failed: true,
-                  a: message,
+                  /* a failure is NEVER an answer: the sentence rests in
+                     errMessage, `a` stays empty — so no answer layout, no
+                     copy/publish/research hands, no follow-up doors */
+                  a: "",
+                  errMessage: message,
                   energy: err instanceof EnergyError,
                 }
               : turn
@@ -4537,6 +4541,27 @@ export function BranchCanopy({
       }
     },
     [language, landingScope, paintLandingTurn]
+  );
+
+  /* THE RETRY HAND — a failed floor turn is laid down and its words are
+     asked again: the failure never stays in the thread as if it were a
+     reply, and nothing is duplicated. */
+  const sendFromPanelRef = useRef<
+    | ((text: string, move: BranchType | null, attachments?: ChatAttachment[], fusion?: string[]) => void)
+    | null
+  >(null);
+  const retryLandingTurn = useCallback(
+    (q: string) => {
+      if (landingBusy) return;
+      setLandingThread((t) =>
+        t.filter((turn, i) => !(i === t.length - 1 && turn.failed))
+      );
+      landingThreadRef.current = landingThreadRef.current.filter(
+        (turn, i, arr) => !(i === arr.length - 1 && turn.failed)
+      );
+      window.setTimeout(() => sendFromPanelRef.current?.(q, null), 0);
+    },
+    [landingBusy]
   );
 
   /* THE WATCHFUL FIELD — a floor ask whose crossing never comes home
@@ -4558,7 +4583,8 @@ export function BranchCanopy({
                 ...turn,
                 loading: false,
                 failed: true,
-                a: "The field is quiet — speak once more",
+                a: "",
+                errMessage: "The field is quiet — speak once more",
               }
             : turn
         )
@@ -4659,6 +4685,11 @@ export function BranchCanopy({
       topologies.length,
     ]
   );
+
+  /* the retry hand reaches the latest sender without a stale closure */
+  useEffect(() => {
+    sendFromPanelRef.current = sendFromPanel;
+  }, [sendFromPanel]);
 
   /* the trail's own touch — RETURN to a previous branch: the walk
      session kept the room's transmission, so one touch re-opens that
@@ -4904,7 +4935,7 @@ export function BranchCanopy({
   const roomLoading = realm ? !!lastLandingTurn?.loading : liveLoading;
   const displayError = realm
     ? lastLandingTurn?.failed
-      ? lastLandingTurn.a || "The field is quiet — speak once more"
+      ? lastLandingTurn.errMessage || "The field is quiet — speak once more"
       : null
     : roomError;
   /* THE ENERGY'S OWN DRESS — a spent-light silence is styled gently
@@ -7295,6 +7326,18 @@ export function BranchCanopy({
                       <p className="mt-1.5 text-[14px] leading-relaxed text-foreground/85">
                         {skyWord(t, displayError)}
                       </p>
+                      {realm && lastLandingTurn?.failed && !energyNotice && (
+                        <button
+                          type="button"
+                          onClick={() => retryLandingTurn(lastLandingTurn.q)}
+                          disabled={landingBusy}
+                          data-testid={`${testIdPrefix}-zoom-retry`}
+                          className="focus-glow mt-2.5 inline-flex h-8 items-center gap-1.5 rounded-full border border-current/25 px-3 text-[13px] font-medium text-foreground/85 transition-colors hover:bg-foreground/5 disabled:opacity-50"
+                        >
+                          <RefreshCw className="size-3.5" aria-hidden="true" />
+                          {t("Try again")}
+                        </button>
+                      )}
                     </div>
                   ) : roomMaking && (revealStage >= 2 || realm) ? null :
                     realm &&
@@ -7554,16 +7597,28 @@ export function BranchCanopy({
                               }`}
                             >
                               <p
+                                role="alert"
                                 className={`text-[13.5px] leading-relaxed ${
                                   turn.energy
                                     ? "text-[#b8860b] dark:text-[#f59e0b]"
-                                    : "mono-label text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground/60"
+                                    : "text-muted-foreground"
                                 }`}
                               >
                                 {turn.errMessage
                                   ? skyWord(t, turn.errMessage)
                                   : t("The field is quiet — speak once more")}
                               </p>
+                              {realm && i === thread.length - 1 && !turn.energy && (
+                                <button
+                                  type="button"
+                                  onClick={() => retryLandingTurn(turn.q)}
+                                  disabled={landingBusy}
+                                  className="focus-glow mt-2 inline-flex h-8 items-center gap-1.5 rounded-full border border-current/25 px-3 text-[13px] font-medium text-foreground/85 transition-colors hover:bg-foreground/5 disabled:opacity-50"
+                                >
+                                  <RefreshCw className="size-3.5" aria-hidden="true" />
+                                  {t("Try again")}
+                                </button>
+                              )}
                             </div>
                           ) : null}
                           <LandingPainting

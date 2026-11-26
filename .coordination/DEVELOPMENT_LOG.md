@@ -272,3 +272,11 @@
   landing, profile (settings rows, toggle, tongue menu), hall (crown pearl, panel, M.E. answer),
   codex (new rail) and Invent (clean render); dream-book route compiled and proven with two real
   weaves. HMR ChunkLoadError during a hot rebuild was transient (fresh load clean).
+
+## 2026-11-26 — Claude: measured performance baseline (PR #21)
+Tools: `qa/perf_probe.py` (production landing, mobile, 4x CPU throttle) and `qa/perf_chat.py` (CI-built app, AI stubbed, 14-turn streamed conversation, 4x throttle; workflow `perf-chat.yml`).
+- Landing (production): heap 12-19 MB, ~1000 DOM nodes, 0 backdrop filters, 5 long tasks / 642 ms at load, 23 `_next/image` requests, no leak.
+- Long conversation: heap flat (~21-28 MB, no growth trend), DOM +15 nodes/turn, no long tasks after turn 2, no horizontal overflow, input responsive (~14 ms frame).
+- ~7 layout passes/s at idle come from the Chronoscope's 5 s featured-world rotation (module childList/style churn); about 3% of one throttled core. Candidate: pause when off-screen.
+- `document.getAnimations()` grows 2/turn: finished `forwards` one-shot animations (mirror-fuse-*), not running loops.
+- No freeze reproduced on these paths. NOT yet profiled: IWork, Scopes, Invent, Manifest, Codex, Gathering, Book, Music rooms (rAF/canvas loops there are visibility-guarded per static scan).
