@@ -3047,6 +3047,16 @@ html:not(.dark) .lp-sigil-img {
   content-visibility: auto;
   contain-intrinsic-size: auto 760px;
 }
+/* THE CODEX'S OWN WIDER STAGE — the chronoscope's section keeps the
+   late sections' pacing but not the content-visibility paint
+   containment: containment clips every full-bleed child at the
+   section's own box (the 900px column), and the codex's stage now
+   breathes wider than the column by the owner's word — the artwork
+   fills the whole stage. The other late sections keep their skip. */
+.lp-late-wide {
+  content-visibility: visible;
+  contain-intrinsic-size: auto 760px;
+}
 @keyframes lp-breathe {
   0%,
   100% {

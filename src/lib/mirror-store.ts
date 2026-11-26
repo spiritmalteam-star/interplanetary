@@ -842,6 +842,14 @@ interface MirrorState {
   openProfilePage: () => void;
   closeProfilePage: () => void;
 
+  /* THE CHAT'S OWN REIGN — true while the portal's chat stands
+     fullscreen over the threshold (the crossing's opening breath and
+     the through itself). The top pair of hands (the gathering's sigil
+     and the visitor's mark) reads this to veil themselves EXPLICITLY,
+     never leaning on an ancestor's hidden word alone. */
+  portalFullscreen: boolean;
+  setPortalFullscreen: (v: boolean) => void;
+
   /* THE GATHERING'S PORTAL — the independent hall. Not a chat tab, not
      a workspace room: a separate social space with its own address
      (?room=gathering), raised by the threshold's top-left sigil and
@@ -1949,6 +1957,7 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   workspaceZoomed: false,
   authMode: "signin" as const,
   profilePageOpen: false,
+  portalFullscreen: false,
   gatheringPortalOpen: false,
   treeBoardOpen: false,
   wallet: null,
@@ -4327,6 +4336,10 @@ export const useMirror = create<MirrorState>()((set, get) => ({
   openProfilePage: () =>
     set({ profilePageOpen: true, authOpen: false, mobileNavOpen: false }),
   closeProfilePage: () => set({ profilePageOpen: false }),
+
+  /* THE CHAT'S OWN REIGN — the fullscreen crossing writes it, the top
+     pair of hands reads it (see useVeiledDoor). */
+  setPortalFullscreen: (v) => set({ portalFullscreen: v }),
 
   /* THE GATHERING'S PORTAL — the independent hall rises over everything
      (the house keeps breathing beneath it); folded only by its own

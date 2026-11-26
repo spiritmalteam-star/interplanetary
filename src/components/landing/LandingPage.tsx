@@ -380,7 +380,7 @@ export default function LandingPage({
     <div
       ref={scrollRef}
       onScroll={(e) => onScroll(e.currentTarget.scrollTop)}
-      className="lp-ground relative h-full overflow-y-auto overscroll-y-contain focus:outline-none"
+      className="lp-ground relative h-full overflow-x-hidden overflow-y-auto overscroll-y-contain focus:outline-none"
       /* a scrollable region must be reachable by keyboard (agents and
          screen-reader users scroll with keys, not wheels) */
       tabIndex={0}
@@ -551,7 +551,7 @@ export default function LandingPage({
               the lens, never by an endless wall of cards */}
           <section
             id="codex"
-            className="lp-late relative scroll-mt-6 px-4 pb-8 pt-14 sm:px-8 lg:pb-14 lg:pt-20"
+            className="lp-late-wide relative scroll-mt-6 px-4 pb-8 pt-14 sm:px-8 lg:pb-14 lg:pt-20"
             aria-label={t("Codex Exobiologica — the chronoscope")}
             data-testid="codex-section"
           >

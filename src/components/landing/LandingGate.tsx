@@ -497,6 +497,11 @@ export default function LandingGate() {
   const expandPortal = useCallback(() => {
     if (busy.current) return;
     if (phaseRef.current === "through") return;
+    /* THE TOP PAIR RESTS — the veil is written the moment the crossing
+       is asked for (the owner's word: when the chat is zoomed the
+       profile and the gathering must not show) — the icons fold at
+       the first breath, not when the tunnel arrives. */
+    useMirror.getState().setPortalFullscreen(true);
     /* the homecoming's own keeping — the scroll is remembered as the
        visitor leaves, so the return finds the exact place */
     setReturnScrollY(landingScroll.current);
@@ -617,6 +622,9 @@ export default function LandingGate() {
   const minimize = useCallback(() => {
     if (busy.current) return;
     busy.current = true;
+    /* THE TOP PAIR RETURNS — the veil is lifted only when the landing
+       truly stands again (the phase lands), so the fading tunnel never
+       shows the icons half-crossing. */
     /* THE TWO ROOMS' LAW — whatever the main portal still held open
        (the passage's door a guest left standing, a modal of the realm)
        stays with the realm: the return folds the portal's own sheets
@@ -633,7 +641,11 @@ export default function LandingGate() {
       /* THE INSTANT RETURN — the phone's fold is as swift as its
          crossing: one quick breath of light, the lens standing in its
          slot beneath it, the whole homecoming inside a breath. */
-      window.setTimeout(() => setPhaseTracked("landing"), 180);
+      window.setTimeout(() => {
+        setPhaseTracked("landing");
+        /* THE TOP PAIR RETURNS — with the landing standing again. */
+        useMirror.getState().setPortalFullscreen(false);
+      }, 180);
       window.setTimeout(() => {
         setTunnel("fading");
         busy.current = false;
@@ -648,6 +660,9 @@ export default function LandingGate() {
        light until the fold begins. */
     window.setTimeout(() => {
       setPhaseTracked("landing");
+      /* THE TOP PAIR RETURNS — with the landing standing again, never
+         while the tunnel still holds the light. */
+      useMirror.getState().setPortalFullscreen(false);
     }, 540);
     window.setTimeout(() => {
       setTunnel("fading");

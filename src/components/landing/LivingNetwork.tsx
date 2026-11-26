@@ -44,7 +44,13 @@ function useVeiledDoor(): boolean {
   /* THE VISITOR'S OWN PAGE — while the profile stands as its own
      individual page over the house, the doorway rests with the rest. */
   const profileOpen = useMirror((s) => s.profilePageOpen);
-  return workplaceOpen || zoomed || gatheringOpen || profileOpen;
+  /* THE CHAT'S OWN REIGN — while the portal's chat stands fullscreen
+     (the crossing's opening breath and the through itself), the top
+     pair rests EXPLICITLY: never leaning on an ancestor's hidden
+     word alone — the owner's word, the icons must not show when the
+     chat is zoomed. */
+  const fullscreen = useMirror((s) => s.portalFullscreen);
+  return workplaceOpen || zoomed || gatheringOpen || profileOpen || fullscreen;
 }
 
 export { useVeiledDoor };

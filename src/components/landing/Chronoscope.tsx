@@ -374,26 +374,67 @@ export default function Chronoscope() {
     [navList, currentId]
   );
 
-  /* the swipe hand — a horizontal drag across the collapsed card
-     walks the profiles without any button; vertical scrolling is
-     never touched (pan-y keeps the page's own motion) */
-  const swipeOriginRef = useRef<{ x: number; y: number } | null>(null);
+  /* THE DRAG HAND — the card is the carousel now: the pointer grabs
+     the artwork and the card follows the finger (transform only), a
+     release past the threshold walks the profiles, a short release
+     springs home and a still release opens the profile. Vertical
+     scrolling is never touched (pan-y keeps the page's own motion). */
+  const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const [dragDx, setDragDx] = useState(0);
+  const dragConsumedRef = useRef(false);
   const onCardPointerDown = useCallback((e: React.PointerEvent) => {
-    swipeOriginRef.current = { x: e.clientX, y: e.clientY };
+    /* only the primary hand drags; a second finger never hijacks */
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    dragOriginRef.current = { x: e.clientX, y: e.clientY };
+    dragConsumedRef.current = false;
+  }, []);
+  const onCardPointerMove = useCallback((e: React.PointerEvent) => {
+    const origin = dragOriginRef.current;
+    if (!origin) return;
+    const dx = e.clientX - origin.x;
+    const dy = e.clientY - origin.y;
+    /* a vertical intent hands the gesture back to the page's scroll */
+    if (Math.abs(dy) > Math.abs(dx) * 1.4) {
+      dragOriginRef.current = null;
+      setDragDx(0);
+      return;
+    }
+    if (Math.abs(dx) > 10) dragConsumedRef.current = true;
+    setDragDx(Math.max(-110, Math.min(110, dx * 0.55)));
   }, []);
   const onCardPointerUp = useCallback(
     (e: React.PointerEvent) => {
-      const origin = swipeOriginRef.current;
-      swipeOriginRef.current = null;
-      if (!origin) return;
+      const origin = dragOriginRef.current;
+      dragOriginRef.current = null;
+      if (!origin) {
+        setDragDx(0);
+        return;
+      }
       const dx = e.clientX - origin.x;
       const dy = e.clientY - origin.y;
+      setDragDx(0);
       if (Math.abs(dx) > 56 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        setRotationHalted(true);
         step(dx < 0 ? 1 : -1);
       }
     },
     [step]
   );
+  const onCardPointerCancel = useCallback(() => {
+    dragOriginRef.current = null;
+    setDragDx(0);
+  }, []);
+  /* THE OPEN HAND — the card itself is the door: one touch (a still
+     one — a dragged card springs home instead) opens the record's own
+     profile in the full instrument. */
+  const openProfile = useCallback(() => {
+    if (dragConsumedRef.current) {
+      dragConsumedRef.current = false;
+      return;
+    }
+    setRotationHalted(true);
+    setExpanded(true);
+  }, []);
 
   /* Discover — an unseen record within the active wing */
   const visitedRef = useRef<Set<string>>(new Set());
@@ -670,12 +711,14 @@ export default function Chronoscope() {
           </p>
         </div>
 
-        {/* the card's own breath — each new world arrives with one
-            quiet fade; the rotation stills the moment a hand or a
-            pointer touches the module (the calm law) */}
+        {/* THE OUTER CARD — the artwork IS the card now: one cinematic
+            plate (the record's own light filling the whole stage), the
+            words living over the image's own breath, no console of
+            buttons — the hand drags to travel the profiles and a still
+            touch opens the record's own profile in the instrument. */}
         <div
           key={currentId}
-          className="chrono-swap grid gap-5 p-4 sm:grid-cols-[420px_1fr] sm:items-center sm:p-6 lg:grid-cols-[560px_1fr] lg:gap-8 lg:p-8"
+          className="chrono-swap"
           style={{ touchAction: "pan-y" }}
           onPointerEnter={() => {
             moduleHoverRef.current = true;
@@ -683,135 +726,129 @@ export default function Chronoscope() {
           onPointerLeave={() => {
             moduleHoverRef.current = false;
           }}
-          onPointerDown={onCardPointerDown}
-          onPointerUp={onCardPointerUp}
           data-testid="chronoscope-card"
         >
-          {/* the card's face — the featured artwork, grown large at the
-              owner's word: it fills its whole column on the desk (up to
-              560px) and carries the record's own light */}
           <div
-            className="relative mx-auto aspect-[3/2] w-full max-w-[560px] overflow-hidden rounded-xl border sm:mx-0 lg:max-w-none"
-            style={{ borderColor: `color-mix(in srgb, ${accent} 36%, transparent)` }}
+            role="button"
+            tabIndex={0}
+            aria-label={`${displayName} — ${t("open the profile")}`}
+            onClick={openProfile}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openProfile();
+              }
+            }}
+            onPointerDown={onCardPointerDown}
+            onPointerMove={onCardPointerMove}
+            onPointerUp={onCardPointerUp}
+            onPointerCancel={onCardPointerCancel}
+            className="group relative cursor-pointer select-none overflow-hidden rounded-2xl border outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--lp-violet)_60%,transparent)]"
+            style={{
+              borderColor: `color-mix(in srgb, ${accent} 42%, var(--lp-edge))`,
+              transform: `translateX(${dragDx}px)`,
+              transition: dragDx === 0 ? "transform 300ms cubic-bezier(0.22,1,0.36,1)" : "none",
+              boxShadow: "0 28px 90px -36px rgba(20,12,40,0.55)",
+            }}
+            data-testid="chronoscope-card-stage"
           >
-            {readyFile ? (
-              <>
+            {/* THE STAGE — the image at full breadth: 4/3 on the phone,
+                16/9 on the small desk, a true 21/9 cinema plate on the
+                grand desk — the artwork grown to the owner's wish */}
+            <div className="relative aspect-[4/3] w-full sm:aspect-[16/9] lg:aspect-[21/9]">
+              {readyFile ? (
                 <Image
                   key={`${currentId}/${roleKey}`}
                   src={`/chronoscope/art/${readyFile}`}
                   alt={`${currentId} — ${displayName}`}
                   fill
                   unoptimized
-                  sizes="(max-width: 640px) 92vw, (max-width: 1024px) 420px, 560px"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 1180px"
                   className="object-cover"
+                  draggable={false}
                 />
-                <button
-                  type="button"
-                  onClick={() => setZoomOpen(true)}
-                  data-testid="chronoscope-zoom-small"
-                  aria-label={t("Enlarge the artwork")}
-                  className="focus-glow absolute bottom-2 right-2 flex size-11 items-center justify-center rounded-full border bg-[color-mix(in_srgb,var(--lp-veil-solid)_82%,transparent)]"
-                  style={{ borderColor: `color-mix(in srgb, ${accent} 44%, transparent)` }}
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-[color-mix(in_srgb,var(--lp-violet)_5%,var(--lp-veil-solid))]">
+                  <div className="size-[52%] max-h-[240px]">
+                    <PendingPlate id={currentId} hue={hue} />
+                  </div>
+                </div>
+              )}
+
+              {/* THE RECORD'S OWN LIGHT — the words ride the image's
+                  lower breath: counter, name, epithet, the fact chips —
+                  one veil, one truth, no buttons anywhere */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to top, color-mix(in srgb, var(--lp-deep) 92%, #0d0a16) 0%, color-mix(in srgb, var(--lp-deep) 55%, transparent) 22%, transparent 52%), linear-gradient(to right, color-mix(in srgb, var(--lp-deep) 40%, transparent) 0%, transparent 30%)",
+                }}
+              />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 p-4 sm:p-6 lg:p-8">
+                <p
+                  className="mono-label text-[9px] tracking-[0.22em]"
+                  style={{ color: accent }}
                 >
-                  <ZoomIn className="size-4" style={{ color: accent }} aria-hidden="true" />
-                </button>
-              </>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-[color-mix(in_srgb,var(--lp-violet)_5%,var(--lp-veil-solid))]">
-                <div className="size-[72%]">
-                  <PendingPlate id={currentId} hue={hue} />
+                  {counter}
+                </p>
+                <h3
+                  id="chrono-card-title"
+                  tabIndex={-1}
+                  className="mt-1 line-clamp-2 break-words font-[family-name:var(--font-cinzel)] text-[24px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none drop-shadow-[0_2px_14px_rgba(10,7,18,0.8)] sm:text-[32px] lg:text-[40px]"
+                >
+                  {displayName}
+                </h3>
+                {displayEpithet && (
+                  <p
+                    className="mt-1 max-w-[640px] truncate text-[13px] italic text-[var(--lp-gold)] drop-shadow-[0_1px_10px_rgba(10,7,18,0.8)] sm:text-[14.5px]"
+                  >
+                    {displayEpithet}
+                  </p>
+                )}
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {factChips.map((chip) => (
+                    <span
+                      key={chip}
+                      className="max-w-[220px] truncate rounded-full border bg-[color-mix(in_srgb,var(--lp-deep)_55%,transparent)] px-2.5 py-0.5 text-[11px] text-[var(--lp-body-soft)] backdrop-blur-sm"
+                      style={{ borderColor: `color-mix(in srgb, ${accent} 30%, transparent)` }}
+                    >
+                      {chip}
+                    </span>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
 
-          <div className="min-w-0">
-            <p className="mono-label text-[9px] tracking-[0.2em]" style={{ color: accent }}>
-              {counter}
-            </p>
-            <h3
-              id="chrono-card-title"
-              tabIndex={-1}
-              className="mt-1 line-clamp-2 break-words font-[family-name:var(--font-cinzel)] text-[22px] font-semibold leading-tight tracking-wide text-[var(--lp-head)] outline-none sm:text-[28px]"
-            >
-              {displayName}
-            </h3>
-            {displayEpithet && (
-              <p className="mt-0.5 truncate text-[13px] italic text-[var(--lp-gold)]">
-                {displayEpithet}
-              </p>
-            )}
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {factChips.map((chip) => (
-                <span
-                  key={chip}
-                  className="max-w-[220px] truncate rounded-full border border-[var(--lp-edge)] px-2.5 py-0.5 text-[11px] text-[var(--lp-body-soft)]"
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
-            <div className="mt-3.5 flex flex-wrap items-center gap-2">
-              {/* the walk hands — the console's Previous / Next standing
-                  in the collapsed module too, so a visitor may move
-                  through the profiles without opening the instrument */}
-              <button
-                type="button"
-                onClick={() => step(-1)}
-                data-testid="chronoscope-module-prev"
-                aria-label={t("Previous profile")}
-                className="focus-glow inline-flex size-11 items-center justify-center rounded-full border text-[var(--lp-head)] transition-colors"
-                style={{ borderColor: `color-mix(in srgb, ${accent} 36%, var(--lp-edge))` }}
+              {/* THE TRAVEL SENSE — two faint chevrons on the hover only
+                  (pointer devices): the card whispers its swipability,
+                  never a button, gone the moment the hand leaves */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full border bg-[color-mix(in_srgb,var(--lp-veil-solid)_72%,transparent)] p-2.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:block"
+                style={{ borderColor: `color-mix(in srgb, ${accent} 34%, transparent)` }}
               >
-                <ChevronLeft className="size-4" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                onClick={() => step(1)}
-                data-testid="chronoscope-module-next"
-                aria-label={t("Next profile")}
-                className="focus-glow inline-flex size-11 items-center justify-center rounded-full border text-[var(--lp-head)] transition-colors"
-                style={{ borderColor: `color-mix(in srgb, ${accent} 36%, var(--lp-edge))` }}
+                <ChevronLeft className="size-4 text-[var(--lp-head)]" />
+              </span>
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full border bg-[color-mix(in_srgb,var(--lp-veil-solid)_72%,transparent)] p-2.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:block"
+                style={{ borderColor: `color-mix(in srgb, ${accent} 34%, transparent)` }}
               >
-                <ChevronRight className="size-4" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                onClick={discover}
-                data-testid="chronoscope-discover"
-                className="focus-glow inline-flex min-h-[44px] items-center gap-2 rounded-full border px-5 py-2 text-[13px] font-semibold tracking-wide transition-all duration-200"
-                style={{
-                  borderColor: `color-mix(in srgb, ${accent} 60%, transparent)`,
-                  color: accent,
-                  background: `color-mix(in srgb, ${accent} 8%, transparent)`,
-                }}
-              >
-                <Sparkles className="size-3.5" aria-hidden="true" />
-                {t("Discover")}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRotationHalted(true);
-                  setExpanded(true);
-                }}
-                data-testid="chronoscope-expand"
-                className="focus-glow inline-flex min-h-[44px] items-center gap-2 rounded-full border border-[var(--lp-edge)] px-5 py-2 text-[13px] font-medium text-[var(--lp-head)] transition-colors hover:border-[color-mix(in_srgb,var(--lp-violet)_55%,transparent)]"
-              >
-                <Telescope className="size-3.5" aria-hidden="true" />
-                {t("Open the chronoscope")}
-              </button>
+                <ChevronRight className="size-4 text-[var(--lp-head)]" />
+              </span>
             </div>
           </div>
         </div>
 
-        {/* the lane's own breath — the quiet line beneath the card that
-            tells the truth of the turning archive */}
+        {/* the lane's own breath — the quiet line beneath the plate that
+            tells the truth of the turning archive and the two hands:
+            drag to travel, touch to open */}
         <p
           className="mono-label border-t border-[var(--lp-edge)] px-4 py-2 text-center text-[8.5px] uppercase tracking-[0.2em] text-[var(--lp-faint)]"
           data-testid="chronoscope-breath"
         >
-          {t("The lane breathes — a featured world rises every five heartbeats.")}
+          {t("Drag to travel the profiles · touch a plate to open its own profile")}
         </p>
       </div>
 
@@ -874,7 +911,11 @@ export default function Chronoscope() {
                 {t("CODEX EXOBIOLOGICA · THE CHRONOSCOPE")}
               </span>
 
-              <div className="ml-auto flex items-center gap-1.5">
+              {/* THE HOUSE'S OWN HANDS — three quiet circular seals
+                  (icon only, their word spoken in the tooltip): search,
+                  the visit's keepsakes, and the way back to the landing.
+                  No text buttons, no crowding — the crown whispers. */}
+              <div className="ml-auto flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -882,11 +923,17 @@ export default function Chronoscope() {
                     setSavedOpen(false);
                   }}
                   aria-expanded={searchOpen}
+                  aria-label={t("Search")}
+                  title={t("Search")}
                   data-testid="chronoscope-search-toggle"
-                  className="focus-glow inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[var(--lp-edge)] px-3.5 text-[12px] text-[var(--lp-mute)] transition-colors hover:text-[var(--lp-head)]"
+                  className={cn(
+                    "focus-glow inline-flex size-10 items-center justify-center rounded-full border transition-all duration-200",
+                    searchOpen
+                      ? "border-[color-mix(in_srgb,var(--lp-violet)_60%,transparent)] bg-[color-mix(in_srgb,var(--lp-violet)_12%,transparent)] text-[var(--lp-violet-bright)]"
+                      : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:text-[var(--lp-head)]"
+                  )}
                 >
-                  <Search className="size-3" aria-hidden="true" />
-                  {t("Search")}
+                  <Search className="size-4" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -895,29 +942,36 @@ export default function Chronoscope() {
                     setSearchOpen(false);
                   }}
                   aria-expanded={savedOpen}
+                  aria-label={t("Saved")}
+                  title={t("Saved")}
                   data-testid="chronoscope-saved-toggle"
-                  className="focus-glow relative inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-[var(--lp-edge)] px-3.5 text-[12px] text-[var(--lp-mute)] transition-colors hover:text-[var(--lp-head)]"
+                  className={cn(
+                    "focus-glow relative inline-flex size-10 items-center justify-center rounded-full border transition-all duration-200",
+                    savedOpen
+                      ? "border-[color-mix(in_srgb,var(--lp-violet)_60%,transparent)] bg-[color-mix(in_srgb,var(--lp-violet)_12%,transparent)] text-[var(--lp-violet-bright)]"
+                      : "border-[var(--lp-edge)] text-[var(--lp-mute)] hover:text-[var(--lp-head)]"
+                  )}
                 >
-                  <Bookmark className="size-3" aria-hidden="true" />
-                  {t("Saved")}
+                  <Bookmark className="size-4" aria-hidden="true" />
                   {saved.length > 0 && (
                     <span
-                      className="mono-label rounded-full px-1.5 text-[9px]"
-                      style={{ background: `color-mix(in srgb, ${accent} 22%, transparent)`, color: "var(--lp-head)" }}
+                      className="mono-label absolute -right-0.5 -top-0.5 rounded-full px-1.5 text-[8.5px]"
+                      style={{ background: `color-mix(in srgb, ${accent} 26%, transparent)`, color: "var(--lp-head)" }}
                     >
                       {saved.length}
                     </span>
                   )}
                 </button>
+                <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-[var(--lp-edge)]" />
                 <button
                   type="button"
                   onClick={() => setExpanded(false)}
-                  data-testid="chronoscope-minimise"
                   aria-label={t("Minimise the chronoscope")}
-                  className="focus-glow inline-flex min-h-[36px] items-center gap-1 rounded-full border border-[var(--lp-edge)] px-3 text-[12px] text-[var(--lp-mute)] transition-colors hover:text-[var(--lp-head)]"
+                  title={t("Minimise the chronoscope")}
+                  data-testid="chronoscope-minimise"
+                  className="focus-glow inline-flex size-10 items-center justify-center rounded-full border border-[var(--lp-edge)] text-[var(--lp-mute)] transition-all duration-200 hover:text-[var(--lp-head)]"
                 >
-                  <X className="size-3.5" aria-hidden="true" />
-                  {t("Minimise")}
+                  <X className="size-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -1091,7 +1145,7 @@ export default function Chronoscope() {
                   up and down to read it. */}
               <article
                 data-testid="chronoscope-card"
-                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)] lg:grid lg:max-w-[1560px] lg:grid-cols-[minmax(240px,0.9fr)_minmax(480px,1.8fr)_minmax(280px,1.1fr)] lg:items-stretch"
+                className="relative z-10 w-full max-w-[680px] overflow-hidden rounded-2xl border bg-[color-mix(in_srgb,var(--lp-veil-solid)_88%,transparent)] shadow-[0_24px_80px_-32px_rgba(20,12,40,0.5)] lg:grid lg:max-w-[1560px] lg:grid-cols-[minmax(230px,0.8fr)_minmax(460px,1.7fr)_minmax(330px,1.25fr)] lg:items-stretch"
                 style={{ borderColor: `color-mix(in srgb, ${accent} 42%, var(--lp-edge))` }}
               >
                 {/* the card's face — one primary image decodes here.
@@ -1172,6 +1226,40 @@ export default function Chronoscope() {
                       aria-hidden="true"
                     />
                   </button>
+
+                  {/* THE ARTWORK'S OWN WALK — the travel hands now live
+                      where the eye already is: two quiet circles at the
+                      image's edges (carousel-true), the record's walk
+                      without a console beneath. They stop the click so a
+                      travel never enlarges the plate. */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setRotationHalted(true);
+                      step(-1);
+                    }}
+                    data-testid="chronoscope-art-prev"
+                    aria-label={t("Previous profile")}
+                    className="focus-glow absolute left-2.5 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border bg-[color-mix(in_srgb,var(--lp-veil-solid)_72%,transparent)] transition-all duration-200 hover:bg-[color-mix(in_srgb,var(--lp-veil-solid)_92%,transparent)]"
+                    style={{ borderColor: `color-mix(in srgb, ${accent} 38%, transparent)` }}
+                  >
+                    <ChevronLeft className="size-4 text-[var(--lp-head)]" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setRotationHalted(true);
+                      step(1);
+                    }}
+                    data-testid="chronoscope-art-next"
+                    aria-label={t("Next profile")}
+                    className="focus-glow absolute right-2.5 top-1/2 flex size-10 -translate-y-1/2 items-center justify-center rounded-full border bg-[color-mix(in_srgb,var(--lp-veil-solid)_72%,transparent)] transition-all duration-200 hover:bg-[color-mix(in_srgb,var(--lp-veil-solid)_92%,transparent)]"
+                    style={{ borderColor: `color-mix(in srgb, ${accent} 38%, transparent)` }}
+                  >
+                    <ChevronRight className="size-4 text-[var(--lp-head)]" aria-hidden="true" />
+                  </button>
                 </div>
 
                 {/* the card's voice — the record's own information.
@@ -1210,25 +1298,29 @@ export default function Chronoscope() {
                     ))}
                   </div>
 
-                  {/* THE RECORD'S OWN TABLE — the desk spread carries the
-                      identity fields and the society's words right here:
-                      more of the record read at once, no sheet needed */}
+                  {/* THE RECORD'S OWN DESK — the narrative breathes first
+                      (the society's own words right beneath the name),
+                      then the identity table, then the archival quote:
+                      story, facts, memory — the reading's own order */}
                   <div className="mt-3 hidden lg:block">
-                    <FieldGrid
-                      rows={[
-                        [t("Star system"), civRecord?.star],
-                        [t("Homeworld"), civRecord?.home],
-                        [t("Kinship"), civRecord?.kinship],
-                        [t("Development"), civRecord?.kard],
-                        [t("Gravity"), civRecord?.g != null ? `${civRecord.g} g` : undefined],
-                        [t("Atmosphere"), civRecord?.atm],
-                        [t("Governance"), civRecord?.gov],
-                        [t("Population"), civRecord?.pop],
-                      ]}
-                    />
                     {civRecord?.society && (
-                      <div className="mt-3">
-                        <Prose title={t("Society & architecture")} body={civRecord.society} />
+                      <Prose title={t("Society & architecture")} body={civRecord.society} />
+                    )}
+                    {civRecord && (
+                      <div className={cn(civRecord.society && "mt-3")}>
+                        <FieldGrid
+                          rows={[
+                            [t("Star system"), civRecord?.star],
+                            [t("Homeworld"), civRecord?.home],
+                            [t("Kinship"), civRecord?.kinship],
+                            [t("Development"), civRecord?.kard],
+                            [t("Gravity"), civRecord?.g != null ? `${civRecord.g} g` : undefined],
+                            [t("Atmosphere"), civRecord?.atm],
+                            [t("Governance"), civRecord?.gov],
+                            [t("Population"), civRecord?.pop],
+                          ]}
+                          cols={1}
+                        />
                       </div>
                     )}
                     {civRecord?.q?.t && (
@@ -1262,9 +1354,15 @@ export default function Chronoscope() {
                 {/* THE FOUR FACES — being · world · technology · life
                     (entity · geometry · locus · voices on the other
                     wing). Desktop: the LEFT column, the roles' own
-                    shore beside the artwork. */}
+                    shore beside the artwork — a quiet vertical rail:
+                    one hairline, one accent breath on the active face,
+                    the record's four ways of being read like chapters. */}
                 <div className="p-4 pt-0 sm:p-5 sm:pt-0 lg:order-1 lg:flex lg:flex-col lg:py-5 lg:pl-5 lg:pr-0">
-                  <div className="mt-3.5 grid grid-cols-4 gap-1 border-t border-[var(--lp-edge)] pt-3 lg:mt-0 lg:grid-cols-2 lg:border-t-0 lg:pt-0" role="tablist" aria-label={t("The profile's four faces")}>
+                  <div
+                    className="mt-3.5 grid grid-cols-4 gap-1 border-t border-[var(--lp-edge)] pt-3 lg:mt-0 lg:grid-cols-1 lg:gap-0 lg:border-t-0 lg:pt-0"
+                    role="tablist"
+                    aria-label={t("The profile's four faces")}
+                  >
                     {(isIdm
                       ? [t("Entity"), t("Geometry"), t("Locus"), t("Voices")]
                       : [t("Being"), t("World"), t("Technology"), t("Life")]
@@ -1276,7 +1374,7 @@ export default function Chronoscope() {
                         aria-selected={role === i}
                         onClick={() => setRole(i)}
                         className={cn(
-                          "focus-glow min-h-[44px] rounded-lg border text-[12px] transition-all duration-200",
+                          "focus-glow relative min-h-[44px] rounded-lg text-[12px] transition-all duration-200 lg:min-h-[46px] lg:rounded-none lg:rounded-r-xl lg:py-2 lg:pl-4 lg:pr-3 lg:text-left lg:text-[12.5px]",
                           role === i
                             ? "font-semibold"
                             : "border-transparent text-[var(--lp-mute)] hover:text-[var(--lp-head)]"
@@ -1284,13 +1382,32 @@ export default function Chronoscope() {
                         style={
                           role === i
                             ? {
-                                borderColor: `color-mix(in srgb, ${accent} 55%, transparent)`,
                                 background: `color-mix(in srgb, ${accent} 10%, transparent)`,
                                 color: "var(--lp-head)",
                               }
                             : undefined
                         }
                       >
+                        {/* the accent's own breath — a 2px spine living on
+                            the active face's left edge (the rail's marker) */}
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "absolute inset-y-1 left-0 w-[2px] rounded-full transition-opacity duration-200 lg:block",
+                            role === i ? "opacity-100" : "opacity-0"
+                          )}
+                          style={{ background: accent }}
+                        />
+                        {/* the phone's own marker — a small dot under the
+                            active face in the compact four-across row */}
+                        <span
+                          aria-hidden="true"
+                          className={cn(
+                            "absolute inset-x-0 bottom-0.5 mx-auto h-[2px] w-6 rounded-full transition-opacity duration-200 lg:hidden",
+                            role === i ? "opacity-100" : "opacity-0"
+                          )}
+                          style={{ background: accent }}
+                        />
                         {label}
                       </button>
                     ))}
@@ -1368,55 +1485,40 @@ export default function Chronoscope() {
               </article>
             </div>
 
-            {/* ------------------- the bottom console ------------------- */}
+            {/* ------------------- the bottom console -------------------
+                SLIMMED TO ITS TRUTH: the walk lives on the artwork's
+                own edges now, so the console carries ONE hand — the
+                Discover seal — and the record's address beside it.
+                The phone keeps it sticky (the thumb's own shore); the
+                desk lets it rest as a quiet closing line. */}
             <div
-              className="sticky bottom-0 z-10 -mx-3 mt-auto border-t border-[var(--lp-edge)] bg-[color-mix(in_srgb,var(--lp-deep)_90%,transparent)] px-3 pb-[max(env(safe-area-inset-bottom),10px)] pt-2.5 sm:-mx-6 sm:px-6"
+              className="sticky bottom-0 z-10 -mx-3 mt-auto border-t border-[var(--lp-edge)] bg-[color-mix(in_srgb,var(--lp-deep)_90%,transparent)] px-3 pb-[max(env(safe-area-inset-bottom),10px)] pt-2.5 sm:-mx-6 sm:px-6 lg:sticky lg:bg-transparent lg:backdrop-blur-none"
               data-testid="chronoscope-console"
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => step(-1)}
-                  data-testid="chronoscope-prev"
-                  className="focus-glow inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-4 text-[12.5px] text-[var(--lp-head)] transition-colors"
-                  style={{ borderColor: `color-mix(in srgb, ${accent} 36%, var(--lp-edge))` }}
+                  onClick={discover}
+                  data-testid="chronoscope-discover-big"
+                  className="focus-glow flex h-[52px] items-center gap-2.5 rounded-full border px-6 font-semibold tracking-[0.18em] transition-transform duration-200 active:scale-95"
+                  style={{
+                    borderColor: `color-mix(in srgb, ${accent} 70%, transparent)`,
+                    color: accent,
+                    background: `color-mix(in srgb, ${accent} 8%, transparent)`,
+                  }}
                 >
-                  <ChevronLeft className="size-4" aria-hidden="true" />
-                  {t("Previous")}
+                  <Sparkles className="size-4" aria-hidden="true" />
+                  <span className="mono-label text-[10px] uppercase">{t("Discover")}</span>
+                  <span className="mono-label text-[8.5px] opacity-70">
+                    {wing === "idw" ? t("hyperspace") : t("an unseen record")}
+                  </span>
                 </button>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={discover}
-                    data-testid="chronoscope-discover-big"
-                    className="focus-glow mx-auto flex size-[74px] flex-col items-center justify-center rounded-full border-2 font-semibold tracking-[0.18em] transition-transform duration-200 active:scale-95"
-                    style={{
-                      borderColor: accent,
-                      color: accent,
-                      background: `color-mix(in srgb, ${accent} 7%, transparent)`,
-                    }}
-                  >
-                    <span className="mono-label text-[9px] uppercase">{t("Discover")}</span>
-                    <span className="mono-label mt-0.5 text-[8px] opacity-70">
-                      {wing === "idw" ? t("hyperspace") : t("an unseen record")}
-                    </span>
-                  </button>
-                  <p className="mono-label mt-1.5 text-[8.5px] tracking-[0.18em] text-[var(--lp-faint)]">
-                    {counter}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => step(1)}
-                  data-testid="chronoscope-next"
-                  className="focus-glow inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-4 text-[12.5px] text-[var(--lp-head)] transition-colors"
-                  style={{ borderColor: `color-mix(in srgb, ${accent} 36%, var(--lp-edge))` }}
+                <p
+                  className="mono-label text-[8.5px] tracking-[0.18em] text-[var(--lp-faint)]"
+                  data-testid="chronoscope-console-counter"
                 >
-                  {t("Next")}
-                  <ChevronRight className="size-4" aria-hidden="true" />
-                </button>
+                  {counter}
+                </p>
               </div>
             </div>
           </div>
@@ -1922,14 +2024,27 @@ export function Prose({ title, body }: { title: string; body?: string | null }) 
   );
 }
 
-export function FieldGrid({ rows }: { rows: [string, string | undefined][] }) {
+export function FieldGrid({
+  rows,
+  cols,
+}: {
+  rows: [string, string | undefined][];
+  /** the columns' own breath — 1 keeps every fact on one reading line
+   * (the desk's right rail), 2 packs two facts abreast (wide sheets). */
+  cols?: 1 | 2;
+}) {
   const clean = rows.filter(([, v]) => v && String(v).trim());
   if (clean.length === 0) return null;
   return (
-    <dl className="grid grid-cols-1 gap-x-4 gap-y-1.5 rounded-2xl border border-[var(--lp-edge)] bg-[var(--lp-veil)] p-4 sm:grid-cols-2">
+    <dl
+      className={cn(
+        "grid grid-cols-1 gap-x-4 gap-y-1.5 rounded-2xl border border-[var(--lp-edge)] bg-[var(--lp-veil)] p-4",
+        cols !== 1 && "sm:grid-cols-2"
+      )}
+    >
       {clean.map(([label, val]) => (
         <div key={label} className="flex items-baseline gap-2">
-          <dt className="mono-label w-[112px] shrink-0 text-[8.5px] uppercase tracking-[0.14em] text-[var(--lp-faint)]">
+          <dt className="mono-label w-[104px] shrink-0 text-[8.5px] uppercase tracking-[0.14em] text-[var(--lp-faint)]">
             {label}
           </dt>
           <dd className="min-w-0 flex-1 text-[12.5px] leading-snug text-[var(--lp-body)]">{val}</dd>
