@@ -22,11 +22,12 @@ import { cn } from "@/lib/utils";
 /*  the door stands.                                                   */
 /*                                                                     */
 /*  THE TOP LAW — the doorway has ONE home: the very top of the        */
-/*  house, opposite the visitor's own mark. It is FIXED there and it   */
-/*  never follows the reader: walking down among the sections, the     */
-/*  sigil stays exactly where it stands (the owner's word: when we     */
-/*  scroll it must stay where it is and not follow). Only the deeper  */
-/*  rooms can rest it.                                                 */
+/*  house, opposite the visitor's own mark. THE SCROLL LAW (the        */
+/*  owner's word, the same law the mark obeys): the sigil lives IN     */
+/*  THE PAGE'S OWN FLOW — absolutely placed at the threshold's first   */
+/*  breath, it is carried away by the page's native scroll like every  */
+/*  other stone of the house: it stands at the top and it does NOT     */
+/*  follow the reader. Only the deeper rooms can rest it.              */
 /* ------------------------------------------------------------------ */
 
 /* THE VEILED DOOR — the sigil steps out of the eye when the house's
@@ -72,24 +73,25 @@ export default function LivingNetwork() {
              glass (the owner's word: never black), a translucent
              walnut wash blurred over the threshold, its rim a soft
              brass hairline that warms on the hover. */
-          "focus-glow fixed z-[46] flex items-center rounded-full border border-[rgba(196,158,110,0.34)] bg-[rgba(64,45,27,0.62)] shadow-[0_8px_28px_-14px_rgba(20,12,5,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.6)] hover:shadow-[0_10px_34px_-14px_rgba(232,217,176,0.35)]",
+          "focus-glow absolute z-[46] flex items-center rounded-full border border-[rgba(196,158,110,0.34)] bg-[rgba(64,45,27,0.62)] shadow-[0_8px_28px_-14px_rgba(20,12,5,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.6)] hover:shadow-[0_10px_34px_-14px_rgba(232,217,176,0.35)]",
           veiled && "pointer-events-none"
         )}
         style={{
           /* THE TOP HAND — the sigil stands at the very top, full and
-             warm, on every device, at every depth of the walk. THE
-             VEILED DOOR — transform and opacity only: the doorway
+             warm, on every device — at the threshold's first breath,
+             inside the page's own scroll flow (the mark's own law).
+             THE VEILED DOOR — transform and opacity only: the doorway
              folds away while a deeper room stands open and returns
              the breath the visitor walks home; never unmounted, so
              the house never re-renders a single word. */
+          top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
+          left: "max(0.75rem, env(safe-area-inset-left))",
           ...(veiled
             ? {
                 opacity: 0,
                 transform: "scale(0.72)",
               }
             : {
-                top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
-                left: "max(0.75rem, env(safe-area-inset-left))",
                 opacity: 1,
                 transform: "scale(1)",
               }),

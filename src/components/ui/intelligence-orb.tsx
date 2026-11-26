@@ -320,7 +320,7 @@ export function IntelligenceOrb({
    flavor's own palette when no dress stands above it. This is the
    chat's per-turn thinking light (directive §7). */
 export function WornAccentOrb({
-  size = 18,
+  size = 22,
   state = "working",
   className,
 }: {

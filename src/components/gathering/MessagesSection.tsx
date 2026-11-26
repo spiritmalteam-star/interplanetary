@@ -388,7 +388,7 @@ function ThreadRoom({ id, onBack }: { id: string; onBack: () => void }) {
         </button>
       </div>
 
-      <div ref={bodyRef} className="gp-scroll mx-auto mt-4 min-h-0 w-full max-w-[760px] flex-1 space-y-3 overflow-y-auto pr-1" data-testid="messages-thread">
+      <div ref={bodyRef} className="gp-scroll mx-auto mt-4 min-h-0 w-full max-w-[760px] flex-1 space-y-3 overflow-x-hidden overflow-y-auto pr-1" data-testid="messages-thread">
         {messages === null ? (
           <p className="flex items-center justify-center gap-2 py-16 text-[13.5px] text-[#a2947c]">
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />

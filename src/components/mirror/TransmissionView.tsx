@@ -186,7 +186,7 @@ export function LoadingTransmission({
         className="mt-4 flex h-6 items-center justify-center gap-2.5 px-4 text-center"
         aria-hidden="true"
       >
-        <IntelligenceOrb state="working" flavor="manifest" size={22} />
+        <IntelligenceOrb state="working" flavor="manifest" size={26} />
         {/* initial={false} — the first phrase is on stage at once, so
             the reveal's dissolving echo is pixel-identical from its
             very first frame */}

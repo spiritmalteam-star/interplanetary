@@ -7052,7 +7052,7 @@ export function BranchCanopy({
                 onScroll={onBodyScroll}
                 data-testid={`${testIdPrefix}-zoom-answer`}
                 className={cn(
-                  "nice-scroll chat-reading min-h-0 flex-1 overflow-y-auto px-3.5 py-3 sm:px-6 sm:py-4",
+                  "nice-scroll chat-reading min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3.5 py-3 sm:px-6 sm:py-4",
                   /* THE ROOM'S OWN SCROLL — docked in the threshold the
                      reading space keeps its touch: the visitor scrolls
                      WITHIN the chat now — the words move under their
@@ -7167,7 +7167,7 @@ export function BranchCanopy({
                           )}
                           {turn.painting && (
                             <span className="mono-label inline-flex items-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                              <WornAccentOrb size={18} />
+                              <WornAccentOrb size={22} />
                               {t("Painting the vision")}
                             </span>
                           )}
@@ -7387,7 +7387,7 @@ export function BranchCanopy({
                              worn light, mapped to the one real event:
                              the request is live and no words stand yet */
                           <span className="mono-label inline-flex items-center gap-2.5 text-[11px] uppercase tracking-[0.22em]">
-                            <WornAccentOrb size={24} />
+                            <WornAccentOrb size={28} />
                             {t(
                               lastLandingTurn?.painting
                                 ? "Painting the vision"
@@ -7565,7 +7565,7 @@ export function BranchCanopy({
                               </span>
                             ) : (
                               <span className="mono-label inline-flex items-center gap-2 py-1 text-[10.5px] uppercase tracking-[0.2em] text-muted-foreground">
-                                <WornAccentOrb size={18} />
+                                <WornAccentOrb size={22} />
                                 {t(
                                   realm
                                     ? "Reflecting"
@@ -7575,7 +7575,7 @@ export function BranchCanopy({
                             )
                           ) : turn.painting ? (
                             <span className="mono-label inline-flex items-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                              <WornAccentOrb size={18} />
+                              <WornAccentOrb size={22} />
                               {t("Painting the vision")}
                             </span>
                           ) : turn.failed ? (

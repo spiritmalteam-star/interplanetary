@@ -637,7 +637,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
       <div
         ref={bodyRef}
         data-testid="simple-room-thread"
-        className="nice-scroll min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-3.5 py-3 sm:px-4"
+        className="nice-scroll min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain px-3.5 py-3 sm:px-4"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         {empty ? (
@@ -704,7 +704,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                         "mono-label inline-flex items-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
                       )}
                     >
-                      <WornAccentOrb size={18} />
+                      <WornAccentOrb size={22} />
                       {t("Reflecting")}
                     </span>
                   ) : turn.failed ? (
@@ -741,7 +741,7 @@ function SimpleMirrorRoom({ config }: { config: SimpleRoomConfig }) {
                             "mono-label inline-flex items-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
                           )}
                         >
-                          <WornAccentOrb size={18} />
+                          <WornAccentOrb size={22} />
                           {t("Painting the vision")}
                         </span>
                       )}

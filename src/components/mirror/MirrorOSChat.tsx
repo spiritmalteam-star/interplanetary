@@ -60,7 +60,7 @@ function OsThinking() {
       aria-live="polite"
       aria-busy="true"
     >
-      <IntelligenceOrb state="working" accent={accent} size={44} />
+      <IntelligenceOrb state="working" accent={accent} size={52} />
       <span className="mono-label text-[11px] text-muted-foreground">
         {t("the OS is refining its answer")}
       </span>
@@ -218,7 +218,7 @@ function OsExchange({
           )}
         <p
           className={cn(
-            "max-w-[78%] rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90",
+            "max-w-[78%] whitespace-pre-wrap break-words rounded-2xl rounded-br-md border border-[color-mix(in_srgb,var(--scope-a)_24%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_9%,transparent)] px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90",
             failed && "opacity-70"
           )}
         >
@@ -276,7 +276,7 @@ function OsExchange({
                 {text.split(/\n{2,}/).map((p, i) => (
                   <p
                     key={i}
-                    className="text-[15px] leading-[1.8] text-foreground/88"
+                    className="break-words text-[15px] leading-[1.8] text-foreground/88"
                   >
                     {p}
                   </p>
@@ -295,7 +295,7 @@ function OsExchange({
               {text.split(/\n{2,}/).map((p, i) => (
                 <p
                   key={i}
-                  className="text-[15px] leading-[1.8] text-foreground/88"
+                  className="break-words text-[15px] leading-[1.8] text-foreground/88"
                 >
                   {p}
                 </p>
@@ -473,7 +473,7 @@ export function MirrorOSChat() {
           clear of the back · tools · new-chat row */}
       <div
         ref={scrollRef}
-        className="nice-scroll min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
+        className="nice-scroll min-h-0 flex-1 space-y-5 overflow-x-hidden overflow-y-auto overscroll-contain px-3 pb-5 pt-16 sm:px-5 sm:pt-[72px]"
       >
         {osMessages.length === 0 && osStatus === "idle" && !osError ? (
           /* the room belongs to the tree — the canopy stands over it */
@@ -550,7 +550,7 @@ export function MirrorOSChat() {
                 <div className="flex items-start gap-3">
                   <IntelligenceOrb
                     state="error"
-                    size={20}
+                    size={24}
                     className="mt-1"
                   />
                   <div className="min-w-0">
