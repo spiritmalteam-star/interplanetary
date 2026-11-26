@@ -56,7 +56,12 @@ with sync_playwright() as p:
             t0 = time.time(); rep.click(); rep.fill(f'Follow-up number {i}: and then?'); rep.press('Enter')
             pg.wait_for_timeout(2500)
             d = snap(f'turn{i}'); d['wall_s'] = round(time.time() - t0, 1); res['turns'].append(d)
+        pg.evaluate('''()=>{window.__mut={};const sel=e=>{if(!e||!e.getAttribute)return "#text";return (e.getAttribute("data-testid")||e.tagName+"."+String(e.className&&e.className.baseVal!==undefined?e.className.baseVal:e.className).slice(0,50))};
+          window.__mo=new MutationObserver(l=>{for(const m of l){const k=m.type+":"+(m.attributeName||"")+" @"+sel(m.type==="characterData"?m.target.parentElement:m.target);window.__mut[k]=(window.__mut[k]||0)+1}});
+          window.__mo.observe(document.body,{attributes:true,childList:true,characterData:true,subtree:true})}''')
         pg.wait_for_timeout(15000); res['idle15s'] = snap('idle15s')
+        res['idle_mutations'] = pg.evaluate('()=>Object.entries(window.__mut).sort((a,b)=>b[1]-a[1]).slice(0,12)')
+        res['active_el'] = pg.evaluate('()=>{const e=document.activeElement;return e?e.tagName+" "+(e.getAttribute("data-testid")||""):null}')
         try: res['responsive_ms'] = pg.evaluate('()=>new Promise(r=>{const t=performance.now();requestAnimationFrame(()=>r(performance.now()-t))})')
         except Exception as e: res['responsive_err'] = str(e)[:60]
     b.close()
