@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, Loader2, MessageCircle, Plus, Send, ShieldAlert } from "lucide-react";
 import { useT } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,64 @@ import {
 /*  the reading marks; the thread breathes quietly while it is open.   */
 /*  Blocking and reporting rest in the room's own header.              */
 /* ------------------------------------------------------------------ */
+
+
+/* ------------------------------------------------------------------ */
+/*  THE EDITORIAL THREAD — one continuous conversation on the page.    */
+/*  No bubbles: contributions sit on the surface, grouped by speaker   */
+/*  (a new group after a change of voice, a day, or a long pause), the */
+/*  speaker named in serif, the hour discreet, a hairline between      */
+/*  voices. The visitor's own lines carry a thin brass rule. Presence- */
+/*  free: only real names and real times appear.                       */
+/* ------------------------------------------------------------------ */
+function EditorialThread({
+  messages,
+  t,
+}: {
+  messages: ThreadMessage[];
+  t: (s: string) => string;
+}) {
+  const GAP_MS = 6 * 60 * 1000;
+  const rows: ReactNode[] = [];
+  let prev: ThreadMessage | null = null;
+  for (const m of messages) {
+    const at = new Date(m.createdAt);
+    const prevAt = prev ? new Date(prev.createdAt) : null;
+    const newDay = !prevAt || at.toDateString() !== prevAt.toDateString();
+    const newVoice =
+      newDay ||
+      !prev ||
+      prev.sender.name !== m.sender.name ||
+      prev.mine !== m.mine ||
+      at.getTime() - (prevAt?.getTime() ?? 0) > GAP_MS;
+    if (newDay) {
+      rows.push(
+        <div key={`d-${m.id}`} className="gth-day" role="separator">
+          <span>
+            {at.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
+          </span>
+        </div>
+      );
+    }
+    rows.push(
+      <div
+        key={m.id}
+        data-testid={`message-${m.id}`}
+        className={cn("gth-line", newVoice ? "gth-line-first" : "gth-line-cont", m.mine && "gth-mine")}
+      >
+        {newVoice ? (
+          <p className="gth-head">
+            <span className="gth-name">{m.sender.name}</span>
+            <span className="gth-time">{relativeTime(m.createdAt, t)}</span>
+          </p>
+        ) : null}
+        <p className="gth-body">{m.body}</p>
+      </div>
+    );
+    prev = m;
+  }
+  return <>{rows}</>;
+}
 
 export default function MessagesSection({ active }: { active: boolean }) {
   const t = useT();
@@ -388,7 +446,7 @@ function ThreadRoom({ id, onBack }: { id: string; onBack: () => void }) {
         </button>
       </div>
 
-      <div ref={bodyRef} className="gp-scroll mx-auto mt-4 min-h-0 w-full max-w-[760px] flex-1 space-y-3 overflow-x-hidden overflow-y-auto pr-1" data-testid="messages-thread">
+      <div ref={bodyRef} className="gth-thread gp-scroll mx-auto mt-4 min-h-0 w-full max-w-[760px] flex-1 overflow-x-hidden overflow-y-auto pr-1" data-testid="messages-thread">
         {messages === null ? (
           <p className="flex items-center justify-center gap-2 py-16 text-[13.5px] text-[#a2947c]">
             <Loader2 className="size-4 animate-spin" aria-hidden="true" />
@@ -399,26 +457,7 @@ function ThreadRoom({ id, onBack }: { id: string; onBack: () => void }) {
             {t("The room waits for its first word.")}
           </p>
         ) : (
-          messages.map((m) => (
-            <div key={m.id} className={cn("flex", m.mine ? "justify-end" : "justify-start")} data-testid={`message-${m.id}`}>
-              <div
-                className={cn(
-                  "gp-card max-w-[80%] rounded-[18px] px-4 py-2.5",
-                  m.mine && "border-[#d9c99a]/50 bg-[#faf5e6]"
-                )}
-              >
-                {!m.mine && (
-                  <p className="text-[10px] font-semibold text-[#8a6f46]">{m.sender.name}</p>
-                )}
-                <p className="whitespace-pre-wrap text-[13px] leading-[1.7] text-[#4c4436] [overflow-wrap:anywhere]">
-                  {m.body}
-                </p>
-                <p className="mt-1 text-right text-[9.5px] text-[#b3a68d]">
-                  {relativeTime(m.createdAt, t)}
-                </p>
-              </div>
-            </div>
-          ))
+          <EditorialThread messages={messages} t={t} />
         )}
       </div>
 
@@ -438,7 +477,7 @@ function ThreadRoom({ id, onBack }: { id: string; onBack: () => void }) {
             placeholder={t("Speak into the room…")}
             aria-label={t("Speak into the room…")}
             data-testid="messages-draft"
-            className="gp-scroll max-h-28 min-h-[44px] flex-1 resize-none rounded-[16px] border border-[#e4d9bd] bg-white/80 px-3.5 py-2.5 text-[13px] leading-relaxed text-[#4c4436] outline-none transition-colors duration-300 placeholder:text-[#b3a68d] focus:border-[#cbb98d]"
+            className="gth-composer gp-scroll max-h-28 min-h-[44px] flex-1 resize-none rounded-[14px] border border-[#e4d9bd] bg-[#fbf7ec] px-3.5 py-2.5 text-[14px] leading-relaxed text-[#4c4436] outline-none transition-colors duration-300 placeholder:text-[#b3a68d] focus:border-[#cbb98d]"
           />
           <button
             type="button"

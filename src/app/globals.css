@@ -6691,3 +6691,107 @@ html[data-perf="eco"] .gp-drift-slow {
     transform: none;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  THE GATHERING'S EDITORIAL CONVERSATION — scoped to .gath-hall.     */
+/*  Messages rest directly on the shared paper: serif speaker names,   */
+/*  sans words, hairlines between voices, a thin brass rule for the    */
+/*  visitor's own lines. No bubbles, no motion, no blur layers.        */
+/* ------------------------------------------------------------------ */
+.gath-hall .gth-thread {
+  --gth-ink: #3d3428;
+  --gth-body: #4c4436;
+  --gth-quiet: #a2947c;
+  --gth-rule: rgba(196, 178, 134, 0.38);
+  --gth-brass: #b08d4a;
+  padding: 4px 2px 12px;
+}
+.dark .gath-hall .gth-thread {
+  --gth-ink: #efe6d2;
+  --gth-body: #d9cfba;
+  --gth-quiet: #9b9078;
+  --gth-rule: rgba(190, 172, 130, 0.22);
+  --gth-brass: #c9a65f;
+}
+.gath-hall .gth-day {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 6px;
+  color: var(--gth-quiet);
+  font-family: var(--font-literata), Georgia, serif;
+  font-size: 11.5px;
+  font-style: italic;
+}
+.gath-hall .gth-day::before,
+.gath-hall .gth-day::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--gth-rule);
+}
+.gath-hall .gth-line {
+  position: relative;
+  max-width: 68ch;
+  padding-left: 14px;
+  min-width: 0;
+}
+.gath-hall .gth-line-first {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gth-rule);
+}
+.gath-hall .gth-day + .gth-line-first {
+  margin-top: 4px;
+  padding-top: 0;
+  border-top: 0;
+}
+.gath-hall .gth-line-cont {
+  margin-top: 4px;
+}
+.gath-hall .gth-mine {
+  border-left: 2px solid color-mix(in srgb, var(--gth-brass) 70%, transparent);
+  padding-left: 12px;
+}
+.gath-hall .gth-line-first.gth-mine {
+  border-top: 1px solid var(--gth-rule);
+}
+.gath-hall .gth-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+.gath-hall .gth-name {
+  font-family: var(--font-literata), Georgia, serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gth-ink);
+  overflow-wrap: anywhere;
+}
+.gath-hall .gth-time {
+  font-size: 10.5px;
+  color: var(--gth-quiet);
+}
+.gath-hall .gth-body {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.72;
+  color: var(--gth-body);
+  overflow-wrap: anywhere;
+}
+/* the tactile writing surface: a quiet inset, a brass hint on focus */
+.gath-hall .gth-composer {
+  box-shadow: inset 0 1px 2px rgba(120, 98, 52, 0.14), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.gath-hall .gth-composer:focus {
+  border-color: #c9a65f;
+  box-shadow: inset 0 1px 2px rgba(120, 98, 52, 0.14), 0 0 0 3px rgba(201, 166, 95, 0.18);
+}
+.dark .gath-hall .gth-composer {
+  background: rgba(30, 36, 30, 0.85);
+  border-color: rgba(190, 172, 130, 0.25);
+  color: #e6dcc6;
+}
