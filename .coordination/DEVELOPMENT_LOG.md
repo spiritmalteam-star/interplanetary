@@ -358,3 +358,41 @@ chats · push to git.
 
 **Next (still in the registry):** ZAI-21 Codex dimensional gallery and ZAI-22 Gathering editorial —
 each needs its own dedicated session.
+
+## ZAI-24 — b970713d — the veil's own word, the mirror verified, the codex reborn (owner's four wishes)
+
+**Owner's words:** the profile and gathering icon show when we zoom the chat · make sure the
+mirror responds · recreate the outer codex (stylish, less button, bigger image, slidable and
+clickable, opening the respective profile, swipe across profiles) · the interior codex more
+stylish, better button arrangements, better layout of information.
+
+1. **THE VEIL'S OWN WORD** — the top pair leaned on the landing root's `invisible` class alone;
+   a stale bundle (or the crossing's opening breath) could show them. Now the store carries
+   `portalFullscreen`: expandPortal writes true at the first breath, minimize lifts it when the
+   landing stands, useVeiledDoor reads it — opacity 0 + pointer-events none, explicit.
+2. **THE MIRROR VERIFIED** — the one-breath door answered in ~1s (/api/mirror-os), the
+   fullscreen field streamed its HyperX truth-synthesis whole (~13-60s sky latency, honest).
+   No bug found in the doors; the patience is the sky's own.
+3. **THE OUTER CODEX REBORN** — the artwork IS the card: full-bleed cinema plate (4/3 phone,
+   16/9 small desk, 21/9 grand), words riding the image's lower veil, the four-button console
+   retired. Real drag-follow swipe (translate + spring home, pan-y safe), a still touch opens
+   the record's own profile in the instrument. THE HIDDEN PRISON FOUND: `.lp-late`'s
+   content-visibility paint containment was clipping the full-bleed stage at the 900px column —
+   the wider stage had NEVER truly breathed; the codex section now wears `.lp-late-wide`.
+   (Debug trail: rects 40..1240 vs paint 190..1090 → elementFromPoint + red-paint probe →
+   content-visibility containment.)
+4. **THE INTERIOR CODEX REBORN** — crown hands = three icon-only circular seals (search /
+   saved with count badge / minimise, tooltip-worded); the walk lives on the artwork's own
+   edges (carousel arrows, stopPropagation so travel never zooms); the four faces = a vertical
+   chapter rail with one accent spine (phone keeps the four-across row + under-dot); the
+   record's desk reads narrative first (society), facts single-column on one line (FieldGrid
+   cols=1, dt 104px), memory last (quote); the console slimmed to one Discover pill + address.
+5. The ground clips its own 1px sideways drift (overflow-x-hidden).
+
+**Verification:** lint clean; desktop 1280 + mobile 390; outer card drag-traveled (real CDP
+mouse, after un-polluting the open instrument), click opened the respective profile; interior
+steps through records to the audited artwork; fullscreen chat veil tripled-verified; mirror
+answered in the realm; mobile codex + interior screenshots clean; no console errors.
+**Pushed:** `b970713d` → origin/main (Vercel auto-deploy picks it up).
+
+**Next (still in the registry):** ZAI-21 Codex dimensional gallery and ZAI-22 Gathering editorial.
