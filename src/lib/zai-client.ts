@@ -31,6 +31,8 @@
 /*  voice is the one and only reader — no other choir stands behind.   */
 /* ================================================================== */
 
+import { isModelRungRefusal, steadyRungFor, isResting, RUNG_REST_MS } from "@/lib/server/model-ladder";
+
 interface ChatParams {
   messages: any[];
   thinking?: unknown;
@@ -562,6 +564,9 @@ interface CloudConfig {
   apiKey: string;
   baseUrl: string;
   model: string;
+  /** THE MODEL LADDER: the steady rung asked once when `model` is refused
+      for a model-side reason (same sky, same key). */
+  steadyModel?: string;
   /** The model that sees uploaded images (vision gift). */
   visionModel?: string;
   /** Whether the endpoint accepts GLM's `thinking` parameter. */
@@ -581,6 +586,10 @@ function zaiCloudConfig(): CloudConfig | null {
       process.env.ZAI_BASE_URL ?? "https://api.z.ai/api/paas/v4"
     ).replace(/\/$/, ""),
     model: process.env.ZAI_MODEL ?? "glm-4.6",
+    steadyModel: steadyRungFor(
+      process.env.ZAI_MODEL ?? "glm-4.6",
+      process.env.ZAI_FALLBACK_MODEL
+    ),
     visionModel: process.env.ZAI_VISION_MODEL ?? "glm-4.6v",
     allowThinking: true,
     label: "Z.ai",
@@ -683,12 +692,36 @@ class CloudBackend implements ZAIClient {
      chats */
   constructor(private readonly cfg: CloudConfig) {}
 
+  /* rungs this process has seen refused (model -> rests until) */
+  private static resting = new Map<string, number>();
+
   private async complete(
     params: ChatParams,
     modelOverride?: string
   ): Promise<ChatCompletion> {
+    const lead = modelOverride ?? this.cfg.model;
+    const steady = modelOverride ? undefined : this.cfg.steadyModel;
+    if (!steady) return this.completeOnce(params, lead);
+    if (isResting(CloudBackend.resting, lead, Date.now())) {
+      return this.completeOnce(params, steady);
+    }
+    try {
+      return await this.completeOnce(params, lead);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!isModelRungRefusal(msg)) throw err;
+      CloudBackend.resting.set(lead, Date.now() + RUNG_REST_MS);
+      console.warn(`[zai] ${lead} refused - the steady rung ${steady} answers`);
+      return this.completeOnce(params, steady);
+    }
+  }
+
+  private async completeOnce(
+    params: ChatParams,
+    model: string
+  ): Promise<ChatCompletion> {
     const body: Record<string, unknown> = {
-      model: modelOverride ?? this.cfg.model,
+      model,
       messages: params.messages,
     };
     if (typeof params.max_tokens === "number") {
@@ -740,9 +773,9 @@ class CloudBackend implements ZAIClient {
          refuses to open; once the stream runs, it is never retried
          (a mid-flight storm is the route's own weather). */
       createStream: async (params: ChatParams): Promise<Response> => {
-        const run = () => {
+        const run = (model: string = this.cfg.model) => {
           const body: Record<string, unknown> = {
-            model: this.cfg.model,
+            model,
             messages: params.messages,
             stream: true,
           };
@@ -765,9 +798,25 @@ class CloudBackend implements ZAIClient {
             signal: AbortSignal.timeout(CLOUD_TIMEOUT_MS),
           });
         };
-        let res = await run();
+        const steady = this.cfg.steadyModel;
+        const lead = this.cfg.model;
+        const resting =
+          !!steady && isResting(CloudBackend.resting, lead, Date.now());
+        const first = resting && steady ? steady : lead;
+        let res = await run(first);
+        /* THE MODEL LADDER: the flagship refused for a model-side reason,
+           so the same sky is asked once on the steady rung */
+        if (!res.ok && steady && !resting) {
+          const detail = (await res.clone().text().catch(() => "")).slice(0, 400);
+          if (isModelRungRefusal(`${this.cfg.label} stream ${res.status}: ${detail}`)) {
+            CloudBackend.resting.set(lead, Date.now() + RUNG_REST_MS);
+            console.warn(`[zai] ${lead} stream refused (${res.status}) - the steady rung ${steady} answers`);
+            res = await run(steady);
+          }
+        }
         if (!res.ok && isTransientError(`${res.status}`)) {
-          res = await withRetry(async () => (await run()));
+          const again = first;
+          res = await withRetry(async () => (await run(again)));
         }
         if (!res.ok) {
           const detail = (await res.text().catch(() => "")).slice(0, 400);
