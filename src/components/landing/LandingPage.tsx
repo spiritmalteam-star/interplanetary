@@ -10,11 +10,13 @@ import {
 import Image from "next/image";
 import {
   ChevronDown,
+  UserRound,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
+import { useMirror } from "@/lib/mirror-store";
 import { cn } from "@/lib/utils";
 import LandingSlides from "./LandingSlides";
-import LivingNetwork from "./LivingNetwork";
+import LivingNetwork, { useVeiledDoor } from "./LivingNetwork";
 import SideRail from "./SideRail";
 import GuideShowcase from "./GuideShowcase";
 import dynamic from "next/dynamic";
@@ -61,6 +63,53 @@ const Chronoscope = dynamic(() => import("./Chronoscope"), {
 /* the shoulders' gallery retired at the owner's word: the six plates
    came down, and the rails now dress themselves in words — see
    SideRail (remembrance stickers + the mirror's hourly quotes) */
+
+/* ------------- THE VISITOR'S OWN MARK — the top of the house --------
+   THE PROFILE ICON HAS ONE HOME: the website's very top right,
+   opposite the gathering's sigil (the sigil top-left, the mark
+   top-right) — on every device, never inside the chat's frame.
+   THE SCROLL LAW (the owner's word): the mark lives IN THE PAGE'S
+   OWN FLOW — absolutely placed at the threshold's first breath, it
+   is carried away by the page's native scroll like every other
+   stone of the house. It does NOT follow the visitor — no fixed
+   hand, no floating glass: scroll down and the mark stays where
+   the house put it, at the very top, gone beneath the fold like
+   the banner's own sky. One touch opens the visitor's own page
+   (the profile — an individual page over the whole website).
+   THE BROWNISH GLASS — the same warm amber-brown glass the sigil
+   wears (the owner's word: never black), a translucent walnut wash
+   with a brass hairline. THE VEILED LAW — the mark rests while a
+   deeper room stands open (a workplace, the hall, the guide's
+   page); in the fullscreen realm the threshold itself rests unseen
+   and the crown's own profile icon takes the door. */
+function TopProfileMark({ veiled }: { veiled: boolean }) {
+  const t = useT();
+  return (
+    <button
+      type="button"
+      onClick={() => useMirror.getState().openProfilePage()}
+      aria-haspopup="dialog"
+      aria-label={t("Profile")}
+      title={t("Profile")}
+      data-testid="banner-profile-mark"
+      className={cn(
+        "focus-glow pm-tap absolute z-[46] flex items-center rounded-full border border-[rgba(196,158,110,0.34)] bg-[rgba(64,45,27,0.62)] text-[#d9c99a] shadow-[0_8px_28px_-14px_rgba(20,12,5,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.6)] hover:shadow-[0_10px_34px_-14px_rgba(232,217,176,0.35)]",
+        veiled && "pointer-events-none opacity-0 scale-[0.72]"
+      )}
+      style={{
+        top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
+        right: "max(0.75rem, env(safe-area-inset-right))",
+        width: "2.25rem",
+        height: "2.25rem",
+        justifyContent: "center",
+      }}
+      aria-hidden={veiled || undefined}
+      tabIndex={veiled ? -1 : 0}
+    >
+      <UserRound className="size-4" aria-hidden="true" />
+    </button>
+  );
+}
 
 /* ------------------ the light language's own sigils ------------------ */
 
@@ -281,6 +330,12 @@ export default function LandingPage({
      the page's own back hands do, and the threshold beneath never
      unmounts — the slideshow keeps its plate and its scroll. */
   const [guideSlug, setGuideSlug] = useState<string | null>(null);
+
+  /* THE VEILED DOOR — the visitor's own mark rests while a deeper
+     room stands open (a workplace, the hall, the gathering itself);
+     the guide's own page veils it through guideSlug below. */
+  const deeperDoor = useVeiledDoor();
+
   const guidePushed = useRef(false);
   useEffect(() => {
     const readHash = () => {
@@ -351,6 +406,13 @@ export default function LandingPage({
           threshold's top-left corner: the vision this house is growing
           into, one touch away, never in the way. */}
       <LivingNetwork />
+
+      {/* THE VISITOR'S OWN MARK — the profile icon at the website's very
+          top right, opposite the gathering's sigil, on every device and
+          in every gear (docked). THE SCROLL LAW: absolute in the
+          threshold's own flow — the page's native scroll carries it
+          away with the banner's sky; it never follows the visitor. */}
+      <TopProfileMark veiled={deeperDoor || guideSlug !== null} />
 
       <div className="relative z-10 flex min-h-full flex-col">
         {/* THE OPEN BANNER — the artwork stands nearly bare (the veil
