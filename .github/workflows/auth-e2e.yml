@@ -1,0 +1,43 @@
+name: Auth e2e (build app, register/login/reload against a throwaway db)
+on:
+  pull_request:
+    paths:
+      - 'qa/auth_e2e.py'
+      - '.github/workflows/auth-e2e.yml'
+  workflow_dispatch:
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - name: Build (throwaway local SQLite; no production data or keys)
+        env:
+          DATABASE_URL: file:./db/custom.db
+          SESSION_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+        run: |
+          mkdir -p db
+          npx prisma generate --schema "$(node scripts/select-schema.mjs)" || true
+          DB_PUSH_ACCEPT_DATA_LOSS=true node scripts/postinstall.mjs || true
+          npx next build
+      - name: Serve
+        env:
+          DATABASE_URL: file:./db/custom.db
+          SESSION_SECRET: ci-only-secret-not-used-anywhere-else-0123456789
+        run: |
+          nohup npx next start -p 3000 > server.log 2>&1 &
+          for i in $(seq 1 40); do curl -sf http://localhost:3000/ >/dev/null && break; sleep 3; done
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Register, sign in, reload
+        run: python qa/auth_e2e.py http://localhost:3000 captures
