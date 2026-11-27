@@ -1,0 +1,16 @@
+name: SEO + smoke probe (production, read-only)
+on:
+  pull_request:
+    paths: ['qa/seo_probe.py', '.github/workflows/seo-probe.yml']
+  workflow_dispatch:
+    inputs:
+      base:
+        default: https://www.reflectme.space
+      alt:
+        default: https://reflectme.space
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 qa/seo_probe.py "${{ inputs.base || 'https://www.reflectme.space' }}" "${{ inputs.alt || 'https://reflectme.space' }}"
