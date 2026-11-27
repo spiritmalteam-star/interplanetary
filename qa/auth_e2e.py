@@ -9,7 +9,7 @@ def me(pg): return pg.evaluate("fetch('/api/auth/me',{cache:'no-store'}).then(r=
 def visible(pg):
     return pg.evaluate("""()=>{const t=document.body.innerText;return {
       signInWords:(t.match(/sign in|log in|sign up|create account/gi)||[]).length,
-      hasEmail:t.includes(%s), authDialogOpen:!!document.querySelector('[data-testid="passage-submit"]')}}""" % json.dumps(email))
+      hasEmail:t.includes(%s), authDialogOpen:!!document.querySelector('[data-testid="passage-submit"]'),markSignedIn:!!document.querySelector('[data-testid="banner-profile-mark"][data-signed-in]')}}""" % json.dumps(email))
 with sync_playwright() as p:
     b = p.chromium.launch(); ctx = b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
     pg = ctx.new_page()
@@ -34,5 +34,9 @@ with sync_playwright() as p:
     ctx.clear_cookies(); r2 = ctx.request.post(base + '/api/auth/login', data={'email': email, 'password': pw}); res['login_status'] = r2.status
     pg3 = ctx.new_page(); pg3.goto(base + '/', wait_until='networkidle'); pg3.wait_for_timeout(2500)
     res['after_login_me'] = me(pg3); res['after_login_view'] = visible(pg3); pg3.screenshot(path=f'{out}/3-after-login.png')
+    pd = b.new_context(viewport={'width': 1280, 'height': 800}, storage_state=ctx.storage_state()).new_page()
+    pd.goto(base + '/', wait_until='networkidle'); pd.wait_for_timeout(2500)
+    res['desktop_mark_text'] = pd.evaluate("()=>{const e=document.querySelector('[data-testid=\"banner-profile-email\"]');return e?e.innerText:null}")
+    res['desktop_view'] = visible(pd); pd.screenshot(path=f'{out}/4-desktop.png')
     b.close()
 json.dump(res, open(f'{out}/auth-e2e.json', 'w'), indent=1); print(json.dumps(res, indent=1))
