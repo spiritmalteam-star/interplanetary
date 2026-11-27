@@ -5,7 +5,6 @@ on:
       - 'qa/auth_e2e.py'
       - '.github/workflows/auth-e2e.yml'
   workflow_dispatch:
-  workflow_dispatch:
 jobs:
   verify:
     runs-on: ubuntu-latest
