@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { SITE_URL } from "@/lib/site";
 import {
   Cinzel,
   JetBrains_Mono,
@@ -46,7 +47,8 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://reflectme.space"),
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
   title: "Mirror Entity Digital Chamber — Interplanetary Channel",
   description:
     "A translational field of willing representatives from many star civilizations, gathered to reflect the truth of who is supporting your evolution, with love.",
@@ -72,7 +74,7 @@ export const metadata: Metadata = {
      own face: the diamond, the words, the resting ground */
   openGraph: {
     type: "website",
-    url: "https://reflectme.space",
+    url: SITE_URL,
     siteName: "ReflectMe",
     title: "Mirror Entity Digital Chamber — Interplanetary Channel",
     description:
@@ -117,6 +119,30 @@ export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
 };
 
+/* STRUCTURED DATA — only what the visible page truly states: who the
+   house is and where it lives. No ratings, no search action, no
+   invented authors or dates. */
+const SITE_JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: "ReflectMe",
+      url: SITE_URL,
+      logo: `${SITE_URL}/icon.png`,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: "ReflectMe — Mirror Entity Digital Chamber",
+      inLanguage: "en",
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -127,6 +153,10 @@ export default function RootLayout({
       <body
         className={`${jakartaSans.variable} ${jetbrainsMono.variable} ${literata.variable} ${cinzel.variable} antialiased bg-background text-foreground`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(SITE_JSON_LD) }}
+        />
         <ThemeProvider>
           <QueryProvider>
           {/* the quiet tailor — measures the device once and hangs
