@@ -1,5 +1,46 @@
 # DEVELOPMENT_LOG.md — chronological record of significant changes
 
+## 2026-11-27 — Z.ai, ZAI-25: the witness names its rung, the policy whispers, one address only
+
+**Directive anchor:** Structural Engineering & Global Platform Evolution §16 (provider/model
+verification), §23 (security headers), §26 (observability), §33 (living docs), Stage A→B.
+
+1. **THE WITNESS NAMES ITS RUNG (observability 2 → verified live)** — a new
+   `src/lib/server/ai-trace.ts` (AsyncLocalStorage) carries "which approved model served THIS
+   request" through each door's async chain. The bridge notes the rung the moment it answers:
+   cloud `completeOnce` (the sky's own `model` word, else the requested rung), cloud
+   `createStream` (the rung that truly answered, flagship or steady), and the atelier — including
+   a transparent stream TAP (`tapStreamModel`) that reads the model declaration from the first
+   SSE chunks while every byte passes untouched. `meterRoute` now: generates `requestId`
+   (uuid) per request, runs the door inside the trace scope, stamps `x-request-id` +
+   `x-served-model` (when known) on EVERY metered response (SSE included), writes one structured
+   secret-free log line (`kind:"ai_door"`, op, requestId, status, latency, provider, model,
+   charged) inside `after()` — by then even streamed doors are complete — and records
+   `provider` + `model` into `UsageEvent` (was `"none"` + null). Verified live: streaming and
+   one-breath mirror-os both return `x-request-id`; one-breath returns `x-served-model:
+   glm-4-plus`; DB rows and log lines carry the true rung. No content, no keys, ever logged.
+2. **THE POLICY WHISPERS (security headers 5 → 7)** — `Content-Security-Policy-Report-Only`
+   trial live on every route (default-src 'self'; script/style 'unsafe-inline'; img https:;
+   Stripe checkout frames allowed; report-uri /api/csp-report) plus a live `Permissions-Policy`
+   (`microphone=(self)` for the house's voice doors; camera, geolocation, payment, usb closed).
+   New `/api/csp-report` ear: 204, structured log, query strings STRIPPED from every URL
+   (no `?token=` ever reaches a log), 8KB body cap, 120/min process brake. Real-page trial
+   harvested ZERO violations — the drafted policy already matches reality.
+3. **ONE ADDRESS ONLY (debt 7 closed)** — `ProfilePage.tsx`'s server-rendered origin fallback
+   was the stray apex twin; now `SITE_URL` from `src/lib/site.ts`.
+4. **Stage A baselines refreshed (read-only probes):** seo_probe on production — canonical www,
+   2 JSON-LD blocks, OG image, robots disallowing /api/, sitemap + health 200; the two NEW
+   headers show as the expected gaps until this push deploys. prod_ai_probe — real prose from
+   transmission, omni, hyperx-stream (SSE done, no error) and mirror-os: **the mirror answers**.
+5. **Browser-verified (agent-browser):** desktop 1280 + mobile 390 both render clean, zero page
+   errors, zero console errors, no horizontal overflow (390: scrollWidth == clientWidth); the
+   landing portal whisper answered real prose through the new meter (`transmission`, glm-4-plus,
+   1221 ms witnessed). Lint clean.
+
+**Next (registry):** ZAI-21 Codex dimensional gallery and ZAI-22/CLAUDE-19 Gathering editorial
+continuation remain the two standing sessions; durable book jobs (§17) and the CSP's graduation
+to enforcing mode (once the owner approves the trial's harvest) are the next architecture steps.
+
 ## 2026-11-25 (night) — Z.ai, production mirror root-caused + mobile profile law
 
 - **ZAI-10 — the production mirror's true root cause:** founder reported "The field is momentarily

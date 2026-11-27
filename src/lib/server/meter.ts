@@ -32,6 +32,11 @@ import {
   type WalletActionType,
 } from "@/lib/server/wallet";
 import { ensureVisitorProvisions } from "@/lib/server/workspace";
+import { resolveProvider } from "@/lib/zai-client";
+import {
+  lastServedModelOf,
+  runWithAiTrace,
+} from "@/lib/server/ai-trace";
 
 /** The wallet cannot be weighed (database unreachable): a paid door
     FAILS CLOSED — nothing runs, nothing is charged, nothing is assumed.
@@ -168,6 +173,10 @@ async function bodyWeighFor(operation: string, req: NextRequest): Promise<BodyWe
 export function meterRoute(operation: string, handler: MeteredHandler) {
   return async (req: NextRequest): Promise<NextResponse> => {
     const started = Date.now();
+    /* THE REQUEST'S OWN NAME — one id that walks the whole door: every
+       log line, every witness row and every answer header carries it,
+       so a support question can be traced end to end (§26 observability) */
+    const requestId = crypto.randomUUID();
     let visitor: Visitor | null = null;
     let workspaceId: string | null = null;
     let userId = "unknown";
@@ -520,7 +529,14 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
         }
       }
 
-      const res = await handler(req, ctx);
+      /* the door runs inside its own trace scope: whatever model rung
+         the bridge serves during its life lands on the kept state —
+         readable now (for the answer's header) and later inside after()
+         (for the witness, once a streaming body has fully flowed) */
+      const { result: res, state: traceState } = await runWithAiTrace(() =>
+        handler(req, ctx)
+      );
+      const servedModel = lastServedModelOf(traceState);
 
       /* a stumbling door gives the light back — any 4xx/5xx refunds.
          THE REFUND RIDES AFTER THE ANSWER — `after` keeps the promise
@@ -571,21 +587,45 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
 
       /* THE WITNESS WRITES AFTER THE DOOR — the usage row is laid
          beside the served answer, never in front of it: the visitor
-         waits one breath less on every door. */
+         waits one breath less on every door. The provider and the
+         serving model are named truthfully: the model column carries
+         the rung that actually answered, never an assumption. The
+         trace state is kept by reference so a door that streams —
+         whose rung declares itself while the body flows — is still
+         witnessed completely inside after(), once the stream is done. */
       const latencyMs = Date.now() - started;
-      after(
-        () =>
-          recordUsage({
-            userId,
-            workspaceId,
-            operation,
-            provider: "none",
+      const providerName = resolveProvider();
+      after(() => {
+        const finalModel = lastServedModelOf(traceState);
+        /* THE STRUCTURED LINE — one honest, secret-free sentence per
+           served door: traceable by requestId, measurable by latency,
+           attributable to its rung. No prose, no ids, no keys. */
+        console.log(
+          JSON.stringify({
+            t: new Date().toISOString(),
+            kind: "ai_door",
+            op: operation,
+            requestId,
+            status: res.status,
             success,
-            error: success ? null : `http_${res.status}`,
-            creditsCharged: charged + walletSpent,
             latencyMs,
-          }).catch(() => undefined)
-      );
+            provider: providerName,
+            model: finalModel,
+            charged: charged + walletSpent,
+          })
+        );
+        return recordUsage({
+          userId,
+          workspaceId,
+          operation,
+          provider: providerName,
+          model: finalModel,
+          success,
+          error: success ? null : `http_${res.status}`,
+          creditsCharged: charged + walletSpent,
+          latencyMs,
+        }).catch(() => undefined);
+      });
 
       /* plain Responses (the streaming SSE lines) are wrapped so the
          anonymous cookie can still ride home on them */
@@ -596,11 +636,19 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
               status: res.status,
               headers: res.headers,
             });
+      /* THE ANSWER NAMES ITSELF — the request's id for correlation and
+         (when a sky answered) the rung that served it. Model names are
+         not credentials; the directive's law asks for exactly this
+         internal verifiability without exposing anything sensitive. */
+      out.headers.set("x-request-id", requestId);
+      if (servedModel) {
+        out.headers.set("x-served-model", servedModel);
+      }
       return withAnonCookie(out, visitor);
     } catch (err) {
       /* the handler itself fell — the meter keeps the door standing,
          and the wallet's pre-execution draw goes back to its owner */
-      console.error(`[meter:${operation}] handler failed:`, err);
+      console.error(`[meter:${operation}] handler failed [requestId=${requestId}]:`, err);
       if (walletLedgerId) {
         const failLedger = walletLedgerId;
         after(() =>

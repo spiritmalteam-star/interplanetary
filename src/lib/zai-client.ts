@@ -32,6 +32,7 @@
 /* ================================================================== */
 
 import { isModelRungRefusal, steadyRungFor, isResting, RUNG_REST_MS } from "@/lib/server/model-ladder";
+import { noteServedModel } from "@/lib/server/ai-trace";
 
 interface ChatParams {
   messages: any[];
@@ -42,6 +43,9 @@ interface ChatParams {
 }
 
 interface ChatCompletion {
+  /** the rung that actually served this completion — the OpenAI-shaped
+      skies name themselves in the body; the witness carries it onward */
+  model?: string;
   choices: {
     message?: { content?: string | null; role?: string };
     finish_reason?: string;
@@ -749,7 +753,12 @@ class CloudBackend implements ZAIClient {
       const detail = (await res.text()).slice(0, 400);
       throw new Error(`${this.cfg.label} chat ${res.status}: ${detail}`);
     }
-    return (await res.json()) as ChatCompletion;
+    const completion = (await res.json()) as ChatCompletion;
+    /* THE WITNESS'S MEMORY — the rung that answered is named (the sky's
+       own word when it speaks it, the requested rung otherwise) so the
+       meter can record which approved model served this request */
+    noteServedModel(completion.model ?? model);
+    return completion;
   }
 
   private completeWithPatience(
@@ -803,6 +812,9 @@ class CloudBackend implements ZAIClient {
         const resting =
           !!steady && isResting(CloudBackend.resting, lead, Date.now());
         const first = resting && steady ? steady : lead;
+        /* the rung that truly answers — named for the witness before the
+           stream ever leaves this door (model names only, never keys) */
+        let servedRung = first;
         let res = await run(first);
         /* THE MODEL LADDER: the flagship refused for a model-side reason,
            so the same sky is asked once on the steady rung */
@@ -811,6 +823,7 @@ class CloudBackend implements ZAIClient {
           if (isModelRungRefusal(`${this.cfg.label} stream ${res.status}: ${detail}`)) {
             CloudBackend.resting.set(lead, Date.now() + RUNG_REST_MS);
             console.warn(`[zai] ${lead} stream refused (${res.status}) - the steady rung ${steady} answers`);
+            servedRung = steady;
             res = await run(steady);
           }
         }
@@ -824,6 +837,7 @@ class CloudBackend implements ZAIClient {
             `${this.cfg.label} stream ${res.status}: ${detail}`
           );
         }
+        noteServedModel(servedRung);
         return res;
       },
     },
@@ -858,6 +872,48 @@ class CloudBackend implements ZAIClient {
 
 /* ------------------------- the atelier sky ------------------------- */
 
+/* THE STREAM'S OWN NAME — a transparent tap that watches the first
+   kilobyte of an atelier SSE body for the model's self-declaration
+   (OpenAI-shaped chunks carry `model`) while every byte passes
+   through untouched. The witness then knows which approved rung the
+   shared sky lent this door — measured, never assumed. */
+function tapStreamModel(
+  stream: ReadableStream<Uint8Array>
+): ReadableStream<Uint8Array> {
+  const decoder = new TextDecoder();
+  let scannedBytes = 0;
+  let noted = false;
+  const tap = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      controller.enqueue(chunk);
+      if (noted || scannedBytes > 8_192) return;
+      scannedBytes += chunk.byteLength;
+      try {
+        const text = decoder.decode(chunk, { stream: true });
+        for (const line of text.split("\n")) {
+          const t = line.trim();
+          if (!t.startsWith("data:")) continue;
+          const payload = t.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+          try {
+            const j = JSON.parse(payload) as { model?: string };
+            if (typeof j.model === "string" && j.model) {
+              noteServedModel(j.model);
+              noted = true;
+              break;
+            }
+          } catch {
+            /* a partial line rides on — the next chunk completes it */
+          }
+        }
+      } catch {
+        /* a decode hiccup never breaks the visitor's stream */
+      }
+    },
+  });
+  return stream.pipeThrough(tap);
+}
+
 async function atelierBackend(): Promise<ZAIClient> {
   const sdk = await import("z-ai-web-dev-sdk");
   const client = (await sdk.default.create()) as unknown as ZAIClient;
@@ -871,7 +927,25 @@ async function atelierBackend(): Promise<ZAIClient> {
     client.chat.completions
   );
   client.chat.completions.create = (params: ChatParams) =>
-    withRetry(() => originalCreate(params));
+    withRetry(async () => {
+      const completion = await originalCreate(params);
+      /* THE STREAMING LINE — the atelier answers a stream ask with its
+         raw body: tapped transparently so the first chunk's own model
+         declaration reaches the witness (bytes ride home untouched) */
+      if (
+        typeof ReadableStream !== "undefined" &&
+        completion instanceof ReadableStream
+      ) {
+        return tapStreamModel(completion) as unknown as ChatCompletion;
+      }
+      /* the atelier's own word about itself, when it speaks one */
+      noteServedModel(
+        typeof completion?.model === "string" && completion.model
+          ? completion.model
+          : null
+      );
+      return completion;
+    });
   if (originalVision) {
     client.chat.completions.createVision = (params: ChatParams) =>
       withRetry(() => originalVision(params));

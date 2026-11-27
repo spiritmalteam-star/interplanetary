@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { isPageHidden, onPageVisible } from "@/lib/page-lifecycle";
+import { SITE_URL } from "@/lib/site";
 import {
   Activity,
   ArrowLeft,
@@ -632,11 +633,11 @@ export function ProfilePage() {
 
   const displayName = me?.name || me?.email || t("A quiet guest");
   /* the endpoint speaks the visitor's own sky — the profile only ever
-     stands in the browser, so the origin is read at the open door */
+     stands in the browser, so the origin is read at the open door.
+     THE HOUSE'S ONE ADDRESS: the server-rendered fallback names the
+     canonical www host (src/lib/site.ts), never a stray apex twin. */
   const apiOrigin =
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "https://reflectme.space";
+    typeof window !== "undefined" ? window.location.origin : SITE_URL;
   const recent = useMemo(() => (entries ?? []).slice(0, 5), [entries]);
   const totalEntries = useMemo(
     () => Object.values(counts).reduce((a, b) => a + b, 0),
