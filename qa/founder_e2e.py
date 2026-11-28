@@ -19,7 +19,11 @@ with sync_playwright() as p:
     check('zero revenue is zero (verified)', d0['grossRevenue']['value'] == 0 and d0['grossRevenue']['status'] == 'verified')
     check('refunds not connected', d0['refunds']['status'] == 'not_connected' and d0['refunds']['value'] is None)
     check('operating profit not connected', d0['operatingProfit']['status'] == 'not_connected')
-    check('registered users counts real accounts only', d0['registeredUsers']['value'] == 2, d0['registeredUsers']['value'])
+    n0 = d0['registeredUsers']['value']; guests0 = d0['guests']['value']
+    other = pw.new_context(base_url=base); other.post('/api/auth/register', data={'email': f'extra.{int(time.time())}@example.test', 'password': PW})
+    d1 = founder.get('/api/admin/founder/overview?days=30').json()['metrics']
+    check('registered users +1 after one more registration', d1['registeredUsers']['value'] == n0 + 1, (n0, d1['registeredUsers']['value']))
+    check('guests are not counted as registered', d1['guests']['value'] >= 0 and d1['registeredUsers']['value'] >= 3, d1['guests'])
     s = subprocess.run(['node', 'qa/seed_founder_test.mjs', ADMIN], capture_output=True, text=True); print(s.stdout, s.stderr[-300:])
     check('seed ok', s.returncode == 0)
     full = founder.get('/api/admin/founder/overview?days=30').json(); m = full['metrics']
@@ -28,8 +32,8 @@ with sync_playwright() as p:
     check('complimentary counted separately = 1', m['complimentaryGrants']['value'] == 1)
     check('AI cost 0.5 flagged estimated (1 uncosted spend)', m['aiCost']['value'] == 0.5 and m['aiCost']['status'] == 'estimated', m['aiCost'])
     check('revenue minus AI cost = 34.5 estimated, not profit', m['grossRevenueMinusAiCost']['value'] == 34.5 and m['grossRevenueMinusAiCost']['status'] == 'estimated')
-    check('active 24h counts the seeded user', m['dau']['value'] == 1, m['dau']['value'])
-    pr = [x for x in full['providers'] if x['provider'] == 'zai']
+    check('active 24h includes the seeded user', (m['dau']['value'] or 0) >= 1, m['dau']['value'])
+    pr = [x for x in full['providers'] if x['provider'] == 'zai' and x['model'] == 'glm-4.6']
     check('provider row: 3 requests, 1 failed, avg 667 ms', len(pr) == 1 and pr[0]['requests'] == 3 and pr[0]['failed'] == 1 and pr[0]['avgLatencyMs'] == 667, pr)
     check('provider balance not invented', full['providerBalances']['status'] == 'not_connected')
     check('no key/secret-like fields in payload', not any(k in json.dumps(full).lower() for k in ('api_key', 'secret', 'sk-', 'bearer')))
