@@ -157,7 +157,7 @@ export async function speakReplyGift(
   body: unknown,
   field: "reply" | "transmission",
   fallback: string
-): Promise<{ text: string; vision: string | null; omni: { taskId: string; needsApproval: boolean } | null }> {
+): Promise<{ text: string; vision: string | null; omni: { taskId: string; needsApproval: boolean; steps: { tool: string; status: string; name: string }[] } | null }> {
   const attempt = async (): Promise<{ res: Response; data: unknown }> => {
     const res = await speakDoor(url, {
       method: "POST",

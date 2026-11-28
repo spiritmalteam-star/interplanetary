@@ -143,12 +143,11 @@ export function WelcomeTour() {
      dismissal flag is NOT carved: the tour is offered again another
      day — the room simply takes the visitor's breath now). */
   const gatheringPortalOpen = useMirror((s) => s.gatheringPortalOpen);
-  const communionOpen = useMirror((s) => s.communionOpen);
   const aboutOpen = useMirror((s) => s.aboutOpen);
   useEffect(() => {
     if (!tourOpen) return;
-    if (gatheringPortalOpen || communionOpen || aboutOpen) closeTour();
-  }, [tourOpen, gatheringPortalOpen, communionOpen, aboutOpen, closeTour]);
+    if (gatheringPortalOpen || aboutOpen) closeTour();
+  }, [tourOpen, gatheringPortalOpen, aboutOpen, closeTour]);
 
   /* focus management — the dialog receives focus on open and returns
      it to the hand that opened the tour */
