@@ -1,4 +1,66 @@
+src/app/api/gathering/[id]/route.ts TS2339 Property 'userId' does not exist on type '{ circle: { id: string; name: string; } | null; visibility: string; status: st
+src/app/api/gathering/[id]/route.ts TS2339 Property 'userId' does not exist on type '{ circle: { id: string; name: string; } | null; visibility: string; status: st
+src/app/api/gathering/[id]/route.ts TS2345 Argument of type '{ id: string; parentId: string | null; body: string; createdAt: Date; userId: string; user: { name: st
+src/app/api/gathering/[id]/route.ts TS2551 Property 'circleId' does not exist on type '{ circle: { id: string; name: string; } | null; visibility: string; status: 
+src/app/api/gathering/[id]/route.ts TS2551 Property 'circleId' does not exist on type '{ circle: { id: string; name: string; } | null; visibility: string; status: 
+src/app/api/music/generate/route.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/app/api/music/shelf/route.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/app/api/music/shelf/route.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/app/api/music/shelf/route.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/app/api/music/shelf/route.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property '_count' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; tit
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'entries' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; ti
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'members' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; ti
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'milestones' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date;
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'networkLabMilestone' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'networkLabMilestone' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'networkLabTask' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'reviews' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; ti
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'tasks' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; titl
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'userId' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; tit
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'userId' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; tit
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'userId' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; tit
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'userId' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; tit
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'userId' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; tit
+src/app/api/network/lab-projects/[id]/route.ts TS2339 Property 'userId' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date; tit
+src/app/api/network/lab-projects/[id]/route.ts TS2353 Object literal may only specify known properties, and 'projectId' does not exist in type '(Without<NetworkLabEntryCreate
+src/app/api/network/lab-projects/[id]/route.ts TS2353 Object literal may only specify known properties, and 'projectId' does not exist in type '(Without<NetworkLabReviewCreat
+src/app/api/network/lab-projects/[id]/route.ts TS2353 Object literal may only specify known properties, and 'projectId' does not exist in type 'Without<NetworkLabMemberCreate
+src/app/api/network/lab-projects/[id]/route.ts TS2353 Object literal may only specify known properties, and 'projectId_userId' does not exist in type 'NetworkLabMemberWhereUn
+src/app/api/network/lab-projects/[id]/route.ts TS2353 Object literal may only specify known properties, and 'user' does not exist in type 'NetworkLabEntryInclude<DefaultArgs>
+src/app/api/network/lab-projects/[id]/route.ts TS2353 Object literal may only specify known properties, and 'user' does not exist in type 'NetworkLabReviewInclude<DefaultArgs
+src/app/api/network/lab-projects/[id]/route.ts TS2353 Object literal may only specify known properties, and 'userId' does not exist in type 'NetworkLabProjectSelect<DefaultAr
+src/app/api/network/lab-projects/route.ts TS2339 Property 'description' does not exist on type '{ background: string | null; id: string; createdAt: Date; updatedAt: Date
+src/app/api/network/lab-projects/route.ts TS2339 Property 'projectId' does not exist on type '{ role: string; id: string; createdAt: Date; userId: string; labId: string;
+src/app/api/network/lab-projects/route.ts TS2345 Argument of type '{ projectId: string; }[]' is not assignable to parameter of type '{ role: string; id: string; createdA
+src/app/api/network/lab-projects/route.ts TS2352 Conversion of type '({ _count: { members: number; entries: number; }; } & { background: string | null; id: string; creat
+src/app/api/network/lab-projects/route.ts TS2353 Object literal may only specify known properties, and 'projectId' does not exist in type 'NetworkLabMemberSelect<Default
+src/app/api/network/lab-projects/route.ts TS2353 Object literal may only specify known properties, and 'projectId' does not exist in type 'NetworkLabMemberWhereInput'.
+src/app/api/network/lab-projects/route.ts TS2353 Object literal may only specify known properties, and 'projectId' does not exist in type 'Without<NetworkLabMemberCreate
+src/app/api/network/lab-projects/route.ts TS2353 Object literal may only specify known properties, and 'userId' does not exist in type '(Without<NetworkLabProjectCreateI
+src/app/api/network/questions/[id]/branch/route.ts TS2353 Object literal may only specify known properties, and 'userId' does not exist in type 'Without<NetworkQuestionBranchCrea
+src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
 src/lib/server/payments/ledger.ts TS2339 Property 'currency' does not exist on type 'CheckoutEntryInput'.
+src/lib/server/payments/ledger.ts TS2339 Property 'currency' does not exist on type 'CheckoutEntryInput'.
+src/lib/server/payments/ledger.ts TS2339 Property 'currency' does not exist on type 'CheckoutEntryInput'.
+src/lib/server/payments/ledger.ts TS2339 Property 'currency' does not exist on type 'CheckoutEntryInput'.
+src/lib/server/payments/ledger.ts TS2339 Property 'paymentLedger' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/payments/ledger.ts TS2339 Property 'paymentLedger' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/payments/ledger.ts TS2339 Property 'paymentLedger' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/payments/ledger.ts TS2339 Property 'paymentLedger' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
 src/lib/server/payments/ledger.ts TS2339 Property 'paymentLedger' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
