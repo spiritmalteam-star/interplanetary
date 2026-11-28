@@ -84,14 +84,22 @@ const Chronoscope = dynamic(() => import("./Chronoscope"), {
    and the crown's own profile icon takes the door. */
 function TopProfileMark({ veiled }: { veiled: boolean }) {
   const t = useT();
+  /* THE KNOWN FACE — once a passage is signed in (email or Google), the
+     mark wears the visitor's own face: the Google portrait or the
+     first letter of their name, and on wider screens the mailbox
+     itself. The sign-in door is never shown to someone who has one. */
+  const me = useMirror((s) => s.me);
+  const known = me && me.email && !me.email.startsWith("anon:") ? me : null;
+  const initial = known ? (known.name || known.email).trim().charAt(0).toUpperCase() : "";
   return (
     <button
       type="button"
       onClick={() => useMirror.getState().openProfilePage()}
       aria-haspopup="dialog"
-      aria-label={t("Profile")}
-      title={t("Profile")}
+      aria-label={known ? `${t("Profile")} — ${known.email}` : t("Profile")}
+      title={known ? known.email : t("Profile")}
       data-testid="banner-profile-mark"
+      data-signed-in={known ? "true" : undefined}
       className={cn(
         "focus-glow pm-tap absolute z-[46] flex items-center rounded-full border border-[rgba(196,158,110,0.34)] bg-[rgba(64,45,27,0.62)] text-[#d9c99a] shadow-[0_8px_28px_-14px_rgba(20,12,5,0.9)] backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform hover:border-[rgba(232,217,176,0.6)] hover:shadow-[0_10px_34px_-14px_rgba(232,217,176,0.35)]",
         veiled && "pointer-events-none opacity-0 scale-[0.72]"
@@ -99,14 +107,31 @@ function TopProfileMark({ veiled }: { veiled: boolean }) {
       style={{
         top: "calc(max(0.75rem, env(safe-area-inset-top)) + 0.15rem)",
         right: "max(0.75rem, env(safe-area-inset-right))",
-        width: "2.25rem",
+        minWidth: "2.25rem",
         height: "2.25rem",
         justifyContent: "center",
+        gap: known ? "0.45rem" : undefined,
       }}
       aria-hidden={veiled || undefined}
       tabIndex={veiled ? -1 : 0}
     >
-      <UserRound className="size-4" aria-hidden="true" />
+      {known ? (
+        <>
+          {known.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={known.image} alt="" referrerPolicy="no-referrer" className="size-[1.7rem] rounded-full object-cover" />
+          ) : (
+            <span aria-hidden="true" className="flex size-[1.7rem] items-center justify-center rounded-full bg-[rgba(232,217,176,0.16)] text-[12px] font-semibold leading-none">
+              {initial}
+            </span>
+          )}
+          <span className="hidden max-w-[11rem] truncate pr-2.5 text-[11.5px] sm:inline" data-testid="banner-profile-email">
+            {known.email}
+          </span>
+        </>
+      ) : (
+        <UserRound className="size-4" aria-hidden="true" />
+      )}
     </button>
   );
 }
