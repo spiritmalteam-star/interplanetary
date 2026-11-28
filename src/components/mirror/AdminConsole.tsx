@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { FounderOverview } from "./admin/FounderOverview";
 import { LoaderCircle, Search, ShieldCheck } from "lucide-react";
 import { useMirror } from "@/lib/mirror-store";
 import { useT } from "@/lib/i18n";
@@ -228,6 +229,7 @@ export function AdminConsole() {
 
   return (
     <div className="space-y-4" data-testid="admin-console">
+      <FounderOverview />
       {flash && (
         <p role="status" className="rounded-lg border hairline bg-[var(--glass-bg-soft)] px-3 py-2 text-[12.5px] text-muted-foreground">
           {flash}
