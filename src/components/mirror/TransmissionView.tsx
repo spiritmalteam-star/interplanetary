@@ -699,14 +699,14 @@ export const Exchange = memo(function Exchange({
         open={publishOpen}
         onClose={() => setPublishOpen(false)}
         payload={{
-          sourcePortal: scope === "forge" ? "invent" : scope === "hyperx" ? "hyperx" : "channeling",
-          recentSector: scope === "forge" ? "invent" : "observatory",
+          sourcePortal: "channeling",
+          recentSector: "observatory",
           titleHint: (message.query ?? "").slice(0, 120) || undefined,
           suggestedTitle:
             (message.query ?? "").slice(0, 140) || "A transmission of the mirror",
           preview: message.text.slice(0, 4000),
           generic: true,
-          contentTypeLabel: scope === "forge" ? "Invention" : scope === "hyperx" ? "Research / Exploration" : "Reflection / Transmission",
+          contentTypeLabel: "Reflection / Transmission",
         }}
       />
     </motion.article>

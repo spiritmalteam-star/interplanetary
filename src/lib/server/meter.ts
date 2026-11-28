@@ -624,6 +624,13 @@ export function meterRoute(operation: string, handler: MeteredHandler) {
           error: success ? null : `http_${res.status}`,
           creditsCharged: charged + walletSpent,
           latencyMs,
+          requestId,
+          httpStatus: res.status,
+          attempts: traceState?.servedModels.length || null,
+          fallbackUsed: traceState
+            ? new Set(traceState.servedModels).size > 1
+            : null,
+          requestedModel: traceState?.servedModels[0] ?? null,
         }).catch(() => undefined);
       });
 

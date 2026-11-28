@@ -28,7 +28,7 @@ export function QueryComposer() {
   const askScopeVisual = useMirror((s) => s.askScopeVisual);
   const status = useMirror((s) => s.sessions[s.activeMode].status);
   const composerFocusNonce = useMirror((s) => s.composerFocusNonce);
-  const canopySummoned = useMirror((s) => s.canopySummoned);
+  const [canopySummoned, setCanopySummoned] = useState(false);
   const t = useT();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
@@ -127,11 +127,7 @@ export function QueryComposer() {
         >
           <CanopySummonButton
             open={canopySummoned}
-            onToggle={() =>
-              useMirror.getState().setCanopySummoned(
-                !useMirror.getState().canopySummoned
-              )
-            }
+            onToggle={() => setCanopySummoned((v) => !v)}
             disabled={status === "loading"}
             testIdPrefix="composer"
           />

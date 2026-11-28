@@ -131,7 +131,7 @@ export async function PUT(req: NextRequest) {
     const namedId = url.searchParams.get("postId");
     if (namedId && /^c[a-z0-9]{8,}$/i.test(namedId)) {
       const out = await adornPublication(namedId);
-      return withAnonCookie(NextResponse.json({ ok: out.ok, ...out }), visitor);
+      return withAnonCookie(NextResponse.json({ ...out }), visitor);
     }
     const take = Math.max(1, Math.min(8, Math.round(Number(url.searchParams.get("take")) || 4)));
     const out = await adornPublicationsBatch(take);

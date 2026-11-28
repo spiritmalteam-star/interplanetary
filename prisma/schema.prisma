@@ -250,10 +250,18 @@ model UsageEvent {
   success        Boolean  @default(true)
   error          String?
   createdAt      DateTime @default(now())
+  // per-request trace (additive, no content): who answered, by which rung, how it went
+  requestId      String?
+  httpStatus     Int?
+  attempts       Int?     // model rungs tried for this request (1 = no retry)
+  fallbackUsed   Boolean? // true when more than one distinct model was tried
+  requestedModel String?  // the first rung asked
+  deployment     String?  // short git sha of the serving deployment
 
   @@index([userId, createdAt])
   @@index([workspaceId, createdAt])
   @@index([operation, createdAt])
+  @@index([requestId])
 }
 
 // ------------------------------- billing ---------------------------------

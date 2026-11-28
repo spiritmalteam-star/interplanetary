@@ -42,15 +42,11 @@ counts prodlike > /tmp/c1.txt; counts restored > /tmp/c2.txt
 diff /tmp/c1.txt /tmp/c2.txt && echo "PASS restore matches source on every table ($(wc -l < /tmp/c1.txt) tables)"
 [ "$(psql $H -d restored -tAc "SELECT body FROM \"LegacyThing\" WHERE id='l1'")" = "precious" ] && echo "PASS restored data readable"
 
-echo "== baseline migration reproduces the schema exactly (no drift)"
+echo "== committed migrations, applied in order, reproduce the schema exactly (no drift)"
 psql $H -qc 'DROP DATABASE IF EXISTS fresh' -c 'CREATE DATABASE fresh' >/dev/null
-npx prisma migrate diff --from-empty --to-schema-datamodel "$SCHEMA" --script > /tmp/baseline.sql
-if [ -f prisma/migrations/0_baseline/migration.sql ]; then
-  diff -q /tmp/baseline.sql prisma/migrations/0_baseline/migration.sql && echo "PASS committed baseline equals the current schema"
-else
-  echo "NO COMMITTED BASELINE"; gzip -c /tmp/baseline.sql | base64 -w0 > /tmp/baseline.b64; wc -c /tmp/baseline.b64
-  split -b 12000 /tmp/baseline.b64 /tmp/bl.; for f in /tmp/bl.*; do echo "BASELINE-CHUNK $(basename $f) $(cat $f)"; done
-fi
-psql $H -d fresh -q -f /tmp/baseline.sql >/dev/null
-DATABASE_URL="$BASE/fresh" npx prisma migrate diff --from-url "$BASE/fresh" --to-schema-datamodel "$SCHEMA" --exit-code >/dev/null && echo "PASS applying the baseline gives zero drift"
+[ -f prisma/migrations/0_baseline/migration.sql ] || { echo "FAIL no committed baseline"; exit 1; }
+for d in $(ls -d prisma/migrations/*/ | sort); do
+  echo "applying $d"; psql $H -d fresh -q -v ON_ERROR_STOP=1 -f "$d/migration.sql" >/dev/null
+done
+DATABASE_URL="$BASE/fresh" npx prisma migrate diff --from-url "$BASE/fresh" --to-schema-datamodel "$SCHEMA" --exit-code >/dev/null && echo "PASS baseline + later migrations give zero drift"
 echo "ALL DB SAFETY CHECKS PASSED"
