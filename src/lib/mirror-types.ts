@@ -349,3 +349,47 @@ export interface VibrationState {
   bridge: string; // the one-line movement out of this state
   anchor: string; // the anchor phrase to install
 }
+
+/* ------------------------------------------------------------------ */
+/*  The living-archive biology wing's shapes (src/lib/data/biology.ts) */
+/*  and the laboratory's pills (src/lib/data/science.ts). Restored so   */
+/*  that wing type-checks without suppression; derived from the data   */
+/*  the builders actually produce.                                      */
+/* ------------------------------------------------------------------ */
+export type SpecimenKind = "fauna" | "flora";
+
+interface SpecimenBase {
+  id: string;
+  registryNo: string;
+  name: string;
+  genus: string;
+  originGroupId: string;
+  originName: string;
+  originWorld: string;
+  habitat: string;
+  traits: string[];
+  note: string;
+  rarity: string;
+  artIndex: number;
+}
+export interface FaunaSpecimen extends SpecimenBase {
+  classId: string;
+  className: string;
+  diet: string;
+  temperament: string;
+  size: string;
+  lifespan: string;
+}
+export interface FloraSpecimen extends SpecimenBase {
+  lineageId: string;
+  lineage: string;
+  bloomCycle: string;
+  scent: string;
+  height: string;
+  properties: string;
+}
+export interface SciencePill {
+  id: string;
+  emoji: string;
+  label: string;
+}

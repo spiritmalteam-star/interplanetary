@@ -155,11 +155,11 @@ export default function GenreSelector({ selected, onChange, testId }: Props) {
               key={id}
               type="button"
               onClick={() => toggle(id)}
-              aria-label={`${t("Remove")} ${hit?.genre.name ?? id}`}
+              aria-label={`${t("Remove")} ${hit?.name ?? id}`}
               data-testid={`genre-chip-${id}`}
               className="focus-glow group flex h-9 items-center gap-1.5 rounded-full border border-[color-mix(in_srgb,var(--scope-a)_40%,transparent)] bg-[color-mix(in_srgb,var(--scope-a)_8%,transparent)] px-3 text-[12.5px] text-[var(--scope-a)] transition-all duration-300 hover:bg-[color-mix(in_srgb,var(--scope-a)_14%,transparent)]"
             >
-              <span className="max-w-[130px] truncate">{t(hit?.genre.name ?? id)}</span>
+              <span className="max-w-[130px] truncate">{t(hit?.name ?? id)}</span>
               <X className="size-3 opacity-60 transition-opacity group-hover:opacity-100" aria-hidden="true" />
             </button>
           );

@@ -1,0 +1,4 @@
+src/lib/server/music/job.ts TS2339 Property 'musicGenerationTrack' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+src/lib/server/music/job.ts TS2551 Property 'musicGenerationJob' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you me
+src/lib/server/payments/ledger.ts TS2339 Property 'currency' does not exist on type 'CheckoutEntryInput'.
+src/lib/server/payments/ledger.ts TS2339 Property 'paymentLedger' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.

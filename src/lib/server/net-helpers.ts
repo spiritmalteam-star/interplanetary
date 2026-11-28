@@ -178,7 +178,7 @@ export async function countShelves(userId: string): Promise<{
   const [posts, circles, projects] = await Promise.all([
     graceful(() => db.gatheringPost.count({ where: { userId } }), 0),
     graceful(() => db.networkCircleMember.count({ where: { userId } }), 0),
-    graceful(() => db.networkLabProject.count({ where: { userId } }), 0),
+    graceful(() => db.networkLabProject.count({ where: { ownerId: userId } }), 0),
   ]);
   return { posts, circles, projects };
 }

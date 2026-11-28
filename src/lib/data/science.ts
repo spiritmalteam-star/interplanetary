@@ -1,10 +1,10 @@
 import type {
   LabFrequency,
-  ModePill,
   SciencePill,
 } from "@/lib/mirror-types";
 
-export const modes: ModePill[] = [
+/* the laboratory's older mode list (wider than today's Mode union) */
+export const modes: SciencePill[] = [
   { id: "interplanetary", emoji: "🌐", label: "Interplanetary" },
   { id: "science", emoji: "🔬", label: "Science" },
   { id: "quantum", emoji: "☯", label: "Quantum" },
