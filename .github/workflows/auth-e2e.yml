@@ -3,6 +3,10 @@ on:
   pull_request:
     paths:
       - 'qa/auth_e2e.py'
+      - 'qa/founder_e2e.py'
+      - 'qa/seed_founder_test.mjs'
+      - 'src/lib/server/founder-metrics.ts'
+      - 'src/app/api/admin/founder/**'
       - '.github/workflows/auth-e2e.yml'
   workflow_dispatch:
 jobs:
@@ -40,3 +44,7 @@ jobs:
       - run: pip install playwright && python -m playwright install --with-deps chromium
       - name: Register, sign in, reload
         run: python qa/auth_e2e.py http://localhost:3000 captures
+      - name: Founder Control Center e2e (throwaway db)
+        env:
+          DATABASE_URL: file:./db/custom.db
+        run: python qa/founder_e2e.py http://localhost:3000
