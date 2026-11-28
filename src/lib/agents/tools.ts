@@ -3,6 +3,7 @@ import { wallIdsFor, networkName, notify } from "@/lib/server/network";
 import { publishToGathering, PUBLICATION_VISIBILITIES, EPISTEMIC_LABELS } from "@/lib/server/publication";
 import { emitEvent, EVENT_TYPES } from "@/lib/server/events";
 import { randomUUID } from "crypto";
+import type { Prisma } from "@prisma/client";
 import type { ToolContext, ToolDefinition, ToolResult } from "./types";
 
 /* ------------------------------------------------------------------ */
@@ -200,7 +201,7 @@ async function circleMemberIds(circleId: string): Promise<Set<string>> {
 }
 
 /** The hall's own wall: public + circle-shared + connections-only, block-walled. */
-async function visiblePostWhere(userId: string) {
+async function visiblePostWhere(userId: string): Promise<Prisma.GatheringPostWhereInput> {
   const walls = await wallIdsFor(userId);
   const connIds = await acceptedConnectionIds(userId);
   return {
@@ -212,7 +213,7 @@ async function visiblePostWhere(userId: string) {
       { userId }, // one's own offerings, whatever their audience
     ],
     userId: { notIn: walls.size ? [...walls] : undefined },
-  } as const;
+  };
 }
 
 /* ------------------------------ tools ------------------------------ */
@@ -241,9 +242,11 @@ export const TOOLS: Record<string, ToolDefinition> = {
       const where = await visiblePostWhere(ctx.userId);
       const rows = await db.gatheringPost.findMany({
         where: {
-          ...where,
-          ...(kind ? { kind } : {}),
-          ...(q ? { OR: [{ title: { contains: q } }, { body: { contains: q } }] } : {}),
+          AND: [
+            where,
+            ...(kind ? [{ kind }] : []),
+            ...(q ? [{ OR: [{ title: { contains: q } }, { body: { contains: q } }] }] : []),
+          ],
         },
         orderBy: { createdAt: "desc" },
         take,
@@ -468,9 +471,11 @@ export const TOOLS: Record<string, ToolDefinition> = {
       const where = await visiblePostWhere(ctx.userId);
       const rows = await db.gatheringPost.findMany({
         where: {
-          ...where,
-          epistemic: epistemic ? epistemic : { not: null },
-          ...(q ? { OR: [{ title: { contains: q } }, { body: { contains: q } }] } : {}),
+          AND: [
+            where,
+            { epistemic: epistemic ? epistemic : { not: null } },
+            ...(q ? [{ OR: [{ title: { contains: q } }, { body: { contains: q } }] }] : []),
+          ],
         },
         orderBy: { createdAt: "desc" },
         take: intOf(input["take"], 1, 24, 10),
@@ -700,7 +705,6 @@ export const TOOLS: Record<string, ToolDefinition> = {
         await db.networkNotification.create({
           data: {
             userId: invitee,
-            actorId: ctx.userId,
             actorName: owner ? networkName(owner) : "A fellow maker",
             type: "project_invite",
             body: project.title.slice(0, 120),
@@ -1003,7 +1007,6 @@ export const TOOLS: Record<string, ToolDefinition> = {
         actorId: ctx.userId,
         actorName: networkName(await db.user.findUnique({ where: { id: ctx.userId }, select: { name: true, email: true, provider: true } }) ?? { name: null, email: "", provider: null }),
         type: "connection_request",
-        body: null,
         refType: "connection",
         refId: created.id,
       }).catch(() => {});
@@ -1378,7 +1381,7 @@ export const TOOLS: Record<string, ToolDefinition> = {
       ]);
       if (err) return err;
       const kind = str(input["kind"], 3, 16) ?? "";
-      if (!COMPOSE_KINDS.includes(kind)) {
+      if (!(COMPOSE_KINDS as readonly string[]).includes(kind)) {
         return `Field "kind" must be one of ${COMPOSE_KINDS.join(" | ")}.`;
       }
       if (input["chapters"] !== undefined) {

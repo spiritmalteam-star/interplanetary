@@ -216,27 +216,6 @@ async function start(payload: ShelfStartPayload): Promise<"ok" | "fallback"> {
 
     const job = data.job;
     setState({ jobs: [job, ...state.jobs].slice(0, 24), activeJob: job });
-    /* the Mirror's written direction, set before the sound */
-    const interp = data.interpretation;
-    if (interp && (interp.notes || interp.title)) {
-      try {
-        useMirror.setState({
-          lcInterpretation: {
-            id: `shelf-${job.id}`,
-            title: interp.title ?? "",
-            mode: job.mode as LightCodesMode,
-            intention: payload.intention,
-            audioUrl: "",
-            style: interp.style,
-            lyrics: interp.lyrics ?? null,
-            notes: interp.notes,
-            length: "full",
-          },
-        });
-      } catch {
-        /* the interpretation rests */
-      }
-    }
     watchJob(job);
     return "ok";
   } catch {
@@ -323,6 +302,7 @@ export function playShelfTrack(job: ShelfJob, track: ShelfTrack): void {
       intention: job.intention,
       audioUrl: track.audioUrl,
       durable: true,
+      createdAt: Date.now(),
       style: job.notes ?? undefined,
       notes: job.notes ?? undefined,
       length: "full",

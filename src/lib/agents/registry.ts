@@ -258,7 +258,7 @@ export async function setAgentStatus(agentKey: string, status: "active" | "inact
   await db.agentRecord.update({ where: { agentKey }, data: { status } });
   if (status !== "active") {
     /* deactivation bars the gate: every grant falls silent with the agent */
-    await db.agentGrant.updateMany({ where: { agentId: row.id }, data: { active: status === "active" } });
+    await db.agentGrant.updateMany({ where: { agentId: row.id }, data: { active: false } });
   }
   return true;
 }

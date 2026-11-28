@@ -102,7 +102,7 @@ function parsePlan(text: string): { reply: string; plan: PlanStep[] } {
   const start = s.indexOf("{");
   if (start === -1) return { reply: s.trim(), plan: [] };
 
-  const attempt = (candidate: string): { reply?: string; plan?: PlanStep[] } | null => {
+  const attempt = (candidate: string): { reply?: unknown; plan?: unknown } | null => {
     try {
       const parsed = JSON.parse(candidate) as { reply?: unknown; plan?: unknown };
       return parsed;
@@ -138,7 +138,7 @@ function parsePlan(text: string): { reply: string; plan: PlanStep[] } {
   const plan = Array.isArray(parsed.plan)
     ? parsed.plan
         .filter(
-          (p): p is { tool: string; input?: Record<string, unknown>; why?: string } =>
+          (p: unknown): p is { tool: string; input?: Record<string, unknown>; why?: string } =>
             !!p && typeof (p as { tool?: unknown }).tool === "string" && TOOLS[(p as { tool: string }).tool] !== undefined
         )
         .slice(0, 5)
