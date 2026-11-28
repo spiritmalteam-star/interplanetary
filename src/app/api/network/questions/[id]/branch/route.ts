@@ -78,7 +78,7 @@ export async function POST(
       : "hypothesis";
 
     await db.networkQuestionBranch.create({
-      data: { questionId: id, parentId, userId: me, kind, body: content, evidence },
+      data: { questionId: id, parentId, authorId: me, kind, body: content, evidence },
     });
     await db.networkQuestion.update({
       where: { id },

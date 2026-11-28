@@ -81,6 +81,8 @@ export async function GET(
     const post = {
       ...postRaw,
       circle: (postRaw.circle as { id: string; name: string } | null) ?? null,
+      circleId: typeof postRaw.circleId === "string" ? postRaw.circleId : null,
+      userId: String(postRaw.userId),
       visibility: String(postRaw.visibility ?? "public"),
       status: String(postRaw.status ?? "published"),
     };
@@ -95,7 +97,7 @@ export async function GET(
       const membership = await graceful(
         () =>
           db.networkCircleMember.findUnique({
-            where: { circleId_userId: { circleId: String(post.circleId), userId: visitor.user.id } },
+            where: { circleId_userId: { circleId: post.circleId, userId: visitor.user.id } },
             select: { id: true },
           }),
         null
@@ -143,7 +145,7 @@ export async function GET(
         body: string;
         createdAt: Date;
         userId: string;
-        user: { name: string; email: string; provider: string | null; image: string | null };
+        user: { name: string | null; email: string; provider: string | null; image: string | null };
       }[]
     );
 

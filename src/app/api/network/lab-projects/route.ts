@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { resolveVisitor, withAnonCookie, STATELESS_PREFIX } from "@/lib/server/access";
 import { rateLimit } from "@/lib/server/rate-limit";
@@ -19,10 +20,9 @@ export const runtime = "nodejs";
 type ProjectRow = {
   id: string;
   seedPostId: string | null;
-  libraryEntryId: string | null;
-  userId: string;
+  ownerId: string;
   title: string;
-  description: string | null;
+  hypothesis: string;
   focus: string;
   status: string;
   createdAt: Date;
@@ -30,13 +30,12 @@ type ProjectRow = {
   _count?: { members?: number; entries?: number };
 };
 
-export const PROJECT_CARD_INCLUDE = {
+const PROJECT_CARD_INCLUDE = {
   _count: { select: { members: true, entries: true } },
 } as const;
 
 async function seedNames(rows: ProjectRow[]) {
   const postIds = rows.map((r) => r.seedPostId).filter((v): v is string => Boolean(v));
-  const entryIds = rows.map((r) => r.libraryEntryId).filter((v): v is string => Boolean(v));
   const posts = postIds.length
     ? await graceful(
         () =>
@@ -47,77 +46,64 @@ async function seedNames(rows: ProjectRow[]) {
         [] as { id: string; title: string }[]
       )
     : [];
-  const entries = entryIds.length
-    ? await graceful(
-        () =>
-          db.libraryEntry.findMany({
-            where: { id: { in: entryIds } },
-            select: { id: true, title: true },
-          }),
-        [] as { id: string; title: string }[]
-      )
-    : [];
   return {
     posts: new Map(posts.map((p) => [p.id, p.title])),
-    entries: new Map(entries.map((e) => [e.id, e.title])),
   };
 }
 
-export async function projectCards(
-  where: Record<string, unknown>,
+async function projectCards(
+  where: Prisma.NetworkLabProjectWhereInput,
   viewerId: string,
   take: number
 ) {
-  const rows = (await db.networkLabProject.findMany({
-    where: where as never,
+  const rows: ProjectRow[] = await db.networkLabProject.findMany({
+    where,
     orderBy: { updatedAt: "desc" },
     take,
     include: PROJECT_CARD_INCLUDE,
-  })) as ProjectRow[];
+  });
 
   /* the visitor's own seats at these benches */
   const seats = await graceful(
     () =>
       db.networkLabMember.findMany({
-        where: { userId: viewerId, projectId: { in: rows.map((r) => r.id) } },
-        select: { projectId: true },
+        where: { userId: viewerId, labId: { in: rows.map((r) => r.id) } },
+        select: { labId: true },
       }),
-    [] as { projectId: string }[]
+    [] as { labId: string }[]
   );
-  const seatSet = new Set(seats.map((s) => s.projectId));
+  const seatSet = new Set(seats.map((s) => s.labId));
 
   const owners = await graceful(
     () =>
       db.user.findMany({
-        where: { id: { in: Array.from(new Set(rows.map((r) => r.userId))) } },
+        where: { id: { in: Array.from(new Set(rows.map((r) => r.ownerId))) } },
         select: { id: true, name: true, email: true, provider: true },
       }),
     [] as { id: string; name: string | null; email: string; provider: string | null }[]
   );
   const ownerMap = new Map(owners.map((o) => [o.id, o]));
 
-  const { posts, entries } = await seedNames(rows);
+  const { posts } = await seedNames(rows);
 
   return rows.map((p) => ({
     id: p.id,
     title: p.title,
-    description: p.description,
+    description: p.hypothesis || null,
     focus: p.focus,
     status: p.status,
     seedPost: p.seedPostId ? { id: p.seedPostId, title: posts.get(p.seedPostId) ?? "" } : null,
-    libraryItem: p.libraryEntryId
-      ? { id: p.libraryEntryId, title: entries.get(p.libraryEntryId) ?? "" }
-      : null,
+    libraryItem: null,
     memberCount: p._count?.members ?? 0,
     entryCount: p._count?.entries ?? 0,
     owner: {
-      id: p.userId,
-      name: ownerMap.has(p.userId)
-        ? networkName(ownerMap.get(p.userId) as { name: string | null; email: string })
+      id: p.ownerId,
+      name: ownerMap.has(p.ownerId)
+        ? networkName(ownerMap.get(p.ownerId) as { name: string | null; email: string })
         : "A quiet maker",
     },
     joined: seatSet.has(p.id),
-    mine: p.userId === viewerId,
+    mine: p.ownerId === viewerId,
     createdAt: new Date(p.createdAt).toISOString(),
     updatedAt: new Date(p.updatedAt).toISOString(),
   }));
@@ -132,8 +118,8 @@ export async function GET(req: NextRequest) {
     const status = cleanStr(url.searchParams.get("status"), 20);
     const take = takeOf(url, 24, 60);
 
-    const where = {
-      ...(mine ? { userId: me } : {}),
+    const where: Prisma.NetworkLabProjectWhereInput = {
+      ...(mine ? { ownerId: me } : {}),
       ...(status ? { status } : {}),
     };
     const projects = await graceful(() => projectCards(where, me, take), [] as Awaited<ReturnType<typeof projectCards>>);
@@ -183,9 +169,8 @@ export async function POST(req: NextRequest) {
 
     const created = await db.networkLabProject.create({
       data: {
-        userId: me,
+        ownerId: me,
         title,
-        description: hypothesis,
         question: question ?? "",
         hypothesis: hypothesis ?? "",
         methodology: method,
@@ -194,7 +179,7 @@ export async function POST(req: NextRequest) {
       },
     });
     await db.networkLabMember.create({
-      data: { projectId: created.id, userId: me, role: "owner" },
+      data: { labId: created.id, userId: me, role: "owner" },
     });
 
     return withAnonCookie(
@@ -202,7 +187,7 @@ export async function POST(req: NextRequest) {
         project: {
           id: created.id,
           title: created.title,
-          description: created.description,
+          description: created.hypothesis || null,
           focus: created.focus,
           status: created.status,
           seedPost: null,

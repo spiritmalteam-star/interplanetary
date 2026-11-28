@@ -7,10 +7,11 @@ import { graceful, cleanStr, errorJson } from "@/lib/server/net-helpers";
 
 /* ------------------------------------------------------------------ */
 /*  ONE BENCH, READ WHOLE — GET /api/network/lab-projects/[id]         */
-/*  THE BENCH'S HANDS — POST {kind:"entry"|"review"|"milestone"|"task"} */
+/*  THE BENCH'S HANDS — POST {kind:"entry"|"review"}                   */
 /*                                                                     */
 /*  The lab's own page: question, hypothesis, method, and the living   */
-/*  shelves around it — entries, reviews, milestones, tasks. Every     */
+/*  shelves around it — entries and reviews (milestones and tasks belong to Collective
+/*  Intentions — /api/network/intentions — not to a lab bench). Every     */
 /*  movement speaks with its maker's name and its own honest label.    */
 /* ------------------------------------------------------------------ */
 
@@ -18,8 +19,8 @@ export const runtime = "nodejs";
 
 const BODY_MAX = 4000;
 const REVIEW_MAX = 2000;
-const VERDICTS = ["sound", "needs_work", "hypothesis", "disputed"] as const;
-const ENTRY_KINDS = ["observation", "result", "question", "note"] as const;
+const VERDICTS = ["feedback", "concerns", "improvements"] as const;
+const ENTRY_KINDS = ["observation", "result", "analysis", "limitation", "replication"] as const;
 
 async function labDetail(projectId: string, viewerId: string) {
   const p = await db.networkLabProject.findUnique({
@@ -30,15 +31,13 @@ async function labDetail(projectId: string, viewerId: string) {
       entries: {
         orderBy: { createdAt: "desc" },
         take: 40,
-        include: { user: { select: { id: true, name: true, email: true, provider: true } } },
+        include: { author: { select: { id: true, name: true, email: true, provider: true } } },
       },
       reviews: {
         orderBy: { createdAt: "desc" },
         take: 40,
-        include: { user: { select: { id: true, name: true, email: true, provider: true } } },
+        include: { author: { select: { id: true, name: true, email: true, provider: true } } },
       },
-      milestones: { orderBy: { position: "asc" } },
-      tasks: { orderBy: { createdAt: "asc" } },
     },
   });
   if (!p) return null;
@@ -46,7 +45,7 @@ async function labDetail(projectId: string, viewerId: string) {
   const owner = await graceful(
     () =>
       db.user.findUnique({
-        where: { id: p.userId },
+        where: { id: p.ownerId },
         select: { id: true, name: true, email: true, provider: true },
       }),
     null
@@ -65,12 +64,12 @@ async function labDetail(projectId: string, viewerId: string) {
     focus: p.focus,
     status: p.status,
     memberCount: p._count?.members ?? 0,
-    mine: p.userId === viewerId,
+    mine: p.ownerId === viewerId,
     membership: mySeat?.role ?? null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
     owner: {
-      id: p.userId,
+      id: p.ownerId,
       name: owner ? networkName(owner) : "A quiet maker",
       anon: (owner?.provider ?? "") === "anon",
     },
@@ -81,9 +80,9 @@ async function labDetail(projectId: string, viewerId: string) {
       dataUrl: e.dataUrl,
       createdAt: e.createdAt.toISOString(),
       author: {
-        id: e.userId,
-        name: e.user ? networkName(e.user) : "A quiet maker",
-        anon: (e.user?.provider ?? "") === "anon",
+        id: e.authorId,
+        name: networkName(e.author),
+        anon: (e.author.provider ?? "") === "anon",
       },
     })),
     reviews: p.reviews.map((r) => ({
@@ -92,24 +91,10 @@ async function labDetail(projectId: string, viewerId: string) {
       body: r.body,
       createdAt: r.createdAt.toISOString(),
       author: {
-        id: r.userId,
-        name: r.user ? networkName(r.user) : "A quiet maker",
-        anon: (r.user?.provider ?? "") === "anon",
+        id: r.authorId,
+        name: networkName(r.author),
+        anon: (r.author.provider ?? "") === "anon",
       },
-    })),
-    /* the bench's other shelves — milestones and tasks, read beside the entries */
-    milestones: p.milestones.map((m) => ({
-      id: m.id,
-      title: m.title,
-      detail: m.detail,
-      position: m.position,
-      done: m.done,
-    })),
-    tasks: p.tasks.map((t) => ({
-      id: t.id,
-      title: t.title,
-      claimedBy: t.claimedBy,
-      done: t.done,
     })),
   };
 }
@@ -155,29 +140,26 @@ export async function POST(
 
     const raw = (await req.json().catch(() => null)) as {
       kind?: unknown;
-      title?: unknown;
-      detail?: unknown;
       body?: unknown;
       verdict?: unknown;
       entryKind?: unknown;
       dataUrl?: unknown;
-      claim?: unknown;
     } | null;
 
     const project = await db.networkLabProject.findUnique({
       where: { id },
-      select: { id: true, userId: true, title: true },
+      select: { id: true, ownerId: true, title: true },
     });
     if (!project) return errorJson("That bench no longer stands.", 404);
 
     /* laying hands on a bench makes one a companion */
     const seat = await db.networkLabMember.findUnique({
-      where: { projectId_userId: { projectId: id, userId: me } },
+      where: { labId_userId: { labId: id, userId: me } },
       select: { id: true },
     });
     if (!seat) {
       await db.networkLabMember.create({
-        data: { projectId: id, userId: me, role: "companion" },
+        data: { labId: id, userId: me, role: "participant" },
       });
     }
 
@@ -191,20 +173,20 @@ export async function POST(
         : "observation";
       const dataUrl = cleanStr(raw?.dataUrl, 300);
       await db.networkLabEntry.create({
-        data: { projectId: id, userId: me, kind, body, dataUrl },
+        data: { labId: id, authorId: me, kind, body, dataUrl },
       });
     } else if (raw?.kind === "review") {
       const body = cleanStr(raw?.body, REVIEW_MAX);
       if (!body) return errorJson(`A review wants up to ${REVIEW_MAX} letters.`, 400);
       const verdict = VERDICTS.includes(raw?.verdict as (typeof VERDICTS)[number])
         ? (raw?.verdict as string)
-        : "hypothesis";
+        : "feedback";
       await db.networkLabReview.create({
-        data: { projectId: id, userId: me, verdict, body },
+        data: { labId: id, authorId: me, verdict, body },
       });
-      if (project.userId !== me) {
+      if (project.ownerId !== me) {
         await notify({
-          userId: project.userId,
+          userId: project.ownerId,
           actorId: me,
           actorName: myName,
           type: "review",
@@ -213,29 +195,8 @@ export async function POST(
           refId: id,
         });
       }
-    } else if (raw?.kind === "milestone") {
-      if (project.userId !== me) {
-        return errorJson("Only the bench's own maker lays its milestones.", 403);
-      }
-      const title = cleanStr(raw?.title, 120);
-      if (!title) return errorJson("A milestone wants a name.", 400);
-      const detail = cleanStr(raw?.detail, 500);
-      const position = await db.networkLabMilestone.count({ where: { projectId: id } });
-      await db.networkLabMilestone.create({
-        data: { projectId: id, title, detail, position },
-      });
-    } else if (raw?.kind === "task") {
-      const title = cleanStr(raw?.title, 120);
-      if (!title) return errorJson("A task wants a name.", 400);
-      await db.networkLabTask.create({
-        data: {
-          projectId: id,
-          title,
-          claimedBy: raw?.claim === true ? me : null,
-        },
-      });
     } else {
-      return errorJson("A bench is touched with kind:entry, review, milestone or task.", 400);
+      return errorJson("A bench is touched with kind:entry or review (milestones and tasks live in /api/network/intentions).", 400);
     }
 
     await db.networkLabProject.update({
