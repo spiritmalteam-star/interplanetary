@@ -1,0 +1,30 @@
+name: DB safety (schema guard, backup/restore, baseline drift) — throwaway Postgres
+on:
+  pull_request:
+    paths:
+      - 'prisma/**'
+      - 'scripts/db-guard*.mjs'
+      - 'scripts/postinstall.mjs'
+      - 'qa/db_safety.sh'
+      - '.github/workflows/db-safety.yml'
+  workflow_dispatch:
+jobs:
+  db:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile --ignore-scripts
+      - run: node --test tests/unit/db-guard.test.mjs
+      - run: bash qa/db_safety.sh
