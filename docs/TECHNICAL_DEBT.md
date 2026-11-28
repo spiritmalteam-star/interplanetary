@@ -1,8 +1,6 @@
 # Technical debt register (verified items only)
 
-1. **Destructive schema sync on deploy** — `package.json` build sets `DB_PUSH_ACCEPT_DATA_LOSS=true`
-   and runs `prisma db push`. A schema change that drops data would apply silently. Needs an
-   owner-approved plan: versioned migrations, pre-deploy backup, restore test. *Not changed.*
+1. ~~Destructive schema sync on deploy~~ — **mitigated** (CLAUDE-22): build uses the additive-only guard; baseline migration checked in; see `docs/DISASTER_RECOVERY.md`. Remaining: production not yet on `migrate deploy`; no production backup until founder adds the backup secrets; orphan legacy columns/tables stay until reviewed.
 2. **Type errors hidden** — `typescript.ignoreBuildErrors: true`; ~37 baseline `tsc` errors.
 3. **God files** — `BranchCanopy.tsx` (7.9k lines), `mirror-store.ts` (6k lines), `gathering/*` (22k lines).
 4. **No CSP / Permissions-Policy** — needs report-only trial (voice features need microphone).
