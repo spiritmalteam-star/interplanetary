@@ -453,7 +453,7 @@ const GatheringSigil = memo(function GatheringSigil({
 
 const SIGILS: Record<
   ChannelingKind,
-  (p: { size: number; className?: string }) => React.JSX.Element
+  React.ComponentType<{ size: number; className?: string }>
 > = {
   transmission: TransmissionSigil,
   akashic: AkashicSigil,
