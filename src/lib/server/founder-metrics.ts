@@ -35,7 +35,7 @@ async function guard(fn: () => Promise<Metric>, source: string, definition: stri
 }
 
 const DAY = 86_400_000;
-const REAL_PAYMENT = { status: "complete", type: { in: ["subscription", "credit_pack"] }, amountCents: { gt: 0 } } as const;
+const REAL_PAYMENT = { status: "complete", type: { in: ["subscription", "credit_pack"] }, amountCents: { gt: 0 } };
 
 export async function buildFounderOverview(rangeDays: number, now = new Date()) {
   const days = Math.min(365, Math.max(1, Math.floor(rangeDays) || 30));
