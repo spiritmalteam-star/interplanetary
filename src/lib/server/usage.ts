@@ -21,6 +21,11 @@ export interface UsageInput {
   latencyMs?: number | null;
   success: boolean;
   error?: string | null;
+  requestId?: string | null;
+  httpStatus?: number | null;
+  attempts?: number | null;
+  fallbackUsed?: boolean | null;
+  requestedModel?: string | null;
 }
 
 function briefError(message: string | undefined | null): string | null {
@@ -45,6 +50,12 @@ export async function recordUsage(input: UsageInput): Promise<void> {
         latencyMs: input.latencyMs ?? null,
         success: input.success,
         error: briefError(input.error),
+        requestId: input.requestId?.slice(0, 64) ?? null,
+        httpStatus: input.httpStatus ?? null,
+        attempts: input.attempts ?? null,
+        fallbackUsed: input.fallbackUsed ?? null,
+        requestedModel: input.requestedModel?.slice(0, 80) ?? null,
+        deployment: (process.env.VERCEL_GIT_COMMIT_SHA ?? "").slice(0, 7) || null,
       },
     });
   } catch (err) {
