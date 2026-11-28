@@ -19,17 +19,17 @@ Q "INSERT INTO \"LegacyThing\" VALUES ('l1','precious')"
 Q "DROP TABLE \"UsageEvent\""
 Q "ALTER TABLE \"GatheringPost\" DROP COLUMN \"viewCount\""
 echo "== run the guard (dry run first)"
-node scripts/db-guard.mjs "$SCHEMA" --dry-run | tee /tmp/guard-dry.txt
+node scripts/db-guard.mjs "$SCHEMA" --dry-run 2>&1 | tee /tmp/guard-dry.txt
 grep -q "would apply" /tmp/guard-dry.txt
 echo "== run the guard for real"
-node scripts/db-guard.mjs "$SCHEMA" | tee /tmp/guard.txt
+node scripts/db-guard.mjs "$SCHEMA" 2>&1 | tee /tmp/guard.txt
 [ "$(Q "SELECT to_regclass('\"UsageEvent\"') IS NOT NULL")" = "t" ] && echo "PASS missing table created"
 [ "$(Q "SELECT count(*) FROM information_schema.columns WHERE table_name='GatheringPost' AND column_name='viewCount'")" = "1" ] && echo "PASS missing column added"
 [ "$(Q "SELECT \"legacyNote\" FROM \"User\" WHERE id='u1'")" = "keep-me" ] && echo "PASS legacy column and its data survive"
 [ "$(Q "SELECT body FROM \"LegacyThing\" WHERE id='l1'")" = "precious" ] && echo "PASS legacy table and its data survive"
-grep -q "BLOCKED" /tmp/guard.txt && echo "PASS destructive statements were reported, not run"
+grep -q "BLOCKED" /tmp/guard.txt && echo "PASS destructive statements were reported, not run" || { echo "FAIL blocked statements not reported"; exit 1; }
 node scripts/db-guard.mjs "$SCHEMA" | tee /tmp/guard2.txt
-grep -q "0 additive" /tmp/guard2.txt && echo "PASS second run is a no-op (idempotent)"
+grep -q "0 additive" /tmp/guard2.txt && echo "PASS second run is a no-op (idempotent)" || { echo "FAIL not idempotent"; exit 1; }
 
 echo "== backup and restore into an isolated database, row-for-row"
 # dump/restore with the SAME major version as the server (a newer client emits settings an older server rejects)

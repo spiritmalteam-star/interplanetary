@@ -37,21 +37,20 @@ if (schema) {
      DATABASE_URL in its vault; a local atelier sets it in .env) */
   const hasDb = Boolean(process.env.DATABASE_URL);
   if (hasDb) {
-    const dataLossFlag = process.env.DB_PUSH_ACCEPT_DATA_LOSS === "true"
-      ? " --accept-data-loss"
-      : "";
-    if (dataLossFlag) {
-      console.warn(
-        "[postinstall] WARNING: db push runs with --accept-data-loss — a schema change that removes a column or table WILL drop its data. Replace with reviewed Prisma migrations (see the engineering roadmap, Phase 2)."
+    const isPg = /^postgres(ql)?:\/\//i.test(process.env.DATABASE_URL.trim());
+    if (isPg) {
+      /* THE CLOUD: additive changes only. Nothing that could remove or
+         rewrite data is ever run here — see scripts/db-guard.mjs. */
+      run(`node scripts/db-guard.mjs ${schema}`, "schema guard (additive-only)");
+    } else {
+      /* the atelier's own throwaway sqlite file */
+      const dataLossFlag = process.env.DB_PUSH_ACCEPT_DATA_LOSS === "true" ? " --accept-data-loss" : "";
+      run(
+        `npx prisma db push --schema ${schema} --skip-generate${dataLossFlag}`,
+        "prisma db push (local sqlite)"
       );
     }
-    run(
-      `npx prisma db push --schema ${schema} --skip-generate${dataLossFlag}`,
-      "prisma db push (ensure the passage tables)"
-    );
   } else {
-    console.log(
-      "[postinstall] DATABASE_URL not set in this step — db push deferred to runtime"
-    );
+    console.log("[postinstall] DATABASE_URL not set in this step — db push deferred to runtime");
   }
 }

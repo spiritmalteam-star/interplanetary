@@ -51,3 +51,8 @@ test("empty diff plans nothing", () => {
   const p = plan("-- This is an empty migration.\n");
   assert.deepEqual(p, { additive: [], blocked: [] });
 });
+
+test("an empty database may be given its schema and tables", () => {
+  assert.equal(judge('CREATE SCHEMA IF NOT EXISTS "public";'), "additive");
+  assert.equal(judge('DROP SCHEMA "public";'), "blocked");
+});

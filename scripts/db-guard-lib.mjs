@@ -25,6 +25,7 @@ const norm = (s) => s.replace(/\s+/g, " ").trim().toUpperCase();
 
 export function classify(statement) {
   const s = norm(statement);
+  if (/^CREATE SCHEMA IF NOT EXISTS\b/.test(s)) return "additive";
   if (/^CREATE TABLE\b/.test(s)) return "additive";
   if (/^CREATE (UNIQUE )?INDEX\b/.test(s)) return "additive";
   if (/^CREATE TYPE\b/.test(s)) return "additive";
