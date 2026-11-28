@@ -32,9 +32,11 @@ node scripts/db-guard.mjs "$SCHEMA" | tee /tmp/guard2.txt
 grep -q "0 additive" /tmp/guard2.txt && echo "PASS second run is a no-op (idempotent)"
 
 echo "== backup and restore into an isolated database, row-for-row"
-pg_dump $H -Fc -d prodlike -f /tmp/prodlike.dump
+# dump/restore with the SAME major version as the server (a newer client emits settings an older server rejects)
+PGTOOLS="docker run --rm --network host -e PGPASSWORD=postgres -v /tmp:/tmp postgres:16"
+$PGTOOLS pg_dump -h localhost -U postgres -Fc -d prodlike -f /tmp/prodlike.dump
 psql $H -qc 'DROP DATABASE IF EXISTS restored' -c 'CREATE DATABASE restored' >/dev/null
-pg_restore $H -d restored --no-owner /tmp/prodlike.dump
+$PGTOOLS pg_restore -h localhost -U postgres -d restored --no-owner --exit-on-error /tmp/prodlike.dump
 counts() { psql $H -d "$1" -tAc "SELECT table_name||'='||(xpath('/row/c/text()', query_to_xml(format('select count(*) as c from %I', table_name), false, true, '')))[1]::text FROM information_schema.tables WHERE table_schema='public' ORDER BY 1"; }
 counts prodlike > /tmp/c1.txt; counts restored > /tmp/c2.txt
 diff /tmp/c1.txt /tmp/c2.txt && echo "PASS restore matches source on every table ($(wc -l < /tmp/c1.txt) tables)"
